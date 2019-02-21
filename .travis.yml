@@ -1,0 +1,21 @@
+language: go
+go:
+  - 1.11.x
+
+env:
+  - GO111MODULE=on
+
+before_install:
+  # Gometalinter
+  - curl -sSfLo install_gometalinter.sh https://git.io/vp6lP
+  - sh install_gometalinter.sh -b $GOPATH/bin v3.0.0
+  - rm install_gometalinter.sh
+  # Ginkgo
+  - go get -u github.com/onsi/ginkgo/ginkgo
+
+before_script:
+  # Get project dependencies
+  - go mod download
+
+script:
+  - make lint test

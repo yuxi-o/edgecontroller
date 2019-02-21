@@ -1,0 +1,29 @@
+{
+    "LineLength": 80,
+    "Cyclo": 12,
+    "Enable": [
+        "deadcode",
+        "errcheck",
+        "goconst",
+        "gocyclo",
+        "golint",
+        "gofmt",
+        "gosec",
+        "gotype",
+        "ineffassign",
+        "interfacer",
+        "lll",
+        "maligned",
+        "misspell",
+        "structcheck",
+        "unconvert",
+        "vet",
+        "vetshadow"
+    ],
+    "Exclude": [
+        "^\\S+\\.pb\\.go",
+        "should not use dot imports",
+        "defer [\\pL\\pN.]+\\.Close\\(\\)"
+    ],
+    "Tests": true
+}
