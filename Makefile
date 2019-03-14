@@ -17,7 +17,7 @@ build:
 	go build -o dist/helloapp ./cmd/helloapp
 
 lint:
-	gometalinter --config=.gometalinter-config.json ./...
+	golangci-lint run
 
 test:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites --failOnPending --skipPackage=vendor

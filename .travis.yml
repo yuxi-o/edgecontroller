@@ -1,15 +1,14 @@
 language: go
 go:
+  - 1.12.x
   - 1.11.x
 
 env:
   - GO111MODULE=on
 
 before_install:
-  # Gometalinter
-  - curl -sSfLo install_gometalinter.sh https://git.io/vp6lP
-  - sh install_gometalinter.sh -b $GOPATH/bin v3.0.0
-  - rm install_gometalinter.sh
+  # golangci-lint
+  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.15.0
   # Ginkgo
   - go get -u github.com/onsi/ginkgo/ginkgo
 

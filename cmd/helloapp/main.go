@@ -77,7 +77,8 @@ func main() {
 	defer listener.Close()
 
 	// Start the server
-	log.Print(name, ": listening on port: ", listener.Addr().(*net.TCPAddr).Port)
+	log.Print(name, ": listening on port: ",
+		listener.Addr().(*net.TCPAddr).Port)
 	err = server.Serve(listener)
 	if err != nil && context.Canceled == nil {
 		log.Fatal("Error starting HTTP server:", err)
