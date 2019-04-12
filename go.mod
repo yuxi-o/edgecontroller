@@ -15,6 +15,13 @@
 module github.com/smartedgemec/controller-ce
 
 require (
-	github.com/onsi/ginkgo v1.7.0
-	github.com/onsi/gomega v1.4.3
+	github.com/golang/protobuf v1.3.0
+	github.com/grpc-ecosystem/grpc-gateway v1.8.4
+	github.com/onsi/ginkgo v1.8.0
+	github.com/onsi/gomega v1.5.0
+	github.com/pkg/errors v0.8.1
+	github.com/satori/go.uuid v1.2.0
+	golang.org/x/net v0.0.0-20190313220215-9f648a60d977 // indirect
+	google.golang.org/genproto v0.0.0-20180831171423-11092d34479b
+	google.golang.org/grpc v1.19.0
 )
