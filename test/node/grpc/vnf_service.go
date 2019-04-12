@@ -24,22 +24,22 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type vnfServer struct {
+type vnfService struct {
 	vnfs []*pb.VNF
 }
 
-func (s *vnfServer) Deploy(
+func (s *vnfService) Deploy(
 	ctx context.Context,
 	vnf *pb.VNF,
 ) (*pb.VNFID, error) {
 	s.vnfs = append(s.vnfs, vnf)
 	vnf.Id = uuid.NewV4().String()
-	vnf.Status = pb.LifecycleStatus_STOPPED
+	vnf.Status = pb.LifecycleStatus_READY
 
 	return &pb.VNFID{Id: vnf.Id}, nil
 }
 
-func (s *vnfServer) GetAll(
+func (s *vnfService) GetAll(
 	context.Context,
 	*empty.Empty,
 ) (*pb.VNFs, error) {
@@ -48,7 +48,7 @@ func (s *vnfServer) GetAll(
 	}, nil
 }
 
-func (s *vnfServer) Get(
+func (s *vnfService) Get(
 	ctx context.Context,
 	id *pb.VNFID,
 ) (*pb.VNF, error) {
@@ -61,7 +61,7 @@ func (s *vnfServer) Get(
 	return nil, status.Errorf(codes.NotFound, "VNF %s not found", id.Id)
 }
 
-func (s *vnfServer) Redeploy(
+func (s *vnfService) Redeploy(
 	ctx context.Context,
 	vnf *pb.VNF,
 ) (*empty.Empty, error) {
@@ -76,7 +76,7 @@ func (s *vnfServer) Redeploy(
 		codes.NotFound, "VNF %s not found", vnf.Id)
 }
 
-func (s *vnfServer) Remove(
+func (s *vnfService) Remove(
 	ctx context.Context,
 	id *pb.VNFID,
 ) (*empty.Empty, error) {
@@ -90,16 +90,20 @@ func (s *vnfServer) Remove(
 	return nil, status.Errorf(codes.NotFound, "VNF %s not found", id.Id)
 }
 
-func (s *vnfServer) Start(
+func (s *vnfService) Start(
 	ctx context.Context,
 	cmd *pb.LifecycleCommand,
 ) (*empty.Empty, error) {
 	vnf := s.find(cmd.Id)
 
 	if vnf != nil {
-		if vnf.Status != pb.LifecycleStatus_STOPPED {
+		switch vnf.Status {
+		case pb.LifecycleStatus_READY:
+		case pb.LifecycleStatus_STOPPED:
+		default:
 			return nil, status.Errorf(
-				codes.FailedPrecondition, "VNF %s not stopped", cmd.Id)
+				codes.FailedPrecondition, "VNF %s not stopped or ready",
+				cmd.Id)
 		}
 
 		vnf.Status = pb.LifecycleStatus_RUNNING
@@ -110,7 +114,7 @@ func (s *vnfServer) Start(
 		codes.NotFound, "VNF %s not found", cmd.Id)
 }
 
-func (s *vnfServer) Stop(
+func (s *vnfService) Stop(
 	ctx context.Context,
 	cmd *pb.LifecycleCommand,
 ) (*empty.Empty, error) {
@@ -130,7 +134,7 @@ func (s *vnfServer) Stop(
 		codes.NotFound, "VNF %s not found", cmd.Id)
 }
 
-func (s *vnfServer) Restart(
+func (s *vnfService) Restart(
 	ctx context.Context,
 	cmd *pb.LifecycleCommand,
 ) (*empty.Empty, error) {
@@ -149,7 +153,7 @@ func (s *vnfServer) Restart(
 		codes.NotFound, "VNF %s not found", cmd.Id)
 }
 
-func (s *vnfServer) find(id string) *pb.VNF {
+func (s *vnfService) find(id string) *pb.VNF {
 	for _, vnf := range s.vnfs {
 		if vnf.Id == id {
 			return vnf
@@ -159,7 +163,7 @@ func (s *vnfServer) find(id string) *pb.VNF {
 	return nil
 }
 
-func (s *vnfServer) findIndex(id string) int {
+func (s *vnfService) findIndex(id string) int {
 	for i, vnf := range s.vnfs {
 		if vnf.Id == id {
 			return i
@@ -169,7 +173,7 @@ func (s *vnfServer) findIndex(id string) int {
 	return len(s.vnfs)
 }
 
-func (s *vnfServer) delete(i int) {
+func (s *vnfService) delete(i int) {
 	copy(s.vnfs[i:], s.vnfs[i+1:])
 	s.vnfs[len(s.vnfs)-1] = nil
 	s.vnfs = s.vnfs[:len(s.vnfs)-1]

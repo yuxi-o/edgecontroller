@@ -23,15 +23,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type interfaceServer struct {
+type interfaceService struct {
 	nis []*pb.NetworkInterface
 
 	// reference to policy server
-	policyServer *interfacePolicyServer
+	policyService *interfacePolicyService
 }
 
-func newInterfaceServer() *interfaceServer {
-	return &interfaceServer{
+func newInterfaceService() *interfaceService {
+	return &interfaceService{
 		nis: []*pb.NetworkInterface{
 			{
 				Id:          "if0",
@@ -73,16 +73,16 @@ func newInterfaceServer() *interfaceServer {
 	}
 }
 
-func (s *interfaceServer) init(policyServer *interfacePolicyServer) {
-	s.policyServer = policyServer
+func (s *interfaceService) init(policyService *interfacePolicyService) {
+	s.policyService = policyService
 
-	s.policyServer.policies["if0"] = defaultPolicy("if0")
-	s.policyServer.policies["if1"] = defaultPolicy("if1")
-	s.policyServer.policies["if2"] = defaultPolicy("if2")
-	s.policyServer.policies["if3"] = defaultPolicy("if3")
+	s.policyService.policies["if0"] = defaultPolicy("if0")
+	s.policyService.policies["if1"] = defaultPolicy("if1")
+	s.policyService.policies["if2"] = defaultPolicy("if2")
+	s.policyService.policies["if3"] = defaultPolicy("if3")
 }
 
-func (s *interfaceServer) Update(
+func (s *interfaceService) Update(
 	ctx context.Context,
 	ni *pb.NetworkInterface,
 ) (*empty.Empty, error) {
@@ -97,7 +97,7 @@ func (s *interfaceServer) Update(
 		codes.NotFound, "Network Interface %s not found", ni.Id)
 }
 
-func (s *interfaceServer) BulkUpdate(
+func (s *interfaceService) BulkUpdate(
 	ctx context.Context,
 	nis *pb.NetworkInterfaces,
 ) (*empty.Empty, error) {
@@ -118,7 +118,7 @@ func (s *interfaceServer) BulkUpdate(
 	return &empty.Empty{}, nil
 }
 
-func (s *interfaceServer) GetAll(
+func (s *interfaceService) GetAll(
 	context.Context,
 	*empty.Empty,
 ) (*pb.NetworkInterfaces, error) {
@@ -127,7 +127,7 @@ func (s *interfaceServer) GetAll(
 	}, nil
 }
 
-func (s *interfaceServer) Get(
+func (s *interfaceService) Get(
 	ctx context.Context,
 	id *pb.InterfaceID,
 ) (*pb.NetworkInterface, error) {
@@ -141,7 +141,7 @@ func (s *interfaceServer) Get(
 		codes.NotFound, "Network Interface %s not found", id.Id)
 }
 
-func (s *interfaceServer) find(id string) *pb.NetworkInterface {
+func (s *interfaceService) find(id string) *pb.NetworkInterface {
 	for _, ni := range s.nis {
 		if ni.Id == id {
 			return ni
@@ -151,7 +151,7 @@ func (s *interfaceServer) find(id string) *pb.NetworkInterface {
 	return nil
 }
 
-func (s *interfaceServer) findIndex(id string) int {
+func (s *interfaceService) findIndex(id string) int {
 	for i, ni := range s.nis {
 		if ni.Id == id {
 			return i

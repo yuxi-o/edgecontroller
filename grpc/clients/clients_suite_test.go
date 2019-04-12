@@ -55,7 +55,7 @@ var (
 var _ = BeforeSuite(func() {
 	By("Building the mock grpc server")
 	exe, err := gexec.Build(
-		"github.com/smartedgemec/controller-ce/mock/grpc",
+		"github.com/smartedgemec/controller-ce/test/node/grpc",
 	)
 	Expect(err).ToNot(HaveOccurred(), "Problem building service")
 

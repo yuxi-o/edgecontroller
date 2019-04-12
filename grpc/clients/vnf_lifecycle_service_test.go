@@ -75,7 +75,7 @@ var _ = Describe("VNF Lifecycle Service", func() {
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.FailedPrecondition,
-						"VNF %s not stopped", vnfID)))
+						"VNF %s not stopped or ready", vnfID)))
 			})
 		})
 	})

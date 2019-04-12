@@ -104,7 +104,7 @@ var _ = Describe("Application Lifecycle Service", func() {
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.FailedPrecondition,
-						"Application %s not stopped", containerAppID)))
+						"Application %s not stopped or ready", containerAppID)))
 			})
 		})
 	})

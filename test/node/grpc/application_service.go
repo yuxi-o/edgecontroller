@@ -24,48 +24,48 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type applicationServer struct {
+type applicationService struct {
 	// maps of application ID to application
 	containerApps map[string]*pb.Application
 	vmApps        map[string]*pb.Application
 
 	// reference to policy server
-	policyServer *applicationPolicyServer
+	policyService *applicationPolicyService
 }
 
-func newApplicationServer() *applicationServer {
-	return &applicationServer{
+func newApplicationService() *applicationService {
+	return &applicationService{
 		containerApps: make(map[string]*pb.Application),
 		vmApps:        make(map[string]*pb.Application),
 	}
 }
 
-func (s *applicationServer) DeployContainer(
+func (s *applicationService) DeployContainer(
 	ctx context.Context,
 	containerApp *pb.Application,
 ) (*pb.ApplicationID, error) {
 	id := uuid.NewV4().String()
 	s.containerApps[id] = containerApp
 	containerApp.Id = id
-	containerApp.Status = pb.LifecycleStatus_STOPPED
-	s.policyServer.policies[id] = defaultPolicy(id)
+	containerApp.Status = pb.LifecycleStatus_READY
+	s.policyService.policies[id] = defaultPolicy(id)
 
 	return &pb.ApplicationID{Id: id}, nil
 }
 
-func (s *applicationServer) DeployVM(
+func (s *applicationService) DeployVM(
 	ctx context.Context,
 	vmApp *pb.Application,
 ) (*pb.ApplicationID, error) {
 	id := uuid.NewV4().String()
 	s.vmApps[id] = vmApp
 	vmApp.Id = id
-	vmApp.Status = pb.LifecycleStatus_STOPPED
+	vmApp.Status = pb.LifecycleStatus_READY
 
 	return &pb.ApplicationID{Id: id}, nil
 }
 
-func (s *applicationServer) GetAll(
+func (s *applicationService) GetAll(
 	context.Context,
 	*empty.Empty,
 ) (*pb.Applications, error) {
@@ -84,7 +84,7 @@ func (s *applicationServer) GetAll(
 	}, nil
 }
 
-func (s *applicationServer) Get(
+func (s *applicationService) Get(
 	ctx context.Context,
 	id *pb.ApplicationID,
 ) (*pb.Application, error) {
@@ -99,7 +99,7 @@ func (s *applicationServer) Get(
 	return nil, status.Errorf(codes.NotFound, "Application %s not found", id.Id)
 }
 
-func (s *applicationServer) Redeploy(
+func (s *applicationService) Redeploy(
 	ctx context.Context,
 	app *pb.Application,
 ) (*empty.Empty, error) {
@@ -117,13 +117,13 @@ func (s *applicationServer) Redeploy(
 		codes.NotFound, "Application %s not found", app.Id)
 }
 
-func (s *applicationServer) Remove(
+func (s *applicationService) Remove(
 	ctx context.Context,
 	id *pb.ApplicationID,
 ) (*empty.Empty, error) {
 	var policyExists bool
-	if _, policyExists = s.policyServer.policies[id.Id]; policyExists {
-		delete(s.policyServer.policies, id.Id)
+	if _, policyExists = s.policyService.policies[id.Id]; policyExists {
+		delete(s.policyService.policies, id.Id)
 		policyExists = true
 	}
 
@@ -145,16 +145,20 @@ func (s *applicationServer) Remove(
 	return nil, status.Errorf(codes.NotFound, "Application %s not found", id.Id)
 }
 
-func (s *applicationServer) Start(
+func (s *applicationService) Start(
 	ctx context.Context,
 	cmd *pb.LifecycleCommand,
 ) (*empty.Empty, error) {
 	app := s.find(cmd.Id)
 
 	if app != nil {
-		if app.Status != pb.LifecycleStatus_STOPPED {
+		switch app.Status {
+		case pb.LifecycleStatus_READY:
+		case pb.LifecycleStatus_STOPPED:
+		default:
 			return nil, status.Errorf(
-				codes.FailedPrecondition, "Application %s not stopped", cmd.Id)
+				codes.FailedPrecondition, "Application %s not stopped or ready",
+				cmd.Id)
 		}
 
 		app.Status = pb.LifecycleStatus_RUNNING
@@ -165,7 +169,7 @@ func (s *applicationServer) Start(
 		codes.NotFound, "Application %s not found", cmd.Id)
 }
 
-func (s *applicationServer) Stop(
+func (s *applicationService) Stop(
 	ctx context.Context,
 	cmd *pb.LifecycleCommand,
 ) (*empty.Empty, error) {
@@ -185,7 +189,7 @@ func (s *applicationServer) Stop(
 		codes.NotFound, "Application %s not found", cmd.Id)
 }
 
-func (s *applicationServer) Restart(
+func (s *applicationService) Restart(
 	ctx context.Context,
 	cmd *pb.LifecycleCommand,
 ) (*empty.Empty, error) {
@@ -204,7 +208,7 @@ func (s *applicationServer) Restart(
 		codes.NotFound, "Application %s not found", cmd.Id)
 }
 
-func (s *applicationServer) find(id string) *pb.Application {
+func (s *applicationService) find(id string) *pb.Application {
 	if containerApp, ok := s.containerApps[id]; ok {
 		return containerApp
 	}

@@ -24,11 +24,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type zoneServer struct {
+type zoneService struct {
 	zones []*pb.NetworkZone
 }
 
-func (s *zoneServer) Create(
+func (s *zoneService) Create(
 	ctx context.Context,
 	zone *pb.NetworkZone,
 ) (*pb.ZoneID, error) {
@@ -38,7 +38,7 @@ func (s *zoneServer) Create(
 	return &pb.ZoneID{Id: zone.Id}, nil
 }
 
-func (s *zoneServer) Update(
+func (s *zoneService) Update(
 	ctx context.Context,
 	zone *pb.NetworkZone,
 ) (*empty.Empty, error) {
@@ -53,7 +53,7 @@ func (s *zoneServer) Update(
 		codes.NotFound, "Network Zone %s not found", zone.Id)
 }
 
-func (s *zoneServer) BulkUpdate(
+func (s *zoneService) BulkUpdate(
 	ctx context.Context,
 	zones *pb.NetworkZones,
 ) (*empty.Empty, error) {
@@ -74,7 +74,7 @@ func (s *zoneServer) BulkUpdate(
 	return &empty.Empty{}, nil
 }
 
-func (s *zoneServer) GetAll(
+func (s *zoneService) GetAll(
 	context.Context,
 	*empty.Empty,
 ) (*pb.NetworkZones, error) {
@@ -83,7 +83,7 @@ func (s *zoneServer) GetAll(
 	}, nil
 }
 
-func (s *zoneServer) Get(
+func (s *zoneService) Get(
 	ctx context.Context,
 	id *pb.ZoneID,
 ) (*pb.NetworkZone, error) {
@@ -97,7 +97,7 @@ func (s *zoneServer) Get(
 		codes.NotFound, "Network Zone %s not found", id.Id)
 }
 
-func (s *zoneServer) Delete(
+func (s *zoneService) Delete(
 	ctx context.Context,
 	id *pb.ZoneID,
 ) (*empty.Empty, error) {
@@ -112,7 +112,7 @@ func (s *zoneServer) Delete(
 		codes.NotFound, "Network Zone %s not found", id.Id)
 }
 
-func (s *zoneServer) find(id string) *pb.NetworkZone {
+func (s *zoneService) find(id string) *pb.NetworkZone {
 	for _, zone := range s.zones {
 		if zone.Id == id {
 			return zone
@@ -122,7 +122,7 @@ func (s *zoneServer) find(id string) *pb.NetworkZone {
 	return nil
 }
 
-func (s *zoneServer) findIndex(id string) int {
+func (s *zoneService) findIndex(id string) int {
 	for i, zone := range s.zones {
 		if zone.Id == id {
 			return i
@@ -132,7 +132,7 @@ func (s *zoneServer) findIndex(id string) int {
 	return len(s.zones)
 }
 
-func (s *zoneServer) delete(i int) {
+func (s *zoneService) delete(i int) {
 	copy(s.zones[i:], s.zones[i+1:])
 	s.zones[len(s.zones)-1] = nil
 	s.zones = s.zones[:len(s.zones)-1]

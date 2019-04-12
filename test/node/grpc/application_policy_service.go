@@ -23,30 +23,30 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type interfacePolicyServer struct {
-	// map of interface ID to traffic policy
+type applicationPolicyService struct {
+	// map of application ID to traffic policy
 	policies map[string]*pb.TrafficPolicy
 
-	// reference to interface server
-	interfaceServer *interfaceServer
+	// reference to application server
+	appSvc *applicationService
 }
 
-func newInterfacePolicyServer(
-	interfaceServer *interfaceServer,
-) *interfacePolicyServer {
-	return &interfacePolicyServer{
-		policies:        make(map[string]*pb.TrafficPolicy),
-		interfaceServer: interfaceServer,
+func newApplicationPolicyService(
+	appSvc *applicationService,
+) *applicationPolicyService {
+	return &applicationPolicyService{
+		policies: make(map[string]*pb.TrafficPolicy),
+		appSvc:   appSvc,
 	}
 }
 
-func (s *interfacePolicyServer) Set(
+func (s *applicationPolicyService) Set(
 	ctx context.Context,
 	policy *pb.TrafficPolicy,
 ) (*empty.Empty, error) {
-	if s.interfaceServer.find(policy.Id) == nil {
+	if s.appSvc.find(policy.Id) == nil {
 		return nil, status.Errorf(
-			codes.NotFound, "Network Interface %s not found", policy.Id)
+			codes.NotFound, "Application %s not found", policy.Id)
 	}
 
 	s.policies[policy.Id] = policy
@@ -54,13 +54,13 @@ func (s *interfacePolicyServer) Set(
 	return &empty.Empty{}, nil
 }
 
-func (s *interfacePolicyServer) Get(
+func (s *applicationPolicyService) Get(
 	ctx context.Context,
-	id *pb.InterfaceID,
+	id *pb.ApplicationID,
 ) (*pb.TrafficPolicy, error) {
 	if s.policies[id.Id] == nil {
 		return nil, status.Errorf(
-			codes.NotFound, "Network Interface %s not found", id.Id)
+			codes.NotFound, "Application %s not found", id.Id)
 	}
 
 	return s.policies[id.Id], nil

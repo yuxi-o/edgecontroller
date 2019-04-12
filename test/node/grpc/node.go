@@ -28,13 +28,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-const name = "mockserver"
+const name = "test-node"
 
 func main() {
 	var (
 		err  error
 		port uint
-		ctx  = context.Background()
 	)
 	log.Print(name, ": starting")
 
@@ -47,34 +46,34 @@ func main() {
 	defer close(sigChan)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Create the mock servers
-	appSrv := newApplicationServer()
-	appPolicySrv := newApplicationPolicyServer(appSrv)
-	appSrv.policyServer = appPolicySrv
-	vnfSrv := vnfServer{}
-	interfaceSrv := newInterfaceServer()
-	ifPolicySrv := newInterfacePolicyServer(interfaceSrv)
-	interfaceSrv.init(ifPolicySrv)
-	zoneSrv := zoneServer{}
+	// Create the services
+	appSvc := newApplicationService()
+	appPolicySvc := newApplicationPolicyService(appSvc)
+	appSvc.policyService = appPolicySvc
+	vnfSvc := vnfService{}
+	interfaceSvc := newInterfaceService()
+	ifPolicySvc := newInterfacePolicyService(interfaceSvc)
+	interfaceSvc.init(ifPolicySvc)
+	zoneSvc := zoneService{}
 
-	// Register the mocks with the grpc server
+	// Register the services with the grpc server
 	server := grpc.NewServer()
-	pb.RegisterApplicationDeploymentServiceServer(server, appSrv)
-	pb.RegisterApplicationLifecycleServiceServer(server, appSrv)
-	pb.RegisterApplicationPolicyServiceServer(server, appPolicySrv)
-	pb.RegisterVNFDeploymentServiceServer(server, &vnfSrv)
-	pb.RegisterVNFLifecycleServiceServer(server, &vnfSrv)
-	pb.RegisterInterfaceServiceServer(server, interfaceSrv)
-	pb.RegisterInterfacePolicyServiceServer(server, ifPolicySrv)
-	pb.RegisterZoneServiceServer(server, &zoneSrv)
+	pb.RegisterApplicationDeploymentServiceServer(server, appSvc)
+	pb.RegisterApplicationLifecycleServiceServer(server, appSvc)
+	pb.RegisterApplicationPolicyServiceServer(server, appPolicySvc)
+	pb.RegisterVNFDeploymentServiceServer(server, &vnfSvc)
+	pb.RegisterVNFLifecycleServiceServer(server, &vnfSvc)
+	pb.RegisterInterfaceServiceServer(server, interfaceSvc)
+	pb.RegisterInterfacePolicyServiceServer(server, ifPolicySvc)
+	pb.RegisterZoneServiceServer(server, &zoneSvc)
 
 	// Shut down the server gracefully
-	go func(ctx context.Context) {
+	go func() {
 		<-sigChan
 		log.Printf("%s: shutting down", name)
 
 		server.GracefulStop()
-	}(ctx)
+	}()
 
 	// Start the listener
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
