@@ -26,8 +26,8 @@ import (
 
 var _ = Describe("VNF Deployment Service", func() {
 	var (
-		vnfID  *string
-		vnf2ID *string
+		vnfID  string
+		vnf2ID string
 	)
 
 	BeforeEach(func() {
@@ -81,7 +81,7 @@ var _ = Describe("VNF Deployment Service", func() {
 				Expect(len(vnfs.Vnfs)).To(BeNumerically(">=", 2))
 				Expect(vnfs.Vnfs).To(ContainElement(
 					&pb.VNF{
-						Id:                   *vnfID,
+						Id:                   vnfID,
 						Name:                 "test_vnf",
 						Vendor:               "test_vendor",
 						Description:          "test vnf",
@@ -96,7 +96,7 @@ var _ = Describe("VNF Deployment Service", func() {
 				))
 				Expect(vnfs.Vnfs).To(ContainElement(
 					&pb.VNF{
-						Id:                   *vnf2ID,
+						Id:                   vnf2ID,
 						Name:                 "test_vnf_2",
 						Vendor:               "test_vendor",
 						Description:          "test vnf 2",
@@ -119,13 +119,13 @@ var _ = Describe("VNF Deployment Service", func() {
 		Describe("Success", func() {
 			It("Should get VNFs", func() {
 				By("Getting the first VNF")
-				vnf, err := vnfDeploySvcCli.Get(ctx, *vnfID)
+				vnf, err := vnfDeploySvcCli.Get(ctx, vnfID)
 
 				By("Verifying the response matches the first VNF")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(vnf).To(Equal(
 					&pb.VNF{
-						Id:                   *vnfID,
+						Id:                   vnfID,
 						Name:                 "test_vnf",
 						Vendor:               "test_vendor",
 						Description:          "test vnf",
@@ -140,13 +140,13 @@ var _ = Describe("VNF Deployment Service", func() {
 				))
 
 				By("Getting the second VNF")
-				vnf2, err := vnfDeploySvcCli.Get(ctx, *vnf2ID)
+				vnf2, err := vnfDeploySvcCli.Get(ctx, vnf2ID)
 
 				By("Verifying the response matches the second VNF")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(vnf2).To(Equal(
 					&pb.VNF{
-						Id:                   *vnf2ID,
+						Id:                   vnf2ID,
 						Name:                 "test_vnf_2",
 						Vendor:               "test_vendor",
 						Description:          "test vnf 2",
@@ -182,7 +182,7 @@ var _ = Describe("VNF Deployment Service", func() {
 		Describe("Success", func() {
 			It("Should redeploy VNFs", func() {
 				By("Getting the VNF")
-				vnf, err := vnfDeploySvcCli.Get(ctx, *vnfID)
+				vnf, err := vnfDeploySvcCli.Get(ctx, vnfID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Updating the VNF")
@@ -196,7 +196,7 @@ var _ = Describe("VNF Deployment Service", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Getting the redeployed VNF")
-				vnf, err = vnfDeploySvcCli.Get(ctx, *vnfID)
+				vnf, err = vnfDeploySvcCli.Get(ctx, vnfID)
 
 				By("Verifying the response matches the updated VNF")
 				Expect(err).ToNot(HaveOccurred())
@@ -224,17 +224,17 @@ var _ = Describe("VNF Deployment Service", func() {
 		Describe("Success", func() {
 			It("Should remove VNFs", func() {
 				By("Removing the first VNF")
-				err := vnfDeploySvcCli.Remove(ctx, *vnfID)
+				err := vnfDeploySvcCli.Remove(ctx, vnfID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the VNF was removed")
-				_, err = vnfDeploySvcCli.Get(ctx, *vnfID)
+				_, err = vnfDeploySvcCli.Get(ctx, vnfID)
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.NotFound,
-						"VNF %s not found", *vnfID)))
+						"VNF %s not found", vnfID)))
 			})
 		})
 

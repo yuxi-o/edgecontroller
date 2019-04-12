@@ -41,32 +41,32 @@ func NewApplicationDeploymentServiceClient(
 func (c *ApplicationDeploymentServiceClient) DeployContainer(
 	ctx context.Context,
 	app *pb.Application,
-) (*string, error) {
+) (string, error) {
 	id, err := c.pbCli.DeployContainer(
 		ctx,
 		app)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "error deploying application")
+		return "", errors.Wrap(err, "error deploying application")
 	}
 
-	return &id.Id, nil
+	return id.Id, nil
 }
 
 // DeployVM deploys a VM application.
 func (c *ApplicationDeploymentServiceClient) DeployVM(
 	ctx context.Context,
 	app *pb.Application,
-) (*string, error) {
+) (string, error) {
 	id, err := c.pbCli.DeployVM(
 		ctx,
 		app)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "error deploying application")
+		return "", errors.Wrap(err, "error deploying application")
 	}
 
-	return &id.Id, nil
+	return id.Id, nil
 }
 
 // GetAll retrieves all applications.

@@ -41,16 +41,16 @@ func NewVNFDeploymentServiceClient(
 func (c *VNFDeploymentServiceClient) Deploy(
 	ctx context.Context,
 	vnf *pb.VNF,
-) (*string, error) {
+) (string, error) {
 	pbVNFID, err := c.pbCli.Deploy(
 		ctx,
 		vnf)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "error deploying vnf")
+		return "", errors.Wrap(err, "error deploying vnf")
 	}
 
-	return &pbVNFID.Id, nil
+	return pbVNFID.Id, nil
 }
 
 // GetAll retrieves all VNFs.

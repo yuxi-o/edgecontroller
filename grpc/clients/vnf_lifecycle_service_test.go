@@ -25,7 +25,7 @@ import (
 
 var _ = Describe("VNF Lifecycle Service", func() {
 	var (
-		vnfID *string
+		vnfID string
 	)
 
 	BeforeEach(func() {
@@ -48,13 +48,13 @@ var _ = Describe("VNF Lifecycle Service", func() {
 		Describe("Success", func() {
 			It("Should start VNFs", func() {
 				By("Starting the first VNF")
-				err := vnfLifeSvcCli.Start(ctx, *vnfID)
+				err := vnfLifeSvcCli.Start(ctx, vnfID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the first VNF is started")
-				containerApp, err := vnfDeploySvcCli.Get(ctx, *vnfID)
+				containerApp, err := vnfDeploySvcCli.Get(ctx, vnfID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(containerApp.Status).To(Equal(
 					pb.LifecycleStatus_RUNNING))
@@ -65,17 +65,17 @@ var _ = Describe("VNF Lifecycle Service", func() {
 			It("Should return an error if the VNF is already "+
 				"running", func() {
 				By("Starting the first VNF")
-				err := vnfLifeSvcCli.Start(ctx, *vnfID)
+				err := vnfLifeSvcCli.Start(ctx, vnfID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Attempting to start the first VNF again")
-				err = vnfLifeSvcCli.Start(ctx, *vnfID)
+				err = vnfLifeSvcCli.Start(ctx, vnfID)
 
 				By("Verifying a FailedPrecondition response")
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.FailedPrecondition,
-						"VNF %s not stopped", *vnfID)))
+						"VNF %s not stopped", vnfID)))
 			})
 		})
 	})
@@ -84,17 +84,17 @@ var _ = Describe("VNF Lifecycle Service", func() {
 		Describe("Success", func() {
 			It("Should restart VNFs", func() {
 				By("Starting the first VNF")
-				err := vnfLifeSvcCli.Start(ctx, *vnfID)
+				err := vnfLifeSvcCli.Start(ctx, vnfID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Restarting the first VNF")
-				err = vnfLifeSvcCli.Restart(ctx, *vnfID)
+				err = vnfLifeSvcCli.Restart(ctx, vnfID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the first VNF is restarted")
-				containerApp, err := vnfDeploySvcCli.Get(ctx, *vnfID)
+				containerApp, err := vnfDeploySvcCli.Get(ctx, vnfID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(containerApp.Status).To(Equal(
 					pb.LifecycleStatus_RUNNING))
@@ -104,13 +104,13 @@ var _ = Describe("VNF Lifecycle Service", func() {
 		Describe("Errors", func() {
 			It("Should return an error if the VNF is not running", func() {
 				By("Attempting to restart the first VNF")
-				err := vnfLifeSvcCli.Restart(ctx, *vnfID)
+				err := vnfLifeSvcCli.Restart(ctx, vnfID)
 
 				By("Verifying a FailedPrecondition response")
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.FailedPrecondition,
-						"VNF %s not running", *vnfID)))
+						"VNF %s not running", vnfID)))
 			})
 		})
 	})
@@ -119,17 +119,17 @@ var _ = Describe("VNF Lifecycle Service", func() {
 		Describe("Success", func() {
 			It("Should stop VNFs", func() {
 				By("Starting the first VNF")
-				err := vnfLifeSvcCli.Start(ctx, *vnfID)
+				err := vnfLifeSvcCli.Start(ctx, vnfID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Stopping the first VNF")
-				err = vnfLifeSvcCli.Stop(ctx, *vnfID)
+				err = vnfLifeSvcCli.Stop(ctx, vnfID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the first VNF is stopped")
-				containerApp, err := vnfDeploySvcCli.Get(ctx, *vnfID)
+				containerApp, err := vnfDeploySvcCli.Get(ctx, vnfID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(containerApp.Status).To(Equal(
 					pb.LifecycleStatus_STOPPED))
@@ -140,21 +140,21 @@ var _ = Describe("VNF Lifecycle Service", func() {
 			It("Should return an error if the first VNF is already "+
 				"stopped", func() {
 				By("Starting the first VNF")
-				err := vnfLifeSvcCli.Start(ctx, *vnfID)
+				err := vnfLifeSvcCli.Start(ctx, vnfID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Stopping the first VNF")
-				err = vnfLifeSvcCli.Stop(ctx, *vnfID)
+				err = vnfLifeSvcCli.Stop(ctx, vnfID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Attempting to stop the first VNF again")
-				err = vnfLifeSvcCli.Stop(ctx, *vnfID)
+				err = vnfLifeSvcCli.Stop(ctx, vnfID)
 
 				By("Verifying a FailedPrecondition response")
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.FailedPrecondition,
-						"VNF %s not running", *vnfID)))
+						"VNF %s not running", vnfID)))
 
 			})
 		})

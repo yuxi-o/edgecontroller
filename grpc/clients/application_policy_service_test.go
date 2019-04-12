@@ -26,7 +26,7 @@ import (
 
 var _ = Describe("Application Policy Service", func() {
 	var (
-		appID *string
+		appID string
 	)
 
 	BeforeEach(func() {
@@ -51,7 +51,7 @@ var _ = Describe("Application Policy Service", func() {
 		Describe("Success", func() {
 			It("Should get the default policy", func() {
 				By("Getting the default policy")
-				policy, err := appPolicySvcCli.Get(ctx, *appID)
+				policy, err := appPolicySvcCli.Get(ctx, appID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the response")
@@ -120,7 +120,7 @@ var _ = Describe("Application Policy Service", func() {
 				err := appPolicySvcCli.Set(
 					ctx,
 					&pb.TrafficPolicy{
-						Id: *appID,
+						Id: appID,
 						TrafficRules: []*pb.TrafficRule{
 							{
 								Description: "updated_rule",
@@ -163,7 +163,7 @@ var _ = Describe("Application Policy Service", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Getting the updated policy")
-				policy, err := appPolicySvcCli.Get(ctx, *appID)
+				policy, err := appPolicySvcCli.Get(ctx, appID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the response")

@@ -26,8 +26,8 @@ import (
 
 var _ = Describe("Application Deployment Service", func() {
 	var (
-		containerAppID *string
-		vmAppID        *string
+		containerAppID string
+		vmAppID        string
 	)
 
 	BeforeEach(func() {
@@ -95,7 +95,7 @@ var _ = Describe("Application Deployment Service", func() {
 				img := "http://test.com/container123"
 				Expect(apps.Applications).To(ContainElement(
 					&pb.Application{
-						Id:                   *containerAppID,
+						Id:                   containerAppID,
 						Name:                 "test_container_app",
 						Vendor:               "test_vendor",
 						Description:          "test container app",
@@ -110,7 +110,7 @@ var _ = Describe("Application Deployment Service", func() {
 				))
 				Expect(apps.Applications).To(ContainElement(
 					&pb.Application{
-						Id:                   *vmAppID,
+						Id:                   vmAppID,
 						Name:                 "test_vm_app",
 						Vendor:               "test_vendor",
 						Description:          "test vm app",
@@ -133,7 +133,7 @@ var _ = Describe("Application Deployment Service", func() {
 		Describe("Success", func() {
 			It("Should get container applications", func() {
 				By("Getting the container application")
-				containerApp, err := appDeploySvcCli.Get(ctx, *containerAppID)
+				containerApp, err := appDeploySvcCli.Get(ctx, containerAppID)
 
 				By("Verifying the response matches the container " +
 					"application")
@@ -141,7 +141,7 @@ var _ = Describe("Application Deployment Service", func() {
 				img := "http://test.com/container123"
 				Expect(containerApp).To(Equal(
 					&pb.Application{
-						Id:                   *containerAppID,
+						Id:                   containerAppID,
 						Name:                 "test_container_app",
 						Vendor:               "test_vendor",
 						Description:          "test container app",
@@ -158,13 +158,13 @@ var _ = Describe("Application Deployment Service", func() {
 
 			It("Should get VM applications", func() {
 				By("Getting the VM application")
-				vmApp, err := appDeploySvcCli.Get(ctx, *vmAppID)
+				vmApp, err := appDeploySvcCli.Get(ctx, vmAppID)
 
 				By("Verifying the response matches the VM application")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(vmApp).To(Equal(
 					&pb.Application{
-						Id:                   *vmAppID,
+						Id:                   vmAppID,
 						Name:                 "test_vm_app",
 						Vendor:               "test_vendor",
 						Description:          "test vm app",
@@ -201,7 +201,7 @@ var _ = Describe("Application Deployment Service", func() {
 		Describe("Success", func() {
 			It("Should redeploy container applications", func() {
 				By("Getting the container application")
-				containerApp, err := appDeploySvcCli.Get(ctx, *containerAppID)
+				containerApp, err := appDeploySvcCli.Get(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Updating the container application")
@@ -215,7 +215,7 @@ var _ = Describe("Application Deployment Service", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Getting the redeployed container application")
-				containerApp, err = appDeploySvcCli.Get(ctx, *containerAppID)
+				containerApp, err = appDeploySvcCli.Get(ctx, containerAppID)
 
 				By("Verifying the response matches the updated container " +
 					"application")
@@ -226,7 +226,7 @@ var _ = Describe("Application Deployment Service", func() {
 
 			It("Should redeploy VM applications", func() {
 				By("Getting the VM application")
-				vmApp, err := appDeploySvcCli.Get(ctx, *vmAppID)
+				vmApp, err := appDeploySvcCli.Get(ctx, vmAppID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Updating the VM application")
@@ -240,7 +240,7 @@ var _ = Describe("Application Deployment Service", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Getting the redeployed VM application")
-				vmApp, err = appDeploySvcCli.Get(ctx, *vmAppID)
+				vmApp, err = appDeploySvcCli.Get(ctx, vmAppID)
 
 				By("Verifying the response matches the updated VM " +
 					"application")
@@ -269,32 +269,32 @@ var _ = Describe("Application Deployment Service", func() {
 		Describe("Success", func() {
 			It("Should remove container applications", func() {
 				By("Removing the container application")
-				err := appDeploySvcCli.Remove(ctx, *containerAppID)
+				err := appDeploySvcCli.Remove(ctx, containerAppID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the container application was removed")
-				_, err = appDeploySvcCli.Get(ctx, *containerAppID)
+				_, err = appDeploySvcCli.Get(ctx, containerAppID)
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.NotFound,
-						"Application %s not found", *containerAppID)))
+						"Application %s not found", containerAppID)))
 			})
 
 			It("Should remove VM applications", func() {
 				By("Removing the VM application")
-				err := appDeploySvcCli.Remove(ctx, *vmAppID)
+				err := appDeploySvcCli.Remove(ctx, vmAppID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the VM application was removed")
-				_, err = appDeploySvcCli.Get(ctx, *vmAppID)
+				_, err = appDeploySvcCli.Get(ctx, vmAppID)
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.NotFound,
-						"Application %s not found", *vmAppID)))
+						"Application %s not found", vmAppID)))
 			})
 		})
 

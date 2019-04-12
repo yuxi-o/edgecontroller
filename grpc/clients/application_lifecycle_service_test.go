@@ -25,8 +25,8 @@ import (
 
 var _ = Describe("Application Lifecycle Service", func() {
 	var (
-		containerAppID *string
-		vmAppID        *string
+		containerAppID string
+		vmAppID        string
 	)
 
 	BeforeEach(func() {
@@ -63,13 +63,13 @@ var _ = Describe("Application Lifecycle Service", func() {
 		Describe("Success", func() {
 			It("Should start container applications", func() {
 				By("Starting the container application")
-				err := appLifeSvcCli.Start(ctx, *containerAppID)
+				err := appLifeSvcCli.Start(ctx, containerAppID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the container application is started")
-				containerApp, err := appDeploySvcCli.Get(ctx, *containerAppID)
+				containerApp, err := appDeploySvcCli.Get(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(containerApp.Status).To(Equal(
 					pb.LifecycleStatus_RUNNING))
@@ -77,14 +77,14 @@ var _ = Describe("Application Lifecycle Service", func() {
 
 			It("Should start VM applications", func() {
 				By("Starting the VM application")
-				err := appLifeSvcCli.Start(ctx, *vmAppID)
+				err := appLifeSvcCli.Start(ctx, vmAppID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the VM application is started")
-				vmApp, err := appDeploySvcCli.Get(ctx, *vmAppID)
+				vmApp, err := appDeploySvcCli.Get(ctx, vmAppID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(vmApp.Status).To(Equal(pb.LifecycleStatus_RUNNING))
 			})
@@ -94,17 +94,17 @@ var _ = Describe("Application Lifecycle Service", func() {
 			It("Should return an error if the application is already "+
 				"running", func() {
 				By("Starting the container application")
-				err := appLifeSvcCli.Start(ctx, *containerAppID)
+				err := appLifeSvcCli.Start(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Attempting to start the container application again")
-				err = appLifeSvcCli.Start(ctx, *containerAppID)
+				err = appLifeSvcCli.Start(ctx, containerAppID)
 
 				By("Verifying a FailedPrecondition response")
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.FailedPrecondition,
-						"Application %s not stopped", *containerAppID)))
+						"Application %s not stopped", containerAppID)))
 			})
 		})
 	})
@@ -113,17 +113,17 @@ var _ = Describe("Application Lifecycle Service", func() {
 		Describe("Success", func() {
 			It("Should restart container applications", func() {
 				By("Starting the container application")
-				err := appLifeSvcCli.Start(ctx, *containerAppID)
+				err := appLifeSvcCli.Start(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Restarting the container application")
-				err = appLifeSvcCli.Restart(ctx, *containerAppID)
+				err = appLifeSvcCli.Restart(ctx, containerAppID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the container application is restarted")
-				containerApp, err := appDeploySvcCli.Get(ctx, *containerAppID)
+				containerApp, err := appDeploySvcCli.Get(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(containerApp.Status).To(Equal(
 					pb.LifecycleStatus_RUNNING))
@@ -131,17 +131,17 @@ var _ = Describe("Application Lifecycle Service", func() {
 
 			It("Should restart VM applications", func() {
 				By("Starting the VM application")
-				err := appLifeSvcCli.Start(ctx, *vmAppID)
+				err := appLifeSvcCli.Start(ctx, vmAppID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Restarting the VM application")
-				err = appLifeSvcCli.Restart(ctx, *vmAppID)
+				err = appLifeSvcCli.Restart(ctx, vmAppID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the VM application is restarted")
-				vmApp, err := appDeploySvcCli.Get(ctx, *vmAppID)
+				vmApp, err := appDeploySvcCli.Get(ctx, vmAppID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(vmApp.Status).To(Equal(pb.LifecycleStatus_RUNNING))
 			})
@@ -151,13 +151,13 @@ var _ = Describe("Application Lifecycle Service", func() {
 			It("Should return an error if the application is not "+
 				"running", func() {
 				By("Attempting to restart the container application")
-				err := appLifeSvcCli.Restart(ctx, *containerAppID)
+				err := appLifeSvcCli.Restart(ctx, containerAppID)
 
 				By("Verifying a FailedPrecondition response")
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.FailedPrecondition,
-						"Application %s not running", *containerAppID)))
+						"Application %s not running", containerAppID)))
 			})
 		})
 	})
@@ -166,17 +166,17 @@ var _ = Describe("Application Lifecycle Service", func() {
 		Describe("Success", func() {
 			It("Should stop container applications", func() {
 				By("Starting the container application")
-				err := appLifeSvcCli.Start(ctx, *containerAppID)
+				err := appLifeSvcCli.Start(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Stopping the container application")
-				err = appLifeSvcCli.Stop(ctx, *containerAppID)
+				err = appLifeSvcCli.Stop(ctx, containerAppID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the container application is stopped")
-				containerApp, err := appDeploySvcCli.Get(ctx, *containerAppID)
+				containerApp, err := appDeploySvcCli.Get(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(containerApp.Status).To(Equal(
 					pb.LifecycleStatus_STOPPED))
@@ -184,17 +184,17 @@ var _ = Describe("Application Lifecycle Service", func() {
 
 			It("Should stop VM applications", func() {
 				By("Starting the VM application")
-				err := appLifeSvcCli.Start(ctx, *vmAppID)
+				err := appLifeSvcCli.Start(ctx, vmAppID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Stopping the VM application")
-				err = appLifeSvcCli.Stop(ctx, *vmAppID)
+				err = appLifeSvcCli.Stop(ctx, vmAppID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the VM application is stopped")
-				vmApp, err := appDeploySvcCli.Get(ctx, *vmAppID)
+				vmApp, err := appDeploySvcCli.Get(ctx, vmAppID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(vmApp.Status).To(Equal(pb.LifecycleStatus_STOPPED))
 			})
@@ -204,21 +204,21 @@ var _ = Describe("Application Lifecycle Service", func() {
 			It("Should return an error if the application is already "+
 				"stopped", func() {
 				By("Starting the container application")
-				err := appLifeSvcCli.Start(ctx, *containerAppID)
+				err := appLifeSvcCli.Start(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Stopping the container application")
-				err = appLifeSvcCli.Stop(ctx, *containerAppID)
+				err = appLifeSvcCli.Stop(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Attempting to stop the container application again")
-				err = appLifeSvcCli.Stop(ctx, *containerAppID)
+				err = appLifeSvcCli.Stop(ctx, containerAppID)
 
 				By("Verifying a FailedPrecondition response")
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.FailedPrecondition,
-						"Application %s not running", *containerAppID)))
+						"Application %s not running", containerAppID)))
 
 			})
 		})

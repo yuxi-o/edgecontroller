@@ -39,16 +39,16 @@ func NewZoneServiceClient(conn *grpc.ClientConn) *ZoneServiceClient {
 func (c *ZoneServiceClient) Create(
 	ctx context.Context,
 	zone *pb.NetworkZone,
-) (*string, error) {
+) (string, error) {
 	id, err := c.pbCli.Create(
 		ctx,
 		zone)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating network zone")
+		return "", errors.Wrap(err, "error creating network zone")
 	}
 
-	return &id.Id, nil
+	return id.Id, nil
 }
 
 // Update updates a network zone.

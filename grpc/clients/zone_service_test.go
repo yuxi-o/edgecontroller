@@ -26,8 +26,8 @@ import (
 
 var _ = Describe("Network Zone Service", func() {
 	var (
-		zoneID  *string
-		zone2ID *string
+		zoneID  string
+		zone2ID string
 	)
 
 	BeforeEach(func() {
@@ -66,7 +66,7 @@ var _ = Describe("Network Zone Service", func() {
 				err := zoneSvcCli.Update(
 					ctx,
 					&pb.NetworkZone{
-						Id:          *zoneID,
+						Id:          zoneID,
 						Description: "test_updated_network_zone",
 					},
 				)
@@ -75,13 +75,13 @@ var _ = Describe("Network Zone Service", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Getting the updated zone")
-				zone, err := zoneSvcCli.Get(ctx, *zoneID)
+				zone, err := zoneSvcCli.Get(ctx, zoneID)
 
 				By("Verifying the response matches the updated zone")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(zone).To(Equal(
 					&pb.NetworkZone{
-						Id:          *zoneID,
+						Id:          zoneID,
 						Description: "test_updated_network_zone",
 					},
 				))
@@ -112,11 +112,11 @@ var _ = Describe("Network Zone Service", func() {
 					&pb.NetworkZones{
 						NetworkZones: []*pb.NetworkZone{
 							{
-								Id:          *zoneID,
+								Id:          zoneID,
 								Description: "test_updated_network_zone",
 							},
 							{
-								Id:          *zone2ID,
+								Id:          zone2ID,
 								Description: "test_updated_network_zone_2",
 							},
 						},
@@ -127,25 +127,25 @@ var _ = Describe("Network Zone Service", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Getting the first zone")
-				zone, err := zoneSvcCli.Get(ctx, *zoneID)
+				zone, err := zoneSvcCli.Get(ctx, zoneID)
 
 				By("Verifying the response matches the updated zone")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(zone).To(Equal(
 					&pb.NetworkZone{
-						Id:          *zoneID,
+						Id:          zoneID,
 						Description: "test_updated_network_zone",
 					},
 				))
 
 				By("Getting the second zone")
-				zone2, err := zoneSvcCli.Get(ctx, *zone2ID)
+				zone2, err := zoneSvcCli.Get(ctx, zone2ID)
 
 				By("Verifying the response matches the updated zone")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(zone2).To(Equal(
 					&pb.NetworkZone{
-						Id:          *zone2ID,
+						Id:          zone2ID,
 						Description: "test_updated_network_zone_2",
 					},
 				))
@@ -185,13 +185,13 @@ var _ = Describe("Network Zone Service", func() {
 				Expect(len(zones.NetworkZones)).To(BeNumerically(">=", 2))
 				Expect(zones.NetworkZones).To(ContainElement(
 					&pb.NetworkZone{
-						Id:          *zoneID,
+						Id:          zoneID,
 						Description: "test_network_zone",
 					},
 				))
 				Expect(zones.NetworkZones).To(ContainElement(
 					&pb.NetworkZone{
-						Id:          *zone2ID,
+						Id:          zone2ID,
 						Description: "test_network_zone_2",
 					},
 				))
@@ -205,25 +205,25 @@ var _ = Describe("Network Zone Service", func() {
 		Describe("Success", func() {
 			It("Should get zones", func() {
 				By("Getting the first zone")
-				zone, err := zoneSvcCli.Get(ctx, *zoneID)
+				zone, err := zoneSvcCli.Get(ctx, zoneID)
 
 				By("Verifying the response matches the first zone")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(zone).To(Equal(
 					&pb.NetworkZone{
-						Id:          *zoneID,
+						Id:          zoneID,
 						Description: "test_network_zone",
 					},
 				))
 
 				By("Getting the secone zone")
-				zone2, err := zoneSvcCli.Get(ctx, *zone2ID)
+				zone2, err := zoneSvcCli.Get(ctx, zone2ID)
 
 				By("Verifying the response matches the second zone")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(zone2).To(Equal(
 					&pb.NetworkZone{
-						Id:          *zone2ID,
+						Id:          zone2ID,
 						Description: "test_network_zone_2",
 					},
 				))
@@ -250,17 +250,17 @@ var _ = Describe("Network Zone Service", func() {
 		Describe("Success", func() {
 			It("Should delete zones", func() {
 				By("Deleting the first zone")
-				err := zoneSvcCli.Delete(ctx, *zoneID)
+				err := zoneSvcCli.Delete(ctx, zoneID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the zone was deleted")
-				_, err = zoneSvcCli.Get(ctx, *zoneID)
+				_, err = zoneSvcCli.Get(ctx, zoneID)
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.NotFound,
-						"Network Zone %s not found", *zoneID)))
+						"Network Zone %s not found", zoneID)))
 			})
 		})
 
