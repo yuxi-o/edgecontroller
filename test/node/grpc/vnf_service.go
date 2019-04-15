@@ -18,7 +18,6 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/satori/go.uuid"
 	"github.com/smartedgemec/controller-ce/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -31,31 +30,23 @@ type vnfService struct {
 func (s *vnfService) Deploy(
 	ctx context.Context,
 	vnf *pb.VNF,
-) (*pb.VNFID, error) {
-	s.vnfs = append(s.vnfs, vnf)
-	vnf.Id = uuid.NewV4().String()
+) (*empty.Empty, error) {
 	vnf.Status = pb.LifecycleStatus_READY
+	s.vnfs = append(s.vnfs, vnf)
 
-	return &pb.VNFID{Id: vnf.Id}, nil
+	return &empty.Empty{}, nil
 }
 
-func (s *vnfService) GetAll(
-	context.Context,
-	*empty.Empty,
-) (*pb.VNFs, error) {
-	return &pb.VNFs{
-		Vnfs: s.vnfs,
-	}, nil
-}
-
-func (s *vnfService) Get(
+func (s *vnfService) GetStatus(
 	ctx context.Context,
 	id *pb.VNFID,
-) (*pb.VNF, error) {
+) (*pb.LifecycleStatus, error) {
 	vnf := s.find(id.Id)
 
 	if vnf != nil {
-		return vnf, nil
+		return &pb.LifecycleStatus{
+			Status: vnf.Status,
+		}, nil
 	}
 
 	return nil, status.Errorf(codes.NotFound, "VNF %s not found", id.Id)
@@ -68,6 +59,7 @@ func (s *vnfService) Redeploy(
 	i := s.findIndex(vnf.Id)
 
 	if i < len(s.vnfs) {
+		vnf.Status = s.vnfs[i].Status
 		s.vnfs[i] = vnf
 		return &empty.Empty{}, nil
 	}
@@ -76,7 +68,7 @@ func (s *vnfService) Redeploy(
 		codes.NotFound, "VNF %s not found", vnf.Id)
 }
 
-func (s *vnfService) Remove(
+func (s *vnfService) Undeploy(
 	ctx context.Context,
 	id *pb.VNFID,
 ) (*empty.Empty, error) {

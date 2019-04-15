@@ -18,6 +18,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 	"github.com/smartedgemec/controller-ce/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -30,10 +31,15 @@ var _ = Describe("VNF Lifecycle Service", func() {
 
 	BeforeEach(func() {
 		var err error
+
+		By("Generating new IDs")
+		vnfID = uuid.NewV4().String()
+
 		By("Deploying a VNF")
-		vnfID, err = vnfDeploySvcCli.Deploy(
+		err = vnfDeploySvcCli.Deploy(
 			ctx,
 			&pb.VNF{
+				Id:          vnfID,
 				Name:        "test_vnf",
 				Vendor:      "test_vendor",
 				Description: "test vnf",
@@ -54,10 +60,13 @@ var _ = Describe("VNF Lifecycle Service", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the first VNF is started")
-				containerApp, err := vnfDeploySvcCli.Get(ctx, vnfID)
+				status, err := vnfDeploySvcCli.GetStatus(ctx, vnfID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(containerApp.Status).To(Equal(
-					pb.LifecycleStatus_RUNNING))
+				Expect(status).To(Equal(
+					&pb.LifecycleStatus{
+						Status: pb.LifecycleStatus_RUNNING,
+					},
+				))
 			})
 		})
 
@@ -94,10 +103,13 @@ var _ = Describe("VNF Lifecycle Service", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the first VNF is restarted")
-				containerApp, err := vnfDeploySvcCli.Get(ctx, vnfID)
+				status, err := vnfDeploySvcCli.GetStatus(ctx, vnfID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(containerApp.Status).To(Equal(
-					pb.LifecycleStatus_RUNNING))
+				Expect(status).To(Equal(
+					&pb.LifecycleStatus{
+						Status: pb.LifecycleStatus_RUNNING,
+					},
+				))
 			})
 		})
 
@@ -129,10 +141,13 @@ var _ = Describe("VNF Lifecycle Service", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the first VNF is stopped")
-				containerApp, err := vnfDeploySvcCli.Get(ctx, vnfID)
+				status, err := vnfDeploySvcCli.GetStatus(ctx, vnfID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(containerApp.Status).To(Equal(
-					pb.LifecycleStatus_STOPPED))
+				Expect(status).To(Equal(
+					&pb.LifecycleStatus{
+						Status: pb.LifecycleStatus_STOPPED,
+					},
+				))
 			})
 		})
 

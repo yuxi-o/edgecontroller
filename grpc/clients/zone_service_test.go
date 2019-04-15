@@ -32,18 +32,25 @@ var _ = Describe("Network Zone Service", func() {
 
 	BeforeEach(func() {
 		var err error
+
+		By("Generating new IDs")
+		zoneID = uuid.NewV4().String()
+		zone2ID = uuid.NewV4().String()
+
 		By("Creating a new zone")
 		zone := &pb.NetworkZone{
+			Id:          zoneID,
 			Description: "test_network_zone",
 		}
-		zoneID, err = zoneSvcCli.Create(ctx, zone)
+		err = zoneSvcCli.Create(ctx, zone)
 		Expect(err).ToNot(HaveOccurred())
 
 		By("Creating a second zone")
 		zone2 := &pb.NetworkZone{
+			Id:          zone2ID,
 			Description: "test_network_zone_2",
 		}
-		zone2ID, err = zoneSvcCli.Create(ctx, zone2)
+		err = zoneSvcCli.Create(ctx, zone2)
 		Expect(err).ToNot(HaveOccurred())
 	})
 

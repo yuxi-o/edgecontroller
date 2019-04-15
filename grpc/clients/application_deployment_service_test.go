@@ -33,10 +33,15 @@ var _ = Describe("Application Deployment Service", func() {
 	BeforeEach(func() {
 		var err error
 
+		By("Generating new IDs")
+		containerAppID = uuid.NewV4().String()
+		vmAppID = uuid.NewV4().String()
+
 		By("Deploying a container application")
-		containerAppID, err = appDeploySvcCli.DeployContainer(
+		err = appDeploySvcCli.DeployContainer(
 			ctx,
 			&pb.Application{
+				Id:          containerAppID,
 				Name:        "test_container_app",
 				Vendor:      "test_vendor",
 				Description: "test container app",
@@ -47,9 +52,10 @@ var _ = Describe("Application Deployment Service", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		By("Deploying a VM application")
-		vmAppID, err = appDeploySvcCli.DeployVM(
+		err = appDeploySvcCli.DeployVM(
 			ctx,
 			&pb.Application{
+				Id:          vmAppID,
 				Name:        "test_vm_app",
 				Vendor:      "test_vendor",
 				Description: "test vm app",
@@ -82,99 +88,30 @@ var _ = Describe("Application Deployment Service", func() {
 		Describe("Errors", func() {})
 	})
 
-	Describe("GetAll", func() {
+	Describe("GetStatus", func() {
 		Describe("Success", func() {
-			It("Should get all deployed applications", func() {
-				By("Getting all applications")
-				apps, err := appDeploySvcCli.GetAll(ctx)
+			It("Should get container application status", func() {
+				By("Getting the container application's status")
+				status, err := appDeploySvcCli.GetStatus(ctx, containerAppID)
 
-				By("Verifying the response includes the container and VM " +
-					"applications")
+				By("Verifying the status is Ready")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(len(apps.Applications)).To(BeNumerically(">=", 2))
-				img := "http://test.com/container123"
-				Expect(apps.Applications).To(ContainElement(
-					&pb.Application{
-						Id:                   containerAppID,
-						Name:                 "test_container_app",
-						Vendor:               "test_vendor",
-						Description:          "test container app",
-						Image:                img,
-						Cores:                4,
-						Memory:               4096,
-						Status:               pb.LifecycleStatus_READY,
-						XXX_NoUnkeyedLiteral: *new(struct{}),
-						XXX_unrecognized:     nil,
-						XXX_sizecache:        0,
-					},
-				))
-				Expect(apps.Applications).To(ContainElement(
-					&pb.Application{
-						Id:                   vmAppID,
-						Name:                 "test_vm_app",
-						Vendor:               "test_vendor",
-						Description:          "test vm app",
-						Image:                "http://test.com/vm123",
-						Cores:                4,
-						Memory:               4096,
-						Status:               pb.LifecycleStatus_READY,
-						XXX_NoUnkeyedLiteral: *new(struct{}),
-						XXX_unrecognized:     nil,
-						XXX_sizecache:        0,
-					},
-				))
-			})
-		})
-
-		Describe("Errors", func() {})
-	})
-
-	Describe("Get", func() {
-		Describe("Success", func() {
-			It("Should get container applications", func() {
-				By("Getting the container application")
-				containerApp, err := appDeploySvcCli.Get(ctx, containerAppID)
-
-				By("Verifying the response matches the container " +
-					"application")
-				Expect(err).ToNot(HaveOccurred())
-				img := "http://test.com/container123"
-				Expect(containerApp).To(Equal(
-					&pb.Application{
-						Id:                   containerAppID,
-						Name:                 "test_container_app",
-						Vendor:               "test_vendor",
-						Description:          "test container app",
-						Image:                img,
-						Cores:                4,
-						Memory:               4096,
-						Status:               pb.LifecycleStatus_READY,
-						XXX_NoUnkeyedLiteral: *new(struct{}),
-						XXX_unrecognized:     nil,
-						XXX_sizecache:        0,
+				Expect(status).To(Equal(
+					&pb.LifecycleStatus{
+						Status: pb.LifecycleStatus_READY,
 					},
 				))
 			})
 
-			It("Should get VM applications", func() {
-				By("Getting the VM application")
-				vmApp, err := appDeploySvcCli.Get(ctx, vmAppID)
+			It("Should get VM application status", func() {
+				By("Getting the VM application's status")
+				status, err := appDeploySvcCli.GetStatus(ctx, vmAppID)
 
-				By("Verifying the response matches the VM application")
+				By("Verifying the status is Ready")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(vmApp).To(Equal(
-					&pb.Application{
-						Id:                   vmAppID,
-						Name:                 "test_vm_app",
-						Vendor:               "test_vendor",
-						Description:          "test vm app",
-						Image:                "http://test.com/vm123",
-						Cores:                4,
-						Memory:               4096,
-						Status:               pb.LifecycleStatus_READY,
-						XXX_NoUnkeyedLiteral: *new(struct{}),
-						XXX_unrecognized:     nil,
-						XXX_sizecache:        0,
+				Expect(status).To(Equal(
+					&pb.LifecycleStatus{
+						Status: pb.LifecycleStatus_READY,
 					},
 				))
 			})
@@ -185,11 +122,11 @@ var _ = Describe("Application Deployment Service", func() {
 				"exist", func() {
 				By("Passing a nonexistent ID")
 				badID := uuid.NewV4().String()
-				noApp, err := appDeploySvcCli.Get(ctx, badID)
+				s, err := appDeploySvcCli.GetStatus(ctx, badID)
 
 				By("Verifying a NotFound response")
 				Expect(err).To(HaveOccurred(),
-					"Expected error but got app: %v", noApp)
+					"Expected error but got status: %v", s)
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.NotFound,
 						"Application %s not found", badID)))
@@ -200,53 +137,61 @@ var _ = Describe("Application Deployment Service", func() {
 	Describe("Redeploy", func() {
 		Describe("Success", func() {
 			It("Should redeploy container applications", func() {
-				By("Getting the container application")
-				containerApp, err := appDeploySvcCli.Get(ctx, containerAppID)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Updating the container application")
-				containerApp.Cores = 8
-				containerApp.Memory = 8192
-
-				By("Redeploying the updated container application")
-				err = appDeploySvcCli.Redeploy(ctx, containerApp)
+				By("Redeploying the container application")
+				err := appDeploySvcCli.Redeploy(
+					ctx,
+					&pb.Application{
+						Id:          containerAppID,
+						Name:        "test_container_app",
+						Vendor:      "test_vendor",
+						Description: "test container app",
+						Image:       "http://test.com/container123",
+						Cores:       8,
+						Memory:      8192,
+					})
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
-				By("Getting the redeployed container application")
-				containerApp, err = appDeploySvcCli.Get(ctx, containerAppID)
+				By("Getting the redeployed container application's status")
+				status, err := appDeploySvcCli.GetStatus(ctx, containerAppID)
 
-				By("Verifying the response matches the updated container " +
-					"application")
+				By("Verifying the status is Ready")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(containerApp.Cores).To(Equal(int32(8)))
-				Expect(containerApp.Memory).To(Equal(int32(8192)))
+				Expect(status).To(Equal(
+					&pb.LifecycleStatus{
+						Status: pb.LifecycleStatus_READY,
+					},
+				))
 			})
 
 			It("Should redeploy VM applications", func() {
-				By("Getting the VM application")
-				vmApp, err := appDeploySvcCli.Get(ctx, vmAppID)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Updating the VM application")
-				vmApp.Cores = 8
-				vmApp.Memory = 8192
-
-				By("Redeploying the updated VM application")
-				err = appDeploySvcCli.Redeploy(ctx, vmApp)
+				By("Redeploying the VM application")
+				err := appDeploySvcCli.Redeploy(
+					ctx,
+					&pb.Application{
+						Id:          vmAppID,
+						Name:        "test_vm_app",
+						Vendor:      "test_vendor",
+						Description: "test vm app",
+						Image:       "http://test.com/vm123",
+						Cores:       8,
+						Memory:      8192,
+					})
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
-				By("Getting the redeployed VM application")
-				vmApp, err = appDeploySvcCli.Get(ctx, vmAppID)
+				By("Getting the redeployed VM application's status")
+				status, err := appDeploySvcCli.GetStatus(ctx, vmAppID)
 
-				By("Verifying the response matches the updated VM " +
-					"application")
+				By("Verifying the status is Ready")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(vmApp.Cores).To(Equal(int32(8)))
-				Expect(vmApp.Memory).To(Equal(int32(8192)))
+				Expect(status).To(Equal(
+					&pb.LifecycleStatus{
+						Status: pb.LifecycleStatus_READY,
+					},
+				))
 			})
 		})
 
@@ -269,13 +214,13 @@ var _ = Describe("Application Deployment Service", func() {
 		Describe("Success", func() {
 			It("Should remove container applications", func() {
 				By("Removing the container application")
-				err := appDeploySvcCli.Remove(ctx, containerAppID)
+				err := appDeploySvcCli.Undeploy(ctx, containerAppID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the container application was removed")
-				_, err = appDeploySvcCli.Get(ctx, containerAppID)
+				_, err = appDeploySvcCli.GetStatus(ctx, containerAppID)
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.NotFound,
@@ -284,13 +229,13 @@ var _ = Describe("Application Deployment Service", func() {
 
 			It("Should remove VM applications", func() {
 				By("Removing the VM application")
-				err := appDeploySvcCli.Remove(ctx, vmAppID)
+				err := appDeploySvcCli.Undeploy(ctx, vmAppID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the VM application was removed")
-				_, err = appDeploySvcCli.Get(ctx, vmAppID)
+				_, err = appDeploySvcCli.GetStatus(ctx, vmAppID)
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.NotFound,
@@ -302,7 +247,7 @@ var _ = Describe("Application Deployment Service", func() {
 			It("Should return an error if the ID does not exist", func() {
 				By("Passing a nonexistent ID")
 				badID := uuid.NewV4().String()
-				err := appDeploySvcCli.Remove(ctx, badID)
+				err := appDeploySvcCli.Undeploy(ctx, badID)
 
 				By("Verifying a NotFound response")
 				Expect(err).To(HaveOccurred())

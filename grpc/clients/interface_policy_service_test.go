@@ -25,72 +25,6 @@ import (
 )
 
 var _ = Describe("Network Interface Policy Service", func() {
-	Describe("Get", func() {
-		Describe("Success", func() {
-			It("Should get the default policy", func() {
-				By("Getting the default policy for the first interface")
-				policy, err := interfacePolicySvcCli.Get(ctx, "if0")
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Verifying the response")
-				Expect(policy).To(Equal(
-					&pb.TrafficPolicy{
-						Id: policy.Id,
-						TrafficRules: []*pb.TrafficRule{
-							{
-								Description: "default_rule",
-								Priority:    0,
-								Source: &pb.TrafficSelector{
-									Description: "default_source",
-									Macs: &pb.MACFilter{
-										MacAddresses: []string{
-											"default_source_mac_0",
-											"default_source_mac_1",
-										},
-									},
-								},
-								Destination: &pb.TrafficSelector{
-									Description: "default_destination",
-									Macs: &pb.MACFilter{
-										MacAddresses: []string{
-											"default_dest_mac_0",
-											"default_dest_mac_1",
-										},
-									},
-								},
-								Target: &pb.TrafficTarget{
-									Description: "default_target",
-									Action:      pb.TrafficTarget_ACCEPT,
-									Mac: &pb.MACModifier{
-										MacAddress: "default_target_mac",
-									},
-									Ip: &pb.IPModifier{
-										Address: "127.0.0.1",
-										Port:    9999,
-									},
-								},
-							},
-						},
-					},
-				))
-			})
-		})
-
-		Describe("Errors", func() {
-			It("Should return an error if the ID does not exist", func() {
-				By("Passing a nonexistent ID")
-				badID := uuid.NewV4().String()
-				_, err := interfacePolicySvcCli.Get(ctx, badID)
-
-				By("Verifying a NotFound response")
-				Expect(err).To(HaveOccurred())
-				Expect(errors.Cause(err)).To(Equal(
-					status.Errorf(codes.NotFound,
-						"Network Interface %s not found", badID)))
-			})
-		})
-	})
-
 	Describe("Set", func() {
 		Describe("Success", func() {
 			It("Should set the traffic policy", func() {
@@ -139,52 +73,6 @@ var _ = Describe("Network Interface Policy Service", func() {
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
-
-				By("Getting the updated policy")
-				policy, err := interfacePolicySvcCli.Get(ctx, "if2")
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Verifying the response")
-				Expect(policy).To(Equal(
-					&pb.TrafficPolicy{
-						Id: "if2",
-						TrafficRules: []*pb.TrafficRule{
-							{
-								Description: "updated_rule",
-								Priority:    0,
-								Source: &pb.TrafficSelector{
-									Description: "updated_source",
-									Macs: &pb.MACFilter{
-										MacAddresses: []string{
-											"updated_source_mac_0",
-											"updated_source_mac_1",
-										},
-									},
-								},
-								Destination: &pb.TrafficSelector{
-									Description: "updated_destination",
-									Macs: &pb.MACFilter{
-										MacAddresses: []string{
-											"updated_dest_mac_0",
-											"updated_dest_mac_1",
-										},
-									},
-								},
-								Target: &pb.TrafficTarget{
-									Description: "updated_target",
-									Action:      pb.TrafficTarget_ACCEPT,
-									Mac: &pb.MACModifier{
-										MacAddress: "updated_target_mac",
-									},
-									Ip: &pb.IPModifier{
-										Address: "127.0.0.1",
-										Port:    9999,
-									},
-								},
-							},
-						},
-					},
-				))
 			})
 		})
 

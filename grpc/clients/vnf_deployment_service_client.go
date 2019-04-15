@@ -17,7 +17,6 @@ package clients
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/pkg/errors"
 	"github.com/smartedgemec/controller-ce/grpc"
 	"github.com/smartedgemec/controller-ce/pb"
@@ -41,37 +40,24 @@ func NewVNFDeploymentServiceClient(
 func (c *VNFDeploymentServiceClient) Deploy(
 	ctx context.Context,
 	vnf *pb.VNF,
-) (string, error) {
-	pbVNFID, err := c.pbCli.Deploy(
+) error {
+	_, err := c.pbCli.Deploy(
 		ctx,
 		vnf)
 
 	if err != nil {
-		return "", errors.Wrap(err, "error deploying vnf")
+		return errors.Wrap(err, "error deploying vnf")
 	}
 
-	return pbVNFID.Id, nil
+	return nil
 }
 
-// GetAll retrieves all VNFs.
-func (c *VNFDeploymentServiceClient) GetAll(
-	ctx context.Context,
-) (*pb.VNFs, error) {
-	pbVNFs, err := c.pbCli.GetAll(ctx, &empty.Empty{})
-
-	if err != nil {
-		return nil, errors.Wrap(err, "error retrieving all vnfs")
-	}
-
-	return pbVNFs, nil
-}
-
-// Get retrieves a VNF.
-func (c *VNFDeploymentServiceClient) Get(
+// GetStatus retrieves a VNF's status.
+func (c *VNFDeploymentServiceClient) GetStatus(
 	ctx context.Context,
 	id string,
-) (*pb.VNF, error) {
-	pbApp, err := c.pbCli.Get(
+) (*pb.LifecycleStatus, error) {
+	status, err := c.pbCli.GetStatus(
 		ctx,
 		&pb.VNFID{
 			Id: id,
@@ -81,7 +67,7 @@ func (c *VNFDeploymentServiceClient) Get(
 		return nil, errors.Wrap(err, "error retrieving vnf")
 	}
 
-	return pbApp, nil
+	return status, nil
 }
 
 // Redeploy redeploys a VNF.
@@ -100,12 +86,12 @@ func (c *VNFDeploymentServiceClient) Redeploy(
 	return nil
 }
 
-// Remove removes a VNF.
-func (c *VNFDeploymentServiceClient) Remove(
+// Undeploy undeploys a VNF.
+func (c *VNFDeploymentServiceClient) Undeploy(
 	ctx context.Context,
 	id string,
 ) error {
-	_, err := c.pbCli.Remove(
+	_, err := c.pbCli.Undeploy(
 		ctx,
 		&pb.VNFID{
 			Id: id,

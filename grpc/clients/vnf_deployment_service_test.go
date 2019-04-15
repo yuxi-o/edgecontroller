@@ -32,10 +32,16 @@ var _ = Describe("VNF Deployment Service", func() {
 
 	BeforeEach(func() {
 		var err error
+
+		By("Generating new IDs")
+		vnfID = uuid.NewV4().String()
+		vnf2ID = uuid.NewV4().String()
+
 		By("Deploying a VNF")
-		vnfID, err = vnfDeploySvcCli.Deploy(
+		err = vnfDeploySvcCli.Deploy(
 			ctx,
 			&pb.VNF{
+				Id:          vnfID,
 				Name:        "test_vnf",
 				Vendor:      "test_vendor",
 				Description: "test vnf",
@@ -46,9 +52,10 @@ var _ = Describe("VNF Deployment Service", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		By("Deploying a second VNF")
-		vnf2ID, err = vnfDeploySvcCli.Deploy(
+		err = vnfDeploySvcCli.Deploy(
 			ctx,
 			&pb.VNF{
+				Id:          vnf2ID,
 				Name:        "test_vnf_2",
 				Vendor:      "test_vendor",
 				Description: "test vnf 2",
@@ -70,93 +77,28 @@ var _ = Describe("VNF Deployment Service", func() {
 		Describe("Errors", func() {})
 	})
 
-	Describe("GetAll", func() {
+	Describe("GetStatus", func() {
 		Describe("Success", func() {
-			It("Should get all deployed VNFs", func() {
-				By("Getting all VNFs")
-				vnfs, err := vnfDeploySvcCli.GetAll(ctx)
+			It("Should get VNF status", func() {
+				By("Getting the first VNF's status")
+				status, err := vnfDeploySvcCli.GetStatus(ctx, vnfID)
 
-				By("Verifying the response includes the deployed VNFs")
+				By("Verifying the status is Ready")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(len(vnfs.Vnfs)).To(BeNumerically(">=", 2))
-				Expect(vnfs.Vnfs).To(ContainElement(
-					&pb.VNF{
-						Id:                   vnfID,
-						Name:                 "test_vnf",
-						Vendor:               "test_vendor",
-						Description:          "test vnf",
-						Image:                "http://test.com/vnf123",
-						Cores:                4,
-						Memory:               4096,
-						Status:               pb.LifecycleStatus_READY,
-						XXX_NoUnkeyedLiteral: *new(struct{}),
-						XXX_unrecognized:     nil,
-						XXX_sizecache:        0,
-					},
-				))
-				Expect(vnfs.Vnfs).To(ContainElement(
-					&pb.VNF{
-						Id:                   vnf2ID,
-						Name:                 "test_vnf_2",
-						Vendor:               "test_vendor",
-						Description:          "test vnf 2",
-						Image:                "http://test.com/vnf456",
-						Cores:                4,
-						Memory:               4096,
-						Status:               pb.LifecycleStatus_READY,
-						XXX_NoUnkeyedLiteral: *new(struct{}),
-						XXX_unrecognized:     nil,
-						XXX_sizecache:        0,
-					},
-				))
-			})
-		})
-
-		Describe("Errors", func() {})
-	})
-
-	Describe("Get", func() {
-		Describe("Success", func() {
-			It("Should get VNFs", func() {
-				By("Getting the first VNF")
-				vnf, err := vnfDeploySvcCli.Get(ctx, vnfID)
-
-				By("Verifying the response matches the first VNF")
-				Expect(err).ToNot(HaveOccurred())
-				Expect(vnf).To(Equal(
-					&pb.VNF{
-						Id:                   vnfID,
-						Name:                 "test_vnf",
-						Vendor:               "test_vendor",
-						Description:          "test vnf",
-						Image:                "http://test.com/vnf123",
-						Cores:                4,
-						Memory:               4096,
-						Status:               pb.LifecycleStatus_READY,
-						XXX_NoUnkeyedLiteral: *new(struct{}),
-						XXX_unrecognized:     nil,
-						XXX_sizecache:        0,
+				Expect(status).To(Equal(
+					&pb.LifecycleStatus{
+						Status: pb.LifecycleStatus_READY,
 					},
 				))
 
-				By("Getting the second VNF")
-				vnf2, err := vnfDeploySvcCli.Get(ctx, vnf2ID)
+				By("Getting the second VNF's status")
+				status2, err := vnfDeploySvcCli.GetStatus(ctx, vnf2ID)
 
-				By("Verifying the response matches the second VNF")
+				By("Verifying the status is Ready")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(vnf2).To(Equal(
-					&pb.VNF{
-						Id:                   vnf2ID,
-						Name:                 "test_vnf_2",
-						Vendor:               "test_vendor",
-						Description:          "test vnf 2",
-						Image:                "http://test.com/vnf456",
-						Cores:                4,
-						Memory:               4096,
-						Status:               pb.LifecycleStatus_READY,
-						XXX_NoUnkeyedLiteral: *new(struct{}),
-						XXX_unrecognized:     nil,
-						XXX_sizecache:        0,
+				Expect(status2).To(Equal(
+					&pb.LifecycleStatus{
+						Status: pb.LifecycleStatus_READY,
 					},
 				))
 			})
@@ -166,11 +108,11 @@ var _ = Describe("VNF Deployment Service", func() {
 			It("Should return an error if the VNF does not exist", func() {
 				By("Passing a nonexistent ID")
 				badID := uuid.NewV4().String()
-				noApp, err := vnfDeploySvcCli.Get(ctx, badID)
+				s, err := vnfDeploySvcCli.GetStatus(ctx, badID)
 
 				By("Verifying a NotFound response")
 				Expect(err).To(HaveOccurred(),
-					"Expected error but got app: %v", noApp)
+					"Expected error but got app: %v", s)
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.NotFound,
 						"VNF %s not found", badID)))
@@ -181,27 +123,32 @@ var _ = Describe("VNF Deployment Service", func() {
 	Describe("Redeploy", func() {
 		Describe("Success", func() {
 			It("Should redeploy VNFs", func() {
-				By("Getting the VNF")
-				vnf, err := vnfDeploySvcCli.Get(ctx, vnfID)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Updating the VNF")
-				vnf.Cores = 8
-				vnf.Memory = 8192
-
-				By("Redeploying the updated VNF")
-				err = vnfDeploySvcCli.Redeploy(ctx, vnf)
+				By("Redeploying the VNF")
+				err := vnfDeploySvcCli.Redeploy(
+					ctx,
+					&pb.VNF{
+						Id:          vnfID,
+						Name:        "test_vnf",
+						Vendor:      "test_vendor",
+						Description: "test vnf",
+						Image:       "http://test.com/vnf123",
+						Cores:       8,
+						Memory:      8192,
+					})
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
-				By("Getting the redeployed VNF")
-				vnf, err = vnfDeploySvcCli.Get(ctx, vnfID)
+				By("Getting the redeployed VNF's status")
+				status, err := vnfDeploySvcCli.GetStatus(ctx, vnfID)
 
-				By("Verifying the response matches the updated VNF")
+				By("Verifying the status is Ready")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(vnf.Cores).To(Equal(int32(8)))
-				Expect(vnf.Memory).To(Equal(int32(8192)))
+				Expect(status).To(Equal(
+					&pb.LifecycleStatus{
+						Status: pb.LifecycleStatus_READY,
+					},
+				))
 			})
 		})
 
@@ -224,13 +171,13 @@ var _ = Describe("VNF Deployment Service", func() {
 		Describe("Success", func() {
 			It("Should remove VNFs", func() {
 				By("Removing the first VNF")
-				err := vnfDeploySvcCli.Remove(ctx, vnfID)
+				err := vnfDeploySvcCli.Undeploy(ctx, vnfID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the VNF was removed")
-				_, err = vnfDeploySvcCli.Get(ctx, vnfID)
+				_, err = vnfDeploySvcCli.GetStatus(ctx, vnfID)
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.NotFound,
@@ -242,7 +189,7 @@ var _ = Describe("VNF Deployment Service", func() {
 			It("Should return an error if the ID does not exist", func() {
 				By("Passing a nonexistent ID")
 				badID := uuid.NewV4().String()
-				err := vnfDeploySvcCli.Remove(ctx, badID)
+				err := vnfDeploySvcCli.Undeploy(ctx, badID)
 
 				By("Verifying a NotFound response")
 				Expect(err).To(HaveOccurred())

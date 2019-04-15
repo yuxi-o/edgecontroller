@@ -18,7 +18,6 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/satori/go.uuid"
 	"github.com/smartedgemec/controller-ce/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -31,11 +30,10 @@ type zoneService struct {
 func (s *zoneService) Create(
 	ctx context.Context,
 	zone *pb.NetworkZone,
-) (*pb.ZoneID, error) {
+) (*empty.Empty, error) {
 	s.zones = append(s.zones, zone)
-	zone.Id = uuid.NewV4().String()
 
-	return &pb.ZoneID{Id: zone.Id}, nil
+	return &empty.Empty{}, nil
 }
 
 func (s *zoneService) Update(

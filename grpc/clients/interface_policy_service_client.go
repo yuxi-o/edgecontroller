@@ -51,19 +51,3 @@ func (c *InterfacePolicyServiceClient) Set(
 
 	return nil
 }
-
-// Get gets the traffic policy.
-func (c *InterfacePolicyServiceClient) Get(
-	ctx context.Context,
-	id string,
-) (*pb.TrafficPolicy, error) {
-	pbPolicy, err := c.pbCli.Get(
-		ctx,
-		&pb.InterfaceID{Id: id})
-
-	if err != nil {
-		return nil, errors.Wrap(err, "error getting interface policy")
-	}
-
-	return pbPolicy, nil
-}

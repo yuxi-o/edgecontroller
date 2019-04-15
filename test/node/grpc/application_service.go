@@ -18,7 +18,6 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/satori/go.uuid"
 	"github.com/smartedgemec/controller-ce/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -43,57 +42,40 @@ func newApplicationService() *applicationService {
 func (s *applicationService) DeployContainer(
 	ctx context.Context,
 	containerApp *pb.Application,
-) (*pb.ApplicationID, error) {
-	id := uuid.NewV4().String()
+) (*empty.Empty, error) {
+	id := containerApp.Id
 	s.containerApps[id] = containerApp
-	containerApp.Id = id
 	containerApp.Status = pb.LifecycleStatus_READY
 	s.policyService.policies[id] = defaultPolicy(id)
 
-	return &pb.ApplicationID{Id: id}, nil
+	return &empty.Empty{}, nil
 }
 
 func (s *applicationService) DeployVM(
 	ctx context.Context,
 	vmApp *pb.Application,
-) (*pb.ApplicationID, error) {
-	id := uuid.NewV4().String()
+) (*empty.Empty, error) {
+	id := vmApp.Id
 	s.vmApps[id] = vmApp
-	vmApp.Id = id
 	vmApp.Status = pb.LifecycleStatus_READY
 
-	return &pb.ApplicationID{Id: id}, nil
+	return &empty.Empty{}, nil
 }
 
-func (s *applicationService) GetAll(
-	context.Context,
-	*empty.Empty,
-) (*pb.Applications, error) {
-	var apps []*pb.Application
-
-	for _, containerApp := range s.containerApps {
-		apps = append(apps, containerApp)
-	}
-
-	for _, vmApp := range s.vmApps {
-		apps = append(apps, vmApp)
-	}
-
-	return &pb.Applications{
-		Applications: apps,
-	}, nil
-}
-
-func (s *applicationService) Get(
+func (s *applicationService) GetStatus(
 	ctx context.Context,
 	id *pb.ApplicationID,
-) (*pb.Application, error) {
+) (*pb.LifecycleStatus, error) {
 	if containerApp, ok := s.containerApps[id.Id]; ok {
-		return containerApp, nil
+		return &pb.LifecycleStatus{
+			Status: containerApp.Status,
+		}, nil
 	}
 
 	if vmApp, ok := s.vmApps[id.Id]; ok {
-		return vmApp, nil
+		return &pb.LifecycleStatus{
+			Status: vmApp.Status,
+		}, nil
 	}
 
 	return nil, status.Errorf(codes.NotFound, "Application %s not found", id.Id)
@@ -103,12 +85,14 @@ func (s *applicationService) Redeploy(
 	ctx context.Context,
 	app *pb.Application,
 ) (*empty.Empty, error) {
-	if _, ok := s.containerApps[app.Id]; ok {
+	if oldApp, ok := s.containerApps[app.Id]; ok {
+		app.Status = oldApp.Status
 		s.containerApps[app.Id] = app
 		return &empty.Empty{}, nil
 	}
 
-	if _, ok := s.vmApps[app.Id]; ok {
+	if oldApp, ok := s.vmApps[app.Id]; ok {
+		app.Status = oldApp.Status
 		s.vmApps[app.Id] = app
 		return &empty.Empty{}, nil
 	}
@@ -117,7 +101,7 @@ func (s *applicationService) Redeploy(
 		codes.NotFound, "Application %s not found", app.Id)
 }
 
-func (s *applicationService) Remove(
+func (s *applicationService) Undeploy(
 	ctx context.Context,
 	id *pb.ApplicationID,
 ) (*empty.Empty, error) {

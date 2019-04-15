@@ -17,7 +17,6 @@ package clients
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/pkg/errors"
 	"github.com/smartedgemec/controller-ce/grpc"
 	"github.com/smartedgemec/controller-ce/pb"
@@ -41,55 +40,40 @@ func NewApplicationDeploymentServiceClient(
 func (c *ApplicationDeploymentServiceClient) DeployContainer(
 	ctx context.Context,
 	app *pb.Application,
-) (string, error) {
-	id, err := c.pbCli.DeployContainer(
+) error {
+	_, err := c.pbCli.DeployContainer(
 		ctx,
 		app)
 
 	if err != nil {
-		return "", errors.Wrap(err, "error deploying application")
+		return errors.Wrap(err, "error deploying application")
 	}
 
-	return id.Id, nil
+	return nil
 }
 
 // DeployVM deploys a VM application.
 func (c *ApplicationDeploymentServiceClient) DeployVM(
 	ctx context.Context,
 	app *pb.Application,
-) (string, error) {
-	id, err := c.pbCli.DeployVM(
+) error {
+	_, err := c.pbCli.DeployVM(
 		ctx,
 		app)
 
 	if err != nil {
-		return "", errors.Wrap(err, "error deploying application")
+		return errors.Wrap(err, "error deploying application")
 	}
 
-	return id.Id, nil
+	return nil
 }
 
-// GetAll retrieves all applications.
-func (c *ApplicationDeploymentServiceClient) GetAll(
-	ctx context.Context,
-) (*pb.Applications, error) {
-	apps, err := c.pbCli.GetAll(
-		ctx,
-		&empty.Empty{})
-
-	if err != nil {
-		return nil, errors.Wrap(err, "error retrieving all applications")
-	}
-
-	return apps, nil
-}
-
-// Get retrieves an application.
-func (c *ApplicationDeploymentServiceClient) Get(
+// GetStatus retrieves an application's status.
+func (c *ApplicationDeploymentServiceClient) GetStatus(
 	ctx context.Context,
 	id string,
-) (*pb.Application, error) {
-	app, err := c.pbCli.Get(
+) (*pb.LifecycleStatus, error) {
+	status, err := c.pbCli.GetStatus(
 		ctx,
 		&pb.ApplicationID{Id: id})
 
@@ -97,7 +81,7 @@ func (c *ApplicationDeploymentServiceClient) Get(
 		return nil, errors.Wrap(err, "error retrieving application")
 	}
 
-	return app, nil
+	return status, nil
 }
 
 // Redeploy redeploys an application.
@@ -116,12 +100,12 @@ func (c *ApplicationDeploymentServiceClient) Redeploy(
 	return nil
 }
 
-// Remove removes an application.
-func (c *ApplicationDeploymentServiceClient) Remove(
+// Undeploy undeploys an application.
+func (c *ApplicationDeploymentServiceClient) Undeploy(
 	ctx context.Context,
 	id string,
 ) error {
-	_, err := c.pbCli.Remove(
+	_, err := c.pbCli.Undeploy(
 		ctx,
 		&pb.ApplicationID{
 			Id: id,

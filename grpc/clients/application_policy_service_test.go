@@ -32,10 +32,14 @@ var _ = Describe("Application Policy Service", func() {
 	BeforeEach(func() {
 		var err error
 
+		By("Generating new IDs")
+		appID = uuid.NewV4().String()
+
 		By("Deploying an application")
-		appID, err = appDeploySvcCli.DeployContainer(
+		err = appDeploySvcCli.DeployContainer(
 			ctx,
 			&pb.Application{
+				Id:          appID,
 				Name:        "test_container_app",
 				Vendor:      "test_vendor",
 				Description: "test container app",
@@ -45,72 +49,6 @@ var _ = Describe("Application Policy Service", func() {
 			})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(appID).ToNot(BeNil())
-	})
-
-	Describe("Get", func() {
-		Describe("Success", func() {
-			It("Should get the default policy", func() {
-				By("Getting the default policy")
-				policy, err := appPolicySvcCli.Get(ctx, appID)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Verifying the response")
-				Expect(policy).To(Equal(
-					&pb.TrafficPolicy{
-						Id: policy.Id,
-						TrafficRules: []*pb.TrafficRule{
-							{
-								Description: "default_rule",
-								Priority:    0,
-								Source: &pb.TrafficSelector{
-									Description: "default_source",
-									Macs: &pb.MACFilter{
-										MacAddresses: []string{
-											"default_source_mac_0",
-											"default_source_mac_1",
-										},
-									},
-								},
-								Destination: &pb.TrafficSelector{
-									Description: "default_destination",
-									Macs: &pb.MACFilter{
-										MacAddresses: []string{
-											"default_dest_mac_0",
-											"default_dest_mac_1",
-										},
-									},
-								},
-								Target: &pb.TrafficTarget{
-									Description: "default_target",
-									Action:      pb.TrafficTarget_ACCEPT,
-									Mac: &pb.MACModifier{
-										MacAddress: "default_target_mac",
-									},
-									Ip: &pb.IPModifier{
-										Address: "127.0.0.1",
-										Port:    9999,
-									},
-								},
-							},
-						},
-					},
-				))
-			})
-		})
-
-		Describe("Errors", func() {
-			It("Should return an error if the ID does not exist", func() {
-				By("Passing a nonexistent ID")
-				badID := uuid.NewV4().String()
-				_, err := appPolicySvcCli.Get(ctx, badID)
-
-				By("Verifying a NotFound response")
-				Expect(err).To(HaveOccurred())
-				Expect(errors.Cause(err)).To(Equal(
-					status.Errorf(codes.NotFound,
-						"Application %s not found", badID)))
-			})
-		})
 	})
 
 	Describe("Set", func() {
@@ -161,52 +99,6 @@ var _ = Describe("Application Policy Service", func() {
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())
-
-				By("Getting the updated policy")
-				policy, err := appPolicySvcCli.Get(ctx, appID)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Verifying the response")
-				Expect(policy).To(Equal(
-					&pb.TrafficPolicy{
-						Id: policy.Id,
-						TrafficRules: []*pb.TrafficRule{
-							{
-								Description: "updated_rule",
-								Priority:    0,
-								Source: &pb.TrafficSelector{
-									Description: "updated_source",
-									Macs: &pb.MACFilter{
-										MacAddresses: []string{
-											"updated_source_mac_0",
-											"updated_source_mac_1",
-										},
-									},
-								},
-								Destination: &pb.TrafficSelector{
-									Description: "updated_destination",
-									Macs: &pb.MACFilter{
-										MacAddresses: []string{
-											"updated_dest_mac_0",
-											"updated_dest_mac_1",
-										},
-									},
-								},
-								Target: &pb.TrafficTarget{
-									Description: "updated_target",
-									Action:      pb.TrafficTarget_ACCEPT,
-									Mac: &pb.MACModifier{
-										MacAddress: "updated_target_mac",
-									},
-									Ip: &pb.IPModifier{
-										Address: "127.0.0.1",
-										Port:    9999,
-									},
-								},
-							},
-						},
-					},
-				))
 			})
 		})
 
