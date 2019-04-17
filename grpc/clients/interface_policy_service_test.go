@@ -18,8 +18,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 	"github.com/smartedgemec/controller-ce/pb"
+	"github.com/smartedgemec/controller-ce/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -79,7 +79,7 @@ var _ = Describe("Network Interface Policy Service", func() {
 		Describe("Errors", func() {
 			It("Should return an error if the ID does not exist", func() {
 				By("Passing a nonexistent ID")
-				badID := uuid.NewV4().String()
+				badID := uuid.New()
 				err := interfacePolicySvcCli.Set(ctx,
 					&pb.TrafficPolicy{Id: badID})
 

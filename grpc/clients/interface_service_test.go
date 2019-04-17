@@ -18,8 +18,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 	"github.com/smartedgemec/controller-ce/pb"
+	"github.com/smartedgemec/controller-ce/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -169,7 +169,7 @@ var _ = Describe("Network Interface Service", func() {
 			It("Should return an error if the interface does not "+
 				"exist", func() {
 				By("Passing a nonexistent ID")
-				badID := uuid.NewV4().String()
+				badID := uuid.New()
 				noVNF, err := interfaceSvcCli.Get(ctx, badID)
 
 				By("Verifying a NotFound response")
@@ -224,7 +224,7 @@ var _ = Describe("Network Interface Service", func() {
 		Describe("Errors", func() {
 			It("Should return an error if the ID does not exist", func() {
 				By("Passing a nonexistent ID")
-				badID := uuid.NewV4().String()
+				badID := uuid.New()
 				err := interfaceSvcCli.Update(ctx,
 					&pb.NetworkInterface{Id: badID})
 
@@ -309,7 +309,7 @@ var _ = Describe("Network Interface Service", func() {
 		Describe("Errors", func() {
 			It("Should return an error if the ID does not exist", func() {
 				By("Passing a nonexistent ID")
-				badID := uuid.NewV4().String()
+				badID := uuid.New()
 				err := interfaceSvcCli.BulkUpdate(
 					ctx,
 					&pb.NetworkInterfaces{

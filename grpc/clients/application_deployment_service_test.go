@@ -18,8 +18,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 	"github.com/smartedgemec/controller-ce/pb"
+	"github.com/smartedgemec/controller-ce/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -34,8 +34,8 @@ var _ = Describe("Application Deployment Service", func() {
 		var err error
 
 		By("Generating new IDs")
-		containerAppID = uuid.NewV4().String()
-		vmAppID = uuid.NewV4().String()
+		containerAppID = uuid.New()
+		vmAppID = uuid.New()
 
 		By("Deploying a container application")
 		err = appDeploySvcCli.DeployContainer(
@@ -121,7 +121,7 @@ var _ = Describe("Application Deployment Service", func() {
 			It("Should return an error if the application does not "+
 				"exist", func() {
 				By("Passing a nonexistent ID")
-				badID := uuid.NewV4().String()
+				badID := uuid.New()
 				s, err := appDeploySvcCli.GetStatus(ctx, badID)
 
 				By("Verifying a NotFound response")
@@ -198,7 +198,7 @@ var _ = Describe("Application Deployment Service", func() {
 		Describe("Errors", func() {
 			It("Should return an error if the ID does not exist", func() {
 				By("Passing a nonexistent ID")
-				badID := uuid.NewV4().String()
+				badID := uuid.New()
 				err := appDeploySvcCli.Redeploy(ctx, &pb.Application{Id: badID})
 
 				By("Verifying a NotFound response")
@@ -246,7 +246,7 @@ var _ = Describe("Application Deployment Service", func() {
 		Describe("Errors", func() {
 			It("Should return an error if the ID does not exist", func() {
 				By("Passing a nonexistent ID")
-				badID := uuid.NewV4().String()
+				badID := uuid.New()
 				err := appDeploySvcCli.Undeploy(ctx, badID)
 
 				By("Verifying a NotFound response")

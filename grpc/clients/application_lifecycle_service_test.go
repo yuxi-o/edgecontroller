@@ -18,8 +18,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 	"github.com/smartedgemec/controller-ce/pb"
+	"github.com/smartedgemec/controller-ce/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -34,8 +34,8 @@ var _ = Describe("Application Lifecycle Service", func() {
 		var err error
 
 		By("Generating new IDs")
-		containerAppID = uuid.NewV4().String()
-		vmAppID = uuid.NewV4().String()
+		containerAppID = uuid.New()
+		vmAppID = uuid.New()
 
 		By("Deploying a container application")
 		err = appDeploySvcCli.DeployContainer(

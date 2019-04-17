@@ -18,8 +18,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 	"github.com/smartedgemec/controller-ce/pb"
+	"github.com/smartedgemec/controller-ce/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -34,8 +34,8 @@ var _ = Describe("VNF Deployment Service", func() {
 		var err error
 
 		By("Generating new IDs")
-		vnfID = uuid.NewV4().String()
-		vnf2ID = uuid.NewV4().String()
+		vnfID = uuid.New()
+		vnf2ID = uuid.New()
 
 		By("Deploying a VNF")
 		err = vnfDeploySvcCli.Deploy(
@@ -107,7 +107,7 @@ var _ = Describe("VNF Deployment Service", func() {
 		Describe("Errors", func() {
 			It("Should return an error if the VNF does not exist", func() {
 				By("Passing a nonexistent ID")
-				badID := uuid.NewV4().String()
+				badID := uuid.New()
 				s, err := vnfDeploySvcCli.GetStatus(ctx, badID)
 
 				By("Verifying a NotFound response")
@@ -155,7 +155,7 @@ var _ = Describe("VNF Deployment Service", func() {
 		Describe("Errors", func() {
 			It("Should return an error if the ID does not exist", func() {
 				By("Passing a nonexistent ID")
-				badID := uuid.NewV4().String()
+				badID := uuid.New()
 				err := vnfDeploySvcCli.Redeploy(ctx, &pb.VNF{Id: badID})
 
 				By("Verifying a NotFound response")
@@ -188,7 +188,7 @@ var _ = Describe("VNF Deployment Service", func() {
 		Describe("Errors", func() {
 			It("Should return an error if the ID does not exist", func() {
 				By("Passing a nonexistent ID")
-				badID := uuid.NewV4().String()
+				badID := uuid.New()
 				err := vnfDeploySvcCli.Undeploy(ctx, badID)
 
 				By("Verifying a NotFound response")
