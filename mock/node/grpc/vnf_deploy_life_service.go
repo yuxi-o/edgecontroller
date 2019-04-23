@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package grpc
 
 import (
 	"context"
@@ -23,11 +23,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type vnfService struct {
+type vnfDeployLifeService struct {
 	vnfs []*pb.VNF
 }
 
-func (s *vnfService) Deploy(
+func (s *vnfDeployLifeService) Deploy(
 	ctx context.Context,
 	vnf *pb.VNF,
 ) (*empty.Empty, error) {
@@ -37,7 +37,7 @@ func (s *vnfService) Deploy(
 	return &empty.Empty{}, nil
 }
 
-func (s *vnfService) GetStatus(
+func (s *vnfDeployLifeService) GetStatus(
 	ctx context.Context,
 	id *pb.VNFID,
 ) (*pb.LifecycleStatus, error) {
@@ -52,7 +52,7 @@ func (s *vnfService) GetStatus(
 	return nil, status.Errorf(codes.NotFound, "VNF %s not found", id.Id)
 }
 
-func (s *vnfService) Redeploy(
+func (s *vnfDeployLifeService) Redeploy(
 	ctx context.Context,
 	vnf *pb.VNF,
 ) (*empty.Empty, error) {
@@ -68,7 +68,7 @@ func (s *vnfService) Redeploy(
 		codes.NotFound, "VNF %s not found", vnf.Id)
 }
 
-func (s *vnfService) Undeploy(
+func (s *vnfDeployLifeService) Undeploy(
 	ctx context.Context,
 	id *pb.VNFID,
 ) (*empty.Empty, error) {
@@ -82,7 +82,7 @@ func (s *vnfService) Undeploy(
 	return nil, status.Errorf(codes.NotFound, "VNF %s not found", id.Id)
 }
 
-func (s *vnfService) Start(
+func (s *vnfDeployLifeService) Start(
 	ctx context.Context,
 	cmd *pb.LifecycleCommand,
 ) (*empty.Empty, error) {
@@ -106,7 +106,7 @@ func (s *vnfService) Start(
 		codes.NotFound, "VNF %s not found", cmd.Id)
 }
 
-func (s *vnfService) Stop(
+func (s *vnfDeployLifeService) Stop(
 	ctx context.Context,
 	cmd *pb.LifecycleCommand,
 ) (*empty.Empty, error) {
@@ -126,7 +126,7 @@ func (s *vnfService) Stop(
 		codes.NotFound, "VNF %s not found", cmd.Id)
 }
 
-func (s *vnfService) Restart(
+func (s *vnfDeployLifeService) Restart(
 	ctx context.Context,
 	cmd *pb.LifecycleCommand,
 ) (*empty.Empty, error) {
@@ -145,7 +145,7 @@ func (s *vnfService) Restart(
 		codes.NotFound, "VNF %s not found", cmd.Id)
 }
 
-func (s *vnfService) find(id string) *pb.VNF {
+func (s *vnfDeployLifeService) find(id string) *pb.VNF {
 	for _, vnf := range s.vnfs {
 		if vnf.Id == id {
 			return vnf
@@ -155,7 +155,7 @@ func (s *vnfService) find(id string) *pb.VNF {
 	return nil
 }
 
-func (s *vnfService) findIndex(id string) int {
+func (s *vnfDeployLifeService) findIndex(id string) int {
 	for i, vnf := range s.vnfs {
 		if vnf.Id == id {
 			return i
@@ -165,7 +165,7 @@ func (s *vnfService) findIndex(id string) int {
 	return len(s.vnfs)
 }
 
-func (s *vnfService) delete(i int) {
+func (s *vnfDeployLifeService) delete(i int) {
 	copy(s.vnfs[i:], s.vnfs[i+1:])
 	s.vnfs[len(s.vnfs)-1] = nil
 	s.vnfs = s.vnfs[:len(s.vnfs)-1]

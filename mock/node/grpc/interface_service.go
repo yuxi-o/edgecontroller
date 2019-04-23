@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package grpc
 
 import (
 	"context"
@@ -25,9 +25,6 @@ import (
 
 type interfaceService struct {
 	nis []*pb.NetworkInterface
-
-	// reference to policy server
-	policyService *interfacePolicyService
 }
 
 func newInterfaceService() *interfaceService {
@@ -71,15 +68,6 @@ func newInterfaceService() *interfaceService {
 			},
 		},
 	}
-}
-
-func (s *interfaceService) init(policyService *interfacePolicyService) {
-	s.policyService = policyService
-
-	s.policyService.policies["if0"] = defaultPolicy("if0")
-	s.policyService.policies["if1"] = defaultPolicy("if1")
-	s.policyService.policies["if2"] = defaultPolicy("if2")
-	s.policyService.policies["if3"] = defaultPolicy("if3")
 }
 
 func (s *interfaceService) Update(

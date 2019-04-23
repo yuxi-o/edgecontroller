@@ -24,7 +24,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var _ = Describe("Network Interface Service", func() {
+var _ = Describe("Network Interface Service Client", func() {
 	BeforeEach(func() {
 		By("Resetting the interfaces")
 		err := interfaceSvcCli.BulkUpdate(

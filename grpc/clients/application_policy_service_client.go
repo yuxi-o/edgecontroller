@@ -24,7 +24,7 @@ import (
 
 // ApplicationPolicyServiceClient wraps the PB client.
 type ApplicationPolicyServiceClient struct {
-	pbCli pb.ApplicationPolicyServiceClient
+	PBCli pb.ApplicationPolicyServiceClient
 }
 
 // NewApplicationPolicyServiceClient creates a new client.
@@ -41,7 +41,7 @@ func (c *ApplicationPolicyServiceClient) Set(
 	ctx context.Context,
 	policy *pb.TrafficPolicy,
 ) error {
-	_, err := c.pbCli.Set(
+	_, err := c.PBCli.Set(
 		ctx,
 		policy)
 

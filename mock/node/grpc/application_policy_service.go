@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package grpc
 
 import (
 	"context"
@@ -28,11 +28,11 @@ type applicationPolicyService struct {
 	policies map[string]*pb.TrafficPolicy
 
 	// reference to application server
-	appSvc *applicationService
+	appSvc *appDeployLifeService
 }
 
 func newApplicationPolicyService(
-	appSvc *applicationService,
+	appSvc *appDeployLifeService,
 ) *applicationPolicyService {
 	return &applicationPolicyService{
 		policies: make(map[string]*pb.TrafficPolicy),
@@ -52,16 +52,4 @@ func (s *applicationPolicyService) Set(
 	s.policies[policy.Id] = policy
 
 	return &empty.Empty{}, nil
-}
-
-func (s *applicationPolicyService) Get(
-	ctx context.Context,
-	id *pb.ApplicationID,
-) (*pb.TrafficPolicy, error) {
-	if s.policies[id.Id] == nil {
-		return nil, status.Errorf(
-			codes.NotFound, "Application %s not found", id.Id)
-	}
-
-	return s.policies[id.Id], nil
 }

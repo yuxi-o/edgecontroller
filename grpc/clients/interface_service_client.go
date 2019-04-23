@@ -25,7 +25,7 @@ import (
 
 // InterfaceServiceClient wraps the PB client.
 type InterfaceServiceClient struct {
-	pbCli pb.InterfaceServiceClient
+	PBCli pb.InterfaceServiceClient
 }
 
 // NewInterfaceServiceClient creates a new client.
@@ -40,7 +40,7 @@ func (c *InterfaceServiceClient) Update(
 	ctx context.Context,
 	ni *pb.NetworkInterface,
 ) error {
-	_, err := c.pbCli.Update(
+	_, err := c.PBCli.Update(
 		ctx,
 		ni)
 
@@ -56,7 +56,7 @@ func (c *InterfaceServiceClient) BulkUpdate(
 	ctx context.Context,
 	nis *pb.NetworkInterfaces,
 ) error {
-	_, err := c.pbCli.BulkUpdate(
+	_, err := c.PBCli.BulkUpdate(
 		ctx,
 		nis)
 
@@ -71,7 +71,7 @@ func (c *InterfaceServiceClient) BulkUpdate(
 func (c *InterfaceServiceClient) GetAll(
 	ctx context.Context,
 ) (*pb.NetworkInterfaces, error) {
-	nis, err := c.pbCli.GetAll(ctx, &empty.Empty{})
+	nis, err := c.PBCli.GetAll(ctx, &empty.Empty{})
 
 	if err != nil {
 		return nil, errors.Wrap(err, "error retrieving all network interfaces")
@@ -85,7 +85,7 @@ func (c *InterfaceServiceClient) Get(
 	ctx context.Context,
 	id string,
 ) (*pb.NetworkInterface, error) {
-	ni, err := c.pbCli.Get(
+	ni, err := c.PBCli.Get(
 		ctx,
 		&pb.InterfaceID{
 			Id: id,

@@ -24,7 +24,7 @@ import (
 
 // VNFDeploymentServiceClient wraps the PB client.
 type VNFDeploymentServiceClient struct {
-	pbCli pb.VNFDeploymentServiceClient
+	PBCli pb.VNFDeploymentServiceClient
 }
 
 // NewVNFDeploymentServiceClient creates a new client.
@@ -41,7 +41,7 @@ func (c *VNFDeploymentServiceClient) Deploy(
 	ctx context.Context,
 	vnf *pb.VNF,
 ) error {
-	_, err := c.pbCli.Deploy(
+	_, err := c.PBCli.Deploy(
 		ctx,
 		vnf)
 
@@ -57,7 +57,7 @@ func (c *VNFDeploymentServiceClient) GetStatus(
 	ctx context.Context,
 	id string,
 ) (*pb.LifecycleStatus, error) {
-	status, err := c.pbCli.GetStatus(
+	status, err := c.PBCli.GetStatus(
 		ctx,
 		&pb.VNFID{
 			Id: id,
@@ -75,7 +75,7 @@ func (c *VNFDeploymentServiceClient) Redeploy(
 	ctx context.Context,
 	vnf *pb.VNF,
 ) error {
-	_, err := c.pbCli.Redeploy(
+	_, err := c.PBCli.Redeploy(
 		ctx,
 		vnf)
 
@@ -91,7 +91,7 @@ func (c *VNFDeploymentServiceClient) Undeploy(
 	ctx context.Context,
 	id string,
 ) error {
-	_, err := c.pbCli.Undeploy(
+	_, err := c.PBCli.Undeploy(
 		ctx,
 		&pb.VNFID{
 			Id: id,

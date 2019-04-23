@@ -24,7 +24,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var _ = Describe("Network Interface Policy Service", func() {
+var _ = Describe("Network Interface Policy Service Client", func() {
 	Describe("Set", func() {
 		Describe("Success", func() {
 			It("Should set the traffic policy", func() {

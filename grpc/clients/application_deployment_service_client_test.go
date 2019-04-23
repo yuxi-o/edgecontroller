@@ -24,7 +24,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var _ = Describe("Application Deployment Service", func() {
+var _ = Describe("Application Deployment Service Client", func() {
 	var (
 		containerAppID string
 		vmAppID        string

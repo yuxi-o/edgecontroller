@@ -24,7 +24,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var _ = Describe("Application Policy Service", func() {
+var _ = Describe("Application Policy Service Client", func() {
 	var (
 		appID string
 	)

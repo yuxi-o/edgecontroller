@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package grpc
 
 import (
 	"context"
@@ -23,7 +23,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type applicationService struct {
+type appDeployLifeService struct {
 	// maps of application ID to application
 	containerApps map[string]*pb.Application
 	vmApps        map[string]*pb.Application
@@ -32,26 +32,25 @@ type applicationService struct {
 	policyService *applicationPolicyService
 }
 
-func newApplicationService() *applicationService {
-	return &applicationService{
+func newAppDeployLifeService() *appDeployLifeService {
+	return &appDeployLifeService{
 		containerApps: make(map[string]*pb.Application),
 		vmApps:        make(map[string]*pb.Application),
 	}
 }
 
-func (s *applicationService) DeployContainer(
+func (s *appDeployLifeService) DeployContainer(
 	ctx context.Context,
 	containerApp *pb.Application,
 ) (*empty.Empty, error) {
 	id := containerApp.Id
 	s.containerApps[id] = containerApp
 	containerApp.Status = pb.LifecycleStatus_READY
-	s.policyService.policies[id] = defaultPolicy(id)
 
 	return &empty.Empty{}, nil
 }
 
-func (s *applicationService) DeployVM(
+func (s *appDeployLifeService) DeployVM(
 	ctx context.Context,
 	vmApp *pb.Application,
 ) (*empty.Empty, error) {
@@ -62,7 +61,7 @@ func (s *applicationService) DeployVM(
 	return &empty.Empty{}, nil
 }
 
-func (s *applicationService) GetStatus(
+func (s *appDeployLifeService) GetStatus(
 	ctx context.Context,
 	id *pb.ApplicationID,
 ) (*pb.LifecycleStatus, error) {
@@ -81,7 +80,7 @@ func (s *applicationService) GetStatus(
 	return nil, status.Errorf(codes.NotFound, "Application %s not found", id.Id)
 }
 
-func (s *applicationService) Redeploy(
+func (s *appDeployLifeService) Redeploy(
 	ctx context.Context,
 	app *pb.Application,
 ) (*empty.Empty, error) {
@@ -101,7 +100,7 @@ func (s *applicationService) Redeploy(
 		codes.NotFound, "Application %s not found", app.Id)
 }
 
-func (s *applicationService) Undeploy(
+func (s *appDeployLifeService) Undeploy(
 	ctx context.Context,
 	id *pb.ApplicationID,
 ) (*empty.Empty, error) {
@@ -129,7 +128,7 @@ func (s *applicationService) Undeploy(
 	return nil, status.Errorf(codes.NotFound, "Application %s not found", id.Id)
 }
 
-func (s *applicationService) Start(
+func (s *appDeployLifeService) Start(
 	ctx context.Context,
 	cmd *pb.LifecycleCommand,
 ) (*empty.Empty, error) {
@@ -153,7 +152,7 @@ func (s *applicationService) Start(
 		codes.NotFound, "Application %s not found", cmd.Id)
 }
 
-func (s *applicationService) Stop(
+func (s *appDeployLifeService) Stop(
 	ctx context.Context,
 	cmd *pb.LifecycleCommand,
 ) (*empty.Empty, error) {
@@ -173,7 +172,7 @@ func (s *applicationService) Stop(
 		codes.NotFound, "Application %s not found", cmd.Id)
 }
 
-func (s *applicationService) Restart(
+func (s *appDeployLifeService) Restart(
 	ctx context.Context,
 	cmd *pb.LifecycleCommand,
 ) (*empty.Empty, error) {
@@ -192,7 +191,7 @@ func (s *applicationService) Restart(
 		codes.NotFound, "Application %s not found", cmd.Id)
 }
 
-func (s *applicationService) find(id string) *pb.Application {
+func (s *appDeployLifeService) find(id string) *pb.Application {
 	if containerApp, ok := s.containerApps[id]; ok {
 		return containerApp
 	}

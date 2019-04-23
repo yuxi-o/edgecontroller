@@ -24,7 +24,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var _ = Describe("VNF Lifecycle Service", func() {
+var _ = Describe("VNF Lifecycle Service Client", func() {
 	var (
 		vnfID string
 	)

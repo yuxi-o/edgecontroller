@@ -24,7 +24,7 @@ import (
 
 // InterfacePolicyServiceClient wraps the PB client.
 type InterfacePolicyServiceClient struct {
-	pbCli pb.InterfacePolicyServiceClient
+	PBCli pb.InterfacePolicyServiceClient
 }
 
 // NewInterfacePolicyServiceClient creates a new client.
@@ -41,7 +41,7 @@ func (c *InterfacePolicyServiceClient) Set(
 	ctx context.Context,
 	interfacePolicy *pb.TrafficPolicy,
 ) error {
-	_, err := c.pbCli.Set(
+	_, err := c.PBCli.Set(
 		ctx,
 		interfacePolicy)
 

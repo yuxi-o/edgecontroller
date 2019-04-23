@@ -24,7 +24,7 @@ import (
 
 // ApplicationLifecycleServiceClient wraps the PB client.
 type ApplicationLifecycleServiceClient struct {
-	pbCli pb.ApplicationLifecycleServiceClient
+	PBCli pb.ApplicationLifecycleServiceClient
 }
 
 // NewApplicationLifecycleServiceClient creates a new client.
@@ -41,7 +41,7 @@ func (c *ApplicationLifecycleServiceClient) Start(
 	ctx context.Context,
 	id string,
 ) error {
-	_, err := c.pbCli.Start(
+	_, err := c.PBCli.Start(
 		ctx,
 		&pb.LifecycleCommand{
 			Id:  id,
@@ -60,7 +60,7 @@ func (c *ApplicationLifecycleServiceClient) Stop(
 	ctx context.Context,
 	id string,
 ) error {
-	_, err := c.pbCli.Stop(
+	_, err := c.PBCli.Stop(
 		ctx,
 		&pb.LifecycleCommand{
 			Id:  id,
@@ -79,7 +79,7 @@ func (c *ApplicationLifecycleServiceClient) Restart(
 	ctx context.Context,
 	id string,
 ) error {
-	_, err := c.pbCli.Restart(
+	_, err := c.PBCli.Restart(
 		ctx,
 		&pb.LifecycleCommand{
 			Id:  id,

@@ -24,7 +24,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var _ = Describe("Network Zone Service", func() {
+var _ = Describe("Network Zone Service Client", func() {
 	var (
 		zoneID  string
 		zone2ID string

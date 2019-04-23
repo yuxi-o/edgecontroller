@@ -24,6 +24,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	nodegmock "github.com/smartedgemec/controller-ce/mock/node/grpc"
 	"github.com/smartedgemec/controller-ce/pb"
 	"google.golang.org/grpc"
 )
@@ -46,26 +47,19 @@ func main() {
 	defer close(sigChan)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Create the services
-	appSvc := newApplicationService()
-	appPolicySvc := newApplicationPolicyService(appSvc)
-	appSvc.policyService = appPolicySvc
-	vnfSvc := vnfService{}
-	interfaceSvc := newInterfaceService()
-	ifPolicySvc := newInterfacePolicyService(interfaceSvc)
-	interfaceSvc.init(ifPolicySvc)
-	zoneSvc := zoneService{}
+	// Create the mock node
+	mockNode := nodegmock.NewMockNode()
 
 	// Register the services with the grpc server
 	server := grpc.NewServer()
-	pb.RegisterApplicationDeploymentServiceServer(server, appSvc)
-	pb.RegisterApplicationLifecycleServiceServer(server, appSvc)
-	pb.RegisterApplicationPolicyServiceServer(server, appPolicySvc)
-	pb.RegisterVNFDeploymentServiceServer(server, &vnfSvc)
-	pb.RegisterVNFLifecycleServiceServer(server, &vnfSvc)
-	pb.RegisterInterfaceServiceServer(server, interfaceSvc)
-	pb.RegisterInterfacePolicyServiceServer(server, ifPolicySvc)
-	pb.RegisterZoneServiceServer(server, &zoneSvc)
+	pb.RegisterApplicationDeploymentServiceServer(server, mockNode.AppDeploySvc)
+	pb.RegisterApplicationLifecycleServiceServer(server, mockNode.AppLifeSvc)
+	pb.RegisterApplicationPolicyServiceServer(server, mockNode.AppPolicySvc)
+	pb.RegisterVNFDeploymentServiceServer(server, mockNode.VNFDeploySvc)
+	pb.RegisterVNFLifecycleServiceServer(server, mockNode.VNFLifeSvc)
+	pb.RegisterInterfaceServiceServer(server, mockNode.InterfaceSvc)
+	pb.RegisterInterfacePolicyServiceServer(server, mockNode.IfPolicySvc)
+	pb.RegisterZoneServiceServer(server, mockNode.ZoneSvc)
 
 	// Shut down the server gracefully
 	go func() {
@@ -88,46 +82,5 @@ func main() {
 	err = server.Serve(listener)
 	if err != nil && context.Canceled == nil {
 		log.Fatal("Error starting GRPC server:", err)
-	}
-}
-
-func defaultPolicy(appID string) *pb.TrafficPolicy {
-	return &pb.TrafficPolicy{
-		Id: appID,
-		TrafficRules: []*pb.TrafficRule{
-			{
-				Description: "default_rule",
-				Priority:    0,
-				Source: &pb.TrafficSelector{
-					Description: "default_source",
-					Macs: &pb.MACFilter{
-						MacAddresses: []string{
-							"default_source_mac_0",
-							"default_source_mac_1",
-						},
-					},
-				},
-				Destination: &pb.TrafficSelector{
-					Description: "default_destination",
-					Macs: &pb.MACFilter{
-						MacAddresses: []string{
-							"default_dest_mac_0",
-							"default_dest_mac_1",
-						},
-					},
-				},
-				Target: &pb.TrafficTarget{
-					Description: "default_target",
-					Action:      pb.TrafficTarget_ACCEPT,
-					Mac: &pb.MACModifier{
-						MacAddress: "default_target_mac",
-					},
-					Ip: &pb.IPModifier{
-						Address: "127.0.0.1",
-						Port:    9999,
-					},
-				},
-			},
-		},
 	}
 }

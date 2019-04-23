@@ -25,7 +25,7 @@ import (
 
 // ZoneServiceClient wraps the PB client.
 type ZoneServiceClient struct {
-	pbCli pb.ZoneServiceClient
+	PBCli pb.ZoneServiceClient
 }
 
 // NewZoneServiceClient creates a new client.
@@ -40,7 +40,7 @@ func (c *ZoneServiceClient) Create(
 	ctx context.Context,
 	zone *pb.NetworkZone,
 ) error {
-	_, err := c.pbCli.Create(
+	_, err := c.PBCli.Create(
 		ctx,
 		zone)
 
@@ -56,7 +56,7 @@ func (c *ZoneServiceClient) Update(
 	ctx context.Context,
 	ni *pb.NetworkZone,
 ) error {
-	_, err := c.pbCli.Update(
+	_, err := c.PBCli.Update(
 		ctx,
 		ni)
 
@@ -72,7 +72,7 @@ func (c *ZoneServiceClient) BulkUpdate(
 	ctx context.Context,
 	nis *pb.NetworkZones,
 ) error {
-	_, err := c.pbCli.BulkUpdate(
+	_, err := c.PBCli.BulkUpdate(
 		ctx,
 		nis)
 
@@ -87,7 +87,7 @@ func (c *ZoneServiceClient) BulkUpdate(
 func (c *ZoneServiceClient) GetAll(
 	ctx context.Context,
 ) (*pb.NetworkZones, error) {
-	nis, err := c.pbCli.GetAll(ctx, &empty.Empty{})
+	nis, err := c.PBCli.GetAll(ctx, &empty.Empty{})
 
 	if err != nil {
 		return nil, errors.Wrap(err, "error retrieving all network zones")
@@ -101,7 +101,7 @@ func (c *ZoneServiceClient) Get(
 	ctx context.Context,
 	id string,
 ) (*pb.NetworkZone, error) {
-	ni, err := c.pbCli.Get(
+	ni, err := c.PBCli.Get(
 		ctx,
 		&pb.ZoneID{
 			Id: id,
@@ -119,7 +119,7 @@ func (c *ZoneServiceClient) Delete(
 	ctx context.Context,
 	id string,
 ) error {
-	_, err := c.pbCli.Delete(
+	_, err := c.PBCli.Delete(
 		ctx,
 		&pb.ZoneID{
 			Id: id,

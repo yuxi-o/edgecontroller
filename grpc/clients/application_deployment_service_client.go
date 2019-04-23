@@ -24,7 +24,7 @@ import (
 
 // ApplicationDeploymentServiceClient wraps the PB client.
 type ApplicationDeploymentServiceClient struct {
-	pbCli pb.ApplicationDeploymentServiceClient
+	PBCli pb.ApplicationDeploymentServiceClient
 }
 
 // NewApplicationDeploymentServiceClient creates a new client.
@@ -41,7 +41,7 @@ func (c *ApplicationDeploymentServiceClient) DeployContainer(
 	ctx context.Context,
 	app *pb.Application,
 ) error {
-	_, err := c.pbCli.DeployContainer(
+	_, err := c.PBCli.DeployContainer(
 		ctx,
 		app)
 
@@ -57,7 +57,7 @@ func (c *ApplicationDeploymentServiceClient) DeployVM(
 	ctx context.Context,
 	app *pb.Application,
 ) error {
-	_, err := c.pbCli.DeployVM(
+	_, err := c.PBCli.DeployVM(
 		ctx,
 		app)
 
@@ -73,7 +73,7 @@ func (c *ApplicationDeploymentServiceClient) GetStatus(
 	ctx context.Context,
 	id string,
 ) (*pb.LifecycleStatus, error) {
-	status, err := c.pbCli.GetStatus(
+	status, err := c.PBCli.GetStatus(
 		ctx,
 		&pb.ApplicationID{Id: id})
 
@@ -89,7 +89,7 @@ func (c *ApplicationDeploymentServiceClient) Redeploy(
 	ctx context.Context,
 	app *pb.Application,
 ) error {
-	_, err := c.pbCli.Redeploy(
+	_, err := c.PBCli.Redeploy(
 		ctx,
 		app)
 
@@ -105,7 +105,7 @@ func (c *ApplicationDeploymentServiceClient) Undeploy(
 	ctx context.Context,
 	id string,
 ) error {
-	_, err := c.pbCli.Undeploy(
+	_, err := c.PBCli.Undeploy(
 		ctx,
 		&pb.ApplicationID{
 			Id: id,
