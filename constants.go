@@ -14,12 +14,12 @@
 
 package cce
 
-// MaxCores is the maximum number of cores a container app, VM app, or VNF can
-// use.
+// MaxCores is the maximum number of cores a container/VM app or container/VM
+// VNF can use.
 const MaxCores = 8
 
-// MaxMemory is the maximum memory (in MB) that a container app, VM app, or VNF
-// can use.
+// MaxMemory is the maximum memory (in MB) that a container/VM app or container/
+// VM VNF can use.
 const MaxMemory = 16 * 1024
 
 // LifecycleStatus is an application or VNF's status.
@@ -63,6 +63,6 @@ func (s LifecycleStatus) String() string {
 	case Unknown:
 		fallthrough
 	default:
-		return "unknown" //nolint:goconst
+		return "unknown"
 	}
 }

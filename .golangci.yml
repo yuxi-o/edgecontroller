@@ -51,3 +51,9 @@ linters-settings:
   lll:
     line-length: 80
     tab-width: 4
+
+issues:
+  exclude-rules:
+    - text: "string `*`"
+      linters:
+        - goconst
