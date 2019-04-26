@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	"github.com/smartedgemec/controller-ce/pb"
+	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -38,12 +38,12 @@ var _ = Describe("Application Policy Service Client", func() {
 		By("Deploying an application")
 		err = appDeploySvcCli.DeployContainer(
 			ctx,
-			&pb.Application{
-				Id:          appID,
+			&cce.ContainerApp{
+				ID:          appID,
 				Name:        "test_container_app",
 				Vendor:      "test_vendor",
 				Description: "test container app",
-				Image:       "http://test.com/container123",
+				Image:       "http://test.com/container_app_123",
 				Cores:       4,
 				Memory:      4096,
 			})
@@ -57,37 +57,37 @@ var _ = Describe("Application Policy Service Client", func() {
 				By("Updating the traffic policy")
 				err := appPolicySvcCli.Set(
 					ctx,
-					&pb.TrafficPolicy{
-						Id: appID,
-						TrafficRules: []*pb.TrafficRule{
+					&cce.TrafficPolicy{
+						ID: appID,
+						Rules: []*cce.TrafficRule{
 							{
 								Description: "updated_rule",
 								Priority:    0,
-								Source: &pb.TrafficSelector{
+								Source: &cce.TrafficSelector{
 									Description: "updated_source",
-									Macs: &pb.MACFilter{
-										MacAddresses: []string{
+									MACs: &cce.MACFilter{
+										MACAddresses: []string{
 											"updated_source_mac_0",
 											"updated_source_mac_1",
 										},
 									},
 								},
-								Destination: &pb.TrafficSelector{
+								Destination: &cce.TrafficSelector{
 									Description: "updated_destination",
-									Macs: &pb.MACFilter{
-										MacAddresses: []string{
+									MACs: &cce.MACFilter{
+										MACAddresses: []string{
 											"updated_dest_mac_0",
 											"updated_dest_mac_1",
 										},
 									},
 								},
-								Target: &pb.TrafficTarget{
+								Target: &cce.TrafficTarget{
 									Description: "updated_target",
-									Action:      pb.TrafficTarget_ACCEPT,
-									Mac: &pb.MACModifier{
-										MacAddress: "updated_target_mac",
+									Action:      "accept",
+									MAC: &cce.MACModifier{
+										MACAddress: "updated_target_mac",
 									},
-									Ip: &pb.IPModifier{
+									IP: &cce.IPModifier{
 										Address: "127.0.0.1",
 										Port:    9999,
 									},
@@ -106,7 +106,9 @@ var _ = Describe("Application Policy Service Client", func() {
 			It("Should return an error if the ID does not exist", func() {
 				By("Passing a nonexistent ID")
 				badID := uuid.New()
-				err := appPolicySvcCli.Set(ctx, &pb.TrafficPolicy{Id: badID})
+				err := appPolicySvcCli.Set(ctx, &cce.TrafficPolicy{
+					ID: badID,
+				})
 
 				By("Verifying a NotFound response")
 				Expect(err).To(HaveOccurred())

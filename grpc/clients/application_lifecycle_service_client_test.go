@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	"github.com/smartedgemec/controller-ce/pb"
+	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -40,12 +40,12 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 		By("Deploying a container application")
 		err = appDeploySvcCli.DeployContainer(
 			ctx,
-			&pb.Application{
-				Id:          containerAppID,
+			&cce.ContainerApp{
+				ID:          containerAppID,
 				Name:        "test_container_app",
 				Vendor:      "test_vendor",
 				Description: "test container app",
-				Image:       "http://test.com/container123",
+				Image:       "http://test.com/container_app_123",
 				Cores:       4,
 				Memory:      4096,
 			})
@@ -54,12 +54,12 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 		By("Deploying a VM application")
 		err = appDeploySvcCli.DeployVM(
 			ctx,
-			&pb.Application{
-				Id:          vmAppID,
+			&cce.VMApp{
+				ID:          vmAppID,
 				Name:        "test_vm_app",
 				Vendor:      "test_vendor",
 				Description: "test vm app",
-				Image:       "http://test.com/vm123",
+				Image:       "http://test.com/vm_app_123",
 				Cores:       4,
 				Memory:      4096,
 			})
@@ -78,11 +78,7 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 				By("Verifying the container application is started")
 				status, err := appDeploySvcCli.GetStatus(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(status).To(Equal(
-					&pb.LifecycleStatus{
-						Status: pb.LifecycleStatus_RUNNING,
-					},
-				))
+				Expect(status).To(Equal(cce.Running))
 			})
 
 			It("Should start VM applications", func() {
@@ -96,11 +92,7 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 				By("Verifying the VM application is started")
 				status, err := appDeploySvcCli.GetStatus(ctx, vmAppID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(status).To(Equal(
-					&pb.LifecycleStatus{
-						Status: pb.LifecycleStatus_RUNNING,
-					},
-				))
+				Expect(status).To(Equal(cce.Running))
 			})
 		})
 
@@ -139,11 +131,7 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 				By("Verifying the container application is restarted")
 				status, err := appDeploySvcCli.GetStatus(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(status).To(Equal(
-					&pb.LifecycleStatus{
-						Status: pb.LifecycleStatus_RUNNING,
-					},
-				))
+				Expect(status).To(Equal(cce.Running))
 			})
 
 			It("Should restart VM applications", func() {
@@ -160,11 +148,7 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 				By("Verifying the VM application is restarted")
 				status, err := appDeploySvcCli.GetStatus(ctx, vmAppID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(status).To(Equal(
-					&pb.LifecycleStatus{
-						Status: pb.LifecycleStatus_RUNNING,
-					},
-				))
+				Expect(status).To(Equal(cce.Running))
 			})
 		})
 
@@ -199,11 +183,7 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 				By("Verifying the container application is stopped")
 				status, err := appDeploySvcCli.GetStatus(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(status).To(Equal(
-					&pb.LifecycleStatus{
-						Status: pb.LifecycleStatus_STOPPED,
-					},
-				))
+				Expect(status).To(Equal(cce.Stopped))
 			})
 
 			It("Should stop VM applications", func() {
@@ -220,11 +200,7 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 				By("Verifying the VM application is stopped")
 				status, err := appDeploySvcCli.GetStatus(ctx, vmAppID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(status).To(Equal(
-					&pb.LifecycleStatus{
-						Status: pb.LifecycleStatus_STOPPED,
-					},
-				))
+				Expect(status).To(Equal(cce.Stopped))
 			})
 		})
 

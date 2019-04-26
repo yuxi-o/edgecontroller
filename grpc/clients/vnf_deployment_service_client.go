@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/grpc"
 	"github.com/smartedgemec/controller-ce/pb"
 )
@@ -36,51 +37,99 @@ func NewVNFDeploymentServiceClient(
 	}
 }
 
-// Deploy deploys a VNF.
-func (c *VNFDeploymentServiceClient) Deploy(
+// DeployContainer deploys a container VNF.
+func (c *VNFDeploymentServiceClient) DeployContainer(
 	ctx context.Context,
-	vnf *pb.VNF,
+	vnf *cce.ContainerVNF,
 ) error {
-	_, err := c.PBCli.Deploy(
-		ctx,
-		vnf)
+	_, err := c.PBCli.Deploy(ctx, toPBContainerVNF(vnf))
 
 	if err != nil {
-		return errors.Wrap(err, "error deploying vnf")
+		return errors.Wrap(err, "error deploying container vnf")
 	}
 
 	return nil
+}
+
+// DeployVM deploys a VM VNF.
+func (c *VNFDeploymentServiceClient) DeployVM(
+	ctx context.Context,
+	vnf *cce.VMVNF,
+) error {
+	_, err := c.PBCli.Deploy(ctx, toPBVMVNF(vnf))
+
+	if err != nil {
+		return errors.Wrap(err, "error deploying vm vnf")
+	}
+
+	return nil
+}
+
+func toPBContainerVNF(vnf *cce.ContainerVNF) *pb.VNF {
+	return &pb.VNF{
+		Id:          vnf.ID,
+		Name:        vnf.Name,
+		Vendor:      vnf.Vendor,
+		Description: vnf.Description,
+		Image:       vnf.Image,
+		Cores:       int32(vnf.Cores),
+		Memory:      int32(vnf.Memory),
+	}
+}
+
+func toPBVMVNF(vnf *cce.VMVNF) *pb.VNF {
+	return &pb.VNF{
+		Id:          vnf.ID,
+		Name:        vnf.Name,
+		Vendor:      vnf.Vendor,
+		Description: vnf.Description,
+		Image:       vnf.Image,
+		Cores:       int32(vnf.Cores),
+		Memory:      int32(vnf.Memory),
+	}
 }
 
 // GetStatus retrieves a VNF's status.
 func (c *VNFDeploymentServiceClient) GetStatus(
 	ctx context.Context,
 	id string,
-) (*pb.LifecycleStatus, error) {
-	status, err := c.PBCli.GetStatus(
+) (cce.LifecycleStatus, error) {
+	pbStatus, err := c.PBCli.GetStatus(
 		ctx,
 		&pb.VNFID{
 			Id: id,
 		})
 
 	if err != nil {
-		return nil, errors.Wrap(err, "error retrieving vnf")
+		return cce.Unknown, errors.Wrap(err, "error retrieving vnf")
 	}
 
-	return status, nil
+	return fromPBLifecycleStatus(pbStatus), nil
 }
 
-// Redeploy redeploys a VNF.
-func (c *VNFDeploymentServiceClient) Redeploy(
+// RedeployContainer redeploys a container VNF.
+func (c *VNFDeploymentServiceClient) RedeployContainer(
 	ctx context.Context,
-	vnf *pb.VNF,
+	vnf *cce.ContainerVNF,
 ) error {
-	_, err := c.PBCli.Redeploy(
-		ctx,
-		vnf)
+	_, err := c.PBCli.Redeploy(ctx, toPBContainerVNF(vnf))
 
 	if err != nil {
-		return errors.Wrap(err, "error redeploying vnf")
+		return errors.Wrap(err, "error redeploying container vnf")
+	}
+
+	return nil
+}
+
+// RedeployVM redeploys a VM VNF.
+func (c *VNFDeploymentServiceClient) RedeployVM(
+	ctx context.Context,
+	vnf *cce.VMVNF,
+) error {
+	_, err := c.PBCli.Redeploy(ctx, toPBVMVNF(vnf))
+
+	if err != nil {
+		return errors.Wrap(err, "error redeploying container vnf")
 	}
 
 	return nil

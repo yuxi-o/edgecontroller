@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/grpc"
 	"github.com/smartedgemec/controller-ce/pb"
 )
@@ -39,14 +40,12 @@ func NewApplicationDeploymentServiceClient(
 // DeployContainer deploys a container application.
 func (c *ApplicationDeploymentServiceClient) DeployContainer(
 	ctx context.Context,
-	app *pb.Application,
+	app *cce.ContainerApp,
 ) error {
-	_, err := c.PBCli.DeployContainer(
-		ctx,
-		app)
+	_, err := c.PBCli.DeployContainer(ctx, toPBContainerApp(app))
 
 	if err != nil {
-		return errors.Wrap(err, "error deploying application")
+		return errors.Wrap(err, "error deploying container application")
 	}
 
 	return nil
@@ -55,46 +54,80 @@ func (c *ApplicationDeploymentServiceClient) DeployContainer(
 // DeployVM deploys a VM application.
 func (c *ApplicationDeploymentServiceClient) DeployVM(
 	ctx context.Context,
-	app *pb.Application,
+	app *cce.VMApp,
 ) error {
-	_, err := c.PBCli.DeployVM(
-		ctx,
-		app)
+	_, err := c.PBCli.DeployVM(ctx, toPBVMApp(app))
 
 	if err != nil {
-		return errors.Wrap(err, "error deploying application")
+		return errors.Wrap(err, "error deploying vm application")
 	}
 
 	return nil
+}
+
+func toPBContainerApp(app *cce.ContainerApp) *pb.Application {
+	return &pb.Application{
+		Id:          app.ID,
+		Name:        app.Name,
+		Vendor:      app.Vendor,
+		Description: app.Description,
+		Image:       app.Image,
+		Cores:       int32(app.Cores),
+		Memory:      int32(app.Memory),
+	}
+}
+
+func toPBVMApp(app *cce.VMApp) *pb.Application {
+	return &pb.Application{
+		Id:          app.ID,
+		Name:        app.Name,
+		Vendor:      app.Vendor,
+		Description: app.Description,
+		Image:       app.Image,
+		Cores:       int32(app.Cores),
+		Memory:      int32(app.Memory),
+	}
 }
 
 // GetStatus retrieves an application's status.
 func (c *ApplicationDeploymentServiceClient) GetStatus(
 	ctx context.Context,
 	id string,
-) (*pb.LifecycleStatus, error) {
-	status, err := c.PBCli.GetStatus(
+) (cce.LifecycleStatus, error) {
+	pbStatus, err := c.PBCli.GetStatus(
 		ctx,
 		&pb.ApplicationID{Id: id})
 
 	if err != nil {
-		return nil, errors.Wrap(err, "error retrieving application")
+		return cce.Unknown, errors.Wrap(err, "error retrieving application")
 	}
 
-	return status, nil
+	return fromPBLifecycleStatus(pbStatus), nil
 }
 
-// Redeploy redeploys an application.
-func (c *ApplicationDeploymentServiceClient) Redeploy(
+// RedeployContainer redeploys a container application.
+func (c *ApplicationDeploymentServiceClient) RedeployContainer(
 	ctx context.Context,
-	app *pb.Application,
+	app *cce.ContainerApp,
 ) error {
-	_, err := c.PBCli.Redeploy(
-		ctx,
-		app)
+	_, err := c.PBCli.Redeploy(ctx, toPBContainerApp(app))
 
 	if err != nil {
-		return errors.Wrap(err, "error redeploying application")
+		return errors.Wrap(err, "error redeploying container application")
+	}
+
+	return nil
+}
+
+// RedeployVM redeploys a VM application.
+func (c *ApplicationDeploymentServiceClient) RedeployVM(
+	ctx context.Context,
+	app *cce.VMApp,
+) error {
+	_, err := c.PBCli.Redeploy(ctx, toPBVMApp(app))
+
+	if err != nil {
+		return errors.Wrap(err, "error redeploying vm application")
 	}
 
 	return nil
