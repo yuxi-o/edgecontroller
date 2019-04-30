@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -16,18 +15,18 @@ type ClientConn struct {
 }
 
 // Dial dials the remote server.
-func Dial(ctx context.Context, host string, port int) (*ClientConn, error) {
+func Dial(ctx context.Context, target string) (*ClientConn, error) {
 	timeoutCtx, cancelFunc := context.WithTimeout(
 		ctx, 2*time.Second)
 	defer cancelFunc()
 
 	conn, err := grpc.DialContext(
 		timeoutCtx,
-		fmt.Sprintf("%s:%d", host, port),
+		target,
 		grpc.WithInsecure(),
 		grpc.WithBlock())
 	if err != nil {
-		return nil, errors.Wrapf(err, "dial failed")
+		return nil, errors.Wrapf(err, "dial %s failed", target)
 	}
 
 	return &ClientConn{conn}, nil

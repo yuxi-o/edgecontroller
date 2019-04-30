@@ -12,18 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module github.com/smartedgemec/controller-ce
+package http
 
-require (
-	github.com/go-sql-driver/mysql v1.4.1
-	github.com/golang/protobuf v1.3.0
-	github.com/gorilla/mux v1.7.0
-	github.com/grpc-ecosystem/grpc-gateway v1.8.4
-	github.com/onsi/ginkgo v1.8.0
-	github.com/onsi/gomega v1.5.0
-	github.com/pkg/errors v0.8.1
-	github.com/satori/go.uuid v1.2.0
-	golang.org/x/net v0.0.0-20190313220215-9f648a60d977 // indirect
-	google.golang.org/genproto v0.0.0-20180831171423-11092d34479b
-	google.golang.org/grpc v1.19.0
+import (
+	"net"
+	"net/http"
 )
+
+// Server wraps http.Server.
+type Server = http.Server
+
+// NewServer creates a new Server.
+func NewServer(handler http.Handler) *Server {
+	return &Server{
+		Handler: handler,
+	}
+}
+
+// Serve wraps http.Serve.
+func Serve(l net.Listener, handler http.Handler) error {
+	return http.Serve(l, handler)
+}

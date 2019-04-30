@@ -4,18 +4,36 @@ This is the project for the Controller Community Edition.
 
 ## Overview
 
-This project uses a MySQL database. To create the schema in a local database,
-run this command:
+This project uses a MySQL database running inside a Docker container. Please
+make sure you have Docker installed locally. To start/reset the database, run:
 
-`mysql -u root -p < schema.sql`
+`make db-reset`
 
-To run the test node:
+To run unit and integration tests:
 
-`go run github.com/smartedgemec/controller-ce/test/node/grpc -port 8081`
+`make test`
 
-To run unit tests using the test node:
+To run only unit tests:
 
-`make lint test`
+`make test-unit`
+
+To run only integration tests (this will call `make db-reset`):
+
+`make test-api`
+
+## Building and Running
+
+To build the binaries:
+
+`make build`
+
+To run the test node which simulates an appliance listening as a gRPC server:
+
+`./dist/test-node -port 8081`
+
+To run the Controller CE:
+
+`./dist/cce -dsn "root:<db_pass>@tcp(:8083)/controller_ce" -port 8080`
 
 ## Project Layout
 

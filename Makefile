@@ -18,20 +18,41 @@ export GO111MODULE = on
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
-	@echo "  clean          to clean up build artifacts and docker"
-	@echo "  build          to build the release docker image"
-	@echo "  lint           to run linters and static analysis on the code"
-	@echo "  test           to run unit tests"
+	@echo "  clean            to clean up build artifacts and docker"
+	@echo "  build            to build the release docker image"
+	@echo "  lint             to run linters and static analysis on the code"
+	@echo "  db-up            to start the MySQL database using docker-compose"
+	@echo "  db-reset         to start and reset the MySQL database using docker-compose"
+	@echo "  db-down          to stop the MySQL database using docker-compose"
+	@echo "  test-unit        to run unit tests"
+	@echo "  test-api         to run api tests"
+	@echo "  test             to run unit followed by api tests"
 
 clean:
 	rm -rf dist
 
 build:
 	mkdir -p dist
-	go build -o dist/helloapp ./cmd/helloapp
+	go build -o dist/cce ./cmd/cce
+	go build -o dist/test-node ./test/node/grpc
 
 lint:
 	golangci-lint run
 
-test:
-	ginkgo -v -r --randomizeAllSpecs --randomizeSuites --failOnPending --skipPackage=vendor
+db-up:
+	docker-compose up -d
+	until mysql -P 8083 --protocol tcp -uroot -pbeer -e '' 2>/dev/null; do echo "Waiting for DB..."; sleep 1; done
+
+db-reset: db-up
+	mysql -P 8083 --protocol tcp -u root -pbeer < schema.sql
+
+db-down:
+	docker-compose down
+
+test-unit:
+	ginkgo -v -r --randomizeAllSpecs --randomizeSuites --skipPackage=vendor,cmd/cce
+
+test-api: db-reset
+	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce
+
+test: test-unit test-api

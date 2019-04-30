@@ -31,7 +31,7 @@ type PersistenceService interface {
 	Filter(ctx context.Context,
 		zv EntityModel, fs []Filter) (es []Entity, err error)
 	BulkUpdate(ctx context.Context, es []Entity) error
-	Delete(ctx context.Context, id string, zv EntityModel) error
+	Delete(ctx context.Context, id string, zv EntityModel) (ok bool, err error)
 }
 
 // Entity is a persistable resource that has a table name and an ID and that can
@@ -47,6 +47,11 @@ type Entity interface {
 // PersistenceService for details on its usage.
 type EntityModel interface {
 	GetTableName() string
+}
+
+// JoinEntity is a resource that joins a Node to another Entity.
+type JoinEntity interface {
+	GetNodeID() string
 }
 
 // Filter filters queries in PersistenceService.Filter.

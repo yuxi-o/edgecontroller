@@ -72,5 +72,5 @@ var (
 
 func TestApplicationClient(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Application Client Suite")
+	RunSpecs(t, "gRPC Clients Suite")
 }

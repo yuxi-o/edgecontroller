@@ -20,6 +20,9 @@ go:
 env:
   - GO111MODULE=on
 
+services:
+  - docker
+
 before_install:
   # golangci-lint
   - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.15.0

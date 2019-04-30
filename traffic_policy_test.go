@@ -35,7 +35,7 @@ var _ = Describe("Entities: TrafficPolicy", func() {
 					Description: "test-rule-1",
 					Priority:    1,
 					Source: &cce.TrafficSelector{
-						Description: "source-source-1",
+						Description: "test-source-1",
 						MACs: &cce.MACFilter{
 							MACAddresses: []string{
 								"F0-59-8E-7B-36-8A",
@@ -102,7 +102,7 @@ var _ = Describe("Entities: TrafficPolicy", func() {
 					Description: "test-rule-2",
 					Priority:    2,
 					Source: &cce.TrafficSelector{
-						Description: "source-source-2",
+						Description: "test-source-2",
 						MACs: &cce.MACFilter{
 							MACAddresses: []string{
 								"43-78-01-EE-B5-8D",
@@ -423,7 +423,7 @@ TrafficPolicy[
             Description: test-rule-1
             Priority: 1
             Source: TrafficSelector[
-                Description: source-source-1
+                Description: test-source-1
                 MACs: MACFilter[
                     MACAddresses: [
                         F0-59-8E-7B-36-8A
@@ -490,7 +490,7 @@ TrafficPolicy[
             Description: test-rule-2
             Priority: 2
             Source: TrafficSelector[
-                Description: source-source-2
+                Description: test-source-2
                 MACs: MACFilter[
                     MACAddresses: [
                         43-78-01-EE-B5-8D
