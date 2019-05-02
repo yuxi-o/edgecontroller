@@ -22,74 +22,74 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
-var _ = Describe("Join Entities: NodeContainerVNF", func() {
+var _ = Describe("Join Entities: NodeDNSConfig", func() {
 	var (
-		nvnf *cce.NodeContainerVNF
+		ncfg *cce.NodeDNSConfig
 	)
 
 	BeforeEach(func() {
-		nvnf = &cce.NodeContainerVNF{
-			ID:             "f01e0777-1368-4688-8745-30da374cbc4a",
-			NodeID:         "48606c73-3905-47e0-864f-14bc7466f5bb",
-			ContainerVNFID: "28bbfdb2-dace-421d-a680-9ae893a95d37",
+		ncfg = &cce.NodeDNSConfig{
+			ID:          "6c7eacb8-7b95-4541-940c-aa18a6204645",
+			NodeID:      "48606c73-3905-47e0-864f-14bc7466f5bb",
+			DNSConfigID: "84c1f7b9-53e7-408e-9223-deab73befc54",
 		}
 	})
 
 	Describe("GetTableName", func() {
-		It(`Should return "nodes_container_vnfs"`, func() {
-			Expect(nvnf.GetTableName()).To(Equal("nodes_container_vnfs"))
+		It(`Should return "nodes_dns_configs"`, func() {
+			Expect(ncfg.GetTableName()).To(Equal("nodes_dns_configs"))
 		})
 	})
 
 	Describe("GetID", func() {
 		It("Should return the ID", func() {
-			Expect(nvnf.GetID()).To(Equal(
-				"f01e0777-1368-4688-8745-30da374cbc4a"))
+			Expect(ncfg.GetID()).To(Equal(
+				"6c7eacb8-7b95-4541-940c-aa18a6204645"))
 		})
 	})
 
 	Describe("SetID", func() {
 		It("Should set and return the updated ID", func() {
 			By("Setting the ID")
-			nvnf.SetID("456")
+			ncfg.SetID("456")
 
 			By("Getting the updated ID")
-			Expect(nvnf.ID).To(Equal("456"))
+			Expect(ncfg.ID).To(Equal("456"))
 		})
 	})
 
 	Describe("GetNodeID", func() {
 		It("Should return the node ID", func() {
-			Expect(nvnf.GetNodeID()).To(Equal(
+			Expect(ncfg.GetNodeID()).To(Equal(
 				"48606c73-3905-47e0-864f-14bc7466f5bb"))
 		})
 	})
 
 	Describe("Validate", func() {
 		It("Should return an error if ID is not a UUID", func() {
-			nvnf.ID = "123"
-			Expect(nvnf.Validate()).To(MatchError("id not a valid uuid"))
+			ncfg.ID = "123"
+			Expect(ncfg.Validate()).To(MatchError("id not a valid uuid"))
 		})
 
 		It("Should return an error if NodeID is not a UUID", func() {
-			nvnf.NodeID = "123"
-			Expect(nvnf.Validate()).To(MatchError("node_id not a valid uuid"))
+			ncfg.NodeID = "123"
+			Expect(ncfg.Validate()).To(MatchError("node_id not a valid uuid"))
 		})
 
-		It("Should return an error if ContainerVNFID is not a UUID", func() {
-			nvnf.ContainerVNFID = "123"
-			Expect(nvnf.Validate()).To(MatchError(
-				"vnf_id not a valid uuid"))
+		It("Should return an error if DNSConfigID is not a UUID", func() {
+			ncfg.DNSConfigID = "123"
+			Expect(ncfg.Validate()).To(MatchError(
+				"dns_config_id not a valid uuid"))
 		})
 	})
 
 	Describe("String", func() {
 		It("Should return the string value", func() {
-			Expect(nvnf.String()).To(Equal(strings.TrimSpace(`
-NodeContainerVNF[
-    ID: f01e0777-1368-4688-8745-30da374cbc4a
+			Expect(ncfg.String()).To(Equal(strings.TrimSpace(`
+NodeDNSConfig[
+    ID: 6c7eacb8-7b95-4541-940c-aa18a6204645
     NodeID: 48606c73-3905-47e0-864f-14bc7466f5bb
-    ContainerVNFID: 28bbfdb2-dace-421d-a680-9ae893a95d37
+    DNSConfigID: 84c1f7b9-53e7-408e-9223-deab73befc54
 ]`,
 			)))
 		})

@@ -194,6 +194,18 @@ CREATE TABLE dns_configs_dns_vm_vnf_aliases (
     UNIQUE KEY (dns_config_id, dns_vm_vnf_alias_id)
 );
 
+-- nodes x dns_configs
+CREATE TABLE nodes_dns_configs (
+    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
+    node_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.node_id') STORED,
+    dns_config_id VARCHAR(36) GENERATED ALWAYS AS
+        (entity->>'$.dns_config_id') STORED,
+    entity JSON,
+    FOREIGN KEY (node_id) REFERENCES nodes(id),
+    FOREIGN KEY (dns_config_id) REFERENCES dns_configs(id),
+    UNIQUE KEY (node_id, dns_config_id)
+);
+
 -- ---------------------
 -- Secondary join tables
 -- ---------------------

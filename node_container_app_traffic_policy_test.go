@@ -69,7 +69,7 @@ var _ = Describe("Join Entities: NodeContainerAppTrafficPolicy", func() {
 			"UUID", func() {
 			ncatp.NodeContainerAppID = "123"
 			Expect(ncatp.Validate()).To(MatchError(
-				"node_container_app_id not a valid uuid"))
+				"nodes_container_apps_id not a valid uuid"))
 		})
 
 		It("Should return an error if TrafficPolicyID is not a UUID", func() {

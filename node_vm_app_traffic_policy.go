@@ -26,7 +26,7 @@ import (
 // a TrafficPolicy.
 type NodeVMAppTrafficPolicy struct {
 	ID              string `json:"id"`
-	NodeVMAppID     string `json:"vm_app_id"`
+	NodeVMAppID     string `json:"nodes_vm_apps_id"`
 	TrafficPolicyID string `json:"traffic_policy_id"`
 }
 
@@ -51,7 +51,7 @@ func (n_vma_tp *NodeVMAppTrafficPolicy) Validate() error {
 		return errors.New("id not a valid uuid")
 	}
 	if !uuid.IsValid(n_vma_tp.NodeVMAppID) {
-		return errors.New("node_vm_app_id not a valid uuid")
+		return errors.New("nodes_vm_apps_id not a valid uuid")
 	}
 	if !uuid.IsValid(n_vma_tp.TrafficPolicyID) {
 		return errors.New("traffic_policy_id not a valid uuid")

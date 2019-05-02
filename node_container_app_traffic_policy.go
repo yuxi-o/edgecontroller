@@ -26,7 +26,7 @@ import (
 // NodeContainerApp and a TrafficPolicy.
 type NodeContainerAppTrafficPolicy struct {
 	ID                 string `json:"id"`
-	NodeContainerAppID string `json:"node_container_app_id"`
+	NodeContainerAppID string `json:"nodes_container_apps_id"`
 	TrafficPolicyID    string `json:"traffic_policy_id"`
 }
 
@@ -51,7 +51,7 @@ func (n_ca_tp *NodeContainerAppTrafficPolicy) Validate() error {
 		return errors.New("id not a valid uuid")
 	}
 	if !uuid.IsValid(n_ca_tp.NodeContainerAppID) {
-		return errors.New("node_container_app_id not a valid uuid")
+		return errors.New("nodes_container_apps_id not a valid uuid")
 	}
 	if !uuid.IsValid(n_ca_tp.TrafficPolicyID) {
 		return errors.New("traffic_policy_id not a valid uuid")

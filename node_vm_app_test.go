@@ -59,7 +59,7 @@ var _ = Describe("Join Entities: NodeVMApp", func() {
 	})
 
 	Describe("GetNodeID", func() {
-		It("Should get the node ID", func() {
+		It("Should return the node ID", func() {
 			Expect(nvma.GetNodeID()).To(Equal(
 				"48606c73-3905-47e0-864f-14bc7466f5bb"))
 		})

@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [0.0.5] - 2019-04-30
+### Added
+- Node <-> DNS config model
+
+### Fixed
+- JSON naming errors in traffic policy models
+
 ## [0.0.4] - 2019-04-30
 ### Added
 - Dockerized MySQL DB, persistence service, HTTP server, API tests

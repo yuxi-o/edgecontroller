@@ -68,7 +68,7 @@ var _ = Describe("Join Entities: NodeVMAppTrafficPolicy", func() {
 		It("Should return an error if NodeVMAppID is not a UUID", func() {
 			nvmatp.NodeVMAppID = "123"
 			Expect(nvmatp.Validate()).To(MatchError(
-				"node_vm_app_id not a valid uuid"))
+				"nodes_vm_apps_id not a valid uuid"))
 		})
 
 		It("Should return an error if TrafficPolicyID is not a UUID", func() {

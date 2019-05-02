@@ -44,7 +44,7 @@ db-up:
 	until mysql -P 8083 --protocol tcp -uroot -pbeer -e '' 2>/dev/null; do echo "Waiting for DB..."; sleep 1; done
 
 db-reset: db-up
-	mysql -P 8083 --protocol tcp -u root -pbeer < schema.sql
+	mysql -P 8083 --protocol tcp -u root -pbeer < mysql/schema.sql
 
 db-down:
 	docker-compose down
