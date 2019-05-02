@@ -39,7 +39,7 @@ var _ = Describe("/vm_vnfs", func() {
                 {
                     "name": "vm vnf",
                     "vendor": "smart edge",
-                    "description": "my vnf",
+                    "description": "my vm vnf",
                     "image": "http://www.test.com/my_vm_vnf.tar.gz",
                     "cores": 4,
                     "memory": 1024
@@ -117,7 +117,7 @@ var _ = Describe("/vm_vnfs", func() {
                 {
                     "name": "vm vnf",
                     "vendor": "smart edge",
-                    "description": "my vnf",
+                    "description": "my vm vnf",
                     "image": "http://www.test.com/my_vm_vnf.tar.gz",
                     "cores": 4,
                     "memory": 1024
@@ -154,11 +154,18 @@ var _ = Describe("/vm_vnfs", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
+				"POST /vm_vnfs with id",
+				`
+                {
+                    "id": "123"
+                }`,
+				"Validation failed: id cannot be specified in POST request"),
+			Entry(
 				"POST /vm_vnfs without name",
 				`
                 {
                     "vendor": "smart edge",
-                    "description": "my vnf",
+                    "description": "my vm vnf",
                     "image": "http://www.test.com/my_vm_vnf.tar.gz",
                     "cores": 4,
                     "memory": 1024
@@ -169,7 +176,7 @@ var _ = Describe("/vm_vnfs", func() {
 				`
                 {
                     "name": "vm vnf",
-                    "description": "my vnf",
+                    "description": "my vm vnf",
                     "image": "http://www.test.com/my_vm_vnf.tar.gz",
                     "cores": 4,
                     "memory": 1024
@@ -181,7 +188,7 @@ var _ = Describe("/vm_vnfs", func() {
                 {
                     "name": "vm vnf",
                     "vendor": "smart edge",
-                    "description": "my vnf",
+                    "description": "my vm vnf",
                     "cores": 4,
                     "memory": 1024
                 }`,
@@ -191,7 +198,7 @@ var _ = Describe("/vm_vnfs", func() {
                 {
                     "name": "vm vnf",
                     "vendor": "smart edge",
-                    "description": "my vnf",
+                    "description": "my vm vnf",
                     "image": "http://www.test.com/my_vm_vnf.tar.gz",
                     "cores": 9,
                     "memory": 1024
@@ -202,7 +209,7 @@ var _ = Describe("/vm_vnfs", func() {
                 {
                     "name": "vm vnf",
                     "vendor": "smart edge",
-                    "description": "my vnf",
+                    "description": "my vm vnf",
                     "image": "http://www.test.com/my_vm_vnf.tar.gz",
                     "cores": 8,
                     "memory": 16385
@@ -246,7 +253,7 @@ var _ = Describe("/vm_vnfs", func() {
 						ID:          vmVNFID,
 						Name:        "vm vnf",
 						Vendor:      "smart edge",
-						Description: "my vnf",
+						Description: "my vm vnf",
 						Image:       "http://www.test.com/my_vm_vnf.tar.gz",
 						Cores:       4,
 						Memory:      1024,
@@ -257,7 +264,7 @@ var _ = Describe("/vm_vnfs", func() {
 						ID:          vmVNF2ID,
 						Name:        "vm vnf",
 						Vendor:      "smart edge",
-						Description: "my vnf",
+						Description: "my vm vnf",
 						Image:       "http://www.test.com/my_vm_vnf.tar.gz",
 						Cores:       4,
 						Memory:      1024,
@@ -286,7 +293,7 @@ var _ = Describe("/vm_vnfs", func() {
 						ID:          vmVNFID,
 						Name:        "vm vnf",
 						Vendor:      "smart edge",
-						Description: "my vnf",
+						Description: "my vm vnf",
 						Image:       "http://www.test.com/my_vm_vnf.tar.gz",
 						Cores:       4,
 						Memory:      1024,
@@ -345,14 +352,14 @@ var _ = Describe("/vm_vnfs", func() {
 				Expect(updatedVNF).To(Equal(expectedVNF))
 			},
 			Entry(
-				"PATCH /vm_vnfs/{id}",
+				"PATCH /vm_vnfs",
 				`
                 [
                     {
                         "id": "%s",
                         "name": "vm vnf2",
                         "vendor": "smart edge",
-                        "description": "my vnf",
+                        "description": "my vm vnf",
                         "image": "http://www.test.com/my_vm_vnf.tar.gz",
                         "cores": 4,
                         "memory": 1024
@@ -361,12 +368,12 @@ var _ = Describe("/vm_vnfs", func() {
 				&cce.VMVNF{
 					Name:        "vm vnf2",
 					Vendor:      "smart edge",
-					Description: "my vnf",
+					Description: "my vm vnf",
 					Image:       "http://www.test.com/my_vm_vnf.tar.gz",
 					Cores:       4,
 					Memory:      1024,
 				}),
-			Entry("PATCH /vm_vnfs/{id} with no description",
+			Entry("PATCH /vm_vnfs with no description",
 				`
                 [
                     {
@@ -391,10 +398,13 @@ var _ = Describe("/vm_vnfs", func() {
 		DescribeTable("400 Bad Request",
 			func(reqStr string, expectedResp string) {
 				By("Sending a PATCH /vm_vnfs request")
+				if strings.Contains(reqStr, "%s") {
+					reqStr = fmt.Sprintf(reqStr, vmVNFID)
+				}
 				req, err := http.NewRequest(
 					http.MethodPatch,
 					"http://127.0.0.1:8080/vm_vnfs",
-					strings.NewReader(fmt.Sprintf(reqStr, vmVNFID)))
+					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
 
 				c := http.Client{}
@@ -412,13 +422,27 @@ var _ = Describe("/vm_vnfs", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
+				"PATCH /vm_vnfs without id",
+				`
+                [
+                    {
+                        "name": "vm vnf2",
+                        "vendor": "smart edge",
+                        "description": "my vm vnf",
+                        "image": "http://www.test.com/my_vm_app.tar.gz",
+                        "cores": 4,
+                        "memory": 1024
+                    }
+                ]`,
+				"Validation failed: id not a valid uuid"),
+			Entry(
 				"PATCH /vm_vnfs without name",
 				`
                 [
                     {
                         "id": "%s",
                         "vendor": "smart edge",
-                        "description": "my vnf",
+                        "description": "my vm vnf",
                         "image": "http://www.test.com/my_vm_vnf.tar.gz",
                         "cores": 4,
                         "memory": 1024
@@ -431,7 +455,7 @@ var _ = Describe("/vm_vnfs", func() {
                     {
                         "id": "%s",
                         "name": "vm vnf2",
-                        "description": "my vnf",
+                        "description": "my vm vnf",
                         "image": "http://www.test.com/my_vm_vnf.tar.gz",
                         "cores": 4,
                         "memory": 1024
@@ -445,7 +469,7 @@ var _ = Describe("/vm_vnfs", func() {
                         "id": "%s",
                         "name": "vm vnf2",
                         "vendor": "smart edge",
-                        "description": "my vnf",
+                        "description": "my vm vnf",
                         "cores": 4,
                         "memory": 1024
                     }
@@ -458,7 +482,7 @@ var _ = Describe("/vm_vnfs", func() {
                         "id": "%s",
                         "name": "vm vnf2",
                         "vendor": "smart edge",
-                        "description": "my vnf",
+                        "description": "my vm vnf",
                         "image": "http://www.test.com/my_vm_vnf.tar.gz",
                         "cores": 9,
                         "memory": 1024
@@ -472,7 +496,7 @@ var _ = Describe("/vm_vnfs", func() {
                         "id": "%s",
                         "name": "vm vnf2",
                         "vendor": "smart edge",
-                        "description": "my vnf",
+                        "description": "my vm vnf",
                         "image": "http://www.test.com/my_vm_vnf.tar.gz",
                         "cores": 4,
                         "memory": 16385

@@ -154,6 +154,13 @@ var _ = Describe("/vm_apps", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
+				"POST /vm_apps with id",
+				`
+                {
+                    "id": "123"
+                }`,
+				"Validation failed: id cannot be specified in POST request"),
+			Entry(
 				"POST /vm_apps without name",
 				`
                 {
@@ -345,7 +352,7 @@ var _ = Describe("/vm_apps", func() {
 				Expect(updatedApp).To(Equal(expectedApp))
 			},
 			Entry(
-				"PATCH /vm_apps/{id}",
+				"PATCH /vm_apps",
 				`
                 [
                     {
@@ -366,7 +373,7 @@ var _ = Describe("/vm_apps", func() {
 					Cores:       4,
 					Memory:      1024,
 				}),
-			Entry("PATCH /vm_apps/{id} with no description",
+			Entry("PATCH /vm_apps with no description",
 				`
                 [
                     {
@@ -391,10 +398,13 @@ var _ = Describe("/vm_apps", func() {
 		DescribeTable("400 Bad Request",
 			func(reqStr string, expectedResp string) {
 				By("Sending a PATCH /vm_apps request")
+				if strings.Contains(reqStr, "%s") {
+					reqStr = fmt.Sprintf(reqStr, vmAppID)
+				}
 				req, err := http.NewRequest(
 					http.MethodPatch,
 					"http://127.0.0.1:8080/vm_apps",
-					strings.NewReader(fmt.Sprintf(reqStr, vmAppID)))
+					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
 
 				c := http.Client{}
@@ -411,6 +421,20 @@ var _ = Describe("/vm_apps", func() {
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(expectedResp))
 			},
+			Entry(
+				"PATCH /vm_apps without id",
+				`
+                [
+                    {
+                        "name": "vm app2",
+                        "vendor": "smart edge",
+                        "description": "my vm app",
+                        "image": "http://www.test.com/my_vm_app.tar.gz",
+                        "cores": 4,
+                        "memory": 1024
+                    }
+                ]`,
+				"Validation failed: id not a valid uuid"),
 			Entry(
 				"PATCH /vm_apps without name",
 				`

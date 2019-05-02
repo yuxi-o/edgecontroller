@@ -63,9 +63,9 @@ var _ = Describe("Entities: ContainerVNF", func() {
 	})
 
 	Describe("Validate", func() {
-		It("Should return an error if ID is empty", func() {
-			vnf.ID = ""
-			Expect(vnf.Validate()).To(MatchError("id cannot be empty"))
+		It("Should return an error if ID is not a UUID", func() {
+			vnf.ID = "123"
+			Expect(vnf.Validate()).To(MatchError("id not a valid uuid"))
 		})
 
 		It("Should return an error if Name is empty", func() {

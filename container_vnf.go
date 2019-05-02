@@ -18,6 +18,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/smartedgemec/controller-ce/uuid"
 )
 
 // ContainerVNF is a containerized VNF.
@@ -48,8 +50,8 @@ func (vnf *ContainerVNF) SetID(id string) {
 
 // Validate validates the model.
 func (vnf *ContainerVNF) Validate() error {
-	if vnf.ID == "" {
-		return errors.New("id cannot be empty")
+	if !uuid.IsValid(vnf.ID) {
+		return errors.New("id not a valid uuid")
 	}
 	if vnf.Name == "" {
 		return errors.New("name cannot be empty")

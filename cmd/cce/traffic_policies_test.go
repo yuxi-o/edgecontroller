@@ -342,6 +342,13 @@ var _ = Describe("/traffic_policies", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
+				"POST /traffic_policies with id",
+				`
+                {
+                    "id": "123"
+                }`,
+				"Validation failed: id cannot be specified in POST request"),
+			Entry(
 				"POST /traffic_policies without rules",
 				`
                 {
@@ -800,7 +807,7 @@ var _ = Describe("/traffic_policies", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
 				By("Getting the updated application")
-				updatedApp := get(trafficPolicyID)
+				updatedPolicy := get(trafficPolicyID)
 
 				By("Verifying the traffic policy was updated")
 				expectedPolicy := trafficPolicy
@@ -812,10 +819,10 @@ var _ = Describe("/traffic_policies", func() {
 					"test-destination-2"
 				expectedPolicy.Rules[0].Target.Description =
 					"test-target-2"
-				Expect(updatedApp).To(Equal(expectedPolicy))
+				Expect(updatedPolicy).To(Equal(expectedPolicy))
 			},
 			Entry(
-				"PATCH /traffic_policies/{id}",
+				"PATCH /traffic_policies",
 				`
                 [{
                     "id": "%s",
@@ -892,10 +899,13 @@ var _ = Describe("/traffic_policies", func() {
 		DescribeTable("400 Bad Request",
 			func(reqStr string, expectedResp string) {
 				By("Sending a PATCH /traffic_policies request")
+				if strings.Contains(reqStr, "%s") {
+					reqStr = fmt.Sprintf(reqStr, trafficPolicyID)
+				}
 				req, err := http.NewRequest(
 					http.MethodPatch,
 					"http://127.0.0.1:8080/traffic_policies",
-					strings.NewReader(fmt.Sprintf(reqStr, trafficPolicyID)))
+					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
 
 				c := http.Client{}
@@ -912,8 +922,13 @@ var _ = Describe("/traffic_policies", func() {
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(expectedResp))
 			},
-			// Don't repeat all the validation testing we did in POST, just a
-			// single one as a sanity check.
+			// Don't repeat all the validation testing we did in POST, just
+			// one for ID and another one as a sanity check.
+			Entry(
+				"PATCH /nodes without id",
+				`
+                [{}]`,
+				"Validation failed: id not a valid uuid"),
 			Entry(
 				"PATCH /traffic_policies without rules[0].description",
 				`

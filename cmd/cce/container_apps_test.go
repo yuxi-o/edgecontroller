@@ -154,6 +154,13 @@ var _ = Describe("/container_apps", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
+				"POST /container_apps with id",
+				`
+                {
+                    "id": "123"
+                }`,
+				"Validation failed: id cannot be specified in POST request"),
+			Entry(
 				"POST /container_apps without name",
 				`
                 {
@@ -345,7 +352,7 @@ var _ = Describe("/container_apps", func() {
 				Expect(updatedApp).To(Equal(expectedApp))
 			},
 			Entry(
-				"PATCH /container_apps/{id}",
+				"PATCH /container_apps",
 				`
                 [
                     {
@@ -366,7 +373,7 @@ var _ = Describe("/container_apps", func() {
 					Cores:       4,
 					Memory:      1024,
 				}),
-			Entry("PATCH /container_apps/{id} with no description",
+			Entry("PATCH /container_apps with no description",
 				`
                 [
                     {
@@ -391,10 +398,13 @@ var _ = Describe("/container_apps", func() {
 		DescribeTable("400 Bad Request",
 			func(reqStr string, expectedResp string) {
 				By("Sending a PATCH /container_apps request")
+				if strings.Contains(reqStr, "%s") {
+					reqStr = fmt.Sprintf(reqStr, containerAppID)
+				}
 				req, err := http.NewRequest(
 					http.MethodPatch,
 					"http://127.0.0.1:8080/container_apps",
-					strings.NewReader(fmt.Sprintf(reqStr, containerAppID)))
+					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
 
 				c := http.Client{}
@@ -411,6 +421,20 @@ var _ = Describe("/container_apps", func() {
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(expectedResp))
 			},
+			Entry(
+				"PATCH /container_apps without id",
+				`
+                [
+                    {
+                        "name": "container app2",
+                        "vendor": "smart edge",
+                        "description": "my container app",
+                        "image": "http://www.test.com/my_container_app.tar.gz",
+                        "cores": 4,
+                        "memory": 1024
+                    }
+                ]`,
+				"Validation failed: id not a valid uuid"),
 			Entry(
 				"PATCH /container_apps without name",
 				`

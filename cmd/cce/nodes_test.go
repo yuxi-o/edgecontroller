@@ -138,6 +138,13 @@ var _ = Describe("/nodes", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
+				"POST /nodes with id",
+				`
+                {
+                    "id": "123"
+                }`,
+				"Validation failed: id cannot be specified in POST request"),
+			Entry(
 				"POST /nodes without name",
 				`
                 {
@@ -267,7 +274,7 @@ var _ = Describe("/nodes", func() {
 		})
 
 		DescribeTable("204 No Content",
-			func(reqStr string, expectedApp *cce.Node) {
+			func(reqStr string, expectedNode *cce.Node) {
 				By("Sending a PATCH /nodes request")
 				req, err := http.NewRequest(
 					http.MethodPatch,
@@ -284,14 +291,14 @@ var _ = Describe("/nodes", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
 				By("Getting the updated application")
-				updatedApp := get(nodeID)
+				updatedNode := get(nodeID)
 
 				By("Verifying the node was updated")
-				expectedApp.SetID(nodeID)
-				Expect(updatedApp).To(Equal(expectedApp))
+				expectedNode.SetID(nodeID)
+				Expect(updatedNode).To(Equal(expectedNode))
 			},
 			Entry(
-				"PATCH /nodes/{id}",
+				"PATCH /nodes",
 				`
                 [
                     {
@@ -311,10 +318,13 @@ var _ = Describe("/nodes", func() {
 		DescribeTable("400 Bad Request",
 			func(reqStr string, expectedResp string) {
 				By("Sending a PATCH /nodes request")
+				if strings.Contains(reqStr, "%s") {
+					reqStr = fmt.Sprintf(reqStr, nodeID)
+				}
 				req, err := http.NewRequest(
 					http.MethodPatch,
 					"http://127.0.0.1:8080/nodes",
-					strings.NewReader(fmt.Sprintf(reqStr, nodeID)))
+					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
 
 				c := http.Client{}
@@ -332,6 +342,17 @@ var _ = Describe("/nodes", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
+				"PATCH /nodes without id",
+				`
+                [
+                    {
+                        "name": "node123",
+                        "location": "smart edge lab",
+                        "serial": "abc123"
+                    }
+                ]`,
+				"Validation failed: id not a valid uuid"),
+			Entry(
 				"PATCH /nodes without name",
 				`
                 [
@@ -339,7 +360,7 @@ var _ = Describe("/nodes", func() {
                         "id": "%s",
                         "location": "smart edge lab",
                         "serial": "abc123"
-                        }
+                    }
                 ]`,
 				"Validation failed: name cannot be empty"),
 			Entry("PATCH /nodes without location",
@@ -349,7 +370,7 @@ var _ = Describe("/nodes", func() {
                         "id": "%s",
                         "name": "node123",
                         "serial": "abc123"
-                        }
+                    }
                 ]`,
 				"Validation failed: location cannot be empty"),
 			Entry("PATCH /nodes without serial",
@@ -359,7 +380,7 @@ var _ = Describe("/nodes", func() {
                         "id": "%s",
                         "name": "node123",
                         "location": "smart edge lab"
-                        }
+                    }
                 ]`,
 				"Validation failed: serial cannot be empty"),
 		)

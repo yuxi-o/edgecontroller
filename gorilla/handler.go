@@ -58,6 +58,16 @@ func (h *handler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if e.GetID() != "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_, err = w.Write([]byte(
+			"Validation failed: id cannot be specified in POST request"))
+		if err != nil {
+			log.Printf("Error writing response: %v", err)
+		}
+		return
+	}
+
 	e.SetID(uuid.NewV4().String())
 
 	if err = e.Validate(); err != nil {
