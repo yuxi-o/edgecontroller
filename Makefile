@@ -29,7 +29,7 @@ help:
 	@echo "  test             to run unit followed by api tests"
 
 clean:
-	rm -rf dist
+	rm -rf dist certificates
 
 build:
 	mkdir -p dist

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.6] - 2019-05-02
+### Added
+- Self-sign CA on startup
+
 ## [0.0.5] - 2019-04-30
 ### Added
 - Node <-> DNS config model

@@ -14,11 +14,16 @@
 
 package cce
 
-import "context"
+import (
+	"context"
+
+	"github.com/smartedgemec/controller-ce/pki"
+)
 
 // Controller aggregates controller services.
 type Controller struct {
 	PersistenceService PersistenceService
+	AuthorityService   *pki.RootCA
 }
 
 // PersistenceService manages entity persistence. The methods with EntityModel

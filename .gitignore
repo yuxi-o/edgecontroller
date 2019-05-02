@@ -27,3 +27,6 @@
 
 # Distributables folder
 dist/
+
+# Certificates folder
+certificates/

@@ -20,12 +20,16 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"path/filepath"
 
 	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/gorilla"
 	"github.com/smartedgemec/controller-ce/http"
 	"github.com/smartedgemec/controller-ce/mysql"
+	"github.com/smartedgemec/controller-ce/pki"
 )
+
+const certsDir = "./certificates"
 
 func main() {
 	var (
@@ -34,6 +38,8 @@ func main() {
 		// flags
 		dsn  string
 		port int
+
+		rootCA *pki.RootCA
 
 		db         *sql.DB
 		controller *cce.Controller
@@ -63,8 +69,17 @@ func main() {
 
 	log.Print("DB connection established")
 
+	if rootCA, err = pki.InitRootCA(
+		filepath.Join(certsDir, "ca"),
+	); err != nil {
+		log.Fatal("Error initializing Controller CA: ", err)
+	}
+
+	log.Print("Initialized Controller CA")
+
 	controller = &cce.Controller{
 		PersistenceService: &mysql.PersistenceService{DB: db},
+		AuthorityService:   rootCA,
 	}
 
 	// Listen on a local network address
