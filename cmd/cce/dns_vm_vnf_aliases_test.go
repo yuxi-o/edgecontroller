@@ -29,15 +29,23 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("/nodes", func() {
-	Describe("POST /nodes", func() {
+var _ = Describe("/dns_vm_vnf_aliases", func() {
+	var (
+		vmVNFID string
+	)
+
+	BeforeEach(func() {
+		vmVNFID = postVMVNFs()
+	})
+
+	Describe("POST /dns_vm_vnf_aliases", func() {
 		DescribeTable("201 Created",
 			func(req string) {
-				By("Sending a POST /nodes request")
+				By("Sending a POST /dns_vm_vnf_aliases request")
 				resp, err := http.Post(
-					"http://127.0.0.1:8080/nodes",
+					"http://127.0.0.1:8080/dns_vm_vnf_aliases",
 					"application/json",
-					strings.NewReader(req))
+					strings.NewReader(fmt.Sprintf(req, vmVNFID)))
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying a 201 response")
@@ -58,20 +66,20 @@ var _ = Describe("/nodes", func() {
 				Expect(uuid.IsValid(respBody.ID)).To(BeTrue())
 			},
 			Entry(
-				"POST /nodes",
+				"POST /dns_vm_vnf_aliases",
 				`
                 {
-                    "name": "node123",
-                    "location": "smart edge lab",
-                    "serial": "abc123"
+                    "name": "dns vm vnf alias 123",
+                    "description": "description 1",
+                    "vm_vnf_id": "%s"
                 }`),
 		)
 
 		DescribeTable("400 Bad Request",
 			func(req, expectedResp string) {
-				By("Sending a POST /nodes request")
+				By("Sending a POST /dns_vm_vnf_aliases request")
 				resp, err := http.Post(
-					"http://127.0.0.1:8080/nodes",
+					"http://127.0.0.1:8080/dns_vm_vnf_aliases",
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
@@ -87,54 +95,55 @@ var _ = Describe("/nodes", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
-				"POST /nodes with id",
+				"POST /dns_vm_vnf_aliases with id",
 				`
                 {
                     "id": "123"
                 }`,
 				"Validation failed: id cannot be specified in POST request"),
 			Entry(
-				"POST /nodes without name",
+				"POST /dns_vm_vnf_aliases without name",
 				`
                 {
-                    "location": "smart edge lab",
-                    "serial": "abc123"
+                    "description": "description 1",
+                    "vm_vnf_id": "123"
                 }`,
 				"Validation failed: name cannot be empty"),
 			Entry(
-				"POST /nodes without location",
+				"POST /dns_vm_vnf_aliases without description",
 				`
                 {
-                    "name": "node123",
-                    "serial": "abc123"
+                    "name": "dns vm vnf alias 123",
+                    "vm_vnf_id": "123"
                 }`,
-				"Validation failed: location cannot be empty"),
+				"Validation failed: description cannot be empty"),
 			Entry(
-				"POST /nodes without serial",
+				"POST /dns_vm_vnf_aliases without vm_vnf_id",
 				`
                 {
-                    "name": "node123",
-                    "location": "smart edge lab"
+                    "name": "dns vm vnf alias 123",
+                    "description": "description 1"
                 }`,
-				"Validation failed: serial cannot be empty"),
+				"Validation failed: vm_vnf_id not a valid uuid"),
 		)
 	})
 
-	Describe("GET /nodes", func() {
+	Describe("GET /dns_vm_vnf_aliases", func() {
 		var (
-			nodeID  string
-			node2ID string
+			dnsVMVNFAliasID  string
+			dnsVMVNFAlias2ID string
 		)
 
 		BeforeEach(func() {
-			nodeID = postNodes()
-			node2ID = postNodes()
+			dnsVMVNFAliasID = postDNSVMVNFAliases(vmVNFID)
+			dnsVMVNFAlias2ID = postDNSVMVNFAliases(vmVNFID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				By("Sending a GET /nodes request")
-				resp, err := http.Get("http://127.0.0.1:8080/nodes")
+				By("Sending a GET /dns_vm_vnf_aliases request")
+				resp, err := http.Get(
+					"http://127.0.0.1:8080/dns_vm_vnf_aliases")
 
 				By("Verifying a 200 OK response")
 				Expect(err).ToNot(HaveOccurred())
@@ -144,89 +153,93 @@ var _ = Describe("/nodes", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var nodes []cce.Node
+				var dnsVMVNFAliases []cce.DNSVMVNFAlias
 
 				By("Unmarshalling the response")
-				Expect(json.Unmarshal(body, &nodes)).To(Succeed())
+				Expect(json.Unmarshal(body, &dnsVMVNFAliases)).
+					To(Succeed())
 
-				By("Verifying the 2 created nodes were returned")
-				Expect(nodes).To(ContainElement(
-					cce.Node{
-						ID:       nodeID,
-						Name:     "node123",
-						Location: "smart edge lab",
-						Serial:   "abc123",
+				By("Verifying the 2 created DNS vm vnf aliases were returned") //nolint:lll
+				Expect(dnsVMVNFAliases).To(ContainElement(
+					cce.DNSVMVNFAlias{
+						ID:          dnsVMVNFAliasID,
+						Name:        "dns vm vnf alias 123",
+						Description: "description 1",
+						VMVNFID:     vmVNFID,
 					}))
-				Expect(nodes).To(ContainElement(
-					cce.Node{
+				Expect(dnsVMVNFAliases).To(ContainElement(
+					cce.DNSVMVNFAlias{
 
-						ID:       node2ID,
-						Name:     "node123",
-						Location: "smart edge lab",
-						Serial:   "abc123",
+						ID:          dnsVMVNFAlias2ID,
+						Name:        "dns vm vnf alias 123",
+						Description: "description 1",
+						VMVNFID:     vmVNFID,
 					}))
 			},
-			Entry("GET /nodes"),
+			Entry("GET /dns_vm_vnf_aliases"),
 		)
 	})
 
-	Describe("GET /nodes/{id}", func() {
+	Describe("GET /dns_vm_vnf_aliases/{id}", func() {
 		var (
-			nodeID string
+			dnsVMVNFAliasID string
 		)
 
 		BeforeEach(func() {
-			nodeID = postNodes()
+			dnsVMVNFAliasID = postDNSVMVNFAliases(vmVNFID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				node := getNode(nodeID)
+				dnsVMVNFAlias := getDNSVMVNFAlias(
+					dnsVMVNFAliasID)
 
-				By("Verifying the created node was returned")
-				Expect(node).To(Equal(
-					&cce.Node{
-						ID:       nodeID,
-						Name:     "node123",
-						Location: "smart edge lab",
-						Serial:   "abc123",
+				By("Verifying the created DNS vm vnf alias was returned")
+				Expect(dnsVMVNFAlias).To(Equal(
+					&cce.DNSVMVNFAlias{
+						ID:          dnsVMVNFAliasID,
+						Name:        "dns vm vnf alias 123",
+						Description: "description 1",
+						VMVNFID:     vmVNFID,
 					},
 				))
 			},
-			Entry("GET /nodes/{id}"),
+			Entry("GET /dns_vm_vnf_aliases/{id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func() {
-				By("Sending a GET /nodes/{id} request")
+				By("Sending a GET /dns_vm_vnf_aliases/{id} request")
 				resp, err := http.Get(
-					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s",
+					fmt.Sprintf(
+						"http://127.0.0.1:8080/dns_vm_vnf_aliases/%s",
 						uuid.New()))
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("GET /nodes/{id} with nonexistent ID"),
+			Entry("GET /dns_vm_vnf_aliases/{id} with nonexistent ID"),
 		)
 	})
 
-	Describe("PATCH /nodes", func() {
+	Describe("PATCH /dns_vm_vnf_aliases", func() {
 		var (
-			nodeID string
+			dnsVMVNFAliasID string
 		)
 
 		BeforeEach(func() {
-			nodeID = postNodes()
+			dnsVMVNFAliasID = postDNSVMVNFAliases(vmVNFID)
 		})
 
 		DescribeTable("204 No Content",
-			func(reqStr string, expectedNode *cce.Node) {
-				By("Sending a PATCH /nodes request")
+			func(reqStr string, expectedAlias *cce.DNSVMVNFAlias) {
+				By("Sending a PATCH /dns_vm_vnf_aliases request")
 				req, err := http.NewRequest(
 					http.MethodPatch,
-					"http://127.0.0.1:8080/nodes",
-					strings.NewReader(fmt.Sprintf(reqStr, nodeID)))
+					"http://127.0.0.1:8080/dns_vm_vnf_aliases",
+					strings.NewReader(fmt.Sprintf(reqStr,
+						dnsVMVNFAliasID, vmVNFID)))
 				Expect(err).ToNot(HaveOccurred())
 
 				c := http.Client{}
@@ -237,40 +250,40 @@ var _ = Describe("/nodes", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
-				By("Getting the updated node")
-				updatedNode := getNode(nodeID)
+				By("Getting the updated VNF alias")
+				updatedAlias := getDNSVMVNFAlias(dnsVMVNFAliasID)
 
-				By("Verifying the node was updated")
-				expectedNode.SetID(nodeID)
-				Expect(updatedNode).To(Equal(expectedNode))
+				By("Verifying the DNS vm vnf alias was updated")
+				expectedAlias.SetID(dnsVMVNFAliasID)
+				expectedAlias.VMVNFID = vmVNFID
+				Expect(updatedAlias).To(Equal(expectedAlias))
 			},
 			Entry(
-				"PATCH /nodes",
+				"PATCH /dns_vm_vnf_aliases",
 				`
                 [
                     {
                         "id": "%s",
-                        "name": "node123456",
-                        "location": "smart edge lab",
-                        "serial": "abc123"
-                        }
+                        "name": "dns vm vnf alias 123456",
+                        "description": "description 1",
+                        "vm_vnf_id": "%s"
+                    }
                 ]`,
-				&cce.Node{
-					Name:     "node123456",
-					Location: "smart edge lab",
-					Serial:   "abc123",
+				&cce.DNSVMVNFAlias{
+					Name:        "dns vm vnf alias 123456",
+					Description: "description 1",
 				}),
 		)
 
 		DescribeTable("400 Bad Request",
 			func(reqStr string, expectedResp string) {
-				By("Sending a PATCH /nodes request")
+				By("Sending a PATCH /dns_vm_vnf_aliases request")
 				if strings.Contains(reqStr, "%s") {
-					reqStr = fmt.Sprintf(reqStr, nodeID)
+					reqStr = fmt.Sprintf(reqStr, dnsVMVNFAliasID)
 				}
 				req, err := http.NewRequest(
 					http.MethodPatch,
-					"http://127.0.0.1:8080/nodes",
+					"http://127.0.0.1:8080/dns_vm_vnf_aliases",
 					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
 
@@ -289,66 +302,63 @@ var _ = Describe("/nodes", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
-				"PATCH /nodes without id",
+				"PATCH /dns_vm_vnf_aliases without id",
 				`
-                [
-                    {
-                        "name": "node123",
-                        "location": "smart edge lab",
-                        "serial": "abc123"
-                    }
-                ]`,
+                [{}]`,
 				"Validation failed: id not a valid uuid"),
 			Entry(
-				"PATCH /nodes without name",
+				"PATCH /dns_vm_vnf_aliases without name",
 				`
                 [
                     {
                         "id": "%s",
-                        "location": "smart edge lab",
-                        "serial": "abc123"
+                        "description": "description 1",
+                        "vm_vnf_id": "123"
                     }
                 ]`,
 				"Validation failed: name cannot be empty"),
-			Entry("PATCH /nodes without location",
+			Entry(
+				"PATCH /dns_vm_vnf_aliases without description",
 				`
                 [
                     {
                         "id": "%s",
-                        "name": "node123",
-                        "serial": "abc123"
+                        "name": "dns vm vnf alias 123",
+                        "vm_vnf_id": "123"
                     }
                 ]`,
-				"Validation failed: location cannot be empty"),
-			Entry("PATCH /nodes without serial",
+				"Validation failed: description cannot be empty"),
+			Entry(
+				"PATCH /dns_vm_vnf_aliases without vm_vnf_id",
 				`
                 [
                     {
                         "id": "%s",
-                        "name": "node123",
-                        "location": "smart edge lab"
+                        "name": "dns vm vnf alias 123",
+                        "description": "description 1"
                     }
                 ]`,
-				"Validation failed: serial cannot be empty"),
+				"Validation failed: vm_vnf_id not a valid uuid"),
 		)
 	})
 
-	Describe("DELETE /nodes/{id}", func() {
+	Describe("DELETE /dns_vm_vnf_aliases/{id}", func() {
 		var (
-			nodeID string
+			dnsVMVNFAliasID string
 		)
 
 		BeforeEach(func() {
-			nodeID = postNodes()
+			dnsVMVNFAliasID = postDNSVMVNFAliases(vmVNFID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				By("Sending a DELETE /nodes/{id} request")
+				By("Sending a DELETE /dns_vm_vnf_aliases/{id} request")
 				req, err := http.NewRequest(
 					http.MethodDelete,
-					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s",
-						nodeID),
+					fmt.Sprintf(
+						"http://127.0.0.1:8080/dns_vm_vnf_aliases/%s",
+						dnsVMVNFAliasID),
 					nil)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -360,26 +370,29 @@ var _ = Describe("/nodes", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-				By("Verifying the node was deleted")
+				By("Verifying the DNS vm vnf alias was deleted")
 
-				By("Sending a GET /nodes/{id} request")
+				By("Sending a GET /dns_vm_vnf_aliases/{id} request")
 				resp, err = http.Get(
-					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s",
-						nodeID))
+					fmt.Sprintf(
+						"http://127.0.0.1:8080/dns_vm_vnf_aliases/%s",
+						dnsVMVNFAliasID))
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("DELETE /nodes/{id}"),
+			Entry("DELETE /dns_vm_vnf_aliases/{id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func(id string) {
-				By("Sending a DELETE /nodes/{id} request")
+				By("Sending a DELETE /dns_vm_vnf_aliases/{id} request")
 				req, err := http.NewRequest(
 					http.MethodDelete,
-					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s", id),
+					fmt.Sprintf(
+						"http://127.0.0.1:8080/dns_vm_vnf_aliases/%s",
+						id),
 					nil)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -392,7 +405,7 @@ var _ = Describe("/nodes", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(
-				"DELETE /nodes/{id} with nonexistent ID",
+				"DELETE /dns_vm_vnf_aliases/{id} with nonexistent ID",
 				uuid.New()),
 		)
 	})

@@ -33,12 +33,17 @@ type Gorilla struct {
 	router *mux.Router
 
 	// entity routes handlers
-	nodesHandler           *handler
-	containerAppsHandler   *handler
-	vmAppsHandler          *handler
-	containerVNFsHandler   *handler
-	vmVNFsHandler          *handler
-	trafficPoliciesHandler *handler
+	nodesHandler                  *handler
+	containerAppsHandler          *handler
+	vmAppsHandler                 *handler
+	containerVNFsHandler          *handler
+	vmVNFsHandler                 *handler
+	trafficPoliciesHandler        *handler
+	dnsConfigsHandler             *handler
+	dnsContainerAppAliasesHandler *handler
+	dnsContainerVNFAliasesHandler *handler
+	dnsVMAppAliasesHandler        *handler
+	dnsVMVNFAliasesHandler        *handler
 
 	// join routes handlers
 	nodesContainerAppsHandler                *handler
@@ -55,21 +60,26 @@ func NewGorilla( //nolint:gocyclo
 	nodeMap map[string]*cce.Node,
 ) *Gorilla {
 	g := &Gorilla{
-		mux.NewRouter(),
+		router: mux.NewRouter(),
 
-		&handler{model: &cce.Node{}},
-		&handler{model: &cce.ContainerApp{}},
-		&handler{model: &cce.VMApp{}},
-		&handler{model: &cce.ContainerVNF{}},
-		&handler{model: &cce.VMVNF{}},
-		&handler{model: &cce.TrafficPolicy{}},
+		nodesHandler:                  &handler{model: &cce.Node{}},
+		containerAppsHandler:          &handler{model: &cce.ContainerApp{}},
+		vmAppsHandler:                 &handler{model: &cce.VMApp{}},
+		containerVNFsHandler:          &handler{model: &cce.ContainerVNF{}},
+		vmVNFsHandler:                 &handler{model: &cce.VMVNF{}},
+		trafficPoliciesHandler:        &handler{model: &cce.TrafficPolicy{}},
+		dnsConfigsHandler:             &handler{model: &cce.DNSConfig{}},
+		dnsContainerAppAliasesHandler: &handler{model: &cce.DNSContainerAppAlias{}}, //nolint:lll
+		dnsContainerVNFAliasesHandler: &handler{model: &cce.DNSContainerVNFAlias{}}, //nolint:lll
+		dnsVMAppAliasesHandler:        &handler{model: &cce.DNSVMAppAlias{}},        //nolint:lll
+		dnsVMVNFAliasesHandler:        &handler{model: &cce.DNSVMVNFAlias{}},        //nolint:lll
 
-		&handler{&cce.NodeContainerApp{}, &nodesContainerAppsBLA{}},
-		&handler{model: &cce.NodeVMApp{}},
-		&handler{model: &cce.NodeContainerVNF{}},
-		&handler{model: &cce.NodeVMVNF{}},
-		&handler{model: &cce.NodeContainerAppTrafficPolicy{}},
-		&handler{model: &cce.NodeVMAppTrafficPolicy{}},
+		nodesContainerAppsHandler:                &handler{&cce.NodeContainerApp{}, &nodesContainerAppsBLA{}}, //nolint:lll
+		nodesVMAppsHandler:                       &handler{model: &cce.NodeVMApp{}},                           //nolint:lll
+		nodesContainerVNFsHandler:                &handler{model: &cce.NodeContainerVNF{}},                    //nolint:lll
+		nodesVMVNFsHandler:                       &handler{model: &cce.NodeVMVNF{}},                           //nolint:lll
+		nodesContainerAppsTrafficPoliciesHandler: &handler{model: &cce.NodeContainerAppTrafficPolicy{}},       //nolint:lll
+		nodesVMAppsTrafficPoliciesHandler:        &handler{model: &cce.NodeVMAppTrafficPolicy{}},              //nolint:lll
 	}
 
 	routes := map[string]http.HandlerFunc{
@@ -109,7 +119,35 @@ func NewGorilla( //nolint:gocyclo
 		"PATCH  /traffic_policies":      g.trafficPoliciesHandler.bulkUpdate,
 		"DELETE /traffic_policies/{id}": g.trafficPoliciesHandler.delete,
 
-		// dns routes here
+		"POST   /dns_configs":      g.dnsConfigsHandler.create,
+		"GET    /dns_configs":      g.dnsConfigsHandler.getAll,
+		"GET    /dns_configs/{id}": g.dnsConfigsHandler.getByID,
+		"PATCH  /dns_configs":      g.dnsConfigsHandler.bulkUpdate,
+		"DELETE /dns_configs/{id}": g.dnsConfigsHandler.delete,
+
+		"POST   /dns_container_app_aliases":      g.dnsContainerAppAliasesHandler.create,     //nolint:lll
+		"GET    /dns_container_app_aliases":      g.dnsContainerAppAliasesHandler.getAll,     //nolint:lll
+		"GET    /dns_container_app_aliases/{id}": g.dnsContainerAppAliasesHandler.getByID,    //nolint:lll
+		"PATCH  /dns_container_app_aliases":      g.dnsContainerAppAliasesHandler.bulkUpdate, //nolint:lll
+		"DELETE /dns_container_app_aliases/{id}": g.dnsContainerAppAliasesHandler.delete,     //nolint:lll
+
+		"POST   /dns_container_vnf_aliases":      g.dnsContainerVNFAliasesHandler.create,     //nolint:lll
+		"GET    /dns_container_vnf_aliases":      g.dnsContainerVNFAliasesHandler.getAll,     //nolint:lll
+		"GET    /dns_container_vnf_aliases/{id}": g.dnsContainerVNFAliasesHandler.getByID,    //nolint:lll
+		"PATCH  /dns_container_vnf_aliases":      g.dnsContainerVNFAliasesHandler.bulkUpdate, //nolint:lll
+		"DELETE /dns_container_vnf_aliases/{id}": g.dnsContainerVNFAliasesHandler.delete,     //nolint:lll
+
+		"POST   /dns_vm_app_aliases":      g.dnsVMAppAliasesHandler.create,     //nolint:lll
+		"GET    /dns_vm_app_aliases":      g.dnsVMAppAliasesHandler.getAll,     //nolint:lll
+		"GET    /dns_vm_app_aliases/{id}": g.dnsVMAppAliasesHandler.getByID,    //nolint:lll
+		"PATCH  /dns_vm_app_aliases":      g.dnsVMAppAliasesHandler.bulkUpdate, //nolint:lll
+		"DELETE /dns_vm_app_aliases/{id}": g.dnsVMAppAliasesHandler.delete,     //nolint:lll
+
+		"POST   /dns_vm_vnf_aliases":      g.dnsVMVNFAliasesHandler.create,     //nolint:lll
+		"GET    /dns_vm_vnf_aliases":      g.dnsVMVNFAliasesHandler.getAll,     //nolint:lll
+		"GET    /dns_vm_vnf_aliases/{id}": g.dnsVMVNFAliasesHandler.getByID,    //nolint:lll
+		"PATCH  /dns_vm_vnf_aliases":      g.dnsVMVNFAliasesHandler.bulkUpdate, //nolint:lll
+		"DELETE /dns_vm_vnf_aliases/{id}": g.dnsVMVNFAliasesHandler.delete,     //nolint:lll
 
 		"POST   /nodes_container_apps":      g.nodesContainerAppsHandler.create,      //nolint:lll
 		"GET    /nodes_container_apps":      g.nodesContainerAppsHandler.getByFilter, //nolint:lll

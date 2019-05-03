@@ -691,7 +691,7 @@ var _ = Describe("/traffic_policies", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
-				By("Getting the updated application")
+				By("Getting the updated traffic policy")
 				updatedPolicy := getTrafficPolicy(trafficPolicyID)
 
 				By("Verifying the traffic policy was updated")

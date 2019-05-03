@@ -290,7 +290,7 @@ var _ = Describe("/container_apps", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
-				By("Getting the updated application")
+				By("Getting the updated container app")
 				updatedApp := getContainerApp(containerAppID)
 
 				By("Verifying the container app was updated")
