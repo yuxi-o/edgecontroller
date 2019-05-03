@@ -30,60 +30,6 @@ import (
 )
 
 var _ = Describe("/container_apps", func() {
-	postSuccess := func() (id string) {
-		By("Sending a POST /container_apps request")
-		resp, err := http.Post(
-			"http://127.0.0.1:8080/container_apps",
-			"application/json",
-			strings.NewReader(`
-                {
-                    "name": "container app",
-                    "vendor": "smart edge",
-                    "description": "my container app",
-                    "image": "http://www.test.com/my_container_app.tar.gz",
-                    "cores": 4,
-                    "memory": 1024
-                }`))
-
-		By("Verifying a 201 Created response")
-		Expect(err).ToNot(HaveOccurred())
-		Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-		By("Reading the response body")
-		body, err := ioutil.ReadAll(resp.Body)
-		Expect(err).ToNot(HaveOccurred())
-
-		var respBody struct {
-			ID string
-		}
-
-		By("Unmarshalling the response")
-		Expect(json.Unmarshal(body, &respBody)).To(Succeed())
-
-		return respBody.ID
-	}
-
-	get := func(id string) *cce.ContainerApp {
-		By("Sending a GET /container_apps/{id} request")
-		resp, err := http.Get(
-			fmt.Sprintf("http://127.0.0.1:8080/container_apps/%s", id))
-
-		By("Verifying a 200 OK response")
-		Expect(err).ToNot(HaveOccurred())
-		Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-		By("Reading the response body")
-		body, err := ioutil.ReadAll(resp.Body)
-		Expect(err).ToNot(HaveOccurred())
-
-		var containerApp cce.ContainerApp
-
-		By("Unmarshalling the response")
-		Expect(json.Unmarshal(body, &containerApp)).To(Succeed())
-
-		return &containerApp
-	}
-
 	Describe("POST /container_apps", func() {
 		DescribeTable("201 Created",
 			func(req string) {
@@ -225,8 +171,8 @@ var _ = Describe("/container_apps", func() {
 		)
 
 		BeforeEach(func() {
-			containerAppID = postSuccess()
-			containerApp2ID = postSuccess()
+			containerAppID = postContainerApps()
+			containerApp2ID = postContainerApps()
 		})
 
 		DescribeTable("200 OK",
@@ -280,12 +226,12 @@ var _ = Describe("/container_apps", func() {
 		)
 
 		BeforeEach(func() {
-			containerAppID = postSuccess()
+			containerAppID = postContainerApps()
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				containerApp := get(containerAppID)
+				containerApp := getContainerApp(containerAppID)
 
 				By("Verifying the created container app was returned")
 				Expect(containerApp).To(Equal(
@@ -324,7 +270,7 @@ var _ = Describe("/container_apps", func() {
 		)
 
 		BeforeEach(func() {
-			containerAppID = postSuccess()
+			containerAppID = postContainerApps()
 		})
 
 		DescribeTable("204 No Content",
@@ -345,7 +291,7 @@ var _ = Describe("/container_apps", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
 				By("Getting the updated application")
-				updatedApp := get(containerAppID)
+				updatedApp := getContainerApp(containerAppID)
 
 				By("Verifying the container app was updated")
 				expectedApp.SetID(containerAppID)
@@ -512,7 +458,7 @@ var _ = Describe("/container_apps", func() {
 		)
 
 		BeforeEach(func() {
-			containerAppID = postSuccess()
+			containerAppID = postContainerApps()
 		})
 
 		DescribeTable("200 OK",

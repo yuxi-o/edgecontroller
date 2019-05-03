@@ -30,57 +30,6 @@ import (
 )
 
 var _ = Describe("/nodes", func() {
-	postSuccess := func() (id string) {
-		By("Sending a POST /nodes request")
-		resp, err := http.Post(
-			"http://127.0.0.1:8080/nodes",
-			"application/json",
-			strings.NewReader(`
-                {
-                    "name": "node123",
-                    "location": "smart edge lab",
-                    "serial": "abc123"
-                }`))
-
-		By("Verifying a 201 Created response")
-		Expect(err).ToNot(HaveOccurred())
-		Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-		By("Reading the response body")
-		body, err := ioutil.ReadAll(resp.Body)
-		Expect(err).ToNot(HaveOccurred())
-
-		var respBody struct {
-			ID string
-		}
-
-		By("Unmarshalling the response")
-		Expect(json.Unmarshal(body, &respBody)).To(Succeed())
-
-		return respBody.ID
-	}
-
-	get := func(id string) *cce.Node {
-		By("Sending a GET /nodes/{id} request")
-		resp, err := http.Get(
-			fmt.Sprintf("http://127.0.0.1:8080/nodes/%s", id))
-
-		By("Verifying a 200 OK response")
-		Expect(err).ToNot(HaveOccurred())
-		Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-		By("Reading the response body")
-		body, err := ioutil.ReadAll(resp.Body)
-		Expect(err).ToNot(HaveOccurred())
-
-		var node cce.Node
-
-		By("Unmarshalling the response")
-		Expect(json.Unmarshal(body, &node)).To(Succeed())
-
-		return &node
-	}
-
 	Describe("POST /nodes", func() {
 		DescribeTable("201 Created",
 			func(req string) {
@@ -178,8 +127,8 @@ var _ = Describe("/nodes", func() {
 		)
 
 		BeforeEach(func() {
-			nodeID = postSuccess()
-			node2ID = postSuccess()
+			nodeID = postNodes()
+			node2ID = postNodes()
 		})
 
 		DescribeTable("200 OK",
@@ -227,14 +176,14 @@ var _ = Describe("/nodes", func() {
 		)
 
 		BeforeEach(func() {
-			nodeID = postSuccess()
+			nodeID = postNodes()
 			fmt.Println("before each: " + nodeID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
 				fmt.Println(nodeID)
-				node := get(nodeID)
+				node := getNode(nodeID)
 
 				By("Verifying the created node was returned")
 				Expect(node).To(Equal(
@@ -270,7 +219,7 @@ var _ = Describe("/nodes", func() {
 		)
 
 		BeforeEach(func() {
-			nodeID = postSuccess()
+			nodeID = postNodes()
 		})
 
 		DescribeTable("204 No Content",
@@ -291,7 +240,7 @@ var _ = Describe("/nodes", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
 				By("Getting the updated application")
-				updatedNode := get(nodeID)
+				updatedNode := getNode(nodeID)
 
 				By("Verifying the node was updated")
 				expectedNode.SetID(nodeID)
@@ -392,7 +341,7 @@ var _ = Describe("/nodes", func() {
 		)
 
 		BeforeEach(func() {
-			nodeID = postSuccess()
+			nodeID = postNodes()
 		})
 
 		DescribeTable("200 OK",

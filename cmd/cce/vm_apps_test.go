@@ -30,60 +30,6 @@ import (
 )
 
 var _ = Describe("/vm_apps", func() {
-	postSuccess := func() (id string) {
-		By("Sending a POST /vm_apps request")
-		resp, err := http.Post(
-			"http://127.0.0.1:8080/vm_apps",
-			"application/json",
-			strings.NewReader(`
-                {
-                    "name": "vm app",
-                    "vendor": "smart edge",
-                    "description": "my vm app",
-                    "image": "http://www.test.com/my_vm_app.tar.gz",
-                    "cores": 4,
-                    "memory": 1024
-                }`))
-
-		By("Verifying a 201 Created response")
-		Expect(err).ToNot(HaveOccurred())
-		Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-		By("Reading the response body")
-		body, err := ioutil.ReadAll(resp.Body)
-		Expect(err).ToNot(HaveOccurred())
-
-		var respBody struct {
-			ID string
-		}
-
-		By("Unmarshalling the response")
-		Expect(json.Unmarshal(body, &respBody)).To(Succeed())
-
-		return respBody.ID
-	}
-
-	get := func(id string) *cce.VMApp {
-		By("Sending a GET /vm_apps/{id} request")
-		resp, err := http.Get(
-			fmt.Sprintf("http://127.0.0.1:8080/vm_apps/%s", id))
-
-		By("Verifying a 200 OK response")
-		Expect(err).ToNot(HaveOccurred())
-		Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-		By("Reading the response body")
-		body, err := ioutil.ReadAll(resp.Body)
-		Expect(err).ToNot(HaveOccurred())
-
-		var vmApp cce.VMApp
-
-		By("Unmarshalling the response")
-		Expect(json.Unmarshal(body, &vmApp)).To(Succeed())
-
-		return &vmApp
-	}
-
 	Describe("POST /vm_apps", func() {
 		DescribeTable("201 Created",
 			func(req string) {
@@ -225,8 +171,8 @@ var _ = Describe("/vm_apps", func() {
 		)
 
 		BeforeEach(func() {
-			vmAppID = postSuccess()
-			vmApp2ID = postSuccess()
+			vmAppID = postVMApps()
+			vmApp2ID = postVMApps()
 		})
 
 		DescribeTable("200 OK",
@@ -280,12 +226,12 @@ var _ = Describe("/vm_apps", func() {
 		)
 
 		BeforeEach(func() {
-			vmAppID = postSuccess()
+			vmAppID = postVMApps()
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				vmApp := get(vmAppID)
+				vmApp := getVMApp(vmAppID)
 
 				By("Verifying the created vm app was returned")
 				Expect(vmApp).To(Equal(
@@ -324,7 +270,7 @@ var _ = Describe("/vm_apps", func() {
 		)
 
 		BeforeEach(func() {
-			vmAppID = postSuccess()
+			vmAppID = postVMApps()
 		})
 
 		DescribeTable("204 No Content",
@@ -345,7 +291,7 @@ var _ = Describe("/vm_apps", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
 				By("Getting the updated application")
-				updatedApp := get(vmAppID)
+				updatedApp := getVMApp(vmAppID)
 
 				By("Verifying the vm app was updated")
 				expectedApp.SetID(vmAppID)
@@ -512,7 +458,7 @@ var _ = Describe("/vm_apps", func() {
 		)
 
 		BeforeEach(func() {
-			vmAppID = postSuccess()
+			vmAppID = postVMApps()
 		})
 
 		DescribeTable("200 OK",

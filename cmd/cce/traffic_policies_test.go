@@ -106,121 +106,6 @@ var _ = Describe("/traffic_policies", func() {
 		}
 	})
 
-	postSuccess := func() (id string) {
-		By("Sending a POST /traffic_policies request")
-		resp, err := http.Post(
-			"http://127.0.0.1:8080/traffic_policies",
-			"application/json",
-			strings.NewReader(`
-            {
-                "rules": [{
-                    "description": "test-rule-1",
-                    "priority": 1,
-                    "source": {
-                        "description": "test-source-1",
-                        "macs": {
-                            "mac_addresses": [
-                                "F0-59-8E-7B-36-8A",
-                                "23-20-8E-15-89-D1",
-                                "35-A4-38-73-35-45"
-                            ]
-                        },
-                        "ip": {
-                            "address": "223.1.1.0",
-                            "mask": 16,
-                            "begin_port": 2000,
-                            "end_port": 2012,
-                            "protocol": "tcp"
-                        },
-                        "gtp": {
-                            "address": "10.6.7.2",
-                            "mask": 12,
-                            "imsis": [
-                                "310150123456789",
-                                "310150123456790",
-                                "310150123456791"
-                            ]
-                        }
-                    },
-                    "destination": {
-                        "description": "test-destination-1",
-                        "macs": {
-                            "mac_addresses": [
-                                "7D-C2-3A-1C-63-D9",
-                                "E9-6B-D1-D2-1A-6B",
-                                "C8-32-A9-43-85-55"
-                            ]
-                        },
-                        "ip": {
-                            "address": "64.1.1.0",
-                            "mask": 16,
-                            "begin_port": 1000,
-                            "end_port": 1012,
-                            "protocol": "tcp"
-                        },
-                        "gtp": {
-                            "address": "108.6.7.2",
-                            "mask": 4,
-                            "imsis": [
-                                "310150123456792",
-                                "310150123456793",
-                                "310150123456794"
-                            ]
-                        }
-                    },
-                    "target": {
-                        "description": "test-target-1",
-                        "action": "accept",
-                        "mac": {
-                            "mac_address": "C7-5A-E7-98-1B-A3"
-                        },
-                        "ip": {
-                            "address": "123.2.3.4",
-                            "port": 1600
-                        }
-                    }
-                }]
-            }`))
-
-		By("Verifying a 201 Created response")
-		Expect(err).ToNot(HaveOccurred())
-		Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-		By("Reading the response body")
-		body, err := ioutil.ReadAll(resp.Body)
-		Expect(err).ToNot(HaveOccurred())
-
-		var respBody struct {
-			ID string
-		}
-
-		By("Unmarshalling the response")
-		Expect(json.Unmarshal(body, &respBody)).To(Succeed())
-
-		return respBody.ID
-	}
-
-	get := func(id string) *cce.TrafficPolicy {
-		By("Sending a GET /traffic_policies/{id} request")
-		resp, err := http.Get(
-			fmt.Sprintf("http://127.0.0.1:8080/traffic_policies/%s", id))
-
-		By("Verifying a 200 OK response")
-		Expect(err).ToNot(HaveOccurred())
-		Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-		By("Reading the response body")
-		body, err := ioutil.ReadAll(resp.Body)
-		Expect(err).ToNot(HaveOccurred())
-
-		var trafficPolicy cce.TrafficPolicy
-
-		By("Unmarshalling the response")
-		Expect(json.Unmarshal(body, &trafficPolicy)).To(Succeed())
-
-		return &trafficPolicy
-	}
-
 	Describe("POST /traffic_policies", func() {
 		DescribeTable("201 Created",
 			func(req string) {
@@ -714,8 +599,8 @@ var _ = Describe("/traffic_policies", func() {
 		)
 
 		BeforeEach(func() {
-			trafficPolicyID = postSuccess()
-			trafficPolicy2ID = postSuccess()
+			trafficPolicyID = postTrafficPolicies()
+			trafficPolicy2ID = postTrafficPolicies()
 		})
 
 		DescribeTable("200 OK",
@@ -753,7 +638,7 @@ var _ = Describe("/traffic_policies", func() {
 		)
 
 		BeforeEach(func() {
-			trafficPolicyID = postSuccess()
+			trafficPolicyID = postTrafficPolicies()
 		})
 
 		DescribeTable("200 OK",
@@ -786,7 +671,7 @@ var _ = Describe("/traffic_policies", func() {
 		)
 
 		BeforeEach(func() {
-			trafficPolicyID = postSuccess()
+			trafficPolicyID = postTrafficPolicies()
 		})
 
 		DescribeTable("204 No Content",
@@ -807,7 +692,7 @@ var _ = Describe("/traffic_policies", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
 				By("Getting the updated application")
-				updatedPolicy := get(trafficPolicyID)
+				updatedPolicy := getTrafficPolicy(trafficPolicyID)
 
 				By("Verifying the traffic policy was updated")
 				expectedPolicy := trafficPolicy
@@ -946,7 +831,7 @@ var _ = Describe("/traffic_policies", func() {
 		)
 
 		BeforeEach(func() {
-			trafficPolicyID = postSuccess()
+			trafficPolicyID = postTrafficPolicies()
 		})
 
 		DescribeTable("200 OK",

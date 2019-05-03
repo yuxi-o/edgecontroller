@@ -30,60 +30,6 @@ import (
 )
 
 var _ = Describe("/vm_vnfs", func() {
-	postSuccess := func() (id string) {
-		By("Sending a POST /vm_vnfs request")
-		resp, err := http.Post(
-			"http://127.0.0.1:8080/vm_vnfs",
-			"application/json",
-			strings.NewReader(`
-                {
-                    "name": "vm vnf",
-                    "vendor": "smart edge",
-                    "description": "my vm vnf",
-                    "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                    "cores": 4,
-                    "memory": 1024
-                }`))
-
-		By("Verifying a 201 Created response")
-		Expect(err).ToNot(HaveOccurred())
-		Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-		By("Reading the response body")
-		body, err := ioutil.ReadAll(resp.Body)
-		Expect(err).ToNot(HaveOccurred())
-
-		var respBody struct {
-			ID string
-		}
-
-		By("Unmarshalling the response")
-		Expect(json.Unmarshal(body, &respBody)).To(Succeed())
-
-		return respBody.ID
-	}
-
-	get := func(id string) *cce.VMVNF {
-		By("Sending a GET /vm_vnfs/{id} request")
-		resp, err := http.Get(
-			fmt.Sprintf("http://127.0.0.1:8080/vm_vnfs/%s", id))
-
-		By("Verifying a 200 OK response")
-		Expect(err).ToNot(HaveOccurred())
-		Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-		By("Reading the response body")
-		body, err := ioutil.ReadAll(resp.Body)
-		Expect(err).ToNot(HaveOccurred())
-
-		var vmVNF cce.VMVNF
-
-		By("Unmarshalling the response")
-		Expect(json.Unmarshal(body, &vmVNF)).To(Succeed())
-
-		return &vmVNF
-	}
-
 	Describe("POST /vm_vnfs", func() {
 		DescribeTable("201 Created",
 			func(req string) {
@@ -225,8 +171,8 @@ var _ = Describe("/vm_vnfs", func() {
 		)
 
 		BeforeEach(func() {
-			vmVNFID = postSuccess()
-			vmVNF2ID = postSuccess()
+			vmVNFID = postVMVNFs()
+			vmVNF2ID = postVMVNFs()
 		})
 
 		DescribeTable("200 OK",
@@ -280,12 +226,12 @@ var _ = Describe("/vm_vnfs", func() {
 		)
 
 		BeforeEach(func() {
-			vmVNFID = postSuccess()
+			vmVNFID = postVMVNFs()
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				vmVNF := get(vmVNFID)
+				vmVNF := getVMVNF(vmVNFID)
 
 				By("Verifying the created VM VNF was returned")
 				Expect(vmVNF).To(Equal(
@@ -324,7 +270,7 @@ var _ = Describe("/vm_vnfs", func() {
 		)
 
 		BeforeEach(func() {
-			vmVNFID = postSuccess()
+			vmVNFID = postVMVNFs()
 		})
 
 		DescribeTable("204 No Content",
@@ -345,7 +291,7 @@ var _ = Describe("/vm_vnfs", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
 				By("Getting the updated VNF")
-				updatedVNF := get(vmVNFID)
+				updatedVNF := getVMVNF(vmVNFID)
 
 				By("Verifying the VM VNF was updated")
 				expectedVNF.SetID(vmVNFID)
@@ -512,7 +458,7 @@ var _ = Describe("/vm_vnfs", func() {
 		)
 
 		BeforeEach(func() {
-			vmVNFID = postSuccess()
+			vmVNFID = postVMVNFs()
 		})
 
 		DescribeTable("200 OK",
