@@ -68,11 +68,11 @@ var _ = Describe("/dns_container_vnf_aliases", func() {
 			Entry(
 				"POST /dns_container_vnf_aliases",
 				`
-                {
-                    "name": "dns container vnf alias 123",
-                    "description": "description 1",
-                    "container_vnf_id": "%s"
-                }`),
+				{
+					"name": "dns container vnf alias 123",
+					"description": "description 1",
+					"container_vnf_id": "%s"
+				}`),
 		)
 
 		DescribeTable("400 Bad Request",
@@ -97,33 +97,33 @@ var _ = Describe("/dns_container_vnf_aliases", func() {
 			Entry(
 				"POST /dns_container_vnf_aliases with id",
 				`
-                {
-                    "id": "123"
-                }`,
+				{
+					"id": "123"
+				}`,
 				"Validation failed: id cannot be specified in POST request"),
 			Entry(
 				"POST /dns_container_vnf_aliases without name",
 				`
-                {
-                    "description": "description 1",
-                    "container_vnf_id": "123"
-                }`,
+				{
+					"description": "description 1",
+					"container_vnf_id": "123"
+				}`,
 				"Validation failed: name cannot be empty"),
 			Entry(
 				"POST /dns_container_vnf_aliases without description",
 				`
-                {
-                    "name": "dns container vnf alias 123",
-                    "container_vnf_id": "123"
-                }`,
+				{
+					"name": "dns container vnf alias 123",
+					"container_vnf_id": "123"
+				}`,
 				"Validation failed: description cannot be empty"),
 			Entry(
 				"POST /dns_container_vnf_aliases without container_vnf_id",
 				`
-                {
-                    "name": "dns container vnf alias 123",
-                    "description": "description 1"
-                }`,
+				{
+					"name": "dns container vnf alias 123",
+					"description": "description 1"
+				}`,
 				"Validation failed: container_vnf_id not a valid uuid"),
 		)
 	})
@@ -169,7 +169,6 @@ var _ = Describe("/dns_container_vnf_aliases", func() {
 					}))
 				Expect(dnsContainerVNFAliases).To(ContainElement(
 					cce.DNSContainerVNFAlias{
-
 						ID:             dnsContainerVNFAlias2ID,
 						Name:           "dns container vnf alias 123",
 						Description:    "description 1",
@@ -261,14 +260,14 @@ var _ = Describe("/dns_container_vnf_aliases", func() {
 			Entry(
 				"PATCH /dns_container_vnf_aliases",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "name": "dns container vnf alias 123456",
-                        "description": "description 1",
-                        "container_vnf_id": "%s"
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"name": "dns container vnf alias 123456",
+						"description": "description 1",
+						"container_vnf_id": "%s"
+					}
+				]`,
 				&cce.DNSContainerVNFAlias{
 					Name:        "dns container vnf alias 123456",
 					Description: "description 1",
@@ -304,40 +303,40 @@ var _ = Describe("/dns_container_vnf_aliases", func() {
 			Entry(
 				"PATCH /dns_container_vnf_aliases without id",
 				`
-                [{}]`,
+				[{}]`,
 				"Validation failed: id not a valid uuid"),
 			Entry(
 				"PATCH /dns_container_vnf_aliases without name",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "description": "description 1",
-                        "container_vnf_id": "123"
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"description": "description 1",
+						"container_vnf_id": "123"
+					}
+				]`,
 				"Validation failed: name cannot be empty"),
 			Entry(
 				"PATCH /dns_container_vnf_aliases without description",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "name": "dns container vnf alias 123",
-                        "container_vnf_id": "123"
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"name": "dns container vnf alias 123",
+						"container_vnf_id": "123"
+					}
+				]`,
 				"Validation failed: description cannot be empty"),
 			Entry(
 				"PATCH /dns_container_vnf_aliases without container_vnf_id",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "name": "dns container vnf alias 123",
-                        "description": "description 1"
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"name": "dns container vnf alias 123",
+						"description": "description 1"
+					}
+				]`,
 				"Validation failed: container_vnf_id not a valid uuid"),
 		)
 	})
@@ -407,6 +406,42 @@ var _ = Describe("/dns_container_vnf_aliases", func() {
 			Entry(
 				"DELETE /dns_container_vnf_aliases/{id} with nonexistent ID",
 				uuid.New()),
+		)
+
+		DescribeTable("422 Unprocessable Entity",
+			func() {
+				postDNSConfigsDNSContainerVNFAliases(
+					postDNSConfigs(),
+					dnsContainerVNFAliasID)
+
+				By("Sending a DELETE /dns_container_vnf_aliases/{id} request")
+				req, err := http.NewRequest(
+					http.MethodDelete,
+					fmt.Sprintf(
+						"http://127.0.0.1:8080/dns_container_vnf_aliases/%s",
+						dnsContainerVNFAliasID),
+					nil)
+				Expect(err).ToNot(HaveOccurred())
+
+				c := http.Client{}
+				resp, err := c.Do(req)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying a 422 response")
+				Expect(resp.StatusCode).To(Equal(
+					http.StatusUnprocessableEntity))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying the response body")
+				Expect(string(body)).To(Equal(fmt.Sprintf(
+					"cannot delete dns_container_vnf_alias_id %s: record in "+
+						"use in dns_configs_dns_container_vnf_aliases",
+					dnsContainerVNFAliasID)))
+			},
+			Entry("DELETE /dns_container_vnf_aliases/{id} with dns_configs_dns_container_vnf_aliases record"), //nolint:lll
 		)
 	})
 })

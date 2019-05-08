@@ -136,75 +136,75 @@ var _ = Describe("/traffic_policies", func() {
 			Entry(
 				"POST /traffic_policies",
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "macs": {
-                                "mac_addresses": [
-                                    "F0-59-8E-7B-36-8A",
-                                    "23-20-8E-15-89-D1",
-                                    "35-A4-38-73-35-45"
-                                ]
-                            },
-                            "ip": {
-                                "address": "223.1.1.0",
-                                "mask": 16,
-                                "begin_port": 2000,
-                                "end_port": 2012,
-                                "protocol": "tcp"
-                            },
-                            "gtp": {
-                                "address": "10.6.7.2",
-                                "mask": 12,
-                                "imsis": [
-                                    "310150123456789",
-                                    "310150123456790",
-                                    "310150123456791"
-                                ]
-                            }
-                        },
-                        "destination": {
-                            "description": "destination1",
-                            "macs": {
-                                "mac_addresses": [
-                                    "7D-C2-3A-1C-63-D9",
-                                    "E9-6B-D1-D2-1A-6B",
-                                    "C8-32-A9-43-85-55"
-                                ]
-                            },
-                            "ip": {
-                                "address": "64.1.1.0",
-                                "mask": 16,
-                                "begin_port": 1000,
-                                "end_port": 1012,
-                                "protocol": "tcp"
-                            },
-                            "gtp": {
-                                "address": "108.6.7.2",
-                                "mask": 4,
-                                "imsis": [
-                                    "310150123456792",
-                                    "310150123456793",
-                                    "310150123456794"
-                                ]
-                            }
-                        },
-                        "target": {
-                            "description": "target1",
-                            "action": "accept",
-                            "mac": {
-                                "mac_address": "C7-5A-E7-98-1B-A3"
-                            },
-                            "ip": {
-                                "address": "123.2.3.4",
-                                "port": 1600
-                            }
-                        }
-                    }]
-                }`),
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"macs": {
+								"mac_addresses": [
+									"F0-59-8E-7B-36-8A",
+									"23-20-8E-15-89-D1",
+									"35-A4-38-73-35-45"
+								]
+							},
+							"ip": {
+								"address": "223.1.1.0",
+								"mask": 16,
+								"begin_port": 2000,
+								"end_port": 2012,
+								"protocol": "tcp"
+							},
+							"gtp": {
+								"address": "10.6.7.2",
+								"mask": 12,
+								"imsis": [
+									"310150123456789",
+									"310150123456790",
+									"310150123456791"
+								]
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"macs": {
+								"mac_addresses": [
+									"7D-C2-3A-1C-63-D9",
+									"E9-6B-D1-D2-1A-6B",
+									"C8-32-A9-43-85-55"
+								]
+							},
+							"ip": {
+								"address": "64.1.1.0",
+								"mask": 16,
+								"begin_port": 1000,
+								"end_port": 1012,
+								"protocol": "tcp"
+							},
+							"gtp": {
+								"address": "108.6.7.2",
+								"mask": 4,
+								"imsis": [
+									"310150123456792",
+									"310150123456793",
+									"310150123456794"
+								]
+							}
+						},
+						"target": {
+							"description": "target1",
+							"action": "accept",
+							"mac": {
+								"mac_address": "C7-5A-E7-98-1B-A3"
+							},
+							"ip": {
+								"address": "123.2.3.4",
+								"port": 1600
+							}
+						}
+					}]
+				}`),
 		)
 
 		DescribeTable("400 Bad Request",
@@ -229,365 +229,365 @@ var _ = Describe("/traffic_policies", func() {
 			Entry(
 				"POST /traffic_policies with id",
 				`
-                {
-                    "id": "123"
-                }`,
+				{
+					"id": "123"
+				}`,
 				"Validation failed: id cannot be specified in POST request"),
 			Entry(
 				"POST /traffic_policies without rules",
 				`
-                {
-                    "rules": []
-                }`,
+				{
+					"rules": []
+				}`,
 				"Validation failed: rules cannot be empty"),
 			Entry(
 				"POST /traffic_policies without rules[0].description",
 				`
-                {
-                    "rules": [{}]
-                }`,
+				{
+					"rules": [{}]
+				}`,
 				"Validation failed: rules[0].description cannot be empty"),
 			Entry(
 				"POST /traffic_policies with rules[0].priority not in [1..65536]", //nolint:lll
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 65537
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 65537
+					}]
+				}`,
 				"Validation failed: rules[0].priority must be in [1..65536]"),
 			Entry("POST /traffic_policies without rules[0].source",
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1
+					}]
+				}`,
 				"Validation failed: rules[0].source cannot be empty"),
 			Entry("POST /traffic_policies without rules[0].destination",
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"macs": {
+								"mac_addresses": []
+							}
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].destination cannot be empty"),
 			Entry("POST /traffic_policies without rules[0].target",
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        },
-                        "destination": {
-                            "description": "destination1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"macs": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"macs": {
+								"mac_addresses": []
+							}
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].target cannot be empty"),
 			Entry("POST /traffic_policies without rules[0].source.description",
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"macs": {
+								"mac_addresses": []
+							}
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].source.description cannot be empty"), //nolint:lll
 			Entry("POST /traffic_policies without rules[0].source.macs|ip|gtp",
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1"
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1"
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].source.macs|ip|gtp cannot all be nil"), //nolint:lll
 			Entry("POST /traffic_policies with invalid rules[0].source.macs.mac_addresses[0]", //nolint:lll
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "macs": {
-                                "mac_addresses": [
-                                    "abc-def"
-                                ]
-                            }
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"macs": {
+								"mac_addresses": [
+									"abc-def"
+								]
+							}
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].source.macs.mac_addresses[0] could not be parsed (address abc-def: invalid MAC address)"), //nolint:lll
 			Entry("POST /traffic_policies with invalid rules[0].source.ip.address", //nolint:lll
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "ip": {
-                                "address": "2234.1.1.0"
-                            }
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"ip": {
+								"address": "2234.1.1.0"
+							}
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].source.ip.address could not be parsed"), //nolint:lll
 			Entry("POST /traffic_policies with rules[0].source.ip.mask not in [0..128]", //nolint:lll
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "ip": {
-                                "address": "223.1.1.0",
-                                "mask": 129
-                            }
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"ip": {
+								"address": "223.1.1.0",
+								"mask": 129
+							}
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].source.ip.mask must be in [0..128]"), //nolint:lll
 			Entry("POST /traffic_policies with rules[0].source.ip.begin_port not in [1..65536]", //nolint:lll
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "ip": {
-                                "address": "223.1.1.0",
-                                "mask": 128,
-                                "begin_port": 65537
-                            }
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"ip": {
+								"address": "223.1.1.0",
+								"mask": 128,
+								"begin_port": 65537
+							}
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].source.ip.begin_port must be in [1..65536]"), //nolint:lll
 			Entry("POST /traffic_policies with rules[0].source.ip.end_port not in [1..65536]", //nolint:lll
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "ip": {
-                                "address": "223.1.1.0",
-                                "mask": 128,
-                                "begin_port": 65,
-                                "end_port": 65537
-                            }
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"ip": {
+								"address": "223.1.1.0",
+								"mask": 128,
+								"begin_port": 65,
+								"end_port": 65537
+							}
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].source.ip.end_port must be in [1..65536]"), //nolint:lll
 			Entry("POST /traffic_policies with invalid rules[0].source.ip.protocol", //nolint:lll
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "ip": {
-                                "address": "223.1.1.0",
-                                "mask": 128,
-                                "begin_port": 65,
-                                "end_port": 65536,
-                                "protocol": "udtcp"
-                            }
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"ip": {
+								"address": "223.1.1.0",
+								"mask": 128,
+								"begin_port": 65,
+								"end_port": 65536,
+								"protocol": "udtcp"
+							}
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].source.ip.protocol must be one of [tcp, udp, icmp, sctp]"), //nolint:lll
 			Entry("POST /traffic_policies without rules[0].target.description", //nolint:lll
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        },
-                        "destination": {
-                            "description": "destination1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        },
-                        "target": {
-                            "action": "accept"
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"macs": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"macs": {
+								"mac_addresses": []
+							}
+						},
+						"target": {
+							"action": "accept"
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].target.description cannot be empty"), //nolint:lll
 			Entry("POST /traffic_policies with invalid rules[0].target.action",
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        },
-                        "destination": {
-                            "description": "destination1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        },
-                        "target": {
-                            "description": "target1",
-                            "action": "forward"
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"macs": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"macs": {
+								"mac_addresses": []
+							}
+						},
+						"target": {
+							"description": "target1",
+							"action": "forward"
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].target.action must be one of [accept, reject, drop]"), //nolint:lll
 			Entry("POST /traffic_policies without rules[0].target.mac|ip",
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        },
-                        "destination": {
-                            "description": "destination1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        },
-                        "target": {
-                            "description": "target1",
-                            "action": "accept"
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"macs": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"macs": {
+								"mac_addresses": []
+							}
+						},
+						"target": {
+							"description": "target1",
+							"action": "accept"
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].target.mac|ip cannot both be nil"),
 			Entry("POST /traffic_policies with invalid rules[0].target.mac",
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        },
-                        "destination": {
-                            "description": "destination1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        },
-                        "target": {
-                            "description": "target1",
-                            "action": "accept",
-                            "mac": {
-                                "mac_address": "abc-123"
-                            }
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"macs": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"macs": {
+								"mac_addresses": []
+							}
+						},
+						"target": {
+							"description": "target1",
+							"action": "accept",
+							"mac": {
+								"mac_address": "abc-123"
+							}
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].target.mac.mac_address could not be parsed (address abc-123: invalid MAC address)"), //nolint:lll
 			Entry("POST /traffic_policies with invalid rules[0].target.ip.address", //nolint:lll
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        },
-                        "destination": {
-                            "description": "destination1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        },
-                        "target": {
-                            "description": "target1",
-                            "action": "accept",
-                            "ip": {
-                                "address": "424.2.2.93"
-                            }
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"macs": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"macs": {
+								"mac_addresses": []
+							}
+						},
+						"target": {
+							"description": "target1",
+							"action": "accept",
+							"ip": {
+								"address": "424.2.2.93"
+							}
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].target.ip.address could not be parsed"), //nolint:lll
 			Entry("POST /traffic_policies with rules[0].target.ip.port not in [1..65536]", //nolint:lll
 				`
-                {
-                    "rules": [{
-                        "description": "rule1",
-                        "priority": 1,
-                        "source": {
-                            "description": "source1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        },
-                        "destination": {
-                            "description": "destination1",
-                            "macs": {
-                                "mac_addresses": []
-                            }
-                        },
-                        "target": {
-                            "description": "target1",
-                            "action": "accept",
-                            "ip": {
-                                "address": "123.2.3.4",
-                                "port": 65537
-                            }
-                        }
-                    }]
-                }`,
+				{
+					"rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"macs": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"macs": {
+								"mac_addresses": []
+							}
+						},
+						"target": {
+							"description": "target1",
+							"action": "accept",
+							"ip": {
+								"address": "123.2.3.4",
+								"port": 65537
+							}
+						}
+					}]
+				}`,
 				"Validation failed: rules[0].target.ip.port must be in [1..65536]"), //nolint:lll
 		)
 	})
@@ -709,76 +709,76 @@ var _ = Describe("/traffic_policies", func() {
 			Entry(
 				"PATCH /traffic_policies",
 				`
-                [{
-                    "id": "%s",
-                    "rules": [{
-                        "description": "test-rule-2",
-                        "priority": 2,
-                        "source": {
-                            "description": "test-source-2",
-                            "macs": {
-                                "mac_addresses": [
-                                    "F0-59-8E-7B-36-8A",
-                                    "23-20-8E-15-89-D1",
-                                    "35-A4-38-73-35-45"
-                                ]
-                            },
-                            "ip": {
-                                "address": "223.1.1.0",
-                                "mask": 16,
-                                "begin_port": 2000,
-                                "end_port": 2012,
-                                "protocol": "tcp"
-                            },
-                            "gtp": {
-                                "address": "10.6.7.2",
-                                "mask": 12,
-                                "imsis": [
-                                    "310150123456789",
-                                    "310150123456790",
-                                    "310150123456791"
-                                ]
-                            }
-                        },
-                        "destination": {
-                            "description": "test-destination-2",
-                            "macs": {
-                                "mac_addresses": [
-                                    "7D-C2-3A-1C-63-D9",
-                                    "E9-6B-D1-D2-1A-6B",
-                                    "C8-32-A9-43-85-55"
-                                ]
-                            },
-                            "ip": {
-                                "address": "64.1.1.0",
-                                "mask": 16,
-                                "begin_port": 1000,
-                                "end_port": 1012,
-                                "protocol": "tcp"
-                            },
-                            "gtp": {
-                                "address": "108.6.7.2",
-                                "mask": 4,
-                                "imsis": [
-                                    "310150123456792",
-                                    "310150123456793",
-                                    "310150123456794"
-                                ]
-                            }
-                        },
-                        "target": {
-                            "description": "test-target-2",
-                            "action": "accept",
-                            "mac": {
-                                "mac_address": "C7-5A-E7-98-1B-A3"
-                            },
-                            "ip": {
-                                "address": "123.2.3.4",
-                                "port": 1600
-                            }
-                        }
-                    }]
-                }]`),
+				[{
+					"id": "%s",
+					"rules": [{
+						"description": "test-rule-2",
+						"priority": 2,
+						"source": {
+							"description": "test-source-2",
+							"macs": {
+								"mac_addresses": [
+									"F0-59-8E-7B-36-8A",
+									"23-20-8E-15-89-D1",
+									"35-A4-38-73-35-45"
+								]
+							},
+							"ip": {
+								"address": "223.1.1.0",
+								"mask": 16,
+								"begin_port": 2000,
+								"end_port": 2012,
+								"protocol": "tcp"
+							},
+							"gtp": {
+								"address": "10.6.7.2",
+								"mask": 12,
+								"imsis": [
+									"310150123456789",
+									"310150123456790",
+									"310150123456791"
+								]
+							}
+						},
+						"destination": {
+							"description": "test-destination-2",
+							"macs": {
+								"mac_addresses": [
+									"7D-C2-3A-1C-63-D9",
+									"E9-6B-D1-D2-1A-6B",
+									"C8-32-A9-43-85-55"
+								]
+							},
+							"ip": {
+								"address": "64.1.1.0",
+								"mask": 16,
+								"begin_port": 1000,
+								"end_port": 1012,
+								"protocol": "tcp"
+							},
+							"gtp": {
+								"address": "108.6.7.2",
+								"mask": 4,
+								"imsis": [
+									"310150123456792",
+									"310150123456793",
+									"310150123456794"
+								]
+							}
+						},
+						"target": {
+							"description": "test-target-2",
+							"action": "accept",
+							"mac": {
+								"mac_address": "C7-5A-E7-98-1B-A3"
+							},
+							"ip": {
+								"address": "123.2.3.4",
+								"port": 1600
+							}
+						}
+					}]
+				}]`),
 		)
 
 		DescribeTable("400 Bad Request",
@@ -812,15 +812,15 @@ var _ = Describe("/traffic_policies", func() {
 			Entry(
 				"PATCH /nodes without id",
 				`
-                [{}]`,
+				[{}]`,
 				"Validation failed: id not a valid uuid"),
 			Entry(
 				"PATCH /traffic_policies without rules[0].description",
 				`
-                [{
-                    "id": "%s",
-                    "rules": [{}]
-                }]`,
+				[{
+					"id": "%s",
+					"rules": [{}]
+				}]`,
 				"Validation failed: rules[0].description cannot be empty"),
 		)
 	})

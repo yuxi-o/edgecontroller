@@ -16,7 +16,6 @@ package gorilla
 
 import (
 	"context"
-	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -24,7 +23,6 @@ import (
 
 	"github.com/gorilla/mux"
 	cce "github.com/smartedgemec/controller-ce"
-	"github.com/smartedgemec/controller-ce/grpc/node"
 )
 
 // Gorilla wraps the gorilla router and application routes.
@@ -46,6 +44,11 @@ type Gorilla struct {
 	dnsVMVNFAliasesHandler        *handler
 
 	// join routes handlers
+	dnsConfigsDNSContainerAppAliasesHandler  *handler
+	dnsConfigsDNSContainerVNFAliasesHandler  *handler
+	dnsConfigsDNSVMAppAliasesHandler         *handler
+	dnsConfigsDNSVMVNFAliasesHandler         *handler
+	nodesDNSConfigsHandler                   *handler
 	nodesContainerAppsHandler                *handler
 	nodesVMAppsHandler                       *handler
 	nodesContainerVNFsHandler                *handler
@@ -62,24 +65,72 @@ func NewGorilla( //nolint:gocyclo
 	g := &Gorilla{
 		router: mux.NewRouter(),
 
-		nodesHandler:                  &handler{model: &cce.Node{}},
-		containerAppsHandler:          &handler{model: &cce.ContainerApp{}},
-		vmAppsHandler:                 &handler{model: &cce.VMApp{}},
-		containerVNFsHandler:          &handler{model: &cce.ContainerVNF{}},
-		vmVNFsHandler:                 &handler{model: &cce.VMVNF{}},
-		trafficPoliciesHandler:        &handler{model: &cce.TrafficPolicy{}},
-		dnsConfigsHandler:             &handler{model: &cce.DNSConfig{}},
-		dnsContainerAppAliasesHandler: &handler{model: &cce.DNSContainerAppAlias{}}, //nolint:lll
-		dnsContainerVNFAliasesHandler: &handler{model: &cce.DNSContainerVNFAlias{}}, //nolint:lll
-		dnsVMAppAliasesHandler:        &handler{model: &cce.DNSVMAppAlias{}},        //nolint:lll
-		dnsVMVNFAliasesHandler:        &handler{model: &cce.DNSVMVNFAlias{}},        //nolint:lll
+		nodesHandler: &handler{model: &cce.Node{}},
+		containerAppsHandler: &handler{
+			model:         &cce.ContainerApp{},
+			checkDBDelete: checkDBDeleteContainerApps,
+		},
+		vmAppsHandler: &handler{
+			model:         &cce.VMApp{},
+			checkDBDelete: checkDBDeleteVMApps,
+		},
+		containerVNFsHandler: &handler{
+			model:         &cce.ContainerVNF{},
+			checkDBDelete: checkDBDeleteContainerVNFs,
+		},
+		vmVNFsHandler: &handler{
+			model:         &cce.VMVNF{},
+			checkDBDelete: checkDBDeleteVMVNFs,
+		},
+		trafficPoliciesHandler: &handler{model: &cce.TrafficPolicy{}},
+		dnsConfigsHandler: &handler{
+			model:         &cce.DNSConfig{},
+			checkDBDelete: checkDBDeleteDNSConfigs,
+		},
+		dnsContainerAppAliasesHandler: &handler{
+			model:         &cce.DNSContainerAppAlias{},
+			checkDBDelete: checkDBDeleteDNSContainerAppAliases,
+		},
+		dnsContainerVNFAliasesHandler: &handler{
+			model:         &cce.DNSContainerVNFAlias{},
+			checkDBDelete: checkDBDeleteDNSContainerVNFAliases,
+		},
+		dnsVMAppAliasesHandler: &handler{
+			model:         &cce.DNSVMAppAlias{},
+			checkDBDelete: checkDBDeleteDNSVMAppAliases,
+		},
+		dnsVMVNFAliasesHandler: &handler{
+			model:         &cce.DNSVMVNFAlias{},
+			checkDBDelete: checkDBDeleteDNSVMVNFAliases,
+		},
 
-		nodesContainerAppsHandler:                &handler{&cce.NodeContainerApp{}, &nodesContainerAppsBLA{}}, //nolint:lll
-		nodesVMAppsHandler:                       &handler{model: &cce.NodeVMApp{}},                           //nolint:lll
-		nodesContainerVNFsHandler:                &handler{model: &cce.NodeContainerVNF{}},                    //nolint:lll
-		nodesVMVNFsHandler:                       &handler{model: &cce.NodeVMVNF{}},                           //nolint:lll
-		nodesContainerAppsTrafficPoliciesHandler: &handler{model: &cce.NodeContainerAppTrafficPolicy{}},       //nolint:lll
-		nodesVMAppsTrafficPoliciesHandler:        &handler{model: &cce.NodeVMAppTrafficPolicy{}},              //nolint:lll
+		dnsConfigsDNSContainerAppAliasesHandler: &handler{
+			model:         &cce.DNSConfigDNSContainerAppAlias{},
+			checkDBCreate: checkDBCreateDNSConfigsDNSContainerAppAliases,
+		},
+		dnsConfigsDNSContainerVNFAliasesHandler: &handler{
+			model:         &cce.DNSConfigDNSContainerVNFAlias{},
+			checkDBCreate: checkDBCreateDNSConfigsDNSContainerVNFAliases,
+		},
+		dnsConfigsDNSVMAppAliasesHandler: &handler{
+			model:         &cce.DNSConfigDNSVMAppAlias{},
+			checkDBCreate: checkDBCreateDNSConfigsDNSVMAppAliases,
+		},
+		dnsConfigsDNSVMVNFAliasesHandler: &handler{
+			model:         &cce.DNSConfigDNSVMVNFAlias{},
+			checkDBCreate: checkDBCreateDNSConfigsDNSVMVNFAliases,
+		},
+		nodesDNSConfigsHandler: &handler{
+			model:         &cce.NodeDNSConfig{},
+			checkDBCreate: checkDBCreateNodeDNSConfigs,
+			// TODO add logic to apply DNS config to node, and tests
+		},
+		nodesContainerAppsHandler:                &handler{model: &cce.NodeContainerApp{}},              //nolint:lll
+		nodesVMAppsHandler:                       &handler{model: &cce.NodeVMApp{}},                     //nolint:lll
+		nodesContainerVNFsHandler:                &handler{model: &cce.NodeContainerVNF{}},              //nolint:lll
+		nodesVMVNFsHandler:                       &handler{model: &cce.NodeVMVNF{}},                     //nolint:lll
+		nodesContainerAppsTrafficPoliciesHandler: &handler{model: &cce.NodeContainerAppTrafficPolicy{}}, //nolint:lll
+		nodesVMAppsTrafficPoliciesHandler:        &handler{model: &cce.NodeVMAppTrafficPolicy{}},        //nolint:lll
 	}
 
 	routes := map[string]http.HandlerFunc{
@@ -149,6 +200,32 @@ func NewGorilla( //nolint:gocyclo
 		"PATCH  /dns_vm_vnf_aliases":      g.dnsVMVNFAliasesHandler.bulkUpdate, //nolint:lll
 		"DELETE /dns_vm_vnf_aliases/{id}": g.dnsVMVNFAliasesHandler.delete,     //nolint:lll
 
+		"POST   /dns_configs_dns_container_app_aliases":      g.dnsConfigsDNSContainerAppAliasesHandler.create,  //nolint:lll
+		"GET    /dns_configs_dns_container_app_aliases":      g.dnsConfigsDNSContainerAppAliasesHandler.getAll,  //nolint:lll
+		"GET    /dns_configs_dns_container_app_aliases/{id}": g.dnsConfigsDNSContainerAppAliasesHandler.getByID, //nolint:lll
+		"DELETE /dns_configs_dns_container_app_aliases/{id}": g.dnsConfigsDNSContainerAppAliasesHandler.delete,  //nolint:lll
+
+		"POST   /dns_configs_dns_container_vnf_aliases":      g.dnsConfigsDNSContainerVNFAliasesHandler.create,  //nolint:lll
+		"GET    /dns_configs_dns_container_vnf_aliases":      g.dnsConfigsDNSContainerVNFAliasesHandler.getAll,  //nolint:lll
+		"GET    /dns_configs_dns_container_vnf_aliases/{id}": g.dnsConfigsDNSContainerVNFAliasesHandler.getByID, //nolint:lll
+		"DELETE /dns_configs_dns_container_vnf_aliases/{id}": g.dnsConfigsDNSContainerVNFAliasesHandler.delete,  //nolint:lll
+
+		"POST   /dns_configs_dns_vm_app_aliases":      g.dnsConfigsDNSVMAppAliasesHandler.create,  //nolint:lll
+		"GET    /dns_configs_dns_vm_app_aliases":      g.dnsConfigsDNSVMAppAliasesHandler.getAll,  //nolint:lll
+		"GET    /dns_configs_dns_vm_app_aliases/{id}": g.dnsConfigsDNSVMAppAliasesHandler.getByID, //nolint:lll
+		"DELETE /dns_configs_dns_vm_app_aliases/{id}": g.dnsConfigsDNSVMAppAliasesHandler.delete,  //nolint:lll
+
+		"POST   /dns_configs_dns_vm_vnf_aliases":      g.dnsConfigsDNSVMVNFAliasesHandler.create,  //nolint:lll
+		"GET    /dns_configs_dns_vm_vnf_aliases":      g.dnsConfigsDNSVMVNFAliasesHandler.getAll,  //nolint:lll
+		"GET    /dns_configs_dns_vm_vnf_aliases/{id}": g.dnsConfigsDNSVMVNFAliasesHandler.getByID, //nolint:lll
+		"DELETE /dns_configs_dns_vm_vnf_aliases/{id}": g.dnsConfigsDNSVMVNFAliasesHandler.delete,  //nolint:lll
+
+		"POST   /nodes_dns_configs":      g.nodesDNSConfigsHandler.create,
+		"GET    /nodes_dns_configs":      g.nodesDNSConfigsHandler.getAll,
+		"GET    /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.getByID,
+		"PATCH  /nodes_dns_configs":      g.nodesDNSConfigsHandler.bulkUpdate,
+		"DELETE /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.delete,
+
 		"POST   /nodes_container_apps":      g.nodesContainerAppsHandler.create,      //nolint:lll
 		"GET    /nodes_container_apps":      g.nodesContainerAppsHandler.getByFilter, //nolint:lll
 		"GET    /nodes_container_apps/{id}": g.nodesContainerAppsHandler.getByID,     //nolint:lll
@@ -209,105 +286,6 @@ func NewGorilla( //nolint:gocyclo
 				log.Println("Injected body", string(body))
 				next.ServeHTTP(w, r.WithContext(ctx))
 			default:
-				next.ServeHTTP(w, r)
-			}
-		})
-	})
-
-	// Initialize a map of collection name to entity model. Used in GET /nodes*
-	// requests to pass the correct Entity to the persistence service for
-	// deserialization from the database.
-	//
-	// Note: this is subject to change once the proxy service is ready
-	nodeCollections := map[string]cce.Entity{
-		"nodes":                                 &cce.Node{},
-		"nodes_container_apps":                  &cce.NodeContainerApp{},
-		"nodes_vm_apps":                         &cce.NodeVMApp{},
-		"nodes_container_vnfs":                  &cce.NodeContainerVNF{},
-		"nodes_vm_vnfs":                         &cce.NodeVMVNF{},
-		"nodes_container_apps_traffic_policies": &cce.NodeContainerAppTrafficPolicy{}, //nolint:lll
-		"nodes_vm_apps_traffic_policies":        &cce.NodeVMAppTrafficPolicy{},
-	}
-
-	// For GET|POST|PATCH /nodes* requests make necessary node connections
-	//
-	// Note: this is subject to change once the proxy service is ready
-	g.router.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if strings.HasPrefix(r.URL.Path, "/nodes") {
-				var nodeIDs []string
-
-				type joinResource struct {
-					NodeID string `json:"node_id"`
-				}
-
-				switch {
-				case r.Method == "POST":
-					body := r.Context().Value(contextKey("body")).([]byte)
-					var jr joinResource
-					if err := json.Unmarshal(body, &jr); err != nil {
-						log.Printf("Error unmarshalling json: %v", err)
-						w.WriteHeader(http.StatusBadRequest)
-						return
-					}
-
-					nodeIDs = append(nodeIDs, jr.NodeID)
-				case r.Method == "PATCH":
-					body := r.Context().Value(contextKey("body")).([]byte)
-					var jrs []joinResource
-					if err := json.Unmarshal(body, &jrs); err != nil {
-						log.Printf("Error unmarshalling json: %v", err)
-						w.WriteHeader(http.StatusBadRequest)
-						return
-					}
-
-					for _, jr := range jrs {
-						nodeIDs = append(nodeIDs, jr.NodeID)
-					}
-				case r.Method == "GET" && mux.Vars(r)["id"] != "":
-					id := mux.Vars(r)["id"]
-					ctrl := r.Context().Value(
-						contextKey("controller")).(*cce.Controller)
-					collectionName := strings.Split(r.URL.Path, "/")[1]
-					jm := nodeCollections[collectionName]
-					je, err := ctrl.PersistenceService.Read(
-						r.Context(), id, jm)
-					if err != nil {
-						log.Printf("Error in persistence service: %v", err)
-						w.WriteHeader(http.StatusInternalServerError)
-						return
-					}
-
-					switch e := je.(type) {
-					case *cce.Node:
-						nodeIDs = append(nodeIDs, e.GetID())
-					case cce.JoinEntity:
-						nodeIDs = append(nodeIDs, e.GetNodeID())
-					}
-				}
-
-				var nodeCCs []node.ClientConn
-				for _, nodeID := range nodeIDs {
-					nodeCC := node.ClientConn{Node: nodeMap[nodeID]}
-					// TODO refactor to use proxy service
-					// if err := nodeCC.Connect(r.Context()); err != nil {
-					// 	log.Printf("Could not connect to node: %v", err)
-					// 	w.WriteHeader(http.StatusInternalServerError)
-					// 	return
-					// }
-
-					// log.Printf("Connection to node %v established",
-					// 	nodeCC.Node)
-					nodeCCs = append(nodeCCs, nodeCC)
-				}
-
-				ctx := context.WithValue(
-					r.Context(),
-					contextKey("nodes"),
-					nodeCCs)
-				log.Println("Injected nodes")
-				next.ServeHTTP(w, r.WithContext(ctx))
-			} else {
 				next.ServeHTTP(w, r)
 			}
 		})

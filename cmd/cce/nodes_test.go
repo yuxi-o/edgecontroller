@@ -60,11 +60,11 @@ var _ = Describe("/nodes", func() {
 			Entry(
 				"POST /nodes",
 				`
-                {
-                    "name": "node123",
-                    "location": "smart edge lab",
-                    "serial": "abc123"
-                }`),
+				{
+					"name": "node123",
+					"location": "smart edge lab",
+					"serial": "abc123"
+				}`),
 		)
 
 		DescribeTable("400 Bad Request",
@@ -89,33 +89,33 @@ var _ = Describe("/nodes", func() {
 			Entry(
 				"POST /nodes with id",
 				`
-                {
-                    "id": "123"
-                }`,
+				{
+					"id": "123"
+				}`,
 				"Validation failed: id cannot be specified in POST request"),
 			Entry(
 				"POST /nodes without name",
 				`
-                {
-                    "location": "smart edge lab",
-                    "serial": "abc123"
-                }`,
+				{
+					"location": "smart edge lab",
+					"serial": "abc123"
+				}`,
 				"Validation failed: name cannot be empty"),
 			Entry(
 				"POST /nodes without location",
 				`
-                {
-                    "name": "node123",
-                    "serial": "abc123"
-                }`,
+				{
+					"name": "node123",
+					"serial": "abc123"
+				}`,
 				"Validation failed: location cannot be empty"),
 			Entry(
 				"POST /nodes without serial",
 				`
-                {
-                    "name": "node123",
-                    "location": "smart edge lab"
-                }`,
+				{
+					"name": "node123",
+					"location": "smart edge lab"
+				}`,
 				"Validation failed: serial cannot be empty"),
 		)
 	})
@@ -159,7 +159,6 @@ var _ = Describe("/nodes", func() {
 					}))
 				Expect(nodes).To(ContainElement(
 					cce.Node{
-
 						ID:       node2ID,
 						Name:     "node123",
 						Location: "smart edge lab",
@@ -247,14 +246,14 @@ var _ = Describe("/nodes", func() {
 			Entry(
 				"PATCH /nodes",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "name": "node123456",
-                        "location": "smart edge lab",
-                        "serial": "abc123"
-                        }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"name": "node123456",
+						"location": "smart edge lab",
+						"serial": "abc123"
+						}
+				]`,
 				&cce.Node{
 					Name:     "node123456",
 					Location: "smart edge lab",
@@ -291,44 +290,44 @@ var _ = Describe("/nodes", func() {
 			Entry(
 				"PATCH /nodes without id",
 				`
-                [
-                    {
-                        "name": "node123",
-                        "location": "smart edge lab",
-                        "serial": "abc123"
-                    }
-                ]`,
+				[
+					{
+						"name": "node123",
+						"location": "smart edge lab",
+						"serial": "abc123"
+					}
+				]`,
 				"Validation failed: id not a valid uuid"),
 			Entry(
 				"PATCH /nodes without name",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "location": "smart edge lab",
-                        "serial": "abc123"
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"location": "smart edge lab",
+						"serial": "abc123"
+					}
+				]`,
 				"Validation failed: name cannot be empty"),
 			Entry("PATCH /nodes without location",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "name": "node123",
-                        "serial": "abc123"
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"name": "node123",
+						"serial": "abc123"
+					}
+				]`,
 				"Validation failed: location cannot be empty"),
 			Entry("PATCH /nodes without serial",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "name": "node123",
-                        "location": "smart edge lab"
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"name": "node123",
+						"location": "smart edge lab"
+					}
+				]`,
 				"Validation failed: serial cannot be empty"),
 		)
 	})

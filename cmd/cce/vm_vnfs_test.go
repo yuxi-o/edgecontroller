@@ -60,24 +60,24 @@ var _ = Describe("/vm_vnfs", func() {
 			Entry(
 				"POST /vm_vnfs",
 				`
-                {
-                    "name": "vm vnf",
-                    "vendor": "smart edge",
-                    "description": "my vm vnf",
-                    "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                    "cores": 4,
-                    "memory": 1024
-                }`),
+				{
+					"name": "vm vnf",
+					"vendor": "smart edge",
+					"description": "my vm vnf",
+					"image": "http://www.test.com/my_vm_vnf.tar.gz",
+					"cores": 4,
+					"memory": 1024
+				}`),
 			Entry(
 				"POST /vm_vnfs without description",
 				`
-                {
-                    "name": "vm vnf",
-                    "vendor": "smart edge",
-                    "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                    "cores": 4,
-                    "memory": 1024
-                }`),
+				{
+					"name": "vm vnf",
+					"vendor": "smart edge",
+					"image": "http://www.test.com/my_vm_vnf.tar.gz",
+					"cores": 4,
+					"memory": 1024
+				}`),
 		)
 
 		DescribeTable("400 Bad Request",
@@ -102,64 +102,64 @@ var _ = Describe("/vm_vnfs", func() {
 			Entry(
 				"POST /vm_vnfs with id",
 				`
-                {
-                    "id": "123"
-                }`,
+				{
+					"id": "123"
+				}`,
 				"Validation failed: id cannot be specified in POST request"),
 			Entry(
 				"POST /vm_vnfs without name",
 				`
-                {
-                    "vendor": "smart edge",
-                    "description": "my vm vnf",
-                    "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                    "cores": 4,
-                    "memory": 1024
-                }`,
+				{
+					"vendor": "smart edge",
+					"description": "my vm vnf",
+					"image": "http://www.test.com/my_vm_vnf.tar.gz",
+					"cores": 4,
+					"memory": 1024
+				}`,
 				"Validation failed: name cannot be empty"),
 			Entry(
 				"POST /vm_vnfs without vendor",
 				`
-                {
-                    "name": "vm vnf",
-                    "description": "my vm vnf",
-                    "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                    "cores": 4,
-                    "memory": 1024
-                }`,
+				{
+					"name": "vm vnf",
+					"description": "my vm vnf",
+					"image": "http://www.test.com/my_vm_vnf.tar.gz",
+					"cores": 4,
+					"memory": 1024
+				}`,
 				"Validation failed: vendor cannot be empty"),
 			Entry(
 				"POST /vm_vnfs without image",
 				`
-                {
-                    "name": "vm vnf",
-                    "vendor": "smart edge",
-                    "description": "my vm vnf",
-                    "cores": 4,
-                    "memory": 1024
-                }`,
+				{
+					"name": "vm vnf",
+					"vendor": "smart edge",
+					"description": "my vm vnf",
+					"cores": 4,
+					"memory": 1024
+				}`,
 				"Validation failed: image cannot be empty"),
 			Entry("POST /vm_vnfs with cores not in [1..8]",
 				`
-                {
-                    "name": "vm vnf",
-                    "vendor": "smart edge",
-                    "description": "my vm vnf",
-                    "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                    "cores": 9,
-                    "memory": 1024
-                }`,
+				{
+					"name": "vm vnf",
+					"vendor": "smart edge",
+					"description": "my vm vnf",
+					"image": "http://www.test.com/my_vm_vnf.tar.gz",
+					"cores": 9,
+					"memory": 1024
+				}`,
 				"Validation failed: cores must be in [1..8]"),
 			Entry("POST /vm_vnfs with memory not in [1..16384]",
 				`
-                {
-                    "name": "vm vnf",
-                    "vendor": "smart edge",
-                    "description": "my vm vnf",
-                    "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                    "cores": 8,
-                    "memory": 16385
-                }`,
+				{
+					"name": "vm vnf",
+					"vendor": "smart edge",
+					"description": "my vm vnf",
+					"image": "http://www.test.com/my_vm_vnf.tar.gz",
+					"cores": 8,
+					"memory": 16385
+				}`,
 				"Validation failed: memory must be in [1..16384]"),
 		)
 	})
@@ -206,7 +206,6 @@ var _ = Describe("/vm_vnfs", func() {
 					}))
 				Expect(vmVNFs).To(ContainElement(
 					cce.VMVNF{
-
 						ID:          vmVNF2ID,
 						Name:        "vm vnf",
 						Vendor:      "smart edge",
@@ -300,17 +299,17 @@ var _ = Describe("/vm_vnfs", func() {
 			Entry(
 				"PATCH /vm_vnfs",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "name": "vm vnf2",
-                        "vendor": "smart edge",
-                        "description": "my vm vnf",
-                        "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                        "cores": 4,
-                        "memory": 1024
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"name": "vm vnf2",
+						"vendor": "smart edge",
+						"description": "my vm vnf",
+						"image": "http://www.test.com/my_vm_vnf.tar.gz",
+						"cores": 4,
+						"memory": 1024
+					}
+				]`,
 				&cce.VMVNF{
 					Name:        "vm vnf2",
 					Vendor:      "smart edge",
@@ -321,16 +320,16 @@ var _ = Describe("/vm_vnfs", func() {
 				}),
 			Entry("PATCH /vm_vnfs with no description",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "name": "vm vnf2",
-                        "vendor": "smart edge",
-                        "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                        "cores": 4,
-                        "memory": 1024
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"name": "vm vnf2",
+						"vendor": "smart edge",
+						"image": "http://www.test.com/my_vm_vnf.tar.gz",
+						"cores": 4,
+						"memory": 1024
+					}
+				]`,
 				&cce.VMVNF{
 					Name:        "vm vnf2",
 					Vendor:      "smart edge",
@@ -370,84 +369,84 @@ var _ = Describe("/vm_vnfs", func() {
 			Entry(
 				"PATCH /vm_vnfs without id",
 				`
-                [
-                    {
-                        "name": "vm vnf2",
-                        "vendor": "smart edge",
-                        "description": "my vm vnf",
-                        "image": "http://www.test.com/my_vm_app.tar.gz",
-                        "cores": 4,
-                        "memory": 1024
-                    }
-                ]`,
+				[
+					{
+						"name": "vm vnf2",
+						"vendor": "smart edge",
+						"description": "my vm vnf",
+						"image": "http://www.test.com/my_vm_app.tar.gz",
+						"cores": 4,
+						"memory": 1024
+					}
+				]`,
 				"Validation failed: id not a valid uuid"),
 			Entry(
 				"PATCH /vm_vnfs without name",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "vendor": "smart edge",
-                        "description": "my vm vnf",
-                        "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                        "cores": 4,
-                        "memory": 1024
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"vendor": "smart edge",
+						"description": "my vm vnf",
+						"image": "http://www.test.com/my_vm_vnf.tar.gz",
+						"cores": 4,
+						"memory": 1024
+					}
+				]`,
 				"Validation failed: name cannot be empty"),
 			Entry("PATCH /vm_vnfs without vendor",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "name": "vm vnf2",
-                        "description": "my vm vnf",
-                        "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                        "cores": 4,
-                        "memory": 1024
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"name": "vm vnf2",
+						"description": "my vm vnf",
+						"image": "http://www.test.com/my_vm_vnf.tar.gz",
+						"cores": 4,
+						"memory": 1024
+					}
+				]`,
 				"Validation failed: vendor cannot be empty"),
 			Entry("PATCH /vm_vnfs without image",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "name": "vm vnf2",
-                        "vendor": "smart edge",
-                        "description": "my vm vnf",
-                        "cores": 4,
-                        "memory": 1024
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"name": "vm vnf2",
+						"vendor": "smart edge",
+						"description": "my vm vnf",
+						"cores": 4,
+						"memory": 1024
+					}
+				]`,
 				"Validation failed: image cannot be empty"),
 			Entry("PATCH /vm_vnfs with cores not in [1..8]",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "name": "vm vnf2",
-                        "vendor": "smart edge",
-                        "description": "my vm vnf",
-                        "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                        "cores": 9,
-                        "memory": 1024
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"name": "vm vnf2",
+						"vendor": "smart edge",
+						"description": "my vm vnf",
+						"image": "http://www.test.com/my_vm_vnf.tar.gz",
+						"cores": 9,
+						"memory": 1024
+					}
+				]`,
 				"Validation failed: cores must be in [1..8]"),
 			Entry("PATCH /vm_vnfs with memory not in [1..16384]",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "name": "vm vnf2",
-                        "vendor": "smart edge",
-                        "description": "my vm vnf",
-                        "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                        "cores": 4,
-                        "memory": 16385
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"name": "vm vnf2",
+						"vendor": "smart edge",
+						"description": "my vm vnf",
+						"image": "http://www.test.com/my_vm_vnf.tar.gz",
+						"cores": 4,
+						"memory": 16385
+					}
+				]`,
 				"Validation failed: memory must be in [1..16384]"),
 		)
 	})
@@ -513,6 +512,40 @@ var _ = Describe("/vm_vnfs", func() {
 			Entry(
 				"DELETE /vm_vnfs/{id} with nonexistent ID",
 				uuid.New()),
+		)
+
+		DescribeTable("422 Unprocessable Entity",
+			func() {
+				postDNSVMVNFAliases(vmVNFID)
+
+				By("Sending a DELETE /vm_vnfs/{id} request")
+				req, err := http.NewRequest(
+					http.MethodDelete,
+					fmt.Sprintf(
+						"http://127.0.0.1:8080/vm_vnfs/%s",
+						vmVNFID),
+					nil)
+				Expect(err).ToNot(HaveOccurred())
+
+				c := http.Client{}
+				resp, err := c.Do(req)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying a 422 response")
+				Expect(resp.StatusCode).To(Equal(
+					http.StatusUnprocessableEntity))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying the response body")
+				Expect(string(body)).To(Equal(fmt.Sprintf(
+					"cannot delete vm_vnf_id %s: record in use in "+
+						"dns_vm_vnf_aliases",
+					vmVNFID)))
+			},
+			Entry("DELETE /vm_vnfs/{id} with dns_vm_vnf_aliases record"),
 		)
 	})
 })

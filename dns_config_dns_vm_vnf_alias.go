@@ -51,7 +51,7 @@ func (cfg_alias *DNSConfigDNSVMVNFAlias) Validate() error {
 		return errors.New("id not a valid uuid")
 	}
 	if !uuid.IsValid(cfg_alias.DNSConfigID) {
-		return errors.New("id not a valid uuid")
+		return errors.New("dns_config_id not a valid uuid")
 	}
 	if !uuid.IsValid(cfg_alias.DNSVMVNFAliasID) {
 		return errors.New("dns_vm_vnf_alias_id not a valid uuid")

@@ -64,6 +64,18 @@ var _ = Describe("Entities: DNSConfigDNSContainerAppAlias", func() {
 			cfgAlias.ID = "123"
 			Expect(cfgAlias.Validate()).To(MatchError("id not a valid uuid"))
 		})
+
+		It("Should return an error if DNSConfigID is not a UUID", func() {
+			cfgAlias.DNSConfigID = "123"
+			Expect(cfgAlias.Validate()).To(MatchError(
+				"dns_config_id not a valid uuid"))
+		})
+
+		It("Should return an error if DNSContainerAppAliasID is not a UUID", func() { //nolint:lll
+			cfgAlias.DNSContainerAppAliasID = "123"
+			Expect(cfgAlias.Validate()).To(MatchError(
+				"dns_container_app_alias_id not a valid uuid"))
+		})
 	})
 
 	Describe("String", func() {

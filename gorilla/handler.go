@@ -15,6 +15,7 @@
 package gorilla
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -24,30 +25,28 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/satori/go.uuid"
 	cce "github.com/smartedgemec/controller-ce"
-	"github.com/smartedgemec/controller-ce/grpc/node"
 )
 
 type handler struct {
-	model           cce.Entity
-	bizLogicApplier bizLogicApplier
+	model         cce.Entity
+	checkDBCreate func(
+		context.Context,
+		cce.PersistenceService,
+		cce.Entity,
+	) (statusCode int, err error)
+	checkDBDelete func(
+		ctx context.Context,
+		ps cce.PersistenceService,
+		id string,
+	) (statusCode int, err error)
 }
 
-// TODO figure out appropriate return types for these methods
-type bizLogicApplier interface {
-	create(node.ClientConn) error
-	getByFilter() error
-	getByID() error
-	bulkUpdate([]node.ClientConn) error
-	delete() error
-}
-
-func (h *handler) create(w http.ResponseWriter, r *http.Request) {
+func (h *handler) create(w http.ResponseWriter, r *http.Request) { //nolint:gocyclo,lll
 	var (
-		ctrl    = r.Context().Value(contextKey("controller")).(*cce.Controller)
-		body    = r.Context().Value(contextKey("body")).([]byte)
-		e       cce.Entity
-		nodeCCs []node.ClientConn
-		err     error
+		ctrl = r.Context().Value(contextKey("controller")).(*cce.Controller)
+		body = r.Context().Value(contextKey("body")).([]byte)
+		e    cce.Entity
+		err  error
 	)
 
 	e = reflect.New(
@@ -80,11 +79,19 @@ func (h *handler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if h.bizLogicApplier != nil {
-		nodeCCs = r.Context().Value(contextKey("nodes")).([]node.ClientConn)
-		if err = h.bizLogicApplier.create(nodeCCs[0]); err != nil {
-			log.Printf("Error running application logic: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
+	if h.checkDBCreate != nil {
+		var statusCode int
+		if statusCode, err = h.checkDBCreate(
+			r.Context(),
+			ctrl.PersistenceService,
+			e,
+		); err != nil {
+			log.Printf("Error running DB logic: %v", err)
+			w.WriteHeader(statusCode)
+			_, err = w.Write([]byte(err.Error()))
+			if err != nil {
+				log.Printf("Error writing response: %v", err)
+			}
 			return
 		}
 	}
@@ -148,7 +155,7 @@ func (h *handler) getAll(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) getByFilter(w http.ResponseWriter, r *http.Request) {
 	var (
-		ctrl  = r.Context().Value(contextKey("controller")).(cce.Controller)
+		ctrl  = r.Context().Value(contextKey("controller")).(*cce.Controller)
 		es    []cce.Entity
 		e     cce.Entity
 		err   error
@@ -237,13 +244,12 @@ func (h *handler) bulkUpdate(
 	r *http.Request,
 ) {
 	var (
-		ctrl    = r.Context().Value(contextKey("controller")).(*cce.Controller)
-		body    = r.Context().Value(contextKey("body")).([]byte)
-		nodeCCs []node.ClientConn
-		ies     []interface{}
-		ie      interface{}
-		e       cce.Entity
-		err     error
+		ctrl = r.Context().Value(contextKey("controller")).(*cce.Controller)
+		body = r.Context().Value(contextKey("body")).([]byte)
+		ies  []interface{}
+		ie   interface{}
+		e    cce.Entity
+		err  error
 	)
 
 	if err = json.Unmarshal(body, &ies); err != nil {
@@ -282,15 +288,6 @@ func (h *handler) bulkUpdate(
 		es = append(es, e)
 	}
 
-	if h.bizLogicApplier != nil {
-		nodeCCs = r.Context().Value(contextKey("nodes")).([]node.ClientConn)
-		if err = h.bizLogicApplier.bulkUpdate(nodeCCs); err != nil {
-			log.Printf("Error running application logic: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	}
-
 	if err = ctrl.PersistenceService.BulkUpdate(r.Context(), es); err != nil {
 		log.Printf("Error updating entities: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -307,6 +304,23 @@ func (h *handler) delete(w http.ResponseWriter, r *http.Request) {
 		ok   bool
 		err  error
 	)
+
+	if h.checkDBDelete != nil {
+		var statusCode int
+		if statusCode, err = h.checkDBDelete(
+			r.Context(),
+			ctrl.PersistenceService,
+			id,
+		); err != nil {
+			log.Printf("Error running DB logic: %v", err)
+			w.WriteHeader(statusCode)
+			_, err = w.Write([]byte(err.Error()))
+			if err != nil {
+				log.Printf("Error writing response: %v", err)
+			}
+			return
+		}
+	}
 
 	if ok, err = ctrl.PersistenceService.Delete(
 		r.Context(),

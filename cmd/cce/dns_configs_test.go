@@ -60,26 +60,26 @@ var _ = Describe("/dns_configs", func() {
 			Entry(
 				"POST /dns_configs",
 				`
-                {
-                    "name": "dns config 123",
-                    "a_records": [{
-                        "name": "a record 1",
-                        "description": "description 1",
-                        "ips": [
-                            "172.16.55.43",
-                            "172.16.55.44"
-                        ]
-                    }],
-                    "forwarders": [{
-                        "name": "forwarder 1",
-                        "description": "description 1",
-                        "ip": "8.8.8.8"
-                    }, {
-                        "name": "forwarder 2",
-                        "description": "description 2",
-                        "ip": "1.1.1.1"
-                    }]
-                }`),
+				{
+					"name": "dns config 123",
+					"a_records": [{
+						"name": "a record 1",
+						"description": "description 1",
+						"ips": [
+							"172.16.55.43",
+							"172.16.55.44"
+						]
+					}],
+					"forwarders": [{
+						"name": "forwarder 1",
+						"description": "description 1",
+						"ip": "8.8.8.8"
+					}, {
+						"name": "forwarder 2",
+						"description": "description 2",
+						"ip": "1.1.1.1"
+					}]
+				}`),
 		)
 
 		DescribeTable("400 Bad Request",
@@ -104,87 +104,87 @@ var _ = Describe("/dns_configs", func() {
 			Entry(
 				"POST /dns_configs with id",
 				`
-                {
-                    "id": "123"
-                }`,
+				{
+					"id": "123"
+				}`,
 				"Validation failed: id cannot be specified in POST request"),
 			Entry(
 				"POST /dns_configs without name",
 				`
-                {
-                }`,
+				{
+				}`,
 				"Validation failed: name cannot be empty"),
 			Entry(
 				"POST /dns_configs without a_records|forwarders",
 				`
-                {
-                    "name": "dns config 123"
-                }`,
+				{
+					"name": "dns config 123"
+				}`,
 				"Validation failed: a_records|forwarders cannot both be empty"),
 			Entry(
 				"POST /dns_configs without a_records[0].name",
 				`
-                {
-                    "name": "dns config 123",
-                    "a_records": [{
-                    }]
-                }`,
+				{
+					"name": "dns config 123",
+					"a_records": [{
+					}]
+				}`,
 				"Validation failed: a_records[0].name cannot be empty"),
 			Entry(
 				"POST /dns_configs without a_records[0].description",
 				`
-                {
-                    "name": "dns config 123",
-                    "a_records": [{
-                        "name": "a record 1"
-                    }]
-                }`,
+				{
+					"name": "dns config 123",
+					"a_records": [{
+						"name": "a record 1"
+					}]
+				}`,
 				"Validation failed: a_records[0].description cannot be empty"),
 			Entry(
 				"POST /dns_configs with invalid a_records[0].ips[0]",
 				`
-                {
-                    "name": "dns config 123",
-                    "a_records": [{
-                        "name": "a record 1",
-                        "description": "description 1",
-                        "ips": [
-                            "1724.16.55.43",
-                            "172.16.55.44"
-                        ]
-                    }]
-                }`,
+				{
+					"name": "dns config 123",
+					"a_records": [{
+						"name": "a record 1",
+						"description": "description 1",
+						"ips": [
+							"1724.16.55.43",
+							"172.16.55.44"
+						]
+					}]
+				}`,
 				"Validation failed: a_records[0].ips[0] could not be parsed"),
 			Entry(
 				"POST /dns_configs without forwarders[0].name",
 				`
-                {
-                    "name": "dns config 123",
-                    "forwarders": [{
-                    }]
-                }`,
+				{
+					"name": "dns config 123",
+					"forwarders": [{
+					}]
+				}`,
 				"Validation failed: forwarders[0].name cannot be empty"),
 			Entry(
 				"POST /dns_configs without forwarders[0].description",
 				`
-                {
-                    "name": "dns config 123",
-                    "forwarders": [{
-                        "name": "forwarder 1"
-                    }]
-                }`,
+				{
+					"name": "dns config 123",
+					"forwarders": [{
+						"name": "forwarder 1"
+					}]
+				}`,
 				"Validation failed: forwarders[0].description cannot be empty"),
 			Entry(
 				"POST /dns_configs with invalid forwarders[0].ip",
 				`
-                {
-                    "name": "dns config 123",
-                    "forwarders": [{
-                        "name": "forwarder 1",
-                        "description": "description 1",
-                        "ip": "888.8.8.8"
-                    }]
-                }`,
+				{
+					"name": "dns config 123",
+					"forwarders": [{
+						"name": "forwarder 1",
+						"description": "description 1",
+						"ip": "888.8.8.8"
+					}]
+				}`,
 				"Validation failed: forwarders[0].ip could not be parsed"),
 		)
 	})
@@ -376,29 +376,29 @@ var _ = Describe("/dns_configs", func() {
 			Entry(
 				"PATCH /dns_configs/{id}",
 				`
-                [
-                    {
-                        "id": "%s",
-                        "name": "dns config 123456",
-                        "a_records": [{
-                            "name": "a record 1",
-                            "description": "description 1",
-                            "ips": [
-                                "172.16.55.43",
-                                "172.16.55.44"
-                            ]
-                        }],
-                        "forwarders": [{
-                            "name": "forwarder 1",
-                            "description": "description 1",
-                            "ip": "8.8.8.8"
-                        }, {
-                            "name": "forwarder 2",
-                            "description": "description 2",
-                            "ip": "1.1.1.1"
-                        }]
-                    }
-                ]`,
+				[
+					{
+						"id": "%s",
+						"name": "dns config 123456",
+						"a_records": [{
+							"name": "a record 1",
+							"description": "description 1",
+							"ips": [
+								"172.16.55.43",
+								"172.16.55.44"
+							]
+						}],
+						"forwarders": [{
+							"name": "forwarder 1",
+							"description": "description 1",
+							"ip": "8.8.8.8"
+						}, {
+							"name": "forwarder 2",
+							"description": "description 2",
+							"ip": "1.1.1.1"
+						}]
+					}
+				]`,
 				&cce.DNSConfig{
 					Name: "dns config 123456",
 					ARecords: []*cce.DNSARecord{
@@ -457,16 +457,16 @@ var _ = Describe("/dns_configs", func() {
 			Entry(
 				"PATCH /dns_configs without id",
 				`
-                [{}]`,
+				[{}]`,
 				"Validation failed: id not a valid uuid"),
 			Entry(
 				"PATCH /dns_configs without name",
 				`
-                [
-                    {
-                        "id": "%s"
-                    }
-                ]`,
+				[
+					{
+						"id": "%s"
+					}
+				]`,
 				"Validation failed: name cannot be empty"),
 		)
 	})
@@ -532,6 +532,69 @@ var _ = Describe("/dns_configs", func() {
 			Entry(
 				"DELETE /dns_configs/{id} with nonexistent ID",
 				uuid.New()),
+		)
+
+		DescribeTable("422 Unprocessable Entity",
+			func(resource, expectedResp string) {
+				switch resource {
+				case "dns_configs_dns_container_app_aliases":
+					postDNSConfigsDNSContainerAppAliases(dnsConfigID,
+						postDNSContainerAppAliases(postContainerApps()))
+				case "dns_configs_dns_vm_app_aliases":
+					postDNSConfigsDNSVMAppAliases(dnsConfigID,
+						postDNSVMAppAliases(postVMApps()))
+				case "dns_configs_dns_container_vnf_aliases":
+					postDNSConfigsDNSContainerVNFAliases(dnsConfigID,
+						postDNSContainerVNFAliases(postContainerVNFs()))
+				case "dns_configs_dns_vm_vnf_aliases":
+					postDNSConfigsDNSVMVNFAliases(dnsConfigID,
+						postDNSVMVNFAliases(postVMVNFs()))
+				}
+
+				By("Sending a DELETE /dns_configs/{id} request")
+				req, err := http.NewRequest(
+					http.MethodDelete,
+					fmt.Sprintf("http://127.0.0.1:8080/dns_configs/%s",
+						dnsConfigID),
+					nil)
+				Expect(err).ToNot(HaveOccurred())
+
+				c := http.Client{}
+				resp, err := c.Do(req)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying a 422 response")
+				Expect(resp.StatusCode).To(Equal(
+					http.StatusUnprocessableEntity))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying the response body")
+				Expect(string(body)).To(Equal(
+					fmt.Sprintf(expectedResp, dnsConfigID)))
+			},
+			Entry(
+				"DELETE /dns_configs/{id} with dns_configs_dns_container_app_aliases record", //nolint:lll
+				"dns_configs_dns_container_app_aliases",
+				"cannot delete dns_config_id %s: record in use in dns_configs_dns_container_app_aliases", //nolint:lll
+			),
+			Entry(
+				"DELETE /dns_configs/{id} with dns_configs_dns_vm_app_aliases record", //nolint:lll
+				"dns_configs_dns_vm_app_aliases",
+				"cannot delete dns_config_id %s: record in use in dns_configs_dns_vm_app_aliases", //nolint:lll
+			),
+			Entry(
+				"DELETE /dns_configs/{id} with dns_configs_dns_container_vnf_aliases record", //nolint:lll
+				"dns_configs_dns_container_vnf_aliases",
+				"cannot delete dns_config_id %s: record in use in dns_configs_dns_container_vnf_aliases", //nolint:lll
+			),
+			Entry(
+				"DELETE /dns_configs/{id} with dns_configs_dns_vm_vnf_aliases record", //nolint:lll
+				"dns_configs_dns_vm_vnf_aliases",
+				"cannot delete dns_config_id %s: record in use in dns_configs_dns_vm_vnf_aliases", //nolint:lll
+			),
 		)
 	})
 })

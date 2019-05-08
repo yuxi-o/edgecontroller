@@ -33,11 +33,10 @@ import (
 
 var (
 	service *gexec.Session
-	port    int
 )
 
 var _ = BeforeSuite(func() {
-	service, port = startService()
+	service = startService()
 })
 
 var _ = AfterSuite(func() {
@@ -51,7 +50,7 @@ func TestApplicationClient(t *testing.T) {
 	RunSpecs(t, "Controller CE API Suite")
 }
 
-func startService() (session *gexec.Session, port int) {
+func startService() (session *gexec.Session) {
 	exe, err := gexec.Build("github.com/smartedgemec/controller-ce/cmd/cce")
 	Expect(err).ToNot(HaveOccurred(), "Problem building service")
 
@@ -66,7 +65,7 @@ func startService() (session *gexec.Session, port int) {
 		"Handler ready, starting server"),
 		"Service did not start in time")
 
-	return session, port
+	return session
 }
 
 func postContainerApps() (id string) {
@@ -75,14 +74,14 @@ func postContainerApps() (id string) {
 		"http://127.0.0.1:8080/container_apps",
 		"application/json",
 		strings.NewReader(`
-            {
-                "name": "container app",
-                "vendor": "smart edge",
-                "description": "my container app",
-                "image": "http://www.test.com/my_container_app.tar.gz",
-                "cores": 4,
-                "memory": 1024
-            }`))
+			{
+				"name": "container app",
+				"vendor": "smart edge",
+				"description": "my container app",
+				"image": "http://www.test.com/my_container_app.tar.gz",
+				"cores": 4,
+				"memory": 1024
+			}`))
 
 	By("Verifying a 201 Created response")
 	Expect(err).ToNot(HaveOccurred())
@@ -129,14 +128,14 @@ func postContainerVNFs() (id string) {
 		"http://127.0.0.1:8080/container_vnfs",
 		"application/json",
 		strings.NewReader(`
-            {
-                "name": "container vnf",
-                "vendor": "smart edge",
-                "description": "my container vnf",
-                "image": "http://www.test.com/my_container_vnf.tar.gz",
-                "cores": 4,
-                "memory": 1024
-            }`))
+			{
+				"name": "container vnf",
+				"vendor": "smart edge",
+				"description": "my container vnf",
+				"image": "http://www.test.com/my_container_vnf.tar.gz",
+				"cores": 4,
+				"memory": 1024
+			}`))
 
 	By("Verifying a 201 Created response")
 	Expect(err).ToNot(HaveOccurred())
@@ -183,26 +182,26 @@ func postDNSConfigs() (id string) {
 		"http://127.0.0.1:8080/dns_configs",
 		"application/json",
 		strings.NewReader(`
-            {
-                "name": "dns config 123",
-                "a_records": [{
-                    "name": "a record 1",
-                    "description": "description 1",
-                    "ips": [
-                        "172.16.55.43",
-                        "172.16.55.44"
-                    ]
-                }],
-                "forwarders": [{
-                    "name": "forwarder 1",
-                    "description": "description 1",
-                    "ip": "8.8.8.8"
-                }, {
-                    "name": "forwarder 2",
-                    "description": "description 2",
-                    "ip": "1.1.1.1"
-                }]
-            }`))
+			{
+				"name": "dns config 123",
+				"a_records": [{
+					"name": "a record 1",
+					"description": "description 1",
+					"ips": [
+						"172.16.55.43",
+						"172.16.55.44"
+					]
+				}],
+				"forwarders": [{
+					"name": "forwarder 1",
+					"description": "description 1",
+					"ip": "8.8.8.8"
+				}, {
+					"name": "forwarder 2",
+					"description": "description 2",
+					"ip": "1.1.1.1"
+				}]
+			}`))
 
 	By("Verifying a 201 Created response")
 	Expect(err).ToNot(HaveOccurred())
@@ -243,17 +242,237 @@ func getDNSConfig(id string) *cce.DNSConfig {
 	return &dnsConfig
 }
 
+func postDNSConfigsDNSContainerAppAliases(
+	dnsConfigID string,
+	dnsContainerAppAliasID string,
+) (id string) {
+	By("Sending a POST /dns_configs_dns_container_app_aliases request")
+	resp, err := http.Post(
+		"http://127.0.0.1:8080/dns_configs_dns_container_app_aliases",
+		"application/json",
+		strings.NewReader(fmt.Sprintf(`
+			{
+				"dns_config_id": "%s",
+				"dns_container_app_alias_id": "%s"
+			}`, dnsConfigID, dnsContainerAppAliasID)))
+
+	By("Verifying a 201 Created response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var respBody struct {
+		ID string
+	}
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
+
+	return respBody.ID
+}
+
+func getDNSConfigsDNSContainerAppAlias(
+	id string,
+) *cce.DNSConfigDNSContainerAppAlias {
+	By("Sending a GET /dns_configs_dns_container_app_aliases/{id} request")
+	resp, err := http.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/dns_configs_dns_container_app_aliases/%s", id)) //nolint:lll
+
+	By("Verifying a 200 OK response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var dnsConfigDNSContainerAppAlias cce.DNSConfigDNSContainerAppAlias
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &dnsConfigDNSContainerAppAlias)).To(Succeed())
+
+	return &dnsConfigDNSContainerAppAlias
+}
+
+func postDNSConfigsDNSContainerVNFAliases(
+	dnsConfigID string,
+	dnsContainerVNFAliasID string,
+) (id string) {
+	By("Sending a POST /dns_configs_dns_container_vnf_aliases request")
+	resp, err := http.Post(
+		"http://127.0.0.1:8080/dns_configs_dns_container_vnf_aliases",
+		"application/json",
+		strings.NewReader(fmt.Sprintf(`
+			{
+				"dns_config_id": "%s",
+				"dns_container_vnf_alias_id": "%s"
+			}`, dnsConfigID, dnsContainerVNFAliasID)))
+
+	By("Verifying a 201 Created response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var respBody struct {
+		ID string
+	}
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
+
+	return respBody.ID
+}
+
+func getDNSConfigsDNSContainerVNFAlias(
+	id string,
+) *cce.DNSConfigDNSContainerVNFAlias {
+	By("Sending a GET /dns_configs_dns_container_vnf_aliases/{id} request")
+	resp, err := http.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/dns_configs_dns_container_vnf_aliases/%s", id)) //nolint:lll
+
+	By("Verifying a 200 OK response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var dnsConfigDNSContainerVNFAlias cce.DNSConfigDNSContainerVNFAlias
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &dnsConfigDNSContainerVNFAlias)).To(Succeed())
+
+	return &dnsConfigDNSContainerVNFAlias
+}
+
+func postDNSConfigsDNSVMAppAliases(
+	dnsConfigID string,
+	dnsVMAppAliasID string,
+) (id string) {
+	By("Sending a POST /dns_configs_dns_vm_app_aliases request")
+	resp, err := http.Post(
+		"http://127.0.0.1:8080/dns_configs_dns_vm_app_aliases",
+		"application/json",
+		strings.NewReader(fmt.Sprintf(`
+			{
+				"dns_config_id": "%s",
+				"dns_vm_app_alias_id": "%s"
+			}`, dnsConfigID, dnsVMAppAliasID)))
+
+	By("Verifying a 201 Created response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var respBody struct {
+		ID string
+	}
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
+
+	return respBody.ID
+}
+
+func getDNSConfigsDNSVMAppAlias(
+	id string,
+) *cce.DNSConfigDNSVMAppAlias {
+	By("Sending a GET /dns_configs_dns_vm_app_aliases/{id} request")
+	resp, err := http.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/dns_configs_dns_vm_app_aliases/%s", id)) //nolint:lll
+
+	By("Verifying a 200 OK response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var dnsConfigDNSVMAppAlias cce.DNSConfigDNSVMAppAlias
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &dnsConfigDNSVMAppAlias)).To(Succeed())
+
+	return &dnsConfigDNSVMAppAlias
+}
+
+func postDNSConfigsDNSVMVNFAliases(
+	dnsConfigID string,
+	dnsVMVNFAliasID string,
+) (id string) {
+	By("Sending a POST /dns_configs_dns_vm_vnf_aliases request")
+	resp, err := http.Post(
+		"http://127.0.0.1:8080/dns_configs_dns_vm_vnf_aliases",
+		"application/json",
+		strings.NewReader(fmt.Sprintf(`
+			{
+				"dns_config_id": "%s",
+				"dns_vm_vnf_alias_id": "%s"
+			}`, dnsConfigID, dnsVMVNFAliasID)))
+
+	By("Verifying a 201 Created response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var respBody struct {
+		ID string
+	}
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
+
+	return respBody.ID
+}
+
+func getDNSConfigsDNSVMVNFAlias(
+	id string,
+) *cce.DNSConfigDNSVMVNFAlias {
+	By("Sending a GET /dns_configs_dns_vm_vnf_aliases/{id} request")
+	resp, err := http.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/dns_configs_dns_vm_vnf_aliases/%s", id)) //nolint:lll
+
+	By("Verifying a 200 OK response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var dnsConfigDNSVMVNFAlias cce.DNSConfigDNSVMVNFAlias
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &dnsConfigDNSVMVNFAlias)).To(Succeed())
+
+	return &dnsConfigDNSVMVNFAlias
+}
+
 func postDNSContainerAppAliases(containerAppID string) (id string) {
 	By("Sending a POST /dns_container_app_aliases request")
 	resp, err := http.Post(
 		"http://127.0.0.1:8080/dns_container_app_aliases",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
-            {
-                "name": "dns container app alias 123",
-                "description": "description 1",
-                "container_app_id": "%s"
-            }`, containerAppID)))
+			{
+				"name": "dns container app alias 123",
+				"description": "description 1",
+				"container_app_id": "%s"
+			}`, containerAppID)))
 
 	By("Verifying a 201 Created response")
 	Expect(err).ToNot(HaveOccurred())
@@ -300,11 +519,11 @@ func postDNSContainerVNFAliases(containerVNFID string) (id string) {
 		"http://127.0.0.1:8080/dns_container_vnf_aliases",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
-            {
-                "name": "dns container vnf alias 123",
-                "description": "description 1",
-                "container_vnf_id": "%s"
-            }`, containerVNFID)))
+			{
+				"name": "dns container vnf alias 123",
+				"description": "description 1",
+				"container_vnf_id": "%s"
+			}`, containerVNFID)))
 
 	By("Verifying a 201 Created response")
 	Expect(err).ToNot(HaveOccurred())
@@ -351,11 +570,11 @@ func postDNSVMAppAliases(vmAppID string) (id string) {
 		"http://127.0.0.1:8080/dns_vm_app_aliases",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
-            {
-                "name": "dns vm app alias 123",
-                "description": "description 1",
-                "vm_app_id": "%s"
-            }`, vmAppID)))
+			{
+				"name": "dns vm app alias 123",
+				"description": "description 1",
+				"vm_app_id": "%s"
+			}`, vmAppID)))
 
 	By("Verifying a 201 Created response")
 	Expect(err).ToNot(HaveOccurred())
@@ -402,11 +621,11 @@ func postDNSVMVNFAliases(vmVNFID string) (id string) {
 		"http://127.0.0.1:8080/dns_vm_vnf_aliases",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
-            {
-                "name": "dns vm vnf alias 123",
-                "description": "description 1",
-                "vm_vnf_id": "%s"
-            }`, vmVNFID)))
+			{
+				"name": "dns vm vnf alias 123",
+				"description": "description 1",
+				"vm_vnf_id": "%s"
+			}`, vmVNFID)))
 
 	By("Verifying a 201 Created response")
 	Expect(err).ToNot(HaveOccurred())
@@ -453,11 +672,11 @@ func postNodes() (id string) {
 		"http://127.0.0.1:8080/nodes",
 		"application/json",
 		strings.NewReader(`
-            {
-                "name": "node123",
-                "location": "smart edge lab",
-                "serial": "abc123"
-            }`))
+			{
+				"name": "node123",
+				"location": "smart edge lab",
+				"serial": "abc123"
+			}`))
 
 	By("Verifying a 201 Created response")
 	Expect(err).ToNot(HaveOccurred())
@@ -498,81 +717,132 @@ func getNode(id string) *cce.Node {
 	return &node
 }
 
+func postNodesDNSConfigs(nodeID, dnsConfigID string) (id string) {
+	By("Sending a POST /nodes_dns_configs request")
+	resp, err := http.Post(
+		"http://127.0.0.1:8080/nodes_dns_configs",
+		"application/json",
+		strings.NewReader(fmt.Sprintf(`
+			{
+				"node_id": "%s",
+				"dns_config_id": "%s"
+			}`, nodeID, dnsConfigID)))
+
+	By("Verifying a 201 Created response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var respBody struct {
+		ID string
+	}
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
+
+	fmt.Println(respBody.ID)
+	return respBody.ID
+}
+
+func getNodesDNSConfig(id string) *cce.NodeDNSConfig {
+	By("Sending a GET /nodes_dns_configs/{id} request")
+	resp, err := http.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes_dns_configs/%s", id))
+
+	By("Verifying a 200 OK response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var nodeDNSConfig cce.NodeDNSConfig
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &nodeDNSConfig)).To(Succeed())
+
+	return &nodeDNSConfig
+}
+
 func postTrafficPolicies() (id string) {
 	By("Sending a POST /traffic_policies request")
 	resp, err := http.Post(
 		"http://127.0.0.1:8080/traffic_policies",
 		"application/json",
 		strings.NewReader(`
-        {
-            "rules": [{
-                "description": "test-rule-1",
-                "priority": 1,
-                "source": {
-                    "description": "test-source-1",
-                    "macs": {
-                        "mac_addresses": [
-                            "F0-59-8E-7B-36-8A",
-                            "23-20-8E-15-89-D1",
-                            "35-A4-38-73-35-45"
-                        ]
-                    },
-                    "ip": {
-                        "address": "223.1.1.0",
-                        "mask": 16,
-                        "begin_port": 2000,
-                        "end_port": 2012,
-                        "protocol": "tcp"
-                    },
-                    "gtp": {
-                        "address": "10.6.7.2",
-                        "mask": 12,
-                        "imsis": [
-                            "310150123456789",
-                            "310150123456790",
-                            "310150123456791"
-                        ]
-                    }
-                },
-                "destination": {
-                    "description": "test-destination-1",
-                    "macs": {
-                        "mac_addresses": [
-                            "7D-C2-3A-1C-63-D9",
-                            "E9-6B-D1-D2-1A-6B",
-                            "C8-32-A9-43-85-55"
-                        ]
-                    },
-                    "ip": {
-                        "address": "64.1.1.0",
-                        "mask": 16,
-                        "begin_port": 1000,
-                        "end_port": 1012,
-                        "protocol": "tcp"
-                    },
-                    "gtp": {
-                        "address": "108.6.7.2",
-                        "mask": 4,
-                        "imsis": [
-                            "310150123456792",
-                            "310150123456793",
-                            "310150123456794"
-                        ]
-                    }
-                },
-                "target": {
-                    "description": "test-target-1",
-                    "action": "accept",
-                    "mac": {
-                        "mac_address": "C7-5A-E7-98-1B-A3"
-                    },
-                    "ip": {
-                        "address": "123.2.3.4",
-                        "port": 1600
-                    }
-                }
-            }]
-        }`))
+		{
+			"rules": [{
+				"description": "test-rule-1",
+				"priority": 1,
+				"source": {
+					"description": "test-source-1",
+					"macs": {
+						"mac_addresses": [
+							"F0-59-8E-7B-36-8A",
+							"23-20-8E-15-89-D1",
+							"35-A4-38-73-35-45"
+						]
+					},
+					"ip": {
+						"address": "223.1.1.0",
+						"mask": 16,
+						"begin_port": 2000,
+						"end_port": 2012,
+						"protocol": "tcp"
+					},
+					"gtp": {
+						"address": "10.6.7.2",
+						"mask": 12,
+						"imsis": [
+							"310150123456789",
+							"310150123456790",
+							"310150123456791"
+						]
+					}
+				},
+				"destination": {
+					"description": "test-destination-1",
+					"macs": {
+						"mac_addresses": [
+							"7D-C2-3A-1C-63-D9",
+							"E9-6B-D1-D2-1A-6B",
+							"C8-32-A9-43-85-55"
+						]
+					},
+					"ip": {
+						"address": "64.1.1.0",
+						"mask": 16,
+						"begin_port": 1000,
+						"end_port": 1012,
+						"protocol": "tcp"
+					},
+					"gtp": {
+						"address": "108.6.7.2",
+						"mask": 4,
+						"imsis": [
+							"310150123456792",
+							"310150123456793",
+							"310150123456794"
+						]
+					}
+				},
+				"target": {
+					"description": "test-target-1",
+					"action": "accept",
+					"mac": {
+						"mac_address": "C7-5A-E7-98-1B-A3"
+					},
+					"ip": {
+						"address": "123.2.3.4",
+						"port": 1600
+					}
+				}
+			}]
+		}`))
 
 	By("Verifying a 201 Created response")
 	Expect(err).ToNot(HaveOccurred())
@@ -619,14 +889,14 @@ func postVMApps() (id string) {
 		"http://127.0.0.1:8080/vm_apps",
 		"application/json",
 		strings.NewReader(`
-            {
-                "name": "vm app",
-                "vendor": "smart edge",
-                "description": "my vm app",
-                "image": "http://www.test.com/my_vm_app.tar.gz",
-                "cores": 4,
-                "memory": 1024
-            }`))
+			{
+				"name": "vm app",
+				"vendor": "smart edge",
+				"description": "my vm app",
+				"image": "http://www.test.com/my_vm_app.tar.gz",
+				"cores": 4,
+				"memory": 1024
+			}`))
 
 	By("Verifying a 201 Created response")
 	Expect(err).ToNot(HaveOccurred())
@@ -673,14 +943,14 @@ func postVMVNFs() (id string) {
 		"http://127.0.0.1:8080/vm_vnfs",
 		"application/json",
 		strings.NewReader(`
-            {
-                "name": "vm vnf",
-                "vendor": "smart edge",
-                "description": "my vm vnf",
-                "image": "http://www.test.com/my_vm_vnf.tar.gz",
-                "cores": 4,
-                "memory": 1024
-            }`))
+			{
+				"name": "vm vnf",
+				"vendor": "smart edge",
+				"description": "my vm vnf",
+				"image": "http://www.test.com/my_vm_vnf.tar.gz",
+				"cores": 4,
+				"memory": 1024
+			}`))
 
 	By("Verifying a 201 Created response")
 	Expect(err).ToNot(HaveOccurred())
