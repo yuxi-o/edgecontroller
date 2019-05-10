@@ -87,6 +87,11 @@ CREATE TABLE dns_vm_vnf_aliases (
     FOREIGN KEY (vm_vnf_id) REFERENCES vm_vnfs(id)
 );
 
+CREATE TABLE credentials (
+    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
+    entity JSON
+);
+
 -- -------------------
 -- Primary join tables
 -- -------------------

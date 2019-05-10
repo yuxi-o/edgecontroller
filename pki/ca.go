@@ -19,9 +19,11 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/md5"
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/base64"
 	"log"
 	"math/big"
 	rdm "math/rand"
@@ -107,6 +109,62 @@ func InitRootCA(certsDir string) (*RootCA, error) {
 		Cert: cert,
 		Key:  key,
 	}, nil
+}
+
+// CAChain returns the root CA certificate wrapped in a slice to satisfy the
+// interface. Since the root CA is the issuing CA and there are no intermediate
+// CAs, we only need to return the root CA certificate.
+func (ca *RootCA) CAChain() ([]*x509.Certificate, error) {
+	return []*x509.Certificate{ca.Cert}, nil
+}
+
+// SignCSR signs a ASN.1 DER encoded certificate signing request.
+func (ca *RootCA) SignCSR(der []byte) (*x509.Certificate, error) {
+	csr, err := x509.ParseCertificateRequest(der)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse CSR")
+	}
+
+	// Certificate CN is base64-encoded (w/o padding) MD5 hash of the public key
+	pub, err := x509.MarshalPKIXPublicKey(csr.PublicKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to marshal CSR public key")
+	}
+
+	hash := md5.Sum(pub)
+
+	cn := base64.RawURLEncoding.EncodeToString(hash[:])
+
+	subject := pkix.Name{CommonName: cn}
+
+	source := rdm.NewSource(time.Now().UnixNano())
+
+	serial := big.NewInt(int64(rdm.New(source).Uint64()))
+
+	template := &x509.Certificate{
+		Signature:          csr.Signature,
+		SignatureAlgorithm: csr.SignatureAlgorithm,
+		PublicKey:          csr.PublicKey,
+		PublicKeyAlgorithm: csr.PublicKeyAlgorithm,
+		SerialNumber:       serial,
+		Issuer:             ca.Cert.Subject,
+		Subject:            subject,
+		NotBefore:          time.Now(),
+		NotAfter:           ca.Cert.NotAfter, // Valid until CA expires
+	}
+
+	certDER, err := x509.CreateCertificate(
+		rand.Reader,
+		template,
+		ca.Cert,
+		template.PublicKey,
+		ca.Key,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to sign certificate")
+	}
+
+	return x509.ParseCertificate(certDER)
 }
 
 // generateRootCA creates a root CA from the private key valid for 3 years.

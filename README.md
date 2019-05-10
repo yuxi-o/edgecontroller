@@ -29,11 +29,11 @@ To build the binaries:
 
 To run the test node which simulates an appliance listening as a gRPC server:
 
-`./dist/test-node -port 8081`
+`./dist/test-node -port 8082`
 
 To run the Controller CE:
 
-`./dist/cce -dsn "root:<db_pass>@tcp(:8083)/controller_ce" -port 8080`
+`./dist/cce -dsn "root:<db_pass>@tcp(:8083)/controller_ce" -httpPort 8080 -grpcPort 8081`
 
 ## Project Layout
 

@@ -15,6 +15,7 @@
 package main_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -23,16 +24,17 @@ import (
 	"strings"
 	"testing"
 
-	cce "github.com/smartedgemec/controller-ce"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+
+	cce "github.com/smartedgemec/controller-ce"
 )
 
 var (
 	service *gexec.Session
+	ctx     = context.Background()
 )
 
 var _ = BeforeSuite(func() {
@@ -56,13 +58,14 @@ func startService() (session *gexec.Session) {
 
 	cmd := exec.Command(exe,
 		"-dsn", "root:beer@tcp(:8083)/controller_ce",
-		"-port", "8080")
+		"-httpPort", "8080",
+		"-grpcPort", "8081")
 
 	session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).ToNot(HaveOccurred(), "Problem starting service")
 
 	Eventually(session.Err, 3).Should(gbytes.Say(
-		"Handler ready, starting server"),
+		"Controller CE ready"),
 		"Service did not start in time")
 
 	return session

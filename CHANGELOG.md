@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.7] - 2019-05-07
+### Added
+- gRPC listener and node auth gRPC endpoint
+
 ## [0.0.6] - 2019-05-02
 ### Added
 - Self-sign CA on startup

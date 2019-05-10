@@ -15,15 +15,24 @@
 package main
 
 import (
+	"context"
 	"database/sql"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
+	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/gorilla"
+	"github.com/smartedgemec/controller-ce/grpc"
 	"github.com/smartedgemec/controller-ce/http"
 	"github.com/smartedgemec/controller-ce/mysql"
 	"github.com/smartedgemec/controller-ce/pki"
@@ -36,8 +45,9 @@ func main() {
 		err error
 
 		// flags
-		dsn  string
-		port int
+		dsn      string
+		httpPort int
+		grpcPort int
 
 		rootCA *pki.RootCA
 
@@ -45,16 +55,20 @@ func main() {
 		controller *cce.Controller
 		nodeMap    map[string]*cce.Node = make(map[string]*cce.Node)
 
-		listener net.Listener
-		g        *gorilla.Gorilla
-		srv      *http.Server
+		httpListener net.Listener
+		g            *gorilla.Gorilla
+		httpServer   *http.Server
+
+		grpcListener net.Listener
+		grpcServer   *grpc.Server
 	)
 
 	log.Print("Controller CE starting")
 
 	// CLI flags
 	flag.StringVar(&dsn, "dsn", "", "Data source name")
-	flag.IntVar(&port, "port", 8080, "Host port")
+	flag.IntVar(&httpPort, "httpPort", 8080, "Controller HTTP port")
+	flag.IntVar(&grpcPort, "grpcPort", 8081, "Controller gRPC port")
 	flag.Parse()
 
 	// Connect to the db
@@ -82,20 +96,104 @@ func main() {
 		AuthorityService:   rootCA,
 	}
 
-	// Listen on a local network address
-	if listener, err = net.Listen("tcp", fmt.Sprintf(":%d", port)); err != nil {
+	// Setup http server tcp listener
+	if httpListener, err = net.Listen(
+		"tcp",
+		fmt.Sprintf(":%d", httpPort),
+	); err != nil {
 		log.Fatal("Could not listen on : ", err)
 	}
-	defer listener.Close()
+	defer httpListener.Close()
 
-	log.Printf("Listener ready on tcp port %d", port)
+	// Setup grpc server tcp listener
+	if grpcListener, err = net.Listen(
+		"tcp",
+		fmt.Sprintf(":%d", grpcPort),
+	); err != nil {
+		log.Fatal("Could not listen on : ", err)
+	}
+	defer grpcListener.Close()
+
+	// Create an error group to manage server goroutines
+	eg, ctx := errgroup.WithContext(context.Background())
+
+	// Catch exit signals
+	eg.Go(func() error {
+		ch := make(chan os.Signal, 2)
+
+		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+
+		select {
+
+		case <-ctx.Done():
+			return ctx.Err()
+
+		case signal := <-ch:
+			return errors.New(signal.String())
+
+		}
+	})
 
 	// Create the gorilla and feed it a controller and its nodes
 	g = gorilla.NewGorilla(controller, nodeMap)
 
-	log.Print("Handler ready, starting server")
+	log.Println("HTTP handler ready")
 
-	// Start the server
-	srv = http.NewServer(g)
-	log.Fatal(srv.Serve(listener))
+	// Configure http server
+	httpServer = http.NewServer(g)
+
+	// Start the http server
+	log.Printf("Starting HTTP server on port %d\n", httpPort)
+	eg.Go(func() error {
+
+		return httpServer.Serve(httpListener)
+	})
+
+	// Shutdown http server on exit signal
+	go func() {
+		<-ctx.Done()
+
+		ctxShutdown, cancel := context.WithTimeout(context.TODO(), time.Minute)
+		defer cancel()
+
+		err = httpServer.Shutdown(ctxShutdown)
+		if err != nil {
+			log.Println("HTTP graceful shutdown exceeded timeout, using force")
+			httpServer.Close()
+		}
+	}()
+
+	// Configure grpc server
+	grpcServer = grpc.NewServer(controller)
+
+	// Start the grpc server
+	log.Printf("Starting gRPC server on port %d\n", httpPort)
+	eg.Go(func() error {
+		return grpcServer.Serve(grpcListener)
+	})
+
+	// Shutdown grpc server on exit signal
+	go func() {
+		<-ctx.Done()
+
+		// Try to gracefully shutdown
+		stopped := make(chan struct{})
+		go func() {
+			grpcServer.GracefulStop()
+			close(stopped)
+		}()
+
+		select {
+		case <-time.After(time.Minute):
+			log.Println("gRPC server shutdown exceeded timeout, using force")
+			grpcServer.Stop()
+		case <-stopped:
+			return
+		}
+	}()
+
+	log.Println("Controller CE ready")
+	if err = eg.Wait(); err != nil {
+		log.Fatal(err)
+	}
 }

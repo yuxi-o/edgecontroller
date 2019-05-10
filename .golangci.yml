@@ -57,3 +57,6 @@ issues:
     - text: "string `*`"
       linters:
         - goconst
+    - text: "weak cryptographic primitive"
+      linters:
+        - gosec
