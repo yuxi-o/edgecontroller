@@ -49,20 +49,6 @@ CREATE TABLE dns_configs (
     entity JSON
 );
 
-CREATE TABLE dns_app_aliases (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    app_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.app_id') STORED,
-    entity JSON,
-    FOREIGN KEY (app_id) REFERENCES apps(id)
-);
-
-CREATE TABLE dns_vnf_aliases (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    vnf_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.vnf_id') STORED,
-    entity JSON,
-    FOREIGN KEY (vnf_id) REFERENCES vnfs(id)
-);
-
 CREATE TABLE credentials (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
     entity JSON
@@ -74,30 +60,28 @@ CREATE TABLE credentials (
 
 -- These tables join two entity tables.
 
--- dns_configs x dns_app_aliases
-CREATE TABLE dns_configs_dns_app_aliases (
+-- dns_configs x apps
+CREATE TABLE dns_configs_app_aliases (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
     dns_config_id  VARCHAR(36) GENERATED ALWAYS AS
         (entity->>'$.dns_config_id') STORED,
-    dns_app_alias_id  VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.dns_app_alias_id') STORED,
+    app_id  VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.app_id') STORED,
     entity JSON,
     FOREIGN KEY (dns_config_id) REFERENCES dns_configs(id),
-    FOREIGN KEY (dns_app_alias_id) REFERENCES dns_app_aliases(id),
-    UNIQUE KEY (dns_config_id, dns_app_alias_id)
+    FOREIGN KEY (app_id) REFERENCES apps(id),
+    UNIQUE KEY (dns_config_id, app_id)
 );
 
--- dns_configs x dns_vnf_aliases
-CREATE TABLE dns_configs_dns_vnf_aliases (
+-- dns_configs x vnfs
+CREATE TABLE dns_configs_vnf_aliases (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
     dns_config_id  VARCHAR(36) GENERATED ALWAYS AS
         (entity->>'$.dns_config_id') STORED,
-    dns_vnf_alias_id  VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.dns_vnf_alias_id') STORED,
+    vnf_id  VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.vnf_id') STORED,
     entity JSON,
     FOREIGN KEY (dns_config_id) REFERENCES dns_configs(id),
-    FOREIGN KEY (dns_vnf_alias_id) REFERENCES dns_vnf_aliases(id),
-    UNIQUE KEY (dns_config_id, dns_vnf_alias_id)
+    FOREIGN KEY (vnf_id) REFERENCES vnfs(id),
+    UNIQUE KEY (dns_config_id, vnf_id)
 );
 
 -- nodes x apps

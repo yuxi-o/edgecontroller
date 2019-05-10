@@ -537,12 +537,10 @@ var _ = Describe("/dns_configs", func() {
 		DescribeTable("422 Unprocessable Entity",
 			func(resource, expectedResp string) {
 				switch resource {
-				case "dns_configs_dns_app_aliases":
-					postDNSConfigsDNSAppAliases(dnsConfigID,
-						postDNSAppAliases(postApps("container")))
-				case "dns_configs_dns_vnf_aliases":
-					postDNSConfigsDNSVNFAliases(dnsConfigID,
-						postDNSVNFAliases(postVNFs("container")))
+				case "dns_configs_app_aliases":
+					postDNSConfigsAppAliases(dnsConfigID, postApps("container"))
+				case "dns_configs_vnf_aliases":
+					postDNSConfigsVNFAliases(dnsConfigID, postVNFs("container"))
 				}
 
 				By("Sending a DELETE /dns_configs/{id} request")
@@ -570,14 +568,14 @@ var _ = Describe("/dns_configs", func() {
 					fmt.Sprintf(expectedResp, dnsConfigID)))
 			},
 			Entry(
-				"DELETE /dns_configs/{id} with dns_configs_dns_app_aliases record", //nolint:lll
-				"dns_configs_dns_app_aliases",
-				"cannot delete dns_config_id %s: record in use in dns_configs_dns_app_aliases", //nolint:lll
+				"DELETE /dns_configs/{id} with dns_configs_app_aliases record",
+				"dns_configs_app_aliases",
+				"cannot delete dns_config_id %s: record in use in dns_configs_app_aliases", //nolint:lll
 			),
 			Entry(
-				"DELETE /dns_configs/{id} with dns_configs_dns_vnf_aliases record", //nolint:lll
-				"dns_configs_dns_vnf_aliases",
-				"cannot delete dns_config_id %s: record in use in dns_configs_dns_vnf_aliases", //nolint:lll
+				"DELETE /dns_configs/{id} with dns_configs_vnf_aliases record",
+				"dns_configs_vnf_aliases",
+				"cannot delete dns_config_id %s: record in use in dns_configs_vnf_aliases", //nolint:lll
 			),
 		)
 	})

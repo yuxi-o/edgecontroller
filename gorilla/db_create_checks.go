@@ -22,7 +22,7 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
-func checkDBCreateDNSConfigsDNSAppAliases(
+func checkDBCreateDNSConfigsAppAliases(
 	ctx context.Context,
 	ps cce.PersistenceService,
 	e cce.Entity,
@@ -31,15 +31,15 @@ func checkDBCreateDNSConfigsDNSAppAliases(
 
 	if es, err = ps.Filter(
 		ctx,
-		&cce.DNSConfigDNSAppAlias{},
+		&cce.DNSConfigAppAlias{},
 		[]cce.Filter{
 			{
 				Field: "dns_config_id",
-				Value: e.(*cce.DNSConfigDNSAppAlias).DNSConfigID,
+				Value: e.(*cce.DNSConfigAppAlias).DNSConfigID,
 			},
 			{
-				Field: "dns_app_alias_id",
-				Value: e.(*cce.DNSConfigDNSAppAlias).DNSAppAliasID,
+				Field: "app_id",
+				Value: e.(*cce.DNSConfigAppAlias).AppID,
 			},
 		},
 	); err != nil {
@@ -48,16 +48,15 @@ func checkDBCreateDNSConfigsDNSAppAliases(
 
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"duplicate record detected for dns_config_id %s and "+
-				"dns_app_alias_id %s",
-			e.(*cce.DNSConfigDNSAppAlias).DNSConfigID,
-			e.(*cce.DNSConfigDNSAppAlias).DNSAppAliasID)
+			"duplicate record detected for dns_config_id %s and app_id %s",
+			e.(*cce.DNSConfigAppAlias).DNSConfigID,
+			e.(*cce.DNSConfigAppAlias).AppID)
 	}
 
 	return 0, nil
 }
 
-func checkDBCreateDNSConfigsDNSVNFAliases(
+func checkDBCreateDNSConfigsVNFAliases(
 	ctx context.Context,
 	ps cce.PersistenceService,
 	e cce.Entity,
@@ -66,15 +65,15 @@ func checkDBCreateDNSConfigsDNSVNFAliases(
 
 	if es, err = ps.Filter(
 		ctx,
-		&cce.DNSConfigDNSVNFAlias{},
+		&cce.DNSConfigVNFAlias{},
 		[]cce.Filter{
 			{
 				Field: "dns_config_id",
-				Value: e.(*cce.DNSConfigDNSVNFAlias).DNSConfigID,
+				Value: e.(*cce.DNSConfigVNFAlias).DNSConfigID,
 			},
 			{
-				Field: "dns_vnf_alias_id",
-				Value: e.(*cce.DNSConfigDNSVNFAlias).DNSVNFAliasID,
+				Field: "vnf_id",
+				Value: e.(*cce.DNSConfigVNFAlias).VNFID,
 			},
 		},
 	); err != nil {
@@ -83,10 +82,9 @@ func checkDBCreateDNSConfigsDNSVNFAliases(
 
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"duplicate record detected for dns_config_id %s and "+
-				"dns_vnf_alias_id %s",
-			e.(*cce.DNSConfigDNSVNFAlias).DNSConfigID,
-			e.(*cce.DNSConfigDNSVNFAlias).DNSVNFAliasID)
+			"duplicate record detected for dns_config_id %s and vnf_id %s",
+			e.(*cce.DNSConfigVNFAlias).DNSConfigID,
+			e.(*cce.DNSConfigVNFAlias).VNFID)
 	}
 
 	return 0, nil

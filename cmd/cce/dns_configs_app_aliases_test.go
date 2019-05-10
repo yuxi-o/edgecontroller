@@ -29,32 +29,32 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("/dns_configs_dns_app_aliases", func() {
+var _ = Describe("/dns_configs_app_aliases", func() {
 	var (
-		dnsConfigID   string
-		appID         string
-		dnsAppAliasID string
+		dnsConfigID string
+		appID       string
 	)
 
 	BeforeEach(func() {
 		dnsConfigID = postDNSConfigs()
 		appID = postApps("container")
-		dnsAppAliasID = postDNSAppAliases(appID)
 	})
 
-	Describe("POST /dns_configs_dns_app_aliases", func() {
+	Describe("POST /dns_configs_app_aliases", func() {
 		DescribeTable("201 Created",
 			func() {
-				By("Sending a POST /dns_configs_dns_app_aliases request")
+				By("Sending a POST /dns_configs_app_aliases request")
 				resp, err := http.Post(
-					"http://127.0.0.1:8080/dns_configs_dns_app_aliases",
+					"http://127.0.0.1:8080/dns_configs_app_aliases",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
 						`
 						{
 							"dns_config_id": "%s",
-							"dns_app_alias_id": "%s"
-						}`, dnsConfigID, dnsAppAliasID)))
+							"name": "dns config app alias",
+							"description": "my dns config app alias",
+							"app_id": "%s"
+						}`, dnsConfigID, appID)))
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying a 201 response")
@@ -75,14 +75,14 @@ var _ = Describe("/dns_configs_dns_app_aliases", func() {
 				Expect(uuid.IsValid(respBody.ID)).To(BeTrue())
 			},
 			Entry(
-				"POST /dns_configs_dns_app_aliases"),
+				"POST /dns_configs_app_aliases"),
 		)
 
 		DescribeTable("400 Bad Request",
 			func(req, expectedResp string) {
-				By("Sending a POST /dns_configs_dns_app_aliases request")
+				By("Sending a POST /dns_configs_app_aliases request")
 				resp, err := http.Post(
-					"http://127.0.0.1:8080/dns_configs_dns_app_aliases",
+					"http://127.0.0.1:8080/dns_configs_app_aliases",
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
@@ -98,25 +98,42 @@ var _ = Describe("/dns_configs_dns_app_aliases", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
-				"POST /dns_configs_dns_app_aliases with id",
+				"POST /dns_configs_app_aliases with id",
 				`
 				{
 					"id": "123"
 				}`,
 				"Validation failed: id cannot be specified in POST request"),
 			Entry(
-				"POST /dns_configs_dns_app_aliases without dns_config_id",
+				"POST /dns_configs_app_aliases without dns_config_id",
 				`
 				{
 				}`,
 				"Validation failed: dns_config_id not a valid uuid"),
 			Entry(
-				"POST /dns_configs_dns_app_aliases without dns_app_alias_id",
+				"POST /dns_configs_app_aliases without name",
 				fmt.Sprintf(`
 				{
 					"dns_config_id": "%s"
 				}`, uuid.New()),
-				"Validation failed: dns_app_alias_id not a valid uuid"),
+				"Validation failed: name cannot be empty"),
+			Entry(
+				"POST /dns_configs_app_aliases without description",
+				fmt.Sprintf(`
+				{
+					"dns_config_id": "%s",
+					"name": "dns config app alias"
+				}`, uuid.New()),
+				"Validation failed: description cannot be empty"),
+			Entry(
+				"POST /dns_configs_app_aliases without app_id",
+				fmt.Sprintf(`
+				{
+					"dns_config_id": "%s",
+					"name": "dns config app alias",
+					"description": "my dns config app alias"
+				}`, uuid.New()),
+				"Validation failed: app_id not a valid uuid"),
 		)
 
 		DescribeTable("422 Unprocessable Entity",
@@ -126,19 +143,21 @@ var _ = Describe("/dns_configs_dns_app_aliases", func() {
 					err  error
 				)
 
-				By("Sending a POST /dns_configs_dns_app_aliases request")
-				postDNSConfigsDNSAppAliases(dnsConfigID, dnsAppAliasID)
+				By("Sending a POST /dns_configs_app_aliases request")
+				postDNSConfigsAppAliases(dnsConfigID, appID)
 
-				By("Repeating the first POST /dns_configs_dns_app_aliases request") //nolint:lll
+				By("Repeating the first POST /dns_configs_app_aliases request")
 				resp, err = http.Post(
-					"http://127.0.0.1:8080/dns_configs_dns_app_aliases",
+					"http://127.0.0.1:8080/dns_configs_app_aliases",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
 						`
 						{
 							"dns_config_id": "%s",
-							"dns_app_alias_id": "%s"
-						}`, dnsConfigID, dnsAppAliasID)))
+							"name": "dns config app alias",
+							"description": "my dns config app alias",
+							"app_id": "%s"
+						}`, dnsConfigID, appID)))
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying a 422 response")
@@ -152,34 +171,32 @@ var _ = Describe("/dns_configs_dns_app_aliases", func() {
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(fmt.Sprintf(
 					"duplicate record detected for dns_config_id %s and "+
-						"dns_app_alias_id %s",
+						"app_id %s",
 					dnsConfigID,
-					dnsAppAliasID)))
+					appID)))
 			},
-			Entry("POST /dns_configs_dns_app_aliases with duplicate dns_config_id/dns_app_alias_id"), //nolint:lll
+			Entry("POST /dns_configs_app_aliases with duplicate dns_config_id/app_id"), //nolint:lll
 		)
 	})
 
-	Describe("GET /dns_configs_dns_app_aliases", func() {
+	Describe("GET /dns_configs_app_aliases", func() {
 		var (
-			dnsConfigDNSAppAliasID  string
-			dnsAppAlias2ID          string
-			dnsConfigDNSAppAlias2ID string
+			dnsConfigAppAliasID  string
+			app2ID               string
+			dnsConfigAppAlias2ID string
 		)
 
 		BeforeEach(func() {
-			dnsConfigDNSAppAliasID =
-				postDNSConfigsDNSAppAliases(dnsConfigID, dnsAppAliasID)
-			dnsAppAlias2ID = postDNSAppAliases(appID)
-			dnsConfigDNSAppAlias2ID =
-				postDNSConfigsDNSAppAliases(dnsConfigID, dnsAppAlias2ID)
+			dnsConfigAppAliasID = postDNSConfigsAppAliases(dnsConfigID, appID)
+			app2ID = postApps("container")
+			dnsConfigAppAlias2ID = postDNSConfigsAppAliases(dnsConfigID, app2ID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				By("Sending a GET /dns_configs_dns_app_aliases request")
+				By("Sending a GET /dns_configs_app_aliases request")
 				resp, err := http.Get(
-					"http://127.0.0.1:8080/dns_configs_dns_app_aliases")
+					"http://127.0.0.1:8080/dns_configs_app_aliases")
 
 				By("Verifying a 200 OK response")
 				Expect(err).ToNot(HaveOccurred())
@@ -189,92 +206,96 @@ var _ = Describe("/dns_configs_dns_app_aliases", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var dnsConfigDNSAppAliases []cce.DNSConfigDNSAppAlias
+				var dnsConfigAppAliases []cce.DNSConfigAppAlias
 
 				By("Unmarshalling the response")
-				Expect(json.Unmarshal(body, &dnsConfigDNSAppAliases)).
+				Expect(json.Unmarshal(body, &dnsConfigAppAliases)).
 					To(Succeed())
 
-				By("Verifying the 2 created DNS app aliases were returned")
-				Expect(dnsConfigDNSAppAliases).To(ContainElement(
-					cce.DNSConfigDNSAppAlias{
-						ID:            dnsConfigDNSAppAliasID,
-						DNSConfigID:   dnsConfigID,
-						DNSAppAliasID: dnsAppAliasID,
+				By("Verifying the 2 created app aliases were returned")
+				Expect(dnsConfigAppAliases).To(ContainElement(
+					cce.DNSConfigAppAlias{
+						ID:          dnsConfigAppAliasID,
+						DNSConfigID: dnsConfigID,
+						Name:        "dns config app alias",
+						Description: "my dns config app alias",
+						AppID:       appID,
 					}))
-				Expect(dnsConfigDNSAppAliases).To(ContainElement(
-					cce.DNSConfigDNSAppAlias{
-						ID:            dnsConfigDNSAppAlias2ID,
-						DNSConfigID:   dnsConfigID,
-						DNSAppAliasID: dnsAppAlias2ID,
+				Expect(dnsConfigAppAliases).To(ContainElement(
+					cce.DNSConfigAppAlias{
+						ID:          dnsConfigAppAlias2ID,
+						DNSConfigID: dnsConfigID,
+						Name:        "dns config app alias",
+						Description: "my dns config app alias",
+						AppID:       app2ID,
 					}))
 			},
-			Entry("GET /dns_configs_dns_app_aliases"),
+			Entry("GET /dns_configs_app_aliases"),
 		)
 	})
 
-	Describe("GET /dns_configs_dns_app_aliases/{id}", func() {
+	Describe("GET /dns_configs_app_aliases/{id}", func() {
 		var (
-			dnsConfigDNSAppAliasID string
+			dnsConfigAppAliasID string
 		)
 
 		BeforeEach(func() {
-			dnsConfigDNSAppAliasID =
-				postDNSConfigsDNSAppAliases(dnsConfigID, dnsAppAliasID)
+			dnsConfigAppAliasID =
+				postDNSConfigsAppAliases(dnsConfigID, appID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				dnsConfigDNSAppAlias :=
-					getDNSConfigsDNSAppAlias(
-						dnsConfigDNSAppAliasID)
+				dnsConfigAppAlias := getDNSConfigsAppAlias(dnsConfigAppAliasID)
 
-				By("Verifying the created DNS config <-> DNS app alias was returned") //nolint:lll
-				Expect(dnsConfigDNSAppAlias).To(Equal(
-					&cce.DNSConfigDNSAppAlias{
-						ID:            dnsConfigDNSAppAliasID,
-						DNSConfigID:   dnsConfigID,
-						DNSAppAliasID: dnsAppAliasID,
+				By("Verifying the created DNS config app alias was returned")
+				Expect(dnsConfigAppAlias).To(Equal(
+					&cce.DNSConfigAppAlias{
+						ID:          dnsConfigAppAliasID,
+						DNSConfigID: dnsConfigID,
+						Name:        "dns config app alias",
+						Description: "my dns config app alias",
+						AppID:       appID,
 					},
 				))
 			},
-			Entry("GET /dns_configs_dns_app_aliases/{id}"),
+			Entry("GET /dns_configs_app_aliases/{id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func() {
-				By("Sending a GET /dns_configs_dns_app_aliases/{id} request")
+				By("Sending a GET /dns_configs_app_aliases/{id} request")
 				resp, err := http.Get(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/dns_configs_dns_app_aliases/%s",
+						"http://127.0.0.1:8080/dns_configs_app_aliases/%s",
 						uuid.New()))
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("GET /dns_configs_dns_app_aliases/{id} with nonexistent ID"),
+			Entry("GET /dns_configs_app_aliases/{id} with nonexistent ID"),
 		)
 	})
 
-	Describe("DELETE /dns_configs_dns_app_aliases/{id}", func() {
+	Describe("DELETE /dns_configs_app_aliases/{id}", func() {
 		var (
-			dnsConfigDNSAppAliasID string
+			dnsConfigAppAliasID string
 		)
 
 		BeforeEach(func() {
-			dnsConfigDNSAppAliasID =
-				postDNSConfigsDNSAppAliases(dnsConfigID, dnsAppAliasID)
+			dnsConfigAppAliasID =
+				postDNSConfigsAppAliases(dnsConfigID, appID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				By("Sending a DELETE /dns_configs_dns_app_aliases/{id} request")
+				By("Sending a DELETE /dns_configs_app_aliases/{id} request")
 				req, err := http.NewRequest(
 					http.MethodDelete,
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/dns_configs_dns_app_aliases/%s",
-						dnsConfigDNSAppAliasID),
+						"http://127.0.0.1:8080/dns_configs_app_aliases/%s",
+						dnsConfigAppAliasID),
 					nil)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -286,28 +307,28 @@ var _ = Describe("/dns_configs_dns_app_aliases", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-				By("Verifying the DNS config <-> DNS app alias was deleted")
+				By("Verifying the DNS config app alias was deleted")
 
-				By("Sending a GET /dns_configs_dns_app_aliases/{id} request")
+				By("Sending a GET /dns_configs_app_aliases/{id} request")
 				resp, err = http.Get(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/dns_configs_dns_app_aliases/%s",
-						dnsConfigDNSAppAliasID))
+						"http://127.0.0.1:8080/dns_configs_app_aliases/%s",
+						dnsConfigAppAliasID))
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("DELETE /dns_configs_dns_app_aliases/{id}"),
+			Entry("DELETE /dns_configs_app_aliases/{id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func(id string) {
-				By("Sending a DELETE /dns_configs_dns_app_aliases/{id} request")
+				By("Sending a DELETE /dns_configs_app_aliases/{id} request")
 				req, err := http.NewRequest(
 					http.MethodDelete,
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/dns_configs_dns_app_aliases/%s",
+						"http://127.0.0.1:8080/dns_configs_app_aliases/%s",
 						id),
 					nil)
 				Expect(err).ToNot(HaveOccurred())
@@ -321,7 +342,7 @@ var _ = Describe("/dns_configs_dns_app_aliases", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(
-				"DELETE /dns_configs_dns_app_aliases/{id} with nonexistent ID",
+				"DELETE /dns_configs_app_aliases/{id} with nonexistent ID",
 				uuid.New()),
 		)
 	})

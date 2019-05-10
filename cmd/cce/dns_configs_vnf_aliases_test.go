@@ -29,32 +29,32 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("/dns_configs_dns_vnf_aliases", func() {
+var _ = Describe("/dns_configs_vnf_aliases", func() {
 	var (
-		dnsConfigID   string
-		vnfID         string
-		dnsVNFAliasID string
+		dnsConfigID string
+		vnfID       string
 	)
 
 	BeforeEach(func() {
 		dnsConfigID = postDNSConfigs()
 		vnfID = postVNFs("container")
-		dnsVNFAliasID = postDNSVNFAliases(vnfID)
 	})
 
-	Describe("POST /dns_configs_dns_vnf_aliases", func() {
+	Describe("POST /dns_configs_vnf_aliases", func() {
 		DescribeTable("201 Created",
 			func() {
-				By("Sending a POST /dns_configs_dns_vnf_aliases request")
+				By("Sending a POST /dns_configs_vnf_aliases request")
 				resp, err := http.Post(
-					"http://127.0.0.1:8080/dns_configs_dns_vnf_aliases",
+					"http://127.0.0.1:8080/dns_configs_vnf_aliases",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
 						`
 						{
 							"dns_config_id": "%s",
-							"dns_vnf_alias_id": "%s"
-						}`, dnsConfigID, dnsVNFAliasID)))
+							"name": "dns config vnf alias",
+							"description": "my dns config vnf alias",
+							"vnf_id": "%s"
+						}`, dnsConfigID, vnfID)))
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying a 201 response")
@@ -75,14 +75,14 @@ var _ = Describe("/dns_configs_dns_vnf_aliases", func() {
 				Expect(uuid.IsValid(respBody.ID)).To(BeTrue())
 			},
 			Entry(
-				"POST /dns_configs_dns_vnf_aliases"),
+				"POST /dns_configs_vnf_aliases"),
 		)
 
 		DescribeTable("400 Bad Request",
 			func(req, expectedResp string) {
-				By("Sending a POST /dns_configs_dns_vnf_aliases request")
+				By("Sending a POST /dns_configs_vnf_aliases request")
 				resp, err := http.Post(
-					"http://127.0.0.1:8080/dns_configs_dns_vnf_aliases",
+					"http://127.0.0.1:8080/dns_configs_vnf_aliases",
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
@@ -98,25 +98,42 @@ var _ = Describe("/dns_configs_dns_vnf_aliases", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
-				"POST /dns_configs_dns_vnf_aliases with id",
+				"POST /dns_configs_vnf_aliases with id",
 				`
 				{
 					"id": "123"
 				}`,
 				"Validation failed: id cannot be specified in POST request"),
 			Entry(
-				"POST /dns_configs_dns_vnf_aliases without dns_config_id",
+				"POST /dns_configs_vnf_aliases without dns_config_id",
 				`
 				{
 				}`,
 				"Validation failed: dns_config_id not a valid uuid"),
 			Entry(
-				"POST /dns_configs_dns_vnf_aliases without dns_vnf_alias_id",
+				"POST /dns_configs_vnf_aliases without name",
 				fmt.Sprintf(`
 				{
 					"dns_config_id": "%s"
 				}`, uuid.New()),
-				"Validation failed: dns_vnf_alias_id not a valid uuid"),
+				"Validation failed: name cannot be empty"),
+			Entry(
+				"POST /dns_configs_vnf_aliases without description",
+				fmt.Sprintf(`
+				{
+					"dns_config_id": "%s",
+					"name": "dns config vnf alias"
+				}`, uuid.New()),
+				"Validation failed: description cannot be empty"),
+			Entry(
+				"POST /dns_configs_vnf_aliases without vnf_id",
+				fmt.Sprintf(`
+				{
+					"dns_config_id": "%s",
+					"name": "dns config vnf alias",
+					"description": "my dns config vnf alias"
+				}`, uuid.New()),
+				"Validation failed: vnf_id not a valid uuid"),
 		)
 
 		DescribeTable("422 Unprocessable Entity",
@@ -126,19 +143,21 @@ var _ = Describe("/dns_configs_dns_vnf_aliases", func() {
 					err  error
 				)
 
-				By("Sending a POST /dns_configs_dns_vnf_aliases request")
-				postDNSConfigsDNSVNFAliases(dnsConfigID, dnsVNFAliasID)
+				By("Sending a POST /dns_configs_vnf_aliases request")
+				postDNSConfigsVNFAliases(dnsConfigID, vnfID)
 
-				By("Repeating the first POST /dns_configs_dns_vnf_aliases request") //nolint:lll
+				By("Repeating the first POST /dns_configs_vnf_aliases request")
 				resp, err = http.Post(
-					"http://127.0.0.1:8080/dns_configs_dns_vnf_aliases",
+					"http://127.0.0.1:8080/dns_configs_vnf_aliases",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
 						`
 						{
 							"dns_config_id": "%s",
-							"dns_vnf_alias_id": "%s"
-						}`, dnsConfigID, dnsVNFAliasID)))
+							"name": "dns config vnf alias",
+							"description": "my dns config vnf alias",
+							"vnf_id": "%s"
+						}`, dnsConfigID, vnfID)))
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying a 422 response")
@@ -152,34 +171,32 @@ var _ = Describe("/dns_configs_dns_vnf_aliases", func() {
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(fmt.Sprintf(
 					"duplicate record detected for dns_config_id %s and "+
-						"dns_vnf_alias_id %s",
+						"vnf_id %s",
 					dnsConfigID,
-					dnsVNFAliasID)))
+					vnfID)))
 			},
-			Entry("POST /dns_configs_dns_vnf_aliases with duplicate dns_config_id/dns_vnf_alias_id"), //nolint:lll
+			Entry("POST /dns_configs_vnf_aliases with duplicate dns_config_id/vnf_id"), //nolint:lll
 		)
 	})
 
-	Describe("GET /dns_configs_dns_vnf_aliases", func() {
+	Describe("GET /dns_configs_vnf_aliases", func() {
 		var (
-			dnsConfigDNSVNFAliasID  string
-			dnsVNFAlias2ID          string
-			dnsConfigDNSVNFAlias2ID string
+			dnsConfigVNFAliasID  string
+			vnf2ID               string
+			dnsConfigVNFAlias2ID string
 		)
 
 		BeforeEach(func() {
-			dnsConfigDNSVNFAliasID =
-				postDNSConfigsDNSVNFAliases(dnsConfigID, dnsVNFAliasID)
-			dnsVNFAlias2ID = postDNSVNFAliases(vnfID)
-			dnsConfigDNSVNFAlias2ID =
-				postDNSConfigsDNSVNFAliases(dnsConfigID, dnsVNFAlias2ID)
+			dnsConfigVNFAliasID = postDNSConfigsVNFAliases(dnsConfigID, vnfID)
+			vnf2ID = postVNFs("container")
+			dnsConfigVNFAlias2ID = postDNSConfigsVNFAliases(dnsConfigID, vnf2ID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				By("Sending a GET /dns_configs_dns_vnf_aliases request")
+				By("Sending a GET /dns_configs_vnf_aliases request")
 				resp, err := http.Get(
-					"http://127.0.0.1:8080/dns_configs_dns_vnf_aliases")
+					"http://127.0.0.1:8080/dns_configs_vnf_aliases")
 
 				By("Verifying a 200 OK response")
 				Expect(err).ToNot(HaveOccurred())
@@ -189,92 +206,96 @@ var _ = Describe("/dns_configs_dns_vnf_aliases", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var dnsConfigDNSVNFAliases []cce.DNSConfigDNSVNFAlias
+				var dnsConfigVNFAliases []cce.DNSConfigVNFAlias
 
 				By("Unmarshalling the response")
-				Expect(json.Unmarshal(body, &dnsConfigDNSVNFAliases)).
+				Expect(json.Unmarshal(body, &dnsConfigVNFAliases)).
 					To(Succeed())
 
-				By("Verifying the 2 created DNS VNF aliases were returned")
-				Expect(dnsConfigDNSVNFAliases).To(ContainElement(
-					cce.DNSConfigDNSVNFAlias{
-						ID:            dnsConfigDNSVNFAliasID,
-						DNSConfigID:   dnsConfigID,
-						DNSVNFAliasID: dnsVNFAliasID,
+				By("Verifying the 2 created VNF aliases were returned")
+				Expect(dnsConfigVNFAliases).To(ContainElement(
+					cce.DNSConfigVNFAlias{
+						ID:          dnsConfigVNFAliasID,
+						DNSConfigID: dnsConfigID,
+						Name:        "dns config vnf alias",
+						Description: "my dns config vnf alias",
+						VNFID:       vnfID,
 					}))
-				Expect(dnsConfigDNSVNFAliases).To(ContainElement(
-					cce.DNSConfigDNSVNFAlias{
-						ID:            dnsConfigDNSVNFAlias2ID,
-						DNSConfigID:   dnsConfigID,
-						DNSVNFAliasID: dnsVNFAlias2ID,
+				Expect(dnsConfigVNFAliases).To(ContainElement(
+					cce.DNSConfigVNFAlias{
+						ID:          dnsConfigVNFAlias2ID,
+						DNSConfigID: dnsConfigID,
+						Name:        "dns config vnf alias",
+						Description: "my dns config vnf alias",
+						VNFID:       vnf2ID,
 					}))
 			},
-			Entry("GET /dns_configs_dns_vnf_aliases"),
+			Entry("GET /dns_configs_vnf_aliases"),
 		)
 	})
 
-	Describe("GET /dns_configs_dns_vnf_aliases/{id}", func() {
+	Describe("GET /dns_configs_vnf_aliases/{id}", func() {
 		var (
-			dnsConfigDNSVNFAliasID string
+			dnsConfigVNFAliasID string
 		)
 
 		BeforeEach(func() {
-			dnsConfigDNSVNFAliasID =
-				postDNSConfigsDNSVNFAliases(dnsConfigID, dnsVNFAliasID)
+			dnsConfigVNFAliasID =
+				postDNSConfigsVNFAliases(dnsConfigID, vnfID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				DNSConfigDNSVNFAlias :=
-					getDNSConfigsDNSVNFAlias(
-						dnsConfigDNSVNFAliasID)
+				dnsConfigVNFAlias := getDNSConfigsVNFAlias(dnsConfigVNFAliasID)
 
-				By("Verifying the created DNS config <-> DNS VNF alias was returned") //nolint:lll
-				Expect(DNSConfigDNSVNFAlias).To(Equal(
-					&cce.DNSConfigDNSVNFAlias{
-						ID:            dnsConfigDNSVNFAliasID,
-						DNSConfigID:   dnsConfigID,
-						DNSVNFAliasID: dnsVNFAliasID,
+				By("Verifying the created DNS config VNF alias was returned")
+				Expect(dnsConfigVNFAlias).To(Equal(
+					&cce.DNSConfigVNFAlias{
+						ID:          dnsConfigVNFAliasID,
+						DNSConfigID: dnsConfigID,
+						Name:        "dns config vnf alias",
+						Description: "my dns config vnf alias",
+						VNFID:       vnfID,
 					},
 				))
 			},
-			Entry("GET /dns_configs_dns_vnf_aliases/{id}"),
+			Entry("GET /dns_configs_vnf_aliases/{id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func() {
-				By("Sending a GET /dns_configs_dns_vnf_aliases/{id} request")
+				By("Sending a GET /dns_configs_vnf_aliases/{id} request")
 				resp, err := http.Get(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/dns_configs_dns_vnf_aliases/%s",
+						"http://127.0.0.1:8080/dns_configs_vnf_aliases/%s",
 						uuid.New()))
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("GET /dns_configs_dns_vnf_aliases/{id} with nonexistent ID"),
+			Entry("GET /dns_configs_vnf_aliases/{id} with nonexistent ID"),
 		)
 	})
 
-	Describe("DELETE /dns_configs_dns_vnf_aliases/{id}", func() {
+	Describe("DELETE /dns_configs_vnf_aliases/{id}", func() {
 		var (
-			dnsConfigDNSVNFAliasID string
+			dnsConfigVNFAliasID string
 		)
 
 		BeforeEach(func() {
-			dnsConfigDNSVNFAliasID =
-				postDNSConfigsDNSVNFAliases(dnsConfigID, dnsVNFAliasID)
+			dnsConfigVNFAliasID =
+				postDNSConfigsVNFAliases(dnsConfigID, vnfID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				By("Sending a DELETE /dns_configs_dns_vnf_aliases/{id} request")
+				By("Sending a DELETE /dns_configs_vnf_aliases/{id} request")
 				req, err := http.NewRequest(
 					http.MethodDelete,
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/dns_configs_dns_vnf_aliases/%s",
-						dnsConfigDNSVNFAliasID),
+						"http://127.0.0.1:8080/dns_configs_vnf_aliases/%s",
+						dnsConfigVNFAliasID),
 					nil)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -286,28 +307,28 @@ var _ = Describe("/dns_configs_dns_vnf_aliases", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-				By("Verifying the DNS config <-> DNS VNF alias was deleted")
+				By("Verifying the DNS config VNF alias was deleted")
 
-				By("Sending a GET /dns_configs_dns_vnf_aliases/{id} request")
+				By("Sending a GET /dns_configs_vnf_aliases/{id} request")
 				resp, err = http.Get(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/dns_configs_dns_vnf_aliases/%s",
-						dnsConfigDNSVNFAliasID))
+						"http://127.0.0.1:8080/dns_configs_vnf_aliases/%s",
+						dnsConfigVNFAliasID))
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("DELETE /dns_configs_dns_vnf_aliases/{id}"),
+			Entry("DELETE /dns_configs_vnf_aliases/{id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func(id string) {
-				By("Sending a DELETE /dns_configs_dns_vnf_aliases/{id} request")
+				By("Sending a DELETE /dns_configs_vnf_aliases/{id} request")
 				req, err := http.NewRequest(
 					http.MethodDelete,
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/dns_configs_dns_vnf_aliases/%s",
+						"http://127.0.0.1:8080/dns_configs_vnf_aliases/%s",
 						id),
 					nil)
 				Expect(err).ToNot(HaveOccurred())
@@ -321,7 +342,7 @@ var _ = Describe("/dns_configs_dns_vnf_aliases", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(
-				"DELETE /dns_configs_dns_vnf_aliases/{id} with nonexistent ID",
+				"DELETE /dns_configs_vnf_aliases/{id} with nonexistent ID",
 				uuid.New()),
 		)
 	})

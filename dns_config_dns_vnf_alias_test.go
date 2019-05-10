@@ -22,23 +22,25 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
-var _ = Describe("Entities: DNSConfigDNSVNFAlias", func() {
+var _ = Describe("Entities: DNSConfigVNFAlias", func() {
 	var (
-		cfgAlias *cce.DNSConfigDNSVNFAlias
+		cfgAlias *cce.DNSConfigVNFAlias
 	)
 
 	BeforeEach(func() {
-		cfgAlias = &cce.DNSConfigDNSVNFAlias{
-			ID:            "7557c16e-1777-490e-9f4f-c59936b2468f",
-			DNSConfigID:   "84c1f7b9-53e7-408e-9223-deab73befc54",
-			DNSVNFAliasID: "fff42347-75a3-48ef-aed1-f4c26f4ca769",
+		cfgAlias = &cce.DNSConfigVNFAlias{
+			ID:          "7557c16e-1777-490e-9f4f-c59936b2468f",
+			DNSConfigID: "84c1f7b9-53e7-408e-9223-deab73befc54",
+			Name:        "test-dns-config-vnf-alias",
+			Description: "test-description",
+			VNFID:       "28bbfdb2-dace-421d-a680-9ae893a95d37",
 		}
 	})
 
 	Describe("GetTableName", func() {
-		It(`Should return "dns_configs_dns_vnf_aliases"`, func() {
+		It(`Should return "dns_configs_vnf_aliases"`, func() {
 			Expect(cfgAlias.GetTableName()).To(Equal(
-				"dns_configs_dns_vnf_aliases"))
+				"dns_configs_vnf_aliases"))
 		})
 	})
 
@@ -71,20 +73,31 @@ var _ = Describe("Entities: DNSConfigDNSVNFAlias", func() {
 				"dns_config_id not a valid uuid"))
 		})
 
-		It("Should return an error if DNSVNFAliasID is not a UUID", func() {
-			cfgAlias.DNSVNFAliasID = "123"
+		It("Should return an error if Name is empty", func() {
+			cfgAlias.Name = ""
+			Expect(cfgAlias.Validate()).To(MatchError("name cannot be empty"))
+		})
+
+		It("Should return an error if Description is empty", func() {
+			cfgAlias.Description = ""
 			Expect(cfgAlias.Validate()).To(MatchError(
-				"dns_vnf_alias_id not a valid uuid"))
+				"description cannot be empty"))
+		})
+
+		It("Should return an error if VNFID is not a UUID", func() {
+			cfgAlias.VNFID = "123"
+			Expect(cfgAlias.Validate()).To(MatchError(
+				"vnf_id not a valid uuid"))
 		})
 	})
 
 	Describe("String", func() {
 		It("Should return the string value", func() {
 			Expect(cfgAlias.String()).To(Equal(strings.TrimSpace(`
-DNSConfigDNSVNFAlias[
+DNSConfigVNFAlias[
     ID: 7557c16e-1777-490e-9f4f-c59936b2468f
     DNSConfigID: 84c1f7b9-53e7-408e-9223-deab73befc54
-    DNSVNFAliasID: fff42347-75a3-48ef-aed1-f4c26f4ca769
+    VNFID: 28bbfdb2-dace-421d-a680-9ae893a95d37
 ]`,
 			)))
 		})

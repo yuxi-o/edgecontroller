@@ -36,12 +36,10 @@ type Gorilla struct {
 	vnfsHandler            *handler
 	trafficPoliciesHandler *handler
 	dnsConfigsHandler      *handler
-	dnsAppAliasesHandler   *handler
-	dnsVNFAliasesHandler   *handler
 
 	// join routes handlers
-	dnsConfigsDNSAppAliasesHandler  *handler
-	dnsConfigsDNSVNFAliasesHandler  *handler
+	dnsConfigsAppAliasesHandler     *handler
+	dnsConfigsVNFAliasesHandler     *handler
 	nodesDNSConfigsHandler          *handler
 	nodesAppsHandler                *handler
 	nodesVNFsHandler                *handler
@@ -70,22 +68,14 @@ func NewGorilla( //nolint:gocyclo
 			model:         &cce.DNSConfig{},
 			checkDBDelete: checkDBDeleteDNSConfigs,
 		},
-		dnsAppAliasesHandler: &handler{
-			model:         &cce.DNSAppAlias{},
-			checkDBDelete: checkDBDeleteDNSAppAliases,
-		},
-		dnsVNFAliasesHandler: &handler{
-			model:         &cce.DNSVNFAlias{},
-			checkDBDelete: checkDBDeleteDNSVNFAliases,
-		},
 
-		dnsConfigsDNSAppAliasesHandler: &handler{
-			model:         &cce.DNSConfigDNSAppAlias{},
-			checkDBCreate: checkDBCreateDNSConfigsDNSAppAliases,
+		dnsConfigsAppAliasesHandler: &handler{
+			model:         &cce.DNSConfigAppAlias{},
+			checkDBCreate: checkDBCreateDNSConfigsAppAliases,
 		},
-		dnsConfigsDNSVNFAliasesHandler: &handler{
-			model:         &cce.DNSConfigDNSVNFAlias{},
-			checkDBCreate: checkDBCreateDNSConfigsDNSVNFAliases,
+		dnsConfigsVNFAliasesHandler: &handler{
+			model:         &cce.DNSConfigVNFAlias{},
+			checkDBCreate: checkDBCreateDNSConfigsVNFAliases,
 		},
 		nodesDNSConfigsHandler: &handler{
 			model:         &cce.NodeDNSConfig{},
@@ -128,27 +118,15 @@ func NewGorilla( //nolint:gocyclo
 		"PATCH  /dns_configs":      g.dnsConfigsHandler.bulkUpdate,
 		"DELETE /dns_configs/{id}": g.dnsConfigsHandler.delete,
 
-		"POST   /dns_app_aliases":      g.dnsAppAliasesHandler.create,
-		"GET    /dns_app_aliases":      g.dnsAppAliasesHandler.getAll,
-		"GET    /dns_app_aliases/{id}": g.dnsAppAliasesHandler.getByID,
-		"PATCH  /dns_app_aliases":      g.dnsAppAliasesHandler.bulkUpdate,
-		"DELETE /dns_app_aliases/{id}": g.dnsAppAliasesHandler.delete,
+		"POST   /dns_configs_app_aliases":      g.dnsConfigsAppAliasesHandler.create,  //nolint:lll
+		"GET    /dns_configs_app_aliases":      g.dnsConfigsAppAliasesHandler.getAll,  //nolint:lll
+		"GET    /dns_configs_app_aliases/{id}": g.dnsConfigsAppAliasesHandler.getByID, //nolint:lll
+		"DELETE /dns_configs_app_aliases/{id}": g.dnsConfigsAppAliasesHandler.delete,  //nolint:lll
 
-		"POST   /dns_vnf_aliases":      g.dnsVNFAliasesHandler.create,
-		"GET    /dns_vnf_aliases":      g.dnsVNFAliasesHandler.getAll,
-		"GET    /dns_vnf_aliases/{id}": g.dnsVNFAliasesHandler.getByID,
-		"PATCH  /dns_vnf_aliases":      g.dnsVNFAliasesHandler.bulkUpdate,
-		"DELETE /dns_vnf_aliases/{id}": g.dnsVNFAliasesHandler.delete,
-
-		"POST   /dns_configs_dns_app_aliases":      g.dnsConfigsDNSAppAliasesHandler.create,  //nolint:lll
-		"GET    /dns_configs_dns_app_aliases":      g.dnsConfigsDNSAppAliasesHandler.getAll,  //nolint:lll
-		"GET    /dns_configs_dns_app_aliases/{id}": g.dnsConfigsDNSAppAliasesHandler.getByID, //nolint:lll
-		"DELETE /dns_configs_dns_app_aliases/{id}": g.dnsConfigsDNSAppAliasesHandler.delete,  //nolint:lll
-
-		"POST   /dns_configs_dns_vnf_aliases":      g.dnsConfigsDNSVNFAliasesHandler.create,  //nolint:lll
-		"GET    /dns_configs_dns_vnf_aliases":      g.dnsConfigsDNSVNFAliasesHandler.getAll,  //nolint:lll
-		"GET    /dns_configs_dns_vnf_aliases/{id}": g.dnsConfigsDNSVNFAliasesHandler.getByID, //nolint:lll
-		"DELETE /dns_configs_dns_vnf_aliases/{id}": g.dnsConfigsDNSVNFAliasesHandler.delete,  //nolint:lll
+		"POST   /dns_configs_vnf_aliases":      g.dnsConfigsVNFAliasesHandler.create,  //nolint:lll
+		"GET    /dns_configs_vnf_aliases":      g.dnsConfigsVNFAliasesHandler.getAll,  //nolint:lll
+		"GET    /dns_configs_vnf_aliases/{id}": g.dnsConfigsVNFAliasesHandler.getByID, //nolint:lll
+		"DELETE /dns_configs_vnf_aliases/{id}": g.dnsConfigsVNFAliasesHandler.delete,  //nolint:lll
 
 		"POST   /nodes_dns_configs":      g.nodesDNSConfigsHandler.create,
 		"GET    /nodes_dns_configs":      g.nodesDNSConfigsHandler.getAll,

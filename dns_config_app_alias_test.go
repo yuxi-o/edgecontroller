@@ -22,74 +22,81 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
-var _ = Describe("Entities: DNSAppAlias", func() {
+var _ = Describe("Entities: DNSConfigAppAlias", func() {
 	var (
-		alias *cce.DNSAppAlias
+		cfgAlias *cce.DNSConfigAppAlias
 	)
 
 	BeforeEach(func() {
-		alias = &cce.DNSAppAlias{
-			ID:          "a48145cc-87de-4aa9-814d-51d23a47eccd",
-			Name:        "patient-checkin.choc.org",
-			Description: "Patient Check-in Dashboard",
+		cfgAlias = &cce.DNSConfigAppAlias{
+			ID:          "8066699a-e81d-4d1f-b860-3ff836c0409f",
+			DNSConfigID: "84c1f7b9-53e7-408e-9223-deab73befc54",
+			Name:        "test-dns-config-app-alias",
+			Description: "test-description",
 			AppID:       "efcece3c-6b58-4993-8d45-bde6239d4baa",
 		}
 	})
 
 	Describe("GetTableName", func() {
-		It(`Should return "dns_app_aliases"`, func() {
-			Expect(alias.GetTableName()).To(Equal("dns_app_aliases"))
+		It(`Should return "dns_configs_app_aliases"`, func() {
+			Expect(cfgAlias.GetTableName()).To(Equal(
+				"dns_configs_app_aliases"))
 		})
 	})
 
 	Describe("GetID", func() {
 		It("Should return the ID", func() {
-			Expect(alias.GetID()).To(Equal(
-				"a48145cc-87de-4aa9-814d-51d23a47eccd"))
+			Expect(cfgAlias.GetID()).To(Equal(
+				"8066699a-e81d-4d1f-b860-3ff836c0409f"))
 		})
 	})
 
 	Describe("SetID", func() {
 		It("Should set and return the updated ID", func() {
 			By("Setting the ID")
-			alias.SetID("456")
+			cfgAlias.SetID("456")
 
 			By("Getting the updated ID")
-			Expect(alias.ID).To(Equal("456"))
+			Expect(cfgAlias.ID).To(Equal("456"))
 		})
 	})
 
 	Describe("Validate", func() {
 		It("Should return an error if ID is not a UUID", func() {
-			alias.ID = "123"
-			Expect(alias.Validate()).To(MatchError("id not a valid uuid"))
+			cfgAlias.ID = "123"
+			Expect(cfgAlias.Validate()).To(MatchError("id not a valid uuid"))
+		})
+
+		It("Should return an error if DNSConfigID is not a UUID", func() {
+			cfgAlias.DNSConfigID = "123"
+			Expect(cfgAlias.Validate()).To(MatchError(
+				"dns_config_id not a valid uuid"))
 		})
 
 		It("Should return an error if Name is empty", func() {
-			alias.Name = ""
-			Expect(alias.Validate()).To(MatchError("name cannot be empty"))
+			cfgAlias.Name = ""
+			Expect(cfgAlias.Validate()).To(MatchError("name cannot be empty"))
 		})
 
 		It("Should return an error if Description is empty", func() {
-			alias.Description = ""
-			Expect(alias.Validate()).To(MatchError(
+			cfgAlias.Description = ""
+			Expect(cfgAlias.Validate()).To(MatchError(
 				"description cannot be empty"))
 		})
 
 		It("Should return an error if AppID is not a UUID", func() {
-			alias.AppID = "123"
-			Expect(alias.Validate()).To(MatchError(
+			cfgAlias.AppID = "123"
+			Expect(cfgAlias.Validate()).To(MatchError(
 				"app_id not a valid uuid"))
 		})
 	})
 
 	Describe("String", func() {
 		It("Should return the string value", func() {
-			Expect(alias.String()).To(Equal(strings.TrimSpace(`
-DNSAppAlias[
-    ID: a48145cc-87de-4aa9-814d-51d23a47eccd
-    Name: patient-checkin.choc.org
-    Description: Patient Check-in Dashboard
+			Expect(cfgAlias.String()).To(Equal(strings.TrimSpace(`
+DNSConfigAppAlias[
+    ID: 8066699a-e81d-4d1f-b860-3ff836c0409f
+    DNSConfigID: 84c1f7b9-53e7-408e-9223-deab73befc54
     AppID: efcece3c-6b58-4993-8d45-bde6239d4baa
 ]`,
 			)))

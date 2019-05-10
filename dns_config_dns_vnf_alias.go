@@ -22,52 +22,59 @@ import (
 	"github.com/smartedgemec/controller-ce/uuid"
 )
 
-// DNSConfigDNSVNFAlias represents an association between a DNSConfig
-// and a DNSVNFAlias.
-type DNSConfigDNSVNFAlias struct {
-	ID            string `json:"id"`
-	DNSConfigID   string `json:"dns_config_id"`
-	DNSVNFAliasID string `json:"dns_vnf_alias_id"`
+// DNSConfigVNFAlias represents an association between a DNSConfig and a VNFID.
+type DNSConfigVNFAlias struct {
+	ID          string `json:"id"`
+	DNSConfigID string `json:"dns_config_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	VNFID       string `json:"vnf_id"`
 }
 
 // GetTableName returns the name of the persistence table.
-func (*DNSConfigDNSVNFAlias) GetTableName() string {
-	return "dns_configs_dns_vnf_aliases"
+func (*DNSConfigVNFAlias) GetTableName() string {
+	return "dns_configs_vnf_aliases"
 }
 
 // GetID gets the ID.
-func (cfg_alias *DNSConfigDNSVNFAlias) GetID() string {
+func (cfg_alias *DNSConfigVNFAlias) GetID() string {
 	return cfg_alias.ID
 }
 
 // SetID sets the ID.
-func (cfg_alias *DNSConfigDNSVNFAlias) SetID(id string) {
+func (cfg_alias *DNSConfigVNFAlias) SetID(id string) {
 	cfg_alias.ID = id
 }
 
 // Validate validates the model.
-func (cfg_alias *DNSConfigDNSVNFAlias) Validate() error {
+func (cfg_alias *DNSConfigVNFAlias) Validate() error {
 	if !uuid.IsValid(cfg_alias.ID) {
 		return errors.New("id not a valid uuid")
 	}
 	if !uuid.IsValid(cfg_alias.DNSConfigID) {
 		return errors.New("dns_config_id not a valid uuid")
 	}
-	if !uuid.IsValid(cfg_alias.DNSVNFAliasID) {
-		return errors.New("dns_vnf_alias_id not a valid uuid")
+	if cfg_alias.Name == "" {
+		return errors.New("name cannot be empty")
+	}
+	if cfg_alias.Description == "" {
+		return errors.New("description cannot be empty")
+	}
+	if !uuid.IsValid(cfg_alias.VNFID) {
+		return errors.New("vnf_id not a valid uuid")
 	}
 
 	return nil
 }
 
-func (cfg_alias *DNSConfigDNSVNFAlias) String() string {
+func (cfg_alias *DNSConfigVNFAlias) String() string {
 	return fmt.Sprintf(strings.TrimSpace(`
-    DNSConfigDNSVNFAlias[
+    DNSConfigVNFAlias[
     ID: %s
     DNSConfigID: %s
-    DNSVNFAliasID: %s
+    VNFID: %s
 ]`),
 		cfg_alias.ID,
 		cfg_alias.DNSConfigID,
-		cfg_alias.DNSVNFAliasID)
+		cfg_alias.VNFID)
 }

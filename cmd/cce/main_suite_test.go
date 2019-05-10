@@ -247,127 +247,21 @@ func getDNSConfig(id string) *cce.DNSConfig {
 	return &dnsConfig
 }
 
-func postDNSConfigsDNSAppAliases(
+func postDNSConfigsAppAliases(
 	dnsConfigID string,
-	dnsAppAliasID string,
+	appID string,
 ) (id string) {
-	By("Sending a POST /dns_configs_dns_app_aliases request")
+	By("Sending a POST /dns_configs_app_aliases request")
 	resp, err := http.Post(
-		"http://127.0.0.1:8080/dns_configs_dns_app_aliases",
+		"http://127.0.0.1:8080/dns_configs_app_aliases",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
 			{
 				"dns_config_id": "%s",
-				"dns_app_alias_id": "%s"
-			}`, dnsConfigID, dnsAppAliasID)))
-
-	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
-	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-	By("Reading the response body")
-	body, err := ioutil.ReadAll(resp.Body)
-	Expect(err).ToNot(HaveOccurred())
-
-	var respBody struct {
-		ID string
-	}
-
-	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
-
-	return respBody.ID
-}
-
-func getDNSConfigsDNSAppAlias(
-	id string,
-) *cce.DNSConfigDNSAppAlias {
-	By("Sending a GET /dns_configs_dns_app_aliases/{id} request")
-	resp, err := http.Get(
-		fmt.Sprintf("http://127.0.0.1:8080/dns_configs_dns_app_aliases/%s", id))
-
-	By("Verifying a 200 OK response")
-	Expect(err).ToNot(HaveOccurred())
-	Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-	By("Reading the response body")
-	body, err := ioutil.ReadAll(resp.Body)
-	Expect(err).ToNot(HaveOccurred())
-
-	var dnsConfigDNSAppAlias cce.DNSConfigDNSAppAlias
-
-	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &dnsConfigDNSAppAlias)).To(Succeed())
-
-	return &dnsConfigDNSAppAlias
-}
-
-func postDNSConfigsDNSVNFAliases(
-	dnsConfigID string,
-	dnsVNFAliasID string,
-) (id string) {
-	By("Sending a POST /dns_configs_dns_vnf_aliases request")
-	resp, err := http.Post(
-		"http://127.0.0.1:8080/dns_configs_dns_vnf_aliases",
-		"application/json",
-		strings.NewReader(fmt.Sprintf(`
-			{
-				"dns_config_id": "%s",
-				"dns_vnf_alias_id": "%s"
-			}`, dnsConfigID, dnsVNFAliasID)))
-
-	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
-	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-	By("Reading the response body")
-	body, err := ioutil.ReadAll(resp.Body)
-	Expect(err).ToNot(HaveOccurred())
-
-	var respBody struct {
-		ID string
-	}
-
-	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
-
-	return respBody.ID
-}
-
-func getDNSConfigsDNSVNFAlias(
-	id string,
-) *cce.DNSConfigDNSVNFAlias {
-	By("Sending a GET /dns_configs_dns_vnf_aliases/{id} request")
-	resp, err := http.Get(
-		fmt.Sprintf("http://127.0.0.1:8080/dns_configs_dns_vnf_aliases/%s", id))
-
-	By("Verifying a 200 OK response")
-	Expect(err).ToNot(HaveOccurred())
-	Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-	By("Reading the response body")
-	body, err := ioutil.ReadAll(resp.Body)
-	Expect(err).ToNot(HaveOccurred())
-
-	var dnsConfigDNSVNFAlias cce.DNSConfigDNSVNFAlias
-
-	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &dnsConfigDNSVNFAlias)).To(Succeed())
-
-	return &dnsConfigDNSVNFAlias
-}
-
-func postDNSAppAliases(appID string) (id string) {
-	By("Sending a POST /dns_app_aliases request")
-	resp, err := http.Post(
-		"http://127.0.0.1:8080/dns_app_aliases",
-		"application/json",
-		strings.NewReader(fmt.Sprintf(`
-			{
-				"name": "dns app alias 123",
-				"description": "description 1",
+				"name": "dns config app alias",
+				"description": "my dns config app alias",
 				"app_id": "%s"
-			}`, appID)))
+			}`, dnsConfigID, appID)))
 
 	By("Verifying a 201 Created response")
 	Expect(err).ToNot(HaveOccurred())
@@ -387,10 +281,12 @@ func postDNSAppAliases(appID string) (id string) {
 	return respBody.ID
 }
 
-func getDNSAppAlias(id string) *cce.DNSAppAlias {
-	By("Sending a GET /dns_app_aliases/{id} request")
+func getDNSConfigsAppAlias(
+	id string,
+) *cce.DNSConfigAppAlias {
+	By("Sending a GET /dns_configs_app_aliases/{id} request")
 	resp, err := http.Get(
-		fmt.Sprintf("http://127.0.0.1:8080/dns_app_aliases/%s", id))
+		fmt.Sprintf("http://127.0.0.1:8080/dns_configs_app_aliases/%s", id))
 
 	By("Verifying a 200 OK response")
 	Expect(err).ToNot(HaveOccurred())
@@ -400,25 +296,29 @@ func getDNSAppAlias(id string) *cce.DNSAppAlias {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var dnsAppAlias cce.DNSAppAlias
+	var dnsConfigAppAlias cce.DNSConfigAppAlias
 
 	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &dnsAppAlias)).To(Succeed())
+	Expect(json.Unmarshal(body, &dnsConfigAppAlias)).To(Succeed())
 
-	return &dnsAppAlias
+	return &dnsConfigAppAlias
 }
 
-func postDNSVNFAliases(vnfID string) (id string) {
-	By("Sending a POST /dns_vnf_aliases request")
+func postDNSConfigsVNFAliases(
+	dnsConfigID string,
+	vnfID string,
+) (id string) {
+	By("Sending a POST /dns_configs_vnf_aliases request")
 	resp, err := http.Post(
-		"http://127.0.0.1:8080/dns_vnf_aliases",
+		"http://127.0.0.1:8080/dns_configs_vnf_aliases",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
 			{
-				"name": "dns vnf alias 123",
-				"description": "description 1",
+				"dns_config_id": "%s",
+				"name": "dns config vnf alias",
+				"description": "my dns config vnf alias",
 				"vnf_id": "%s"
-			}`, vnfID)))
+			}`, dnsConfigID, vnfID)))
 
 	By("Verifying a 201 Created response")
 	Expect(err).ToNot(HaveOccurred())
@@ -438,10 +338,12 @@ func postDNSVNFAliases(vnfID string) (id string) {
 	return respBody.ID
 }
 
-func getDNSVNFAlias(id string) *cce.DNSVNFAlias {
-	By("Sending a GET /dns_vnf_aliases/{id} request")
+func getDNSConfigsVNFAlias(
+	id string,
+) *cce.DNSConfigVNFAlias {
+	By("Sending a GET /dns_configs_vnf_aliases/{id} request")
 	resp, err := http.Get(
-		fmt.Sprintf("http://127.0.0.1:8080/dns_vnf_aliases/%s", id))
+		fmt.Sprintf("http://127.0.0.1:8080/dns_configs_vnf_aliases/%s", id))
 
 	By("Verifying a 200 OK response")
 	Expect(err).ToNot(HaveOccurred())
@@ -451,12 +353,12 @@ func getDNSVNFAlias(id string) *cce.DNSVNFAlias {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var dnsVNFAlias cce.DNSVNFAlias
+	var dnsConfigVNFAlias cce.DNSConfigVNFAlias
 
 	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &dnsVNFAlias)).To(Succeed())
+	Expect(json.Unmarshal(body, &dnsConfigVNFAlias)).To(Succeed())
 
-	return &dnsVNFAlias
+	return &dnsConfigVNFAlias
 }
 
 func postNodes() (id string) {
