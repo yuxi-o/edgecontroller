@@ -537,18 +537,12 @@ var _ = Describe("/dns_configs", func() {
 		DescribeTable("422 Unprocessable Entity",
 			func(resource, expectedResp string) {
 				switch resource {
-				case "dns_configs_dns_container_app_aliases":
-					postDNSConfigsDNSContainerAppAliases(dnsConfigID,
-						postDNSContainerAppAliases(postContainerApps()))
-				case "dns_configs_dns_vm_app_aliases":
-					postDNSConfigsDNSVMAppAliases(dnsConfigID,
-						postDNSVMAppAliases(postVMApps()))
-				case "dns_configs_dns_container_vnf_aliases":
-					postDNSConfigsDNSContainerVNFAliases(dnsConfigID,
-						postDNSContainerVNFAliases(postContainerVNFs()))
-				case "dns_configs_dns_vm_vnf_aliases":
-					postDNSConfigsDNSVMVNFAliases(dnsConfigID,
-						postDNSVMVNFAliases(postVMVNFs()))
+				case "dns_configs_dns_app_aliases":
+					postDNSConfigsDNSAppAliases(dnsConfigID,
+						postDNSAppAliases(postApps("container")))
+				case "dns_configs_dns_vnf_aliases":
+					postDNSConfigsDNSVNFAliases(dnsConfigID,
+						postDNSVNFAliases(postVNFs("container")))
 				}
 
 				By("Sending a DELETE /dns_configs/{id} request")
@@ -576,24 +570,14 @@ var _ = Describe("/dns_configs", func() {
 					fmt.Sprintf(expectedResp, dnsConfigID)))
 			},
 			Entry(
-				"DELETE /dns_configs/{id} with dns_configs_dns_container_app_aliases record", //nolint:lll
-				"dns_configs_dns_container_app_aliases",
-				"cannot delete dns_config_id %s: record in use in dns_configs_dns_container_app_aliases", //nolint:lll
+				"DELETE /dns_configs/{id} with dns_configs_dns_app_aliases record", //nolint:lll
+				"dns_configs_dns_app_aliases",
+				"cannot delete dns_config_id %s: record in use in dns_configs_dns_app_aliases", //nolint:lll
 			),
 			Entry(
-				"DELETE /dns_configs/{id} with dns_configs_dns_vm_app_aliases record", //nolint:lll
-				"dns_configs_dns_vm_app_aliases",
-				"cannot delete dns_config_id %s: record in use in dns_configs_dns_vm_app_aliases", //nolint:lll
-			),
-			Entry(
-				"DELETE /dns_configs/{id} with dns_configs_dns_container_vnf_aliases record", //nolint:lll
-				"dns_configs_dns_container_vnf_aliases",
-				"cannot delete dns_config_id %s: record in use in dns_configs_dns_container_vnf_aliases", //nolint:lll
-			),
-			Entry(
-				"DELETE /dns_configs/{id} with dns_configs_dns_vm_vnf_aliases record", //nolint:lll
-				"dns_configs_dns_vm_vnf_aliases",
-				"cannot delete dns_config_id %s: record in use in dns_configs_dns_vm_vnf_aliases", //nolint:lll
+				"DELETE /dns_configs/{id} with dns_configs_dns_vnf_aliases record", //nolint:lll
+				"dns_configs_dns_vnf_aliases",
+				"cannot delete dns_config_id %s: record in use in dns_configs_dns_vnf_aliases", //nolint:lll
 			),
 		)
 	})

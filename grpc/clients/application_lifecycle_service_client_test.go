@@ -38,10 +38,11 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 		vmAppID = uuid.New()
 
 		By("Deploying a container application")
-		err = appDeploySvcCli.DeployContainer(
+		err = appDeploySvcCli.Deploy(
 			ctx,
-			&cce.ContainerApp{
+			&cce.App{
 				ID:          containerAppID,
+				Type:        "container",
 				Name:        "test_container_app",
 				Vendor:      "test_vendor",
 				Description: "test container app",
@@ -52,10 +53,11 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		By("Deploying a VM application")
-		err = appDeploySvcCli.DeployVM(
+		err = appDeploySvcCli.Deploy(
 			ctx,
-			&cce.VMApp{
+			&cce.App{
 				ID:          vmAppID,
+				Type:        "vm",
 				Name:        "test_vm_app",
 				Vendor:      "test_vendor",
 				Description: "test vm app",

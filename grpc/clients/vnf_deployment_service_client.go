@@ -37,47 +37,21 @@ func NewVNFDeploymentServiceClient(
 	}
 }
 
-// DeployContainer deploys a container VNF.
-func (c *VNFDeploymentServiceClient) DeployContainer(
+// Deploy deploys a VNF.
+func (c *VNFDeploymentServiceClient) Deploy(
 	ctx context.Context,
-	vnf *cce.ContainerVNF,
+	vnf *cce.VNF,
 ) error {
-	_, err := c.PBCli.Deploy(ctx, toPBContainerVNF(vnf))
+	_, err := c.PBCli.Deploy(ctx, toPBVNF(vnf))
 
 	if err != nil {
-		return errors.Wrap(err, "error deploying container vnf")
+		return errors.Wrap(err, "error deploying vnf")
 	}
 
 	return nil
 }
 
-// DeployVM deploys a VM VNF.
-func (c *VNFDeploymentServiceClient) DeployVM(
-	ctx context.Context,
-	vnf *cce.VMVNF,
-) error {
-	_, err := c.PBCli.Deploy(ctx, toPBVMVNF(vnf))
-
-	if err != nil {
-		return errors.Wrap(err, "error deploying vm vnf")
-	}
-
-	return nil
-}
-
-func toPBContainerVNF(vnf *cce.ContainerVNF) *pb.VNF {
-	return &pb.VNF{
-		Id:          vnf.ID,
-		Name:        vnf.Name,
-		Vendor:      vnf.Vendor,
-		Description: vnf.Description,
-		Image:       vnf.Image,
-		Cores:       int32(vnf.Cores),
-		Memory:      int32(vnf.Memory),
-	}
-}
-
-func toPBVMVNF(vnf *cce.VMVNF) *pb.VNF {
+func toPBVNF(vnf *cce.VNF) *pb.VNF {
 	return &pb.VNF{
 		Id:          vnf.ID,
 		Name:        vnf.Name,
@@ -107,29 +81,15 @@ func (c *VNFDeploymentServiceClient) GetStatus(
 	return fromPBLifecycleStatus(pbStatus), nil
 }
 
-// RedeployContainer redeploys a container VNF.
-func (c *VNFDeploymentServiceClient) RedeployContainer(
+// Redeploy redeploys a VNF.
+func (c *VNFDeploymentServiceClient) Redeploy(
 	ctx context.Context,
-	vnf *cce.ContainerVNF,
+	vnf *cce.VNF,
 ) error {
-	_, err := c.PBCli.Redeploy(ctx, toPBContainerVNF(vnf))
+	_, err := c.PBCli.Redeploy(ctx, toPBVNF(vnf))
 
 	if err != nil {
-		return errors.Wrap(err, "error redeploying container vnf")
-	}
-
-	return nil
-}
-
-// RedeployVM redeploys a VM VNF.
-func (c *VNFDeploymentServiceClient) RedeployVM(
-	ctx context.Context,
-	vnf *cce.VMVNF,
-) error {
-	_, err := c.PBCli.Redeploy(ctx, toPBVMVNF(vnf))
-
-	if err != nil {
-		return errors.Wrap(err, "error redeploying container vnf")
+		return errors.Wrap(err, "error redeploying vnf")
 	}
 
 	return nil

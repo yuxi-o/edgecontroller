@@ -14,12 +14,10 @@
 
 package cce
 
-// MaxCores is the maximum number of cores a container/VM app or container/VM
-// VNF can use.
+// MaxCores is the maximum number of cores that an application or VNF can use.
 const MaxCores = 8
 
-// MaxMemory is the maximum memory (in MB) that a container/VM app or container/
-// VM VNF can use.
+// MaxMemory is the maximum memory (in MB) that an application or VNF can use.
 const MaxMemory = 16 * 1024
 
 // LifecycleStatus is an application or VNF's status.

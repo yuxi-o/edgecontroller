@@ -22,7 +22,7 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
-func checkDBDeleteContainerApps(
+func checkDBDeleteApps(
 	ctx context.Context,
 	ps cce.PersistenceService,
 	id string,
@@ -31,10 +31,10 @@ func checkDBDeleteContainerApps(
 
 	if es, err = ps.Filter(
 		ctx,
-		&cce.DNSContainerAppAlias{},
+		&cce.DNSAppAlias{},
 		[]cce.Filter{
 			{
-				Field: "container_app_id",
+				Field: "app_id",
 				Value: id,
 			},
 		},
@@ -44,15 +44,15 @@ func checkDBDeleteContainerApps(
 
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"cannot delete container_app_id %s: record in use in "+
-				"dns_container_app_aliases",
+			"cannot delete app_id %s: record in use in "+
+				"dns_app_aliases",
 			id)
 	}
 
 	return 0, nil
 }
 
-func checkDBDeleteVMApps(
+func checkDBDeleteVNFs(
 	ctx context.Context,
 	ps cce.PersistenceService,
 	id string,
@@ -61,10 +61,10 @@ func checkDBDeleteVMApps(
 
 	if es, err = ps.Filter(
 		ctx,
-		&cce.DNSVMAppAlias{},
+		&cce.DNSVNFAlias{},
 		[]cce.Filter{
 			{
-				Field: "vm_app_id",
+				Field: "vnf_id",
 				Value: id,
 			},
 		},
@@ -74,66 +74,8 @@ func checkDBDeleteVMApps(
 
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"cannot delete vm_app_id %s: record in use in dns_vm_app_aliases",
-			id)
-	}
-
-	return 0, nil
-}
-
-func checkDBDeleteContainerVNFs(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	id string,
-) (statusCode int, err error) {
-	var es []cce.Entity
-
-	if es, err = ps.Filter(
-		ctx,
-		&cce.DNSContainerVNFAlias{},
-		[]cce.Filter{
-			{
-				Field: "container_vnf_id",
-				Value: id,
-			},
-		},
-	); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	if len(es) != 0 {
-		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"cannot delete container_vnf_id %s: record in use in "+
-				"dns_container_vnf_aliases",
-			id)
-	}
-
-	return 0, nil
-}
-
-func checkDBDeleteVMVNFs(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	id string,
-) (statusCode int, err error) {
-	var es []cce.Entity
-
-	if es, err = ps.Filter(
-		ctx,
-		&cce.DNSVMVNFAlias{},
-		[]cce.Filter{
-			{
-				Field: "vm_vnf_id",
-				Value: id,
-			},
-		},
-	); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	if len(es) != 0 {
-		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"cannot delete vm_vnf_id %s: record in use in dns_vm_vnf_aliases",
+			"cannot delete vnf_id %s: record in use in "+
+				"dns_vnf_aliases",
 			id)
 	}
 
@@ -149,7 +91,7 @@ func checkDBDeleteDNSConfigs(
 
 	if es, err = ps.Filter(
 		ctx,
-		&cce.DNSConfigDNSContainerAppAlias{},
+		&cce.DNSConfigDNSAppAlias{},
 		[]cce.Filter{
 			{
 				Field: "dns_config_id",
@@ -163,13 +105,13 @@ func checkDBDeleteDNSConfigs(
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
 			"cannot delete dns_config_id %s: record in use in "+
-				"dns_configs_dns_container_app_aliases",
+				"dns_configs_dns_app_aliases",
 			id)
 	}
 
 	if es, err = ps.Filter(
 		ctx,
-		&cce.DNSConfigDNSContainerVNFAlias{},
+		&cce.DNSConfigDNSVNFAlias{},
 		[]cce.Filter{
 			{
 				Field: "dns_config_id",
@@ -183,54 +125,14 @@ func checkDBDeleteDNSConfigs(
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
 			"cannot delete dns_config_id %s: record in use in "+
-				"dns_configs_dns_container_vnf_aliases",
-			id)
-	}
-
-	if es, err = ps.Filter(
-		ctx,
-		&cce.DNSConfigDNSVMAppAlias{},
-		[]cce.Filter{
-			{
-				Field: "dns_config_id",
-				Value: id,
-			},
-		},
-	); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	if len(es) != 0 {
-		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"cannot delete dns_config_id %s: record in use in "+
-				"dns_configs_dns_vm_app_aliases",
-			id)
-	}
-
-	if es, err = ps.Filter(
-		ctx,
-		&cce.DNSConfigDNSVMVNFAlias{},
-		[]cce.Filter{
-			{
-				Field: "dns_config_id",
-				Value: id,
-			},
-		},
-	); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	if len(es) != 0 {
-		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"cannot delete dns_config_id %s: record in use in "+
-				"dns_configs_dns_vm_vnf_aliases",
+				"dns_configs_dns_vnf_aliases",
 			id)
 	}
 
 	return 0, nil
 }
 
-func checkDBDeleteDNSContainerAppAliases(
+func checkDBDeleteDNSAppAliases(
 	ctx context.Context,
 	ps cce.PersistenceService,
 	id string,
@@ -239,10 +141,10 @@ func checkDBDeleteDNSContainerAppAliases(
 
 	if es, err = ps.Filter(
 		ctx,
-		&cce.DNSConfigDNSContainerAppAlias{},
+		&cce.DNSConfigDNSAppAlias{},
 		[]cce.Filter{
 			{
-				Field: "dns_container_app_alias_id",
+				Field: "dns_app_alias_id",
 				Value: id,
 			},
 		},
@@ -252,15 +154,15 @@ func checkDBDeleteDNSContainerAppAliases(
 
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"cannot delete dns_container_app_alias_id %s: record in use in "+
-				"dns_configs_dns_container_app_aliases",
+			"cannot delete dns_app_alias_id %s: record in use in "+
+				"dns_configs_dns_app_aliases",
 			id)
 	}
 
 	return 0, nil
 }
 
-func checkDBDeleteDNSContainerVNFAliases(
+func checkDBDeleteDNSVNFAliases(
 	ctx context.Context,
 	ps cce.PersistenceService,
 	id string,
@@ -269,10 +171,10 @@ func checkDBDeleteDNSContainerVNFAliases(
 
 	if es, err = ps.Filter(
 		ctx,
-		&cce.DNSConfigDNSContainerVNFAlias{},
+		&cce.DNSConfigDNSVNFAlias{},
 		[]cce.Filter{
 			{
-				Field: "dns_container_vnf_alias_id",
+				Field: "dns_vnf_alias_id",
 				Value: id,
 			},
 		},
@@ -282,68 +184,8 @@ func checkDBDeleteDNSContainerVNFAliases(
 
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"cannot delete dns_container_vnf_alias_id %s: record in use in "+
-				"dns_configs_dns_container_vnf_aliases",
-			id)
-	}
-
-	return 0, nil
-}
-
-func checkDBDeleteDNSVMAppAliases(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	id string,
-) (statusCode int, err error) {
-	var es []cce.Entity
-
-	if es, err = ps.Filter(
-		ctx,
-		&cce.DNSConfigDNSVMAppAlias{},
-		[]cce.Filter{
-			{
-				Field: "dns_vm_app_alias_id",
-				Value: id,
-			},
-		},
-	); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	if len(es) != 0 {
-		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"cannot delete dns_vm_app_alias_id %s: record in use in "+
-				"dns_configs_dns_vm_app_aliases",
-			id)
-	}
-
-	return 0, nil
-}
-
-func checkDBDeleteDNSVMVNFAliases(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	id string,
-) (statusCode int, err error) {
-	var es []cce.Entity
-
-	if es, err = ps.Filter(
-		ctx,
-		&cce.DNSConfigDNSVMVNFAlias{},
-		[]cce.Filter{
-			{
-				Field: "dns_vm_vnf_alias_id",
-				Value: id,
-			},
-		},
-	); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	if len(es) != 0 {
-		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"cannot delete dns_vm_vnf_alias_id %s: record in use in "+
-				"dns_configs_dns_vm_vnf_aliases",
+			"cannot delete dns_vnf_alias_id %s: record in use in "+
+				"dns_configs_dns_vnf_aliases",
 			id)
 	}
 

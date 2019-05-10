@@ -38,10 +38,11 @@ var _ = Describe("VNF Lifecycle Service Client", func() {
 		vmVNFID = uuid.New()
 
 		By("Deploying a container VNF")
-		err = vnfDeploySvcCli.DeployContainer(
+		err = vnfDeploySvcCli.Deploy(
 			ctx,
-			&cce.ContainerVNF{
+			&cce.VNF{
 				ID:          containerVNFID,
+				Type:        "container",
 				Name:        "test_container_vnf",
 				Vendor:      "test_vendor",
 				Description: "test container vnf",
@@ -52,10 +53,11 @@ var _ = Describe("VNF Lifecycle Service Client", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		By("Deploying a VM VNF")
-		err = vnfDeploySvcCli.DeployVM(
+		err = vnfDeploySvcCli.Deploy(
 			ctx,
-			&cce.VMVNF{
+			&cce.VNF{
 				ID:          vmVNFID,
+				Type:        "vm",
 				Name:        "test_vm_vnf",
 				Vendor:      "test_vendor",
 				Description: "test vm vnf",
@@ -203,8 +205,7 @@ var _ = Describe("VNF Lifecycle Service Client", func() {
 		})
 
 		Describe("Errors", func() {
-			It("Should return an error if the container VNF is already "+
-				"stopped", func() {
+			It("Should return an error if the VNF is already stopped", func() {
 				By("Starting the container VNF")
 				err := vnfLifeSvcCli.Start(ctx, containerVNFID)
 				Expect(err).ToNot(HaveOccurred())

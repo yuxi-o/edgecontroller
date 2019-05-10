@@ -36,10 +36,11 @@ var _ = Describe("Application Policy Service Client", func() {
 		appID = uuid.New()
 
 		By("Deploying an application")
-		err = appDeploySvcCli.DeployContainer(
+		err = appDeploySvcCli.Deploy(
 			ctx,
-			&cce.ContainerApp{
+			&cce.App{
 				ID:          appID,
+				Type:        "container",
 				Name:        "test_container_app",
 				Vendor:      "test_vendor",
 				Description: "test container app",

@@ -36,14 +36,14 @@ type MockNode struct {
 func NewMockNode() *MockNode {
 	var (
 		appDeployLifeSvc = newAppDeployLifeService()
-		appPolicySvc     = newApplicationPolicyService(appDeployLifeSvc)
+		appPolicySvc     = newAppPolicyService(appDeployLifeSvc)
 		vnfDeployLifeSvc = &vnfDeployLifeService{}
 		interfaceSvc     = newInterfaceService()
 		ifPolicySvc      = newInterfacePolicyService(interfaceSvc)
 		zoneSvc          = &zoneService{}
 	)
 
-	appDeployLifeSvc.policyService = appPolicySvc
+	appDeployLifeSvc.appPolicyService = appPolicySvc
 
 	return &MockNode{
 		AppDeploySvc: appDeployLifeSvc,

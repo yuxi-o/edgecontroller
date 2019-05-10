@@ -38,10 +38,11 @@ var _ = Describe("Application Deployment Service Client", func() {
 		vmAppID = uuid.New()
 
 		By("Deploying a container application")
-		err = appDeploySvcCli.DeployContainer(
+		err = appDeploySvcCli.Deploy(
 			ctx,
-			&cce.ContainerApp{
+			&cce.App{
 				ID:          containerAppID,
+				Type:        "container",
 				Name:        "test_container_app",
 				Vendor:      "test_vendor",
 				Description: "test container app",
@@ -52,10 +53,11 @@ var _ = Describe("Application Deployment Service Client", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		By("Deploying a VM application")
-		err = appDeploySvcCli.DeployVM(
+		err = appDeploySvcCli.Deploy(
 			ctx,
-			&cce.VMApp{
+			&cce.App{
 				ID:          vmAppID,
+				Type:        "vm",
 				Name:        "test_vm_app",
 				Vendor:      "test_vendor",
 				Description: "test vm app",
@@ -66,19 +68,13 @@ var _ = Describe("Application Deployment Service Client", func() {
 		Expect(err).ToNot(HaveOccurred())
 	})
 
-	Describe("DeployContainer", func() {
+	Describe("Deploy", func() {
 		Describe("Success", func() {
 			It("Should deploy container applications", func() {
 				By("Verifying the response is an ID")
 				Expect(containerAppID).ToNot(BeNil())
 			})
-		})
 
-		Describe("Errors", func() {})
-	})
-
-	Describe("DeployVM", func() {
-		Describe("Success", func() {
 			It("Should deploy VM applications", func() {
 				By("Verifying the response is an ID")
 				Expect(vmAppID).ToNot(BeNil())
@@ -130,13 +126,14 @@ var _ = Describe("Application Deployment Service Client", func() {
 		Describe("Success", func() {
 			It("Should redeploy container applications", func() {
 				By("Redeploying the container application")
-				err := appDeploySvcCli.RedeployContainer(
+				err := appDeploySvcCli.Redeploy(
 					ctx,
-					&cce.ContainerApp{
+					&cce.App{
 						ID:          containerAppID,
+						Type:        "container",
 						Name:        "test_container_app",
 						Vendor:      "test_vendor",
-						Description: "test container app",
+						Description: "test app",
 						Image:       "http://test.com/container_app_123",
 						Cores:       8,
 						Memory:      8192,
@@ -155,10 +152,11 @@ var _ = Describe("Application Deployment Service Client", func() {
 
 			It("Should redeploy VM applications", func() {
 				By("Redeploying the VM application")
-				err := appDeploySvcCli.RedeployVM(
+				err := appDeploySvcCli.Redeploy(
 					ctx,
-					&cce.VMApp{
+					&cce.App{
 						ID:          vmAppID,
+						Type:        "vm",
 						Name:        "test_vm_app",
 						Vendor:      "test_vendor",
 						Description: "test vm app",
@@ -183,8 +181,8 @@ var _ = Describe("Application Deployment Service Client", func() {
 			It("Should return an error if the ID does not exist", func() {
 				By("Passing a nonexistent ID")
 				badID := uuid.New()
-				err := appDeploySvcCli.RedeployVM(
-					ctx, &cce.VMApp{
+				err := appDeploySvcCli.Redeploy(
+					ctx, &cce.App{
 						ID: badID,
 					})
 

@@ -37,47 +37,28 @@ func NewApplicationDeploymentServiceClient(
 	}
 }
 
-// DeployContainer deploys a container application.
-func (c *ApplicationDeploymentServiceClient) DeployContainer(
+// Deploy deploys an application. Depending on the type of the application,
+// either DeployContainer or DeployVM is called on the gRPC service.
+func (c *ApplicationDeploymentServiceClient) Deploy(
 	ctx context.Context,
-	app *cce.ContainerApp,
+	app *cce.App,
 ) error {
-	_, err := c.PBCli.DeployContainer(ctx, toPBContainerApp(app))
+	var err error
+	switch app.Type {
+	case "container":
+		_, err = c.PBCli.DeployContainer(ctx, toPBApp(app))
+	case "vm":
+		_, err = c.PBCli.DeployVM(ctx, toPBApp(app))
+	}
 
 	if err != nil {
-		return errors.Wrap(err, "error deploying container application")
+		return errors.Wrap(err, "error deploying application")
 	}
 
 	return nil
 }
 
-// DeployVM deploys a VM application.
-func (c *ApplicationDeploymentServiceClient) DeployVM(
-	ctx context.Context,
-	app *cce.VMApp,
-) error {
-	_, err := c.PBCli.DeployVM(ctx, toPBVMApp(app))
-
-	if err != nil {
-		return errors.Wrap(err, "error deploying vm application")
-	}
-
-	return nil
-}
-
-func toPBContainerApp(app *cce.ContainerApp) *pb.Application {
-	return &pb.Application{
-		Id:          app.ID,
-		Name:        app.Name,
-		Vendor:      app.Vendor,
-		Description: app.Description,
-		Image:       app.Image,
-		Cores:       int32(app.Cores),
-		Memory:      int32(app.Memory),
-	}
-}
-
-func toPBVMApp(app *cce.VMApp) *pb.Application {
+func toPBApp(app *cce.App) *pb.Application {
 	return &pb.Application{
 		Id:          app.ID,
 		Name:        app.Name,
@@ -105,29 +86,15 @@ func (c *ApplicationDeploymentServiceClient) GetStatus(
 	return fromPBLifecycleStatus(pbStatus), nil
 }
 
-// RedeployContainer redeploys a container application.
-func (c *ApplicationDeploymentServiceClient) RedeployContainer(
+// Redeploy redeploys an application.
+func (c *ApplicationDeploymentServiceClient) Redeploy(
 	ctx context.Context,
-	app *cce.ContainerApp,
+	app *cce.App,
 ) error {
-	_, err := c.PBCli.Redeploy(ctx, toPBContainerApp(app))
+	_, err := c.PBCli.Redeploy(ctx, toPBApp(app))
 
 	if err != nil {
-		return errors.Wrap(err, "error redeploying container application")
-	}
-
-	return nil
-}
-
-// RedeployVM redeploys a VM application.
-func (c *ApplicationDeploymentServiceClient) RedeployVM(
-	ctx context.Context,
-	app *cce.VMApp,
-) error {
-	_, err := c.PBCli.Redeploy(ctx, toPBVMApp(app))
-
-	if err != nil {
-		return errors.Wrap(err, "error redeploying vm application")
+		return errors.Wrap(err, "error redeploying application")
 	}
 
 	return nil

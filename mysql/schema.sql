@@ -27,23 +27,15 @@ CREATE TABLE nodes (
     entity JSON
 );
 
-CREATE TABLE container_apps (
+CREATE TABLE apps (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
+    type VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.type') STORED,
     entity JSON
 );
 
-CREATE TABLE vm_apps (
+CREATE TABLE vnfs (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    entity JSON
-);
-
-CREATE TABLE container_vnfs (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    entity JSON
-);
-
-CREATE TABLE vm_vnfs (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
+    type VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.type') STORED,
     entity JSON
 );
 
@@ -57,34 +49,18 @@ CREATE TABLE dns_configs (
     entity JSON
 );
 
-CREATE TABLE dns_container_app_aliases (
+CREATE TABLE dns_app_aliases (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    container_app_id VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.container_app_id') STORED,
+    app_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.app_id') STORED,
     entity JSON,
-    FOREIGN KEY (container_app_id) REFERENCES container_apps(id)
+    FOREIGN KEY (app_id) REFERENCES apps(id)
 );
 
-CREATE TABLE dns_vm_app_aliases (
+CREATE TABLE dns_vnf_aliases (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    vm_app_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.vm_app_id') STORED,
+    vnf_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.vnf_id') STORED,
     entity JSON,
-    FOREIGN KEY (vm_app_id) REFERENCES vm_apps(id)
-);
-
-CREATE TABLE dns_container_vnf_aliases (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    container_vnf_id VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.container_vnf_id') STORED,
-    entity JSON,
-    FOREIGN KEY (container_vnf_id) REFERENCES container_vnfs(id)
-);
-
-CREATE TABLE dns_vm_vnf_aliases (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    vm_vnf_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.vm_vnf_id') STORED,
-    entity JSON,
-    FOREIGN KEY (vm_vnf_id) REFERENCES vm_vnfs(id)
+    FOREIGN KEY (vnf_id) REFERENCES vnfs(id)
 );
 
 CREATE TABLE credentials (
@@ -98,105 +74,52 @@ CREATE TABLE credentials (
 
 -- These tables join two entity tables.
 
--- dns_configs x dns_container_app_aliases
-CREATE TABLE dns_configs_dns_container_app_aliases (
+-- dns_configs x dns_app_aliases
+CREATE TABLE dns_configs_dns_app_aliases (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
     dns_config_id  VARCHAR(36) GENERATED ALWAYS AS
         (entity->>'$.dns_config_id') STORED,
-    dns_container_app_alias_id  VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.dns_container_app_alias_id') STORED,
+    dns_app_alias_id  VARCHAR(36) GENERATED ALWAYS AS
+        (entity->>'$.dns_app_alias_id') STORED,
     entity JSON,
     FOREIGN KEY (dns_config_id) REFERENCES dns_configs(id),
-    FOREIGN KEY (dns_container_app_alias_id) REFERENCES
-        dns_container_app_aliases(id),
-    UNIQUE KEY (dns_config_id, dns_container_app_alias_id)
+    FOREIGN KEY (dns_app_alias_id) REFERENCES dns_app_aliases(id),
+    UNIQUE KEY (dns_config_id, dns_app_alias_id)
 );
 
--- dns_configs x dns_vm_app_aliases
-CREATE TABLE dns_configs_dns_vm_app_aliases (
+-- dns_configs x dns_vnf_aliases
+CREATE TABLE dns_configs_dns_vnf_aliases (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
     dns_config_id  VARCHAR(36) GENERATED ALWAYS AS
         (entity->>'$.dns_config_id') STORED,
-    dns_vm_app_alias_id  VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.dns_vm_app_alias_id') STORED,
+    dns_vnf_alias_id  VARCHAR(36) GENERATED ALWAYS AS
+        (entity->>'$.dns_vnf_alias_id') STORED,
     entity JSON,
     FOREIGN KEY (dns_config_id) REFERENCES dns_configs(id),
-    FOREIGN KEY (dns_vm_app_alias_id) REFERENCES dns_vm_app_aliases(id),
-    UNIQUE KEY (dns_config_id, dns_vm_app_alias_id)
+    FOREIGN KEY (dns_vnf_alias_id) REFERENCES dns_vnf_aliases(id),
+    UNIQUE KEY (dns_config_id, dns_vnf_alias_id)
 );
 
--- dns_configs x dns_container_vnf_aliases
-CREATE TABLE dns_configs_dns_container_vnf_aliases (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    dns_config_id  VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.dns_config_id') STORED,
-    dns_container_vnf_alias_id  VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.dns_container_vnf_alias_id') STORED,
-    entity JSON,
-    FOREIGN KEY (dns_config_id) REFERENCES dns_configs(id),
-    FOREIGN KEY (dns_container_vnf_alias_id) REFERENCES
-        dns_container_vnf_aliases(id),
-    UNIQUE KEY (dns_config_id, dns_container_vnf_alias_id)
-);
-
--- dns_configs x dns_vm_vnf_aliases
-CREATE TABLE dns_configs_dns_vm_vnf_aliases (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    dns_config_id  VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.dns_config_id') STORED,
-    dns_vm_vnf_alias_id  VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.dns_vm_vnf_alias_id') STORED,
-    entity JSON,
-    FOREIGN KEY (dns_config_id) REFERENCES dns_configs(id),
-    FOREIGN KEY (dns_vm_vnf_alias_id) REFERENCES
-        dns_vm_vnf_aliases(id),
-    UNIQUE KEY (dns_config_id, dns_vm_vnf_alias_id)
-);
-
--- nodes x container_apps
-CREATE TABLE nodes_container_apps (
+-- nodes x apps
+CREATE TABLE nodes_apps (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
     node_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.node_id') STORED,
-    container_app_id VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.container_app_id') STORED,
+    app_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.app_id') STORED,
     entity JSON,
     FOREIGN KEY (node_id) REFERENCES nodes(id),
-    FOREIGN KEY (container_app_id) REFERENCES container_apps(id),
-    UNIQUE KEY (node_id, container_app_id)
+    FOREIGN KEY (app_id) REFERENCES apps(id),
+    UNIQUE KEY (node_id, app_id)
 );
 
--- nodes x vm_apps
-CREATE TABLE nodes_vm_apps (
+-- nodes x vnfs
+CREATE TABLE nodes_vnfs (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
     node_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.node_id') STORED,
-    vm_app_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.vm_app_id') STORED,
+    vnf_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.vnf_id') STORED,
     entity JSON,
     FOREIGN KEY (node_id) REFERENCES nodes(id),
-    FOREIGN KEY (vm_app_id) REFERENCES vm_apps(id),
-    UNIQUE KEY (node_id, vm_app_id)
-);
-
--- nodes x container_vnfs
-CREATE TABLE nodes_container_vnfs (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    node_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.node_id') STORED,
-    container_vnf_id VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.container_vnf_id') STORED,
-    entity JSON,
-    FOREIGN KEY (node_id) REFERENCES nodes(id),
-    FOREIGN KEY (container_vnf_id) REFERENCES container_vnfs(id),
-    UNIQUE KEY (node_id, container_vnf_id)
-);
-
--- nodes x vm_vnfs
-CREATE TABLE nodes_vm_vnfs (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    node_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.node_id') STORED,
-    vm_vnf_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.vm_vnf_id') STORED,
-    entity JSON,
-    FOREIGN KEY (node_id) REFERENCES nodes(id),
-    FOREIGN KEY (vm_vnf_id) REFERENCES vm_vnfs(id),
-    UNIQUE KEY (node_id, vm_vnf_id)
+    FOREIGN KEY (vnf_id) REFERENCES vnfs(id),
+    UNIQUE KEY (node_id, vnf_id)
 );
 
 -- nodes x dns_configs
@@ -217,28 +140,15 @@ CREATE TABLE nodes_dns_configs (
 
 -- These tables join an entity table to a primary join table.
 
--- nodes_container_apps x traffic_policies
-CREATE TABLE nodes_container_apps_traffic_policies (
+-- nodes_apps x traffic_policies
+CREATE TABLE nodes_apps_traffic_policies (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    nodes_container_apps_id VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.nodes_container_apps_id') STORED,
+    nodes_apps_id VARCHAR(36) GENERATED ALWAYS AS
+        (entity->>'$.nodes_apps_id') STORED,
     traffic_policy_id VARCHAR(36) GENERATED ALWAYS AS
         (entity->>'$.traffic_policy_id') STORED,
     entity JSON,
-    FOREIGN KEY (nodes_container_apps_id) REFERENCES nodes_container_apps(id),
+    FOREIGN KEY (nodes_apps_id) REFERENCES nodes_apps(id),
     FOREIGN KEY (traffic_policy_id) REFERENCES traffic_policies(id),
-    UNIQUE KEY (nodes_container_apps_id, traffic_policy_id)
-);
-
--- nodes_vm_apps x traffic_policies
-CREATE TABLE nodes_vm_apps_traffic_policies (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    nodes_vm_apps_id VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.nodes_vm_apps_id') STORED,
-    traffic_policy_id VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.traffic_policy_id') STORED,
-    entity JSON,
-    FOREIGN KEY (nodes_vm_apps_id) REFERENCES nodes_vm_apps(id),
-    FOREIGN KEY (traffic_policy_id) REFERENCES traffic_policies(id),
-    UNIQUE KEY (nodes_vm_apps_id, traffic_policy_id)
+    UNIQUE KEY (nodes_apps_id, traffic_policy_id)
 );

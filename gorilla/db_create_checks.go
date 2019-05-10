@@ -22,7 +22,7 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
-func checkDBCreateDNSConfigsDNSContainerAppAliases(
+func checkDBCreateDNSConfigsDNSAppAliases(
 	ctx context.Context,
 	ps cce.PersistenceService,
 	e cce.Entity,
@@ -31,15 +31,15 @@ func checkDBCreateDNSConfigsDNSContainerAppAliases(
 
 	if es, err = ps.Filter(
 		ctx,
-		&cce.DNSConfigDNSContainerAppAlias{},
+		&cce.DNSConfigDNSAppAlias{},
 		[]cce.Filter{
 			{
 				Field: "dns_config_id",
-				Value: e.(*cce.DNSConfigDNSContainerAppAlias).DNSConfigID,
+				Value: e.(*cce.DNSConfigDNSAppAlias).DNSConfigID,
 			},
 			{
-				Field: "dns_container_app_alias_id",
-				Value: e.(*cce.DNSConfigDNSContainerAppAlias).DNSContainerAppAliasID, //nolint:lll
+				Field: "dns_app_alias_id",
+				Value: e.(*cce.DNSConfigDNSAppAlias).DNSAppAliasID,
 			},
 		},
 	); err != nil {
@@ -49,15 +49,15 @@ func checkDBCreateDNSConfigsDNSContainerAppAliases(
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
 			"duplicate record detected for dns_config_id %s and "+
-				"dns_container_app_alias_id %s",
-			e.(*cce.DNSConfigDNSContainerAppAlias).DNSConfigID,
-			e.(*cce.DNSConfigDNSContainerAppAlias).DNSContainerAppAliasID)
+				"dns_app_alias_id %s",
+			e.(*cce.DNSConfigDNSAppAlias).DNSConfigID,
+			e.(*cce.DNSConfigDNSAppAlias).DNSAppAliasID)
 	}
 
 	return 0, nil
 }
 
-func checkDBCreateDNSConfigsDNSContainerVNFAliases(
+func checkDBCreateDNSConfigsDNSVNFAliases(
 	ctx context.Context,
 	ps cce.PersistenceService,
 	e cce.Entity,
@@ -66,15 +66,15 @@ func checkDBCreateDNSConfigsDNSContainerVNFAliases(
 
 	if es, err = ps.Filter(
 		ctx,
-		&cce.DNSConfigDNSContainerVNFAlias{},
+		&cce.DNSConfigDNSVNFAlias{},
 		[]cce.Filter{
 			{
 				Field: "dns_config_id",
-				Value: e.(*cce.DNSConfigDNSContainerVNFAlias).DNSConfigID,
+				Value: e.(*cce.DNSConfigDNSVNFAlias).DNSConfigID,
 			},
 			{
-				Field: "dns_container_vnf_alias_id",
-				Value: e.(*cce.DNSConfigDNSContainerVNFAlias).DNSContainerVNFAliasID, //nolint:lll
+				Field: "dns_vnf_alias_id",
+				Value: e.(*cce.DNSConfigDNSVNFAlias).DNSVNFAliasID,
 			},
 		},
 	); err != nil {
@@ -84,79 +84,9 @@ func checkDBCreateDNSConfigsDNSContainerVNFAliases(
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
 			"duplicate record detected for dns_config_id %s and "+
-				"dns_container_vnf_alias_id %s",
-			e.(*cce.DNSConfigDNSContainerVNFAlias).DNSConfigID,
-			e.(*cce.DNSConfigDNSContainerVNFAlias).DNSContainerVNFAliasID)
-	}
-
-	return 0, nil
-}
-
-func checkDBCreateDNSConfigsDNSVMAppAliases(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Entity,
-) (statusCode int, err error) {
-	var es []cce.Entity
-
-	if es, err = ps.Filter(
-		ctx,
-		&cce.DNSConfigDNSVMAppAlias{},
-		[]cce.Filter{
-			{
-				Field: "dns_config_id",
-				Value: e.(*cce.DNSConfigDNSVMAppAlias).DNSConfigID,
-			},
-			{
-				Field: "dns_vm_app_alias_id",
-				Value: e.(*cce.DNSConfigDNSVMAppAlias).DNSVMAppAliasID,
-			},
-		},
-	); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	if len(es) != 0 {
-		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"duplicate record detected for dns_config_id %s and "+
-				"dns_vm_app_alias_id %s",
-			e.(*cce.DNSConfigDNSVMAppAlias).DNSConfigID,
-			e.(*cce.DNSConfigDNSVMAppAlias).DNSVMAppAliasID)
-	}
-
-	return 0, nil
-}
-
-func checkDBCreateDNSConfigsDNSVMVNFAliases(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Entity,
-) (statusCode int, err error) {
-	var es []cce.Entity
-
-	if es, err = ps.Filter(
-		ctx,
-		&cce.DNSConfigDNSVMVNFAlias{},
-		[]cce.Filter{
-			{
-				Field: "dns_config_id",
-				Value: e.(*cce.DNSConfigDNSVMVNFAlias).DNSConfigID,
-			},
-			{
-				Field: "dns_vm_vnf_alias_id",
-				Value: e.(*cce.DNSConfigDNSVMVNFAlias).DNSVMVNFAliasID,
-			},
-		},
-	); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	if len(es) != 0 {
-		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"duplicate record detected for dns_config_id %s and "+
-				"dns_vm_vnf_alias_id %s",
-			e.(*cce.DNSConfigDNSVMVNFAlias).DNSConfigID,
-			e.(*cce.DNSConfigDNSVMVNFAlias).DNSVMVNFAliasID)
+				"dns_vnf_alias_id %s",
+			e.(*cce.DNSConfigDNSVNFAlias).DNSConfigID,
+			e.(*cce.DNSConfigDNSVNFAlias).DNSVNFAliasID)
 	}
 
 	return 0, nil
