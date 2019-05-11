@@ -54,7 +54,10 @@ func NewGorilla( //nolint:gocyclo
 	g := &Gorilla{
 		router: mux.NewRouter(),
 
-		nodesHandler: &handler{model: &cce.Node{}},
+		nodesHandler: &handler{
+			model: &cce.Node{},
+			// TODO add any application logic necessary
+		},
 		appsHandler: &handler{
 			model:         &cce.App{},
 			checkDBDelete: checkDBDeleteApps,
@@ -80,7 +83,7 @@ func NewGorilla( //nolint:gocyclo
 		nodesDNSConfigsHandler: &handler{
 			model:         &cce.NodeDNSConfig{},
 			checkDBCreate: checkDBCreateNodeDNSConfigs,
-			// TODO add logic to apply DNS config to node, and tests
+			handleCreate:  handleCreateNodeDNSConfigs,
 		},
 		nodesAppsHandler:                &handler{model: &cce.NodeApp{}},
 		nodesVNFsHandler:                &handler{model: &cce.NodeVNF{}},

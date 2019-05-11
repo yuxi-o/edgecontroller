@@ -28,7 +28,9 @@ import (
 )
 
 type handler struct {
-	model         cce.Entity
+	model cce.Entity
+
+	// these funcs provide db checks
 	checkDBCreate func(
 		context.Context,
 		cce.PersistenceService,
@@ -39,6 +41,9 @@ type handler struct {
 		ps cce.PersistenceService,
 		id string,
 	) (statusCode int, err error)
+
+	// these funcs handle node logic
+	handleCreate func(context.Context) error
 }
 
 func (h *handler) create(w http.ResponseWriter, r *http.Request) { //nolint:gocyclo,lll

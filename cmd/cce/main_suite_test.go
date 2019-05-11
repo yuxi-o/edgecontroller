@@ -33,18 +33,17 @@ import (
 )
 
 var (
-	service *gexec.Session
-	ctx     = context.Background()
+	ctrl *gexec.Session
+	node *gexec.Session
+	ctx  = context.Background()
 )
 
 var _ = BeforeSuite(func() {
-	service = startService()
+	startup()
 })
 
 var _ = AfterSuite(func() {
-	if service != nil {
-		service.Kill()
-	}
+	shutdown()
 })
 
 func TestApplicationClient(t *testing.T) {
@@ -52,7 +51,8 @@ func TestApplicationClient(t *testing.T) {
 	RunSpecs(t, "Controller CE API Suite")
 }
 
-func startService() (session *gexec.Session) {
+func startup() {
+	By("Building the controller")
 	exe, err := gexec.Build("github.com/smartedgemec/controller-ce/cmd/cce")
 	Expect(err).ToNot(HaveOccurred(), "Problem building service")
 
@@ -61,14 +61,42 @@ func startService() (session *gexec.Session) {
 		"-httpPort", "8080",
 		"-grpcPort", "8081")
 
-	session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+	By("Starting the controller")
+	ctrl, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).ToNot(HaveOccurred(), "Problem starting service")
 
-	Eventually(session.Err, 3).Should(gbytes.Say(
+	By("Verifying that the controller started successfully")
+	Eventually(ctrl.Err, 3).Should(gbytes.Say(
 		"Controller CE ready"),
 		"Service did not start in time")
 
-	return session
+	By("Building the node")
+	exe, err = gexec.Build(
+		"github.com/smartedgemec/controller-ce/test/node/grpc")
+	Expect(err).ToNot(HaveOccurred(), "Problem building node")
+
+	cmd = exec.Command(exe,
+		"-port", "8082")
+
+	By("Starting the node")
+	node, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+	Expect(err).ToNot(HaveOccurred(), "Problem starting node")
+
+	By("Verifying that the node started successfully")
+	Eventually(node.Err, 3).Should(gbytes.Say(
+		"test-node: listening on port: 8082"),
+		"Node did not start in time")
+}
+
+func shutdown() {
+	if ctrl != nil {
+		By("Stopping the controller service")
+		ctrl.Kill()
+	}
+	if node != nil {
+		By("Stopping the test node")
+		node.Kill()
+	}
 }
 
 func postApps(appType string) (id string) {
