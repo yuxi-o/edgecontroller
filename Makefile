@@ -59,7 +59,6 @@ test-unit:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites --skipPackage=vendor,syslog,cmd/cce
 
 test-syslog: syslog-up
-	sudo chmod -R +r syslog/logs
 	ginkgo -v --randomizeAllSpecs --randomizeSuites syslog
 
 test-api: db-reset

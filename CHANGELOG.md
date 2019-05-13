@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.10] - 2019-05-13
+### Fix
+- Run test-syslog without sudo
+
 ## [0.0.9] - 2019-05-13
 ### Added
 - DNSService gRPC client

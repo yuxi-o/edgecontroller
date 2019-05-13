@@ -15,4 +15,5 @@ services:
     ports:
       - 514:514/udp
     volumes:
+      - ./syslog/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
       - ./syslog/logs:/var/log
