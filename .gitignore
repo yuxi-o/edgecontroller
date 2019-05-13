@@ -30,3 +30,6 @@ dist/
 
 # Certificates folder
 certificates/
+
+# Syslog logs folder
+syslog/logs

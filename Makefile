@@ -29,7 +29,7 @@ help:
 	@echo "  test             to run unit followed by api tests"
 
 clean:
-	rm -rf dist certificates
+	rm -rf dist certificates syslog/logs
 
 build:
 	mkdir -p dist
@@ -40,19 +40,29 @@ lint:
 	golangci-lint run
 
 db-up:
-	docker-compose up -d
+	docker-compose up -d mysql
 	until mysql -P 8083 --protocol tcp -uroot -pbeer -e '' 2>/dev/null; do echo "Waiting for DB..."; sleep 1; done
 
 db-reset: db-up
 	mysql -P 8083 --protocol tcp -u root -pbeer < mysql/schema.sql
 
 db-down:
-	docker-compose down
+	docker-compose stop mysql
+
+syslog-up:
+	docker-compose up -d syslog
+
+syslog-down:
+	docker-compose stop syslog
 
 test-unit:
-	ginkgo -v -r --randomizeAllSpecs --randomizeSuites --skipPackage=vendor,cmd/cce
+	ginkgo -v -r --randomizeAllSpecs --randomizeSuites --skipPackage=vendor,syslog,cmd/cce
+
+test-syslog: syslog-up
+	sudo chmod -R +r syslog/logs
+	ginkgo -v --randomizeAllSpecs --randomizeSuites syslog
 
 test-api: db-reset
 	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce
 
-test: test-unit test-api
+test: test-unit test-syslog test-api

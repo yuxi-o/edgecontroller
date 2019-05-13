@@ -44,3 +44,11 @@ for guidelines.
 
 - Domain models (types that implement the Entity interface) decouple application
   logic from PB types
+
+### Log Service
+
+There is a syslog-ng service that receives log events via the Syslog protocol
+over UDP on port 514 and stores the logs in `syslog/log/messages-kv.log` on
+the Controller host. The syslog-ng
+[Docker](https://github.com/balabit/syslog-ng-docker) container is started along
+with the other services in the docker-compose.yml.

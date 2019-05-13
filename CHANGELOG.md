@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.8] - 2019-05-09
+### Added
+- Syslog service for log telemetry support
+
 ## [0.0.7] - 2019-05-07
 ### Added
 - gRPC listener and node auth gRPC endpoint
