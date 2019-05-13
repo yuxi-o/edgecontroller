@@ -28,7 +28,7 @@ type Node struct {
 	Name       string `json:"name"`
 	Location   string `json:"location"`
 	Serial     string `json:"serial"`
-	GRPCTarget string `json:"grpc_target"` // this field will be removed
+	GRPCTarget string `json:"grpc_target"`
 	// TODO figure out interface model
 }
 

@@ -58,13 +58,18 @@ var (
 			MockNode: mockNode,
 		},
 	}
-	zoneSvcCli = gclients.ZoneServiceClient{
+	zoneSvcCli = &gclients.ZoneServiceClient{
 		PBCli: &ctrlgmock.MockPBZoneServiceClient{
 			MockNode: mockNode,
 		},
 	}
 	interfacePolicySvcCli = &gclients.InterfacePolicyServiceClient{
 		PBCli: &ctrlgmock.MockPBInterfacePolicyServiceClient{
+			MockNode: mockNode,
+		},
+	}
+	dnsSvcCli = &gclients.DNSServiceClient{
+		PBCli: &ctrlgmock.MockPBDNSServiceClient{
 			MockNode: mockNode,
 		},
 	}

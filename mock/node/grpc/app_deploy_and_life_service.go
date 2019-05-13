@@ -43,8 +43,7 @@ func (s *appDeployLifeService) DeployContainer(
 	ctx context.Context,
 	containerApp *pb.Application,
 ) (*empty.Empty, error) {
-	id := containerApp.Id
-	s.containerApps[id] = containerApp
+	s.containerApps[containerApp.Id] = containerApp
 	containerApp.Status = pb.LifecycleStatus_READY
 
 	return &empty.Empty{}, nil
@@ -54,8 +53,7 @@ func (s *appDeployLifeService) DeployVM(
 	ctx context.Context,
 	vmApp *pb.Application,
 ) (*empty.Empty, error) {
-	id := vmApp.Id
-	s.vmApps[id] = vmApp
+	s.vmApps[vmApp.Id] = vmApp
 	vmApp.Status = pb.LifecycleStatus_READY
 
 	return &empty.Empty{}, nil

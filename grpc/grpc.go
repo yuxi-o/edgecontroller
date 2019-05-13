@@ -82,12 +82,17 @@ func (c *ClientConn) NewInterfaceServiceClient() pb.InterfaceServiceClient {
 	return pb.NewInterfaceServiceClient(c.conn)
 }
 
+// NewInterfacePolicyServiceClient wraps the pb function.
+func (c *ClientConn) NewInterfacePolicyServiceClient() pb.InterfacePolicyServiceClient { //nolint:lll
+	return pb.NewInterfacePolicyServiceClient(c.conn)
+}
+
 // NewZoneServiceClient wraps the pb function.
 func (c *ClientConn) NewZoneServiceClient() pb.ZoneServiceClient {
 	return pb.NewZoneServiceClient(c.conn)
 }
 
-// NewInterfacePolicyServiceClient wraps the pb function.
-func (c *ClientConn) NewInterfacePolicyServiceClient() pb.InterfacePolicyServiceClient { //nolint:lll
-	return pb.NewInterfacePolicyServiceClient(c.conn)
+// NewDNSServiceClient wraps the pb function.
+func (c *ClientConn) NewDNSServiceClient() pb.DNSServiceClient {
+	return pb.NewDNSServiceClient(c.conn)
 }

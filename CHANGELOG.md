@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.9] - 2019-05-13
+### Added
+- DNSService gRPC client
+
 ## [0.0.8] - 2019-05-09
 ### Added
 - Syslog service for log telemetry support
