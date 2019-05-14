@@ -52,3 +52,10 @@ over UDP on port 514 and stores the logs in `syslog/log/messages-kv.log` on
 the Controller host. The syslog-ng
 [Docker](https://github.com/balabit/syslog-ng-docker) container is started along
 with the other services in the docker-compose.yml.
+
+### Statistics Service
+
+There is a StatsD service that receives statistics via the StatsD protocol over
+UDP on port 8125 and stores the statistics in `statsd/stats.log` on the
+Controller host. The gostatsd [Docker](https://github.com/atlassian/gostatsd)
+container is started along with the other services in the docker-compose.yml.

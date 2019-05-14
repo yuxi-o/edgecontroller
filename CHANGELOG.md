@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.11] - 2019-05-13
+### Added
+- StatsD service for stats telemetry support
+
 ## [0.0.10] - 2019-05-13
 ### Fix
 - Run test-syslog without sudo

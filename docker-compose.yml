@@ -10,6 +10,14 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: beer
 
+  statsd:
+    image: atlassianlabs/gostatsd:15.0.1
+    entrypoint: /bin/sh -c "gostatsd --backends=stdout > /etc/gostatsd/stats.log 2>&1"
+    ports:
+      - 8125:8125/udp
+    volumes:
+    - ./statsd:/etc/gostatsd
+
   syslog:
     image:  balabit/syslog-ng:3.19.1
     ports:

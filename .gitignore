@@ -31,5 +31,8 @@ dist/
 # Certificates folder
 certificates/
 
+# StatsD log
+statsd/stats.log
+
 # Syslog logs folder
 syslog/logs

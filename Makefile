@@ -29,7 +29,7 @@ help:
 	@echo "  test             to run unit followed by api tests"
 
 clean:
-	rm -rf dist certificates syslog/logs
+	rm -rf dist certificates statsd/stats.log syslog/logs
 
 build:
 	mkdir -p dist
@@ -49,6 +49,12 @@ db-reset: db-up
 db-down:
 	docker-compose stop mysql
 
+statsd-up:
+	docker-compose up -d statsd
+
+statsd-down:
+	docker-compose stop statsd
+
 syslog-up:
 	docker-compose up -d syslog
 
@@ -56,7 +62,10 @@ syslog-down:
 	docker-compose stop syslog
 
 test-unit:
-	ginkgo -v -r --randomizeAllSpecs --randomizeSuites --skipPackage=vendor,syslog,cmd/cce
+	ginkgo -v -r --randomizeAllSpecs --randomizeSuites --skipPackage=vendor,statsd,syslog,cmd/cce
+
+test-statsd: statsd-up
+	ginkgo -v --randomizeAllSpecs --randomizeSuites statsd
 
 test-syslog: syslog-up
 	ginkgo -v --randomizeAllSpecs --randomizeSuites syslog
@@ -64,4 +73,4 @@ test-syslog: syslog-up
 test-api: db-reset
 	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce
 
-test: test-unit test-syslog test-api
+test: test-unit test-statsd test-syslog test-api
