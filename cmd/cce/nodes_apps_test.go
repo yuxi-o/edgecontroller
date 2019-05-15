@@ -29,31 +29,32 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("/nodes_dns_configs", func() {
+var _ = Describe("/nodes_apps", func() {
 	var (
-		nodeID      string
-		dnsConfigID string
+		nodeID string
+		appID  string
 	)
 
 	BeforeEach(func() {
 		nodeID = postNodes()
-		dnsConfigID = postDNSConfigs()
+		appID = postApps("container")
 	})
 
-	Describe("POST /nodes_dns_configs", func() {
+	Describe("POST /nodes_apps", func() {
 		DescribeTable("201 Created",
 			func() {
-				By("Sending a POST /nodes_dns_configs request")
+				By("Sending a POST /nodes_apps request")
 				resp, err := http.Post(
-					"http://127.0.0.1:8080/nodes_dns_configs",
+					"http://127.0.0.1:8080/nodes_apps",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
 						`
 						{
 							"node_id": "%s",
-							"dns_config_id": "%s"
-						}`, nodeID, dnsConfigID)))
+							"app_id": "%s"
+						}`, nodeID, appID)))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 201 response")
 				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
@@ -73,17 +74,18 @@ var _ = Describe("/nodes_dns_configs", func() {
 				Expect(uuid.IsValid(respBody.ID)).To(BeTrue())
 			},
 			Entry(
-				"POST /nodes_dns_configs"),
+				"POST /nodes_apps"),
 		)
 
 		DescribeTable("400 Bad Request",
 			func(req, expectedResp string) {
-				By("Sending a POST /nodes_dns_configs request")
+				By("Sending a POST /nodes_apps request")
 				resp, err := http.Post(
-					"http://127.0.0.1:8080/nodes_dns_configs",
+					"http://127.0.0.1:8080/nodes_apps",
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 400 Bad Request response")
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
@@ -96,25 +98,25 @@ var _ = Describe("/nodes_dns_configs", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
-				"POST /nodes_dns_configs with id",
+				"POST /nodes_apps with id",
 				`
 				{
 					"id": "123"
 				}`,
 				"Validation failed: id cannot be specified in POST request"),
 			Entry(
-				"POST /nodes_dns_configs without node_id",
+				"POST /nodes_apps without node_id",
 				`
 				{
 				}`,
 				"Validation failed: node_id not a valid uuid"),
 			Entry(
-				"POST /nodes_dns_configs without dns_config_id",
+				"POST /nodes_apps without app_id",
 				fmt.Sprintf(`
 				{
 					"node_id": "%s"
 				}`, uuid.New()),
-				"Validation failed: dns_config_id not a valid uuid"),
+				"Validation failed: app_id not a valid uuid"),
 		)
 
 		DescribeTable("422 Unprocessable Entity",
@@ -124,20 +126,21 @@ var _ = Describe("/nodes_dns_configs", func() {
 					err  error
 				)
 
-				By("Sending a POST /nodes_dns_configs request")
-				postNodesDNSConfigs(nodeID, dnsConfigID)
+				By("Sending a POST /nodes_apps request")
+				postNodesApps(nodeID, appID)
 
-				By("Repeating the first POST /nodes_dns_configs request")
+				By("Repeating the first POST /nodes_apps request")
 				resp, err = http.Post(
-					"http://127.0.0.1:8080/nodes_dns_configs",
+					"http://127.0.0.1:8080/nodes_apps",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
 						`
 						{
 							"node_id": "%s",
-							"dns_config_id": "%s"
-						}`, nodeID, dnsConfigID)))
+							"app_id": "%s"
+						}`, nodeID, appID)))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 422 response")
 				Expect(resp.StatusCode).To(Equal(
@@ -150,172 +153,173 @@ var _ = Describe("/nodes_dns_configs", func() {
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(fmt.Sprintf(
 					"duplicate record detected for node_id %s and "+
-						"dns_config_id %s",
+						"app_id %s",
 					nodeID,
-					dnsConfigID)))
+					appID)))
 			},
-			Entry("POST /nodes_dns_configs with duplicate node_id and dns_config_id"), //nolint:lll
+			Entry("POST /nodes_apps with duplicate node_id and app_id"),
 		)
 	})
 
-	Describe("GET /nodes_dns_configs", func() {
+	Describe("GET /nodes_apps", func() {
 		var (
-			nodeDNSConfigID  string
-			node2ID          string
-			dnsConfig2ID     string
-			nodeDNSConfig2ID string
+			nodeAppID  string
+			app2ID     string
+			nodeApp2ID string
 		)
 
 		BeforeEach(func() {
-			nodeDNSConfigID = postNodesDNSConfigs(nodeID, dnsConfigID)
-			node2ID = postNodes()
-			dnsConfig2ID = postDNSConfigs()
-			nodeDNSConfig2ID = postNodesDNSConfigs(node2ID, dnsConfig2ID)
+			nodeAppID = postNodesApps(nodeID, appID)
+			app2ID = postApps("container")
+			nodeApp2ID = postNodesApps(nodeID, app2ID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				By("Sending a GET /nodes_dns_configs request")
-				resp, err := http.Get(
-					"http://127.0.0.1:8080/nodes_dns_configs")
+				By("Sending a GET /nodes_apps request")
+				resp, err := http.Get(fmt.Sprintf(
+					"http://127.0.0.1:8080/nodes_apps?node_id=%s", nodeID))
 
 				By("Verifying a 200 OK response")
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Reading the response body")
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var nodeDNSConfigs []cce.NodeDNSConfig
+				var nodeApps []cce.NodeApp
 
 				By("Unmarshalling the response")
-				Expect(json.Unmarshal(body, &nodeDNSConfigs)).
+				Expect(json.Unmarshal(body, &nodeApps)).
 					To(Succeed())
 
-				By("Verifying the 2 created node <-> DNS configs were returned")
-				Expect(nodeDNSConfigs).To(ContainElement(
-					cce.NodeDNSConfig{
-						ID:          nodeDNSConfigID,
-						NodeID:      nodeID,
-						DNSConfigID: dnsConfigID,
+				By("Verifying the 2 created node apps were returned")
+				Expect(nodeApps).To(ContainElement(
+					cce.NodeApp{
+						ID:     nodeAppID,
+						NodeID: nodeID,
+						AppID:  appID,
 					}))
-				Expect(nodeDNSConfigs).To(ContainElement(
-					cce.NodeDNSConfig{
-						ID:          nodeDNSConfig2ID,
-						NodeID:      node2ID,
-						DNSConfigID: dnsConfig2ID,
+				Expect(nodeApps).To(ContainElement(
+					cce.NodeApp{
+						ID:     nodeApp2ID,
+						NodeID: nodeID,
+						AppID:  app2ID,
 					}))
 			},
-			Entry("GET /nodes_dns_configs"),
+			Entry("GET /nodes_apps"),
 		)
 	})
 
-	Describe("GET /nodes_dns_configs/{id}", func() {
+	Describe("GET /nodes_apps/{id}", func() {
 		var (
-			nodeDNSConfigID string
+			nodeAppID string
 		)
 
 		BeforeEach(func() {
-			nodeDNSConfigID = postNodesDNSConfigs(nodeID, dnsConfigID)
+			nodeAppID = postNodesApps(nodeID, appID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				nodeDNSConfig := getNodeDNSConfig(nodeDNSConfigID)
+				nodeApp := getNodeApp(nodeAppID)
 
-				By("Verifying the created node <-> DNS config was returned")
-				Expect(nodeDNSConfig).To(Equal(
-					&cce.NodeDNSConfig{
-						ID:          nodeDNSConfigID,
-						NodeID:      nodeID,
-						DNSConfigID: dnsConfigID,
+				By("Verifying the created node app was returned")
+				Expect(nodeApp).To(Equal(
+					&cce.NodeApp{
+						ID:     nodeAppID,
+						NodeID: nodeID,
+						AppID:  appID,
 					},
 				))
 			},
-			Entry("GET /nodes_dns_configs/{id}"),
+			Entry("GET /nodes_apps/{id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func() {
-				By("Sending a GET /nodes_dns_configs/{id} request")
+				By("Sending a GET /nodes_apps/{id} request")
 				resp, err := http.Get(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_dns_configs/%s",
+						"http://127.0.0.1:8080/nodes_apps/%s",
 						uuid.New()))
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("GET /nodes_dns_configs/{id} with nonexistent ID"),
+			Entry("GET /nodes_apps/{id} with nonexistent ID"),
 		)
 	})
 
-	Describe("DELETE /nodes_dns_configs/{id}", func() {
+	Describe("DELETE /nodes_apps/{id}", func() {
 		var (
-			nodeDNSConfigID string
+			nodeAppID string
 		)
 
 		BeforeEach(func() {
-			nodeDNSConfigID = postNodesDNSConfigs(nodeID, dnsConfigID)
+			nodeAppID = postNodesApps(nodeID, appID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				By("Sending a DELETE /nodes_dns_configs/{id} request")
+				By("Sending a DELETE /nodes_apps/{id} request")
 				req, err := http.NewRequest(
 					http.MethodDelete,
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_dns_configs/%s",
-						nodeDNSConfigID),
+						"http://127.0.0.1:8080/nodes_apps/%s",
+						nodeAppID),
 					nil)
 				Expect(err).ToNot(HaveOccurred())
 
 				c := http.Client{}
 				resp, err := c.Do(req)
-				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying a 200 OK response")
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-				By("Verifying the node <-> DNS config was deleted")
+				By("Verifying the node app was deleted")
 
-				By("Sending a GET /nodes_dns_configs/{id} request")
-				resp, err = http.Get(
+				By("Sending a GET /nodes_apps/{id} request")
+				resp2, err := http.Get(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_dns_configs/%s",
-						nodeDNSConfigID))
+						"http://127.0.0.1:8080/nodes_apps/%s",
+						nodeAppID))
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
+				defer resp2.Body.Close()
+				Expect(resp2.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("DELETE /nodes_dns_configs/{id}"),
+			Entry("DELETE /nodes_apps/{id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func(id string) {
-				By("Sending a DELETE /nodes_dns_configs/{id} request")
+				By("Sending a DELETE /nodes_apps/{id} request")
 				req, err := http.NewRequest(
 					http.MethodDelete,
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_dns_configs/%s",
+						"http://127.0.0.1:8080/nodes_apps/%s",
 						id),
 					nil)
 				Expect(err).ToNot(HaveOccurred())
 
 				c := http.Client{}
 				resp, err := c.Do(req)
-				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(
-				"DELETE /nodes_dns_configs/{id} with nonexistent ID",
+				"DELETE /nodes_apps/{id} with nonexistent ID",
 				uuid.New()),
 		)
 	})

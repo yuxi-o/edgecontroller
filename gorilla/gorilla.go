@@ -51,7 +51,6 @@ type Gorilla struct {
 // NewGorilla creates a new Gorilla.
 func NewGorilla( //nolint:gocyclo
 	controller *cce.Controller,
-	nodeMap map[string]*cce.Node,
 ) *Gorilla {
 	g := &Gorilla{
 		// router
@@ -93,17 +92,20 @@ func NewGorilla( //nolint:gocyclo
 			model:         &cce.DNSConfigVNFAlias{},
 			checkDBCreate: checkDBCreateDNSConfigsVNFAliases,
 		},
-		nodesDNSConfigsHandler: &handler{
-			model:         &cce.NodeDNSConfig{},
-			checkDBCreate: checkDBCreateNodeDNSConfigs,
-			handleCreate:  handleCreateNodeDNSConfigs,
-		},
 		nodesAppsHandler: &handler{
 			model: &cce.NodeApp{},
 
+			checkDBCreate: checkDBCreateNodesApps,
 			// TODO add checkDBDelete func + tests for
 			// nodes_apps_traffic_policies
 			// checkDBDelete: checkDBDeleteNodesApps,
+
+			handleCreate: handleCreateNodesApps,
+		},
+		nodesDNSConfigsHandler: &handler{
+			model:         &cce.NodeDNSConfig{},
+			checkDBCreate: checkDBCreateNodesDNSConfigs,
+			handleCreate:  handleCreateNodesDNSConfigs,
 		},
 		nodesVNFsHandler: &handler{
 			model: &cce.NodeVNF{},
@@ -168,11 +170,13 @@ func NewGorilla( //nolint:gocyclo
 		"GET    /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.getByID,
 		"DELETE /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.delete,
 
-		// these endpoints still need API tests
 		"POST   /nodes_apps":      g.nodesAppsHandler.create,
 		"GET    /nodes_apps":      g.nodesAppsHandler.getByFilter,
+		"GET    /nodes_apps/{id}": g.nodesAppsHandler.getByID,
+		"PATCH  /nodes_apps":      g.nodesAppsHandler.bulkUpdate,
 		"DELETE /nodes_apps/{id}": g.nodesAppsHandler.delete,
 
+		// these endpoints still need API tests
 		"POST   /nodes_vnfs":      g.nodesVNFsHandler.create,
 		"GET    /nodes_vnfs":      g.nodesVNFsHandler.getByFilter,
 		"DELETE /nodes_vnfs/{id}": g.nodesVNFsHandler.delete,

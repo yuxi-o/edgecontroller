@@ -22,6 +22,40 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
+func checkDBCreateNodesApps(
+	ctx context.Context,
+	ps cce.PersistenceService,
+	e cce.Entity,
+) (statusCode int, err error) {
+	var es []cce.Entity
+
+	if es, err = ps.Filter(
+		ctx,
+		&cce.NodeApp{},
+		[]cce.Filter{
+			{
+				Field: "node_id",
+				Value: e.(*cce.NodeApp).NodeID,
+			},
+			{
+				Field: "app_id",
+				Value: e.(*cce.NodeApp).AppID,
+			},
+		},
+	); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	if len(es) != 0 {
+		return http.StatusUnprocessableEntity, fmt.Errorf(
+			"duplicate record detected for node_id %s and app_id %s",
+			e.(*cce.NodeApp).NodeID,
+			e.(*cce.NodeApp).AppID)
+	}
+
+	return 0, nil
+}
+
 func checkDBCreateDNSConfigsAppAliases(
 	ctx context.Context,
 	ps cce.PersistenceService,
@@ -90,7 +124,7 @@ func checkDBCreateDNSConfigsVNFAliases(
 	return 0, nil
 }
 
-func checkDBCreateNodeDNSConfigs(
+func checkDBCreateNodesDNSConfigs(
 	ctx context.Context,
 	ps cce.PersistenceService,
 	e cce.Entity,

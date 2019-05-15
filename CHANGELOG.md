@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.14] - 2019-05-14
+### Added
+- Node App tests, application logic handler func framework
+
 ## [0.0.13] - 2019-05-14
 ### Added
 - Node VNF traffic policy model + tests

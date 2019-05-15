@@ -29,10 +29,11 @@ var _ = Describe("Entities: Node", func() {
 
 	BeforeEach(func() {
 		node = &cce.Node{
-			ID:       "48606c73-3905-47e0-864f-14bc7466f5bb",
-			Name:     "test-node",
-			Location: "test-location",
-			Serial:   "test-serial",
+			ID:         "48606c73-3905-47e0-864f-14bc7466f5bb",
+			Name:       "test-node",
+			Location:   "test-location",
+			Serial:     "test-serial",
+			GRPCTarget: "127.0.0.1:8082",
 		}
 	})
 
@@ -89,6 +90,7 @@ Node[
     Name: test-node
     Location: test-location
     Serial: test-serial
+    GRPCTarget: 127.0.0.1:8082
 ]`,
 			)))
 		})

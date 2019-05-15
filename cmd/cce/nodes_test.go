@@ -152,17 +152,19 @@ var _ = Describe("/nodes", func() {
 				By("Verifying the 2 created nodes were returned")
 				Expect(nodes).To(ContainElement(
 					cce.Node{
-						ID:       nodeID,
-						Name:     "node123",
-						Location: "smart edge lab",
-						Serial:   "abc123",
+						ID:         nodeID,
+						Name:       "Test Node 1",
+						Location:   "Localhost port 8082",
+						Serial:     "ABC-123",
+						GRPCTarget: "127.0.0.1:8082",
 					}))
 				Expect(nodes).To(ContainElement(
 					cce.Node{
-						ID:       node2ID,
-						Name:     "node123",
-						Location: "smart edge lab",
-						Serial:   "abc123",
+						ID:         node2ID,
+						Name:       "Test Node 1",
+						Location:   "Localhost port 8082",
+						Serial:     "ABC-123",
+						GRPCTarget: "127.0.0.1:8082",
 					}))
 			},
 			Entry("GET /nodes"),
@@ -185,10 +187,11 @@ var _ = Describe("/nodes", func() {
 				By("Verifying the created node was returned")
 				Expect(node).To(Equal(
 					&cce.Node{
-						ID:       nodeID,
-						Name:     "node123",
-						Location: "smart edge lab",
-						Serial:   "abc123",
+						ID:         nodeID,
+						Name:       "Test Node 1",
+						Location:   "Localhost port 8082",
+						Serial:     "ABC-123",
+						GRPCTarget: "127.0.0.1:8082",
 					},
 				))
 			},

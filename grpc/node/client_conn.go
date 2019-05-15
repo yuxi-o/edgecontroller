@@ -35,6 +35,7 @@ type ClientConn struct {
 	AppPolicySvcCli *gclients.ApplicationPolicyServiceClient
 	VNFDeploySvcCli *gclients.VNFDeploymentServiceClient
 	VNFLifeSvcCli   *gclients.VNFLifecycleServiceClient
+	DNSSvcCli       *gclients.DNSServiceClient
 }
 
 // Connect connects to a node via grpc.Dial.
@@ -49,6 +50,7 @@ func (cc *ClientConn) Connect(ctx context.Context) error {
 	cc.AppPolicySvcCli = gclients.NewApplicationPolicyServiceClient(cc.conn)
 	cc.VNFDeploySvcCli = gclients.NewVNFDeploymentServiceClient(cc.conn)
 	cc.VNFLifeSvcCli = gclients.NewVNFLifecycleServiceClient(cc.conn)
+	cc.DNSSvcCli = gclients.NewDNSServiceClient(cc.conn)
 
 	return nil
 }

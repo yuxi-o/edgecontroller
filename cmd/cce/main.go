@@ -53,7 +53,6 @@ func main() {
 
 		db         *sql.DB
 		controller *cce.Controller
-		nodeMap    map[string]*cce.Node = make(map[string]*cce.Node)
 
 		httpListener net.Listener
 		koko         *gorilla.Gorilla
@@ -135,7 +134,7 @@ func main() {
 	})
 
 	// Create the gorilla and feed it a controller and its nodes
-	koko = gorilla.NewGorilla(controller, nodeMap)
+	koko = gorilla.NewGorilla(controller)
 
 	log.Println("HTTP handler ready")
 

@@ -23,14 +23,14 @@ import (
 	"reflect"
 
 	"github.com/gorilla/mux"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	cce "github.com/smartedgemec/controller-ce"
 )
 
 type handler struct {
 	model cce.Entity
 
-	// these funcs provide db checks
+	// these funcs provide db constraint (unique/foreign key) checks
 	checkDBCreate func(
 		context.Context,
 		cce.PersistenceService,
@@ -42,8 +42,37 @@ type handler struct {
 		id string,
 	) (statusCode int, err error)
 
-	// these funcs handle node logic
-	handleCreate func(context.Context) error
+	// these funcs provide application logic
+	handleCreate func(
+		context.Context,
+		cce.PersistenceService,
+		cce.Entity,
+	) error
+	handleGetAll func(
+		context.Context,
+		cce.PersistenceService,
+		[]cce.Entity,
+	) ([]interface{}, error)
+	handleGetByFilter func(
+		context.Context,
+		cce.PersistenceService,
+		[]cce.Entity,
+	) ([]interface{}, error)
+	handleGetByID func(
+		context.Context,
+		cce.PersistenceService,
+		cce.Entity,
+	) (interface{}, error)
+	handleBulkUpdate func(
+		context.Context,
+		cce.PersistenceService,
+		[]cce.Entity,
+	) error
+	handleDelete func(
+		ctx context.Context,
+		ps cce.PersistenceService,
+		id string,
+	) error
 }
 
 func (h *handler) create(w http.ResponseWriter, r *http.Request) { //nolint:gocyclo,lll
@@ -91,8 +120,23 @@ func (h *handler) create(w http.ResponseWriter, r *http.Request) { //nolint:gocy
 			ctrl.PersistenceService,
 			e,
 		); err != nil {
-			log.Printf("Error running DB logic: %v", err)
+			log.Printf("Error checking DB create: %v", err)
 			w.WriteHeader(statusCode)
+			_, err = w.Write([]byte(err.Error()))
+			if err != nil {
+				log.Printf("Error writing response: %v", err)
+			}
+			return
+		}
+	}
+
+	if h.handleCreate != nil {
+		if err = h.handleCreate(
+			r.Context(),
+			ctrl.PersistenceService, e,
+		); err != nil {
+			log.Printf("Error handling create logic: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
 			_, err = w.Write([]byte(err.Error()))
 			if err != nil {
 				log.Printf("Error writing response: %v", err)
@@ -134,6 +178,23 @@ func (h *handler) getAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if h.handleGetAll != nil {
+		if _, err = h.handleGetAll(
+			r.Context(),
+			ctrl.PersistenceService,
+			es,
+		); err != nil {
+			log.Printf("Error handling get all logic: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			_, err = w.Write([]byte(err.Error()))
+			if err != nil {
+				log.Printf("Error writing response: %v", err)
+			}
+			return
+		}
+	}
+
+	// TODO modify/update response based on result of handleGetAll
 	bytes = append(bytes, byte('['))
 	for _, e = range es {
 		var appBytes []byte
@@ -160,27 +221,47 @@ func (h *handler) getAll(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) getByFilter(w http.ResponseWriter, r *http.Request) {
 	var (
-		ctrl  = r.Context().Value(contextKey("controller")).(*cce.Controller)
-		es    []cce.Entity
-		e     cce.Entity
-		err   error
-		bytes []byte
+		ctrl    = r.Context().Value(contextKey("controller")).(*cce.Controller)
+		k       string
+		v       []string
+		filters []cce.Filter
+		es      []cce.Entity
+		e       cce.Entity
+		err     error
+		bytes   []byte
 	)
 
-	// TODO parse from request
+	for k, v = range r.URL.Query() {
+		filters = append(filters, cce.Filter{Field: k, Value: v[0]})
+	}
+
 	if es, err = ctrl.PersistenceService.Filter(
 		r.Context(),
 		h.model,
-		[]cce.Filter{
-			{Field: "node_id", Value: "9112538c-4df3-4a7a-a7e6-5db9ec203d03"},
-			{Field: "node_id", Value: "9112538c-4df3-4a7a-a7e6-5db9ec203d03"},
-		},
+		filters,
 	); err != nil {
 		log.Printf("Error getting entityRoutes: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
+	if h.handleGetByFilter != nil {
+		if _, err = h.handleGetByFilter(
+			r.Context(),
+			ctrl.PersistenceService,
+			es,
+		); err != nil {
+			log.Printf("Error handling get all logic: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			_, err = w.Write([]byte(err.Error()))
+			if err != nil {
+				log.Printf("Error writing response: %v", err)
+			}
+			return
+		}
+	}
+
+	// TODO modify/update response based on result of handleGetByFilter
 	bytes = append(bytes, byte('['))
 	for _, e = range es {
 		var appBytes []byte
@@ -231,6 +312,23 @@ func (h *handler) getByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if h.handleGetByID != nil {
+		if _, err = h.handleGetByID(
+			r.Context(),
+			ctrl.PersistenceService,
+			e,
+		); err != nil {
+			log.Printf("Error handling get all logic: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			_, err = w.Write([]byte(err.Error()))
+			if err != nil {
+				log.Printf("Error writing response: %v", err)
+			}
+			return
+		}
+	}
+
+	// TODO modify/update response based on result of handleGetByID
 	if bytes, err = json.Marshal(e); err != nil {
 		log.Printf("Error marshalling json: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -293,6 +391,22 @@ func (h *handler) bulkUpdate(
 		es = append(es, e)
 	}
 
+	if h.handleBulkUpdate != nil {
+		if err = h.handleBulkUpdate(
+			r.Context(),
+			ctrl.PersistenceService,
+			es,
+		); err != nil {
+			log.Printf("Error handling get all logic: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			_, err = w.Write([]byte(err.Error()))
+			if err != nil {
+				log.Printf("Error writing response: %v", err)
+			}
+			return
+		}
+	}
+
 	if err = ctrl.PersistenceService.BulkUpdate(r.Context(), es); err != nil {
 		log.Printf("Error updating entities: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -319,6 +433,22 @@ func (h *handler) delete(w http.ResponseWriter, r *http.Request) {
 		); err != nil {
 			log.Printf("Error running DB logic: %v", err)
 			w.WriteHeader(statusCode)
+			_, err = w.Write([]byte(err.Error()))
+			if err != nil {
+				log.Printf("Error writing response: %v", err)
+			}
+			return
+		}
+	}
+
+	if h.handleDelete != nil {
+		if err = h.handleDelete(
+			r.Context(),
+			ctrl.PersistenceService,
+			id,
+		); err != nil {
+			log.Printf("Error handling get all logic: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
 			_, err = w.Write([]byte(err.Error()))
 			if err != nil {
 				log.Printf("Error writing response: %v", err)

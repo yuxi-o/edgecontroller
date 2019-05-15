@@ -72,9 +72,11 @@ Node[
     Name: %s
     Location: %s
     Serial: %s
+    GRPCTarget: %s
 ]`),
 		n.ID,
 		n.Name,
 		n.Location,
-		n.Serial)
+		n.Serial,
+		n.GRPCTarget)
 }

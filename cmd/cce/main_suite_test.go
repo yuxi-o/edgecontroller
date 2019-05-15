@@ -386,9 +386,10 @@ func postNodes() (id string) {
 		"application/json",
 		strings.NewReader(`
 			{
-				"name": "node123",
-				"location": "smart edge lab",
-				"serial": "abc123"
+				"name": "Test Node 1",
+				"location": "Localhost port 8082",
+				"serial": "ABC-123",
+				"grpc_target": "127.0.0.1:8082"
 			}`))
 
 	By("Verifying a 201 Created response")
@@ -453,6 +454,27 @@ func postNodesApps(nodeID, appID string) (id string) {
 	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
 	return rb.ID
+}
+
+func getNodeApp(id string) *cce.NodeApp {
+	By("Sending a GET /nodes_apps/{id} request")
+	resp, err := http.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes_apps/%s", id))
+
+	By("Verifying a 200 OK response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var nodeApp cce.NodeApp
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &nodeApp)).To(Succeed())
+
+	return &nodeApp
 }
 
 func postNodesVNFs(nodeID, vnfID string) (id string) {
