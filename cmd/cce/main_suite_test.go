@@ -99,6 +99,10 @@ func shutdown() {
 	}
 }
 
+type respBody struct {
+	ID string
+}
+
 func postApps(appType string) (id string) {
 	By("Sending a POST /apps request")
 	resp, err := http.Post(
@@ -123,14 +127,12 @@ func postApps(appType string) (id string) {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var respBody struct {
-		ID string
-	}
+	var rb respBody
 
 	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
-	return respBody.ID
+	return rb.ID
 }
 
 func getApp(id string) *cce.App {
@@ -178,14 +180,12 @@ func postVNFs(vnfType string) (id string) {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var respBody struct {
-		ID string
-	}
+	var rb respBody
 
 	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
-	return respBody.ID
+	return rb.ID
 }
 
 func getVNF(id string) *cce.VNF {
@@ -244,14 +244,12 @@ func postDNSConfigs() (id string) {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var respBody struct {
-		ID string
-	}
+	var rb respBody
 
 	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
-	return respBody.ID
+	return rb.ID
 }
 
 func getDNSConfig(id string) *cce.DNSConfig {
@@ -299,19 +297,15 @@ func postDNSConfigsAppAliases(
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var respBody struct {
-		ID string
-	}
+	var rb respBody
 
 	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
-	return respBody.ID
+	return rb.ID
 }
 
-func getDNSConfigsAppAlias(
-	id string,
-) *cce.DNSConfigAppAlias {
+func getDNSConfigsAppAlias(id string) *cce.DNSConfigAppAlias {
 	By("Sending a GET /dns_configs_app_aliases/{id} request")
 	resp, err := http.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/dns_configs_app_aliases/%s", id))
@@ -356,19 +350,15 @@ func postDNSConfigsVNFAliases(
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var respBody struct {
-		ID string
-	}
+	var rb respBody
 
 	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
-	return respBody.ID
+	return rb.ID
 }
 
-func getDNSConfigsVNFAlias(
-	id string,
-) *cce.DNSConfigVNFAlias {
+func getDNSConfigsVNFAlias(id string) *cce.DNSConfigVNFAlias {
 	By("Sending a GET /dns_configs_vnf_aliases/{id} request")
 	resp, err := http.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/dns_configs_vnf_aliases/%s", id))
@@ -409,14 +399,12 @@ func postNodes() (id string) {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var respBody struct {
-		ID string
-	}
+	var rb respBody
 
 	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
-	return respBody.ID
+	return rb.ID
 }
 
 func getNode(id string) *cce.Node {
@@ -440,6 +428,60 @@ func getNode(id string) *cce.Node {
 	return &node
 }
 
+func postNodesApps(nodeID, appID string) (id string) {
+	By("Sending a POST /nodes_apps request")
+	resp, err := http.Post(
+		"http://127.0.0.1:8080/nodes_apps",
+		"application/json",
+		strings.NewReader(fmt.Sprintf(`
+			{
+				"node_id": "%s",
+				"app_id": "%s"
+			}`, nodeID, appID)))
+
+	By("Verifying a 201 Created response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var rb respBody
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
+
+	return rb.ID
+}
+
+func postNodesVNFs(nodeID, vnfID string) (id string) {
+	By("Sending a POST /nodes_vnfs request")
+	resp, err := http.Post(
+		"http://127.0.0.1:8080/nodes_vnfs",
+		"application/json",
+		strings.NewReader(fmt.Sprintf(`
+			{
+				"node_id": "%s",
+				"vnf_id": "%s"
+			}`, nodeID, vnfID)))
+
+	By("Verifying a 201 Created response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var rb respBody
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
+
+	return rb.ID
+}
+
 func postNodesDNSConfigs(nodeID, dnsConfigID string) (id string) {
 	By("Sending a POST /nodes_dns_configs request")
 	resp, err := http.Post(
@@ -459,18 +501,15 @@ func postNodesDNSConfigs(nodeID, dnsConfigID string) (id string) {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var respBody struct {
-		ID string
-	}
+	var rb respBody
 
 	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
-	fmt.Println(respBody.ID)
-	return respBody.ID
+	return rb.ID
 }
 
-func getNodesDNSConfig(id string) *cce.NodeDNSConfig {
+func getNodeDNSConfig(id string) *cce.NodeDNSConfig {
 	By("Sending a GET /nodes_dns_configs/{id} request")
 	resp, err := http.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/nodes_dns_configs/%s", id))
@@ -575,14 +614,12 @@ func postTrafficPolicies() (id string) {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var respBody struct {
-		ID string
-	}
+	var rb respBody
 
 	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &respBody)).To(Succeed())
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
-	return respBody.ID
+	return rb.ID
 }
 
 func getTrafficPolicy(id string) *cce.TrafficPolicy {
@@ -604,4 +641,64 @@ func getTrafficPolicy(id string) *cce.TrafficPolicy {
 	Expect(json.Unmarshal(body, &trafficPolicy)).To(Succeed())
 
 	return &trafficPolicy
+}
+
+func postNodesAppsTrafficPolicies(
+	nodeAppID string,
+	trafficPolicyID string,
+) (id string) {
+	By("Sending a POST /nodes_apps_traffic_policies request")
+	resp, err := http.Post(
+		"http://127.0.0.1:8080/nodes_apps_traffic_policies",
+		"application/json",
+		strings.NewReader(fmt.Sprintf(`
+			{
+				"nodes_apps_id": "%s",
+				"traffic_policy_id": "%s"
+			}`, nodeAppID, trafficPolicyID)))
+
+	By("Verifying a 201 Created response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var rb respBody
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
+
+	return rb.ID
+}
+
+func postNodesVNFsTrafficPolicies(
+	nodeVNFID string,
+	trafficPolicyID string,
+) (id string) {
+	By("Sending a POST /nodes_vnfs_traffic_policies request")
+	resp, err := http.Post(
+		"http://127.0.0.1:8080/nodes_vnfs_traffic_policies",
+		"application/json",
+		strings.NewReader(fmt.Sprintf(`
+			{
+				"nodes_vnfs_id": "%s",
+				"traffic_policy_id": "%s"
+			}`, nodeVNFID, trafficPolicyID)))
+
+	By("Verifying a 201 Created response")
+	Expect(err).ToNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var rb respBody
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
+
+	return rb.ID
 }

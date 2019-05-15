@@ -562,10 +562,17 @@ var _ = Describe("/vnfs", func() {
 		)
 
 		DescribeTable("422 Unprocessable Entity",
-			func() {
-				postDNSConfigsVNFAliases(
-					postDNSConfigs(),
-					containerVNFID)
+			func(resource, expectedResp string) {
+				switch resource {
+				case "dns_configs_vnf_aliases":
+					postDNSConfigsVNFAliases(
+						postDNSConfigs(),
+						containerVNFID)
+				case "nodes_vnfs":
+					postNodesVNFs(
+						postNodes(),
+						containerVNFID)
+				}
 
 				By("Sending a DELETE /vnfs/{id} request")
 				req, err := http.NewRequest(
@@ -589,12 +596,19 @@ var _ = Describe("/vnfs", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the response body")
-				Expect(string(body)).To(Equal(fmt.Sprintf(
-					"cannot delete vnf_id %s: record in use in "+
-						"dns_configs_vnf_aliases",
-					containerVNFID)))
+				Expect(string(body)).To(Equal(
+					fmt.Sprintf(expectedResp, containerVNFID)))
 			},
-			Entry("DELETE /vnfs/{id} with dns_configs_vnf_aliases record"),
+			Entry(
+				"DELETE /vnfs/{id} with dns_configs_vnf_aliases record",
+				"dns_configs_vnf_aliases",
+				"cannot delete vnf_id %s: record in use in dns_configs_vnf_aliases", //nolint:lll
+			),
+			Entry(
+				"DELETE /vnfs/{id} with nodes_vnfs record",
+				"nodes_vnfs",
+				"cannot delete vnf_id %s: record in use in nodes_vnfs",
+			),
 		)
 	})
 })

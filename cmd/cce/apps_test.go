@@ -562,10 +562,17 @@ var _ = Describe("/apps", func() {
 		)
 
 		DescribeTable("422 Unprocessable Entity",
-			func() {
-				postDNSConfigsAppAliases(
-					postDNSConfigs(),
-					containerAppID)
+			func(resource, expectedResp string) {
+				switch resource {
+				case "dns_configs_app_aliases":
+					postDNSConfigsAppAliases(
+						postDNSConfigs(),
+						containerAppID)
+				case "nodes_apps":
+					postNodesApps(
+						postNodes(),
+						containerAppID)
+				}
 
 				By("Sending a DELETE /apps/{id} request")
 				req, err := http.NewRequest(
@@ -589,12 +596,19 @@ var _ = Describe("/apps", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the response body")
-				Expect(string(body)).To(Equal(fmt.Sprintf(
-					"cannot delete app_id %s: record in use in "+
-						"dns_configs_app_aliases",
-					containerAppID)))
+				Expect(string(body)).To(Equal(
+					fmt.Sprintf(expectedResp, containerAppID)))
 			},
-			Entry("DELETE /apps/{id} with dns_configs_app_aliases record"),
+			Entry(
+				"DELETE /apps/{id} with dns_configs_app_aliases record",
+				"dns_configs_app_aliases",
+				"cannot delete app_id %s: record in use in dns_configs_app_aliases", //nolint:lll
+			),
+			Entry(
+				"DELETE /apps/{id} with nodes_apps record",
+				"nodes_apps",
+				"cannot delete app_id %s: record in use in nodes_apps",
+			),
 		)
 	})
 })

@@ -42,9 +42,28 @@ func checkDBDeleteApps(
 		return http.StatusInternalServerError, err
 	}
 
-	if len(es) != 0 {
+	if len(es) > 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
 			"cannot delete app_id %s: record in use in dns_configs_app_aliases",
+			id)
+	}
+
+	if es, err = ps.Filter(
+		ctx,
+		&cce.NodeApp{},
+		[]cce.Filter{
+			{
+				Field: "app_id",
+				Value: id,
+			},
+		},
+	); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	if len(es) > 0 {
+		return http.StatusUnprocessableEntity, fmt.Errorf(
+			"cannot delete app_id %s: record in use in nodes_apps",
 			id)
 	}
 
@@ -71,9 +90,78 @@ func checkDBDeleteVNFs(
 		return http.StatusInternalServerError, err
 	}
 
-	if len(es) != 0 {
+	if len(es) > 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
 			"cannot delete vnf_id %s: record in use in dns_configs_vnf_aliases",
+			id)
+	}
+
+	if es, err = ps.Filter(
+		ctx,
+		&cce.NodeVNF{},
+		[]cce.Filter{
+			{
+				Field: "vnf_id",
+				Value: id,
+			},
+		},
+	); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	if len(es) > 0 {
+		return http.StatusUnprocessableEntity, fmt.Errorf(
+			"cannot delete vnf_id %s: record in use in nodes_vnfs",
+			id)
+	}
+
+	return 0, nil
+}
+
+func checkDBDeleteTrafficPolicies(
+	ctx context.Context,
+	ps cce.PersistenceService,
+	id string,
+) (statusCode int, err error) {
+	var es []cce.Entity
+
+	if es, err = ps.Filter(
+		ctx,
+		&cce.NodeAppTrafficPolicy{},
+		[]cce.Filter{
+			{
+				Field: "traffic_policy_id",
+				Value: id,
+			},
+		},
+	); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	if len(es) > 0 {
+		return http.StatusUnprocessableEntity, fmt.Errorf(
+			"cannot delete traffic_policy_id %s: record in use in "+
+				"nodes_apps_traffic_policies",
+			id)
+	}
+
+	if es, err = ps.Filter(
+		ctx,
+		&cce.NodeVNFTrafficPolicy{},
+		[]cce.Filter{
+			{
+				Field: "traffic_policy_id",
+				Value: id,
+			},
+		},
+	); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	if len(es) > 0 {
+		return http.StatusUnprocessableEntity, fmt.Errorf(
+			"cannot delete traffic_policy_id %s: record in use in "+
+				"nodes_vnfs_traffic_policies",
 			id)
 	}
 
@@ -100,7 +188,7 @@ func checkDBDeleteDNSConfigs(
 		return http.StatusInternalServerError, err
 	}
 
-	if len(es) != 0 {
+	if len(es) > 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
 			"cannot delete dns_config_id %s: record in use in "+
 				"dns_configs_app_aliases",
@@ -120,10 +208,30 @@ func checkDBDeleteDNSConfigs(
 		return http.StatusInternalServerError, err
 	}
 
-	if len(es) != 0 {
+	if len(es) > 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
 			"cannot delete dns_config_id %s: record in use in "+
 				"dns_configs_vnf_aliases",
+			id)
+	}
+
+	if es, err = ps.Filter(
+		ctx,
+		&cce.NodeDNSConfig{},
+		[]cce.Filter{
+			{
+				Field: "dns_config_id",
+				Value: id,
+			},
+		},
+	); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	if len(es) > 0 {
+		return http.StatusUnprocessableEntity, fmt.Errorf(
+			"cannot delete dns_config_id %s: record in use in "+
+				"nodes_dns_configs",
 			id)
 	}
 

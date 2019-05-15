@@ -222,7 +222,7 @@ var _ = Describe("/nodes_dns_configs", func() {
 
 		DescribeTable("200 OK",
 			func() {
-				nodeDNSConfig := getNodesDNSConfig(nodeDNSConfigID)
+				nodeDNSConfig := getNodeDNSConfig(nodeDNSConfigID)
 
 				By("Verifying the created node <-> DNS config was returned")
 				Expect(nodeDNSConfig).To(Equal(

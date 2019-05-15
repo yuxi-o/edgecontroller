@@ -136,3 +136,16 @@ CREATE TABLE nodes_apps_traffic_policies (
     FOREIGN KEY (traffic_policy_id) REFERENCES traffic_policies(id),
     UNIQUE KEY (nodes_apps_id, traffic_policy_id)
 );
+
+-- nodes_vnfs x traffic_policies
+CREATE TABLE nodes_vnfs_traffic_policies (
+    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
+    nodes_vnfs_id VARCHAR(36) GENERATED ALWAYS AS
+        (entity->>'$.nodes_vnfs_id') STORED,
+    traffic_policy_id VARCHAR(36) GENERATED ALWAYS AS
+        (entity->>'$.traffic_policy_id') STORED,
+    entity JSON,
+    FOREIGN KEY (nodes_vnfs_id) REFERENCES nodes_vnfs(id),
+    FOREIGN KEY (traffic_policy_id) REFERENCES traffic_policies(id),
+    UNIQUE KEY (nodes_vnfs_id, traffic_policy_id)
+);

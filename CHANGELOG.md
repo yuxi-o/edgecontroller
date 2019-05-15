@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.13] - 2019-05-14
+### Added
+- Node VNF traffic policy model + tests
+
 ## [0.0.12] - 2019-05-14
 ### Removed
 - Unneeded JSON_EXTRACT usage in queries

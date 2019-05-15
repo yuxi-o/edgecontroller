@@ -888,5 +888,58 @@ var _ = Describe("/traffic_policies", func() {
 				"DELETE /traffic_policies/{id} with nonexistent ID",
 				uuid.New()),
 		)
+
+		DescribeTable("422 Unprocessable Entity",
+			func(resource, expectedResp string) {
+				switch resource {
+				case "nodes_apps_traffic_policies":
+					postNodesAppsTrafficPolicies(
+						postNodesApps(
+							postNodes(),
+							postApps("container")),
+						trafficPolicyID)
+				case "nodes_vnfs_traffic_policies":
+					postNodesVNFsTrafficPolicies(
+						postNodesVNFs(
+							postNodes(),
+							postVNFs("container")),
+						trafficPolicyID)
+				}
+
+				By("Sending a DELETE /traffic_policies/{id} request")
+				req, err := http.NewRequest(
+					http.MethodDelete,
+					fmt.Sprintf("http://127.0.0.1:8080/traffic_policies/%s",
+						trafficPolicyID),
+					nil)
+				Expect(err).ToNot(HaveOccurred())
+
+				c := http.Client{}
+				resp, err := c.Do(req)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying a 422 response")
+				Expect(resp.StatusCode).To(Equal(
+					http.StatusUnprocessableEntity))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying the response body")
+				Expect(string(body)).To(Equal(
+					fmt.Sprintf(expectedResp, trafficPolicyID)))
+			},
+			Entry(
+				"DELETE /traffic_policies/{id} with nodes_apps_traffic_policies record", //nolint:lll
+				"nodes_apps_traffic_policies",
+				"cannot delete traffic_policy_id %s: record in use in nodes_apps_traffic_policies", //nolint:lll
+			),
+			Entry(
+				"DELETE /traffic_policies/{id} with nodes_vnfs_traffic_policies record", //nolint:lll
+				"nodes_vnfs_traffic_policies",
+				"cannot delete traffic_policy_id %s: record in use in nodes_vnfs_traffic_policies", //nolint:lll
+			),
+		)
 	})
 })

@@ -56,7 +56,7 @@ func main() {
 		nodeMap    map[string]*cce.Node = make(map[string]*cce.Node)
 
 		httpListener net.Listener
-		g            *gorilla.Gorilla
+		koko         *gorilla.Gorilla
 		httpServer   *http.Server
 
 		grpcListener net.Listener
@@ -135,12 +135,12 @@ func main() {
 	})
 
 	// Create the gorilla and feed it a controller and its nodes
-	g = gorilla.NewGorilla(controller, nodeMap)
+	koko = gorilla.NewGorilla(controller, nodeMap)
 
 	log.Println("HTTP handler ready")
 
 	// Configure http server
-	httpServer = http.NewServer(g)
+	httpServer = http.NewServer(koko)
 
 	// Start the http server
 	log.Printf("Starting HTTP server on port %d\n", httpPort)
