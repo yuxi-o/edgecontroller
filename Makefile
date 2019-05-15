@@ -61,6 +61,12 @@ syslog-up:
 syslog-down:
 	docker-compose stop syslog
 
+ui-up:
+	cd ui/ && yarn install && yarn start
+
+ui-test:
+	cd ui/ && yarn install && yarn build && yarn test
+
 test-unit:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites --skipPackage=vendor,statsd,syslog,cmd/cce
 

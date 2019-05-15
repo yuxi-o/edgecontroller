@@ -44,6 +44,13 @@ for guidelines.
 
 - Domain models (types that implement the Entity interface) decouple application
   logic from PB types
+  
+### Controller CE UI
+##### Pre requisites
+- Node & NPM installed (v10.15.3, or V10 LTS)
+  - recommended to use NVM https://github.com/nvm-sh/nvm to manage your Node versions
+- Yarn installed globally `npm install -g yarn`
+- install dependencies via `yarn install` within the project
 
 ### Log Service
 
