@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.12] - 2019-05-14
+### Removed
+- Unneeded JSON_EXTRACT usage in queries
+
 ## [0.0.11] - 2019-05-13
 ### Added
 - StatsD service for stats telemetry support

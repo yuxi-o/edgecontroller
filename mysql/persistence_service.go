@@ -50,7 +50,7 @@ func (s *PersistenceService) Read(
 		fmt.Sprintf( //nolint:gosec
 			`SELECT entity
              FROM %s
-             WHERE JSON_EXTRACT(entity, "$.id") = ?`, zv.GetTableName()),
+             WHERE id = ?`, zv.GetTableName()),
 		id)
 	if err != nil {
 		return nil, errors.Wrap(err, "error running query")
@@ -162,7 +162,7 @@ func (s *PersistenceService) BulkUpdate(
 			fmt.Sprintf( //nolint:gosec
 				`UPDATE %s
                  SET entity = ?
-                 WHERE JSON_EXTRACT(entity, "$.id") = JSON_EXTRACT(?, "$.id")`,
+                 WHERE id = JSON_EXTRACT(?, "$.id")`,
 				e.GetTableName()),
 			bytes, bytes)
 		if err != nil {
@@ -184,7 +184,7 @@ func (s *PersistenceService) Delete(
 		fmt.Sprintf( //nolint:gosec
 			`DELETE
              FROM %s
-             WHERE JSON_EXTRACT(entity, "$.id") = ?`, zv.GetTableName()),
+             WHERE id = ?`, zv.GetTableName()),
 		id)
 	if err != nil {
 		return false, errors.Wrap(err, "error deleting record")
