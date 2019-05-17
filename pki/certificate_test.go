@@ -137,13 +137,7 @@ func generateCert(key crypto.PrivateKey) (*x509.Certificate, error) {
 		NotAfter:  time.Now().Add(time.Hour),
 	}
 
-	if der, err = x509.CreateCertificate(
-		rand.Reader,
-		template,
-		template,
-		k.Public(),
-		key,
-	); err != nil {
+	if der, err = x509.CreateCertificate(rand.Reader, template, template, k.Public(), key); err != nil {
 		return nil, errors.Wrap(err, "unable to create certificate")
 	}
 

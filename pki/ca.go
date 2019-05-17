@@ -62,10 +62,7 @@ func InitRootCA(certsDir string) (*RootCA, error) {
 	keyFile = filepath.Join(certsDir, "key.pem")
 
 	if key, err = LoadKey(keyFile); err != nil {
-		if key, err = ecdsa.GenerateKey(
-			elliptic.P256(),
-			rand.Reader,
-		); err != nil {
+		if key, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader); err != nil {
 			return nil, errors.Wrap(err, "unable to generate CA key")
 		}
 
@@ -90,9 +87,7 @@ func InitRootCA(certsDir string) (*RootCA, error) {
 		log.Printf("Generated and stored CA certificate at: %s", certFile)
 	}
 
-	if certDER, err = x509.MarshalPKIXPublicKey(
-		key.(crypto.Signer).Public(),
-	); err != nil {
+	if certDER, err = x509.MarshalPKIXPublicKey(key.(crypto.Signer).Public()); err != nil {
 		return nil, errors.Wrap(err, "unable to marshal public key")
 	}
 
@@ -223,13 +218,7 @@ func generateRootCA(key crypto.PrivateKey) (*x509.Certificate, error) {
 		BasicConstraintsValid: true,
 	}
 
-	if der, err = x509.CreateCertificate(
-		rand.Reader,
-		template,
-		template,
-		k.Public(),
-		key,
-	); err != nil {
+	if der, err = x509.CreateCertificate(rand.Reader, template, template, k.Public(), key); err != nil {
 		return nil, errors.Wrap(err, "unable to create CA certificate")
 	}
 

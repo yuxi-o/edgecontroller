@@ -27,7 +27,7 @@ func checkDBDeleteApps(
 	ps cce.PersistenceService,
 	id string,
 ) (statusCode int, err error) {
-	var es []cce.Entity
+	var es []cce.Persistable
 
 	if es, err = ps.Filter(
 		ctx,
@@ -75,7 +75,7 @@ func checkDBDeleteVNFs(
 	ps cce.PersistenceService,
 	id string,
 ) (statusCode int, err error) {
-	var es []cce.Entity
+	var es []cce.Persistable
 
 	if es, err = ps.Filter(
 		ctx,
@@ -123,7 +123,7 @@ func checkDBDeleteTrafficPolicies(
 	ps cce.PersistenceService,
 	id string,
 ) (statusCode int, err error) {
-	var es []cce.Entity
+	var es []cce.Persistable
 
 	if es, err = ps.Filter(
 		ctx,
@@ -173,7 +173,7 @@ func checkDBDeleteDNSConfigs(
 	ps cce.PersistenceService,
 	id string,
 ) (statusCode int, err error) {
-	var es []cce.Entity
+	var es []cce.Persistable
 
 	if es, err = ps.Filter(
 		ctx,

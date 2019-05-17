@@ -29,6 +29,18 @@ type NodeApp struct {
 	AppID  string `json:"app_id"`
 }
 
+// NodeAppReq is a NodeApp request.
+type NodeAppReq struct {
+	NodeApp
+	Cmd string `json:"cmd,omitempty"`
+}
+
+// NodeAppResp is a NodeApp response.
+type NodeAppResp struct {
+	NodeApp
+	Status string `json:"status"`
+}
+
 // GetTableName returns the name of the persistence table.
 func (*NodeApp) GetTableName() string {
 	return "nodes_apps"
@@ -62,6 +74,26 @@ func (n_a *NodeApp) Validate() error {
 	}
 
 	return nil
+}
+
+// Validate validates the request model.
+func (n_ar *NodeAppReq) Validate() error {
+	if err := n_ar.NodeApp.Validate(); err != nil {
+		return err
+	}
+	switch n_ar.Cmd {
+	case "start", "stop", "restart":
+		return nil
+	case "":
+		return errors.New("cmd missing")
+	default:
+		return fmt.Errorf(`cmd "%s" is invalid`, n_ar.Cmd)
+	}
+}
+
+// GetTableName returns the name of the persistence table.
+func (n_ar *NodeAppReq) GetTableName() string {
+	return n_ar.NodeApp.GetTableName()
 }
 
 func (n_a *NodeApp) String() string {

@@ -28,13 +28,14 @@ import (
 )
 
 type handler struct {
-	model cce.Entity
+	model    cce.Persistable
+	reqModel cce.ReqEntity
 
 	// these funcs provide db constraint (unique/foreign key) checks
 	checkDBCreate func(
 		context.Context,
 		cce.PersistenceService,
-		cce.Entity,
+		cce.Persistable,
 	) (statusCode int, err error)
 	checkDBDelete func(
 		ctx context.Context,
@@ -46,80 +47,58 @@ type handler struct {
 	handleCreate func(
 		context.Context,
 		cce.PersistenceService,
-		cce.Entity,
+		cce.Persistable,
 	) error
-	handleGetAll func(
+	handleGet func(
 		context.Context,
 		cce.PersistenceService,
-		[]cce.Entity,
-	) ([]interface{}, error)
-	handleGetByFilter func(
+		cce.Persistable,
+	) (cce.RespEntity, error)
+	handleUpdate func(
 		context.Context,
 		cce.PersistenceService,
-		[]cce.Entity,
-	) ([]interface{}, error)
-	handleGetByID func(
-		context.Context,
-		cce.PersistenceService,
-		cce.Entity,
-	) (interface{}, error)
-	handleBulkUpdate func(
-		context.Context,
-		cce.PersistenceService,
-		[]cce.Entity,
+		cce.Validatable,
 	) error
 	handleDelete func(
-		ctx context.Context,
-		ps cce.PersistenceService,
-		id string,
+		context.Context,
+		cce.PersistenceService,
+		cce.Persistable,
 	) error
 }
 
-func (h *handler) create(w http.ResponseWriter, r *http.Request) { //nolint:gocyclo,lll
-	var (
-		ctrl = r.Context().Value(contextKey("controller")).(*cce.Controller)
-		body = r.Context().Value(contextKey("body")).([]byte)
-		e    cce.Entity
-		err  error
-	)
+func (h *handler) create(w http.ResponseWriter, r *http.Request) { //nolint:gocyclo
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
+	body := r.Context().Value(contextKey("body")).([]byte)
 
-	e = reflect.New(
-		reflect.ValueOf(h.model).Elem().Type()).Interface().(cce.Entity)
-	if err = json.Unmarshal(body, e); err != nil {
+	p := reflect.New(reflect.ValueOf(h.model).Elem().Type()).Interface().(cce.Persistable)
+	if err := json.Unmarshal(body, p); err != nil {
 		log.Printf("Error unmarshalling json: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	if e.GetID() != "" {
+	if p.GetID() != "" {
 		w.WriteHeader(http.StatusBadRequest)
-		_, err = w.Write([]byte(
-			"Validation failed: id cannot be specified in POST request"))
-		if err != nil {
+
+		if _, err := w.Write([]byte("Validation failed: id cannot be specified in POST request")); err != nil {
 			log.Printf("Error writing response: %v", err)
 		}
 		return
 	}
 
-	e.SetID(uuid.NewV4().String())
+	p.SetID(uuid.NewV4().String())
 
-	if err = e.Validate(); err != nil {
-		log.Printf("Validation failed for %#v: %v", e, err)
+	if err := p.(cce.Validatable).Validate(); err != nil {
+		log.Printf("Validation failed for %#v: %v", p, err)
 		w.WriteHeader(http.StatusBadRequest)
-		_, err = w.Write([]byte(fmt.Sprintf("Validation failed: %v", err)))
-		if err != nil {
+		if _, err = w.Write([]byte(fmt.Sprintf("Validation failed: %v", err))); err != nil {
 			log.Printf("Error writing response: %v", err)
 		}
 		return
 	}
 
 	if h.checkDBCreate != nil {
-		var statusCode int
-		if statusCode, err = h.checkDBCreate(
-			r.Context(),
-			ctrl.PersistenceService,
-			e,
-		); err != nil {
+		if statusCode, err := h.checkDBCreate(r.Context(), ctrl.PersistenceService, p); err != nil {
 			log.Printf("Error checking DB create: %v", err)
 			w.WriteHeader(statusCode)
 			_, err = w.Write([]byte(err.Error()))
@@ -131,10 +110,7 @@ func (h *handler) create(w http.ResponseWriter, r *http.Request) { //nolint:gocy
 	}
 
 	if h.handleCreate != nil {
-		if err = h.handleCreate(
-			r.Context(),
-			ctrl.PersistenceService, e,
-		); err != nil {
+		if err := h.handleCreate(r.Context(), ctrl.PersistenceService, p); err != nil {
 			log.Printf("Error handling create logic: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			_, err = w.Write([]byte(err.Error()))
@@ -145,7 +121,7 @@ func (h *handler) create(w http.ResponseWriter, r *http.Request) { //nolint:gocy
 		}
 	}
 
-	if err = ctrl.PersistenceService.Create(r.Context(), e); err != nil {
+	if err := ctrl.PersistenceService.Create(r.Context(), p); err != nil {
 		log.Printf("Error creating entity: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -154,118 +130,49 @@ func (h *handler) create(w http.ResponseWriter, r *http.Request) { //nolint:gocy
 	w.Header()["Content-Type"] = []string{"application/json"}
 	w.WriteHeader(http.StatusCreated)
 
-	_, err = w.Write([]byte(fmt.Sprintf(`{"id":"%s"}`, e.GetID())))
-	if err != nil {
+	if _, err := w.Write([]byte(fmt.Sprintf(`{"id":"%s"}`, p.GetID()))); err != nil {
 		log.Printf("Error writing response: %v", err)
 	}
 }
 
-func (h *handler) getAll(w http.ResponseWriter, r *http.Request) {
-	var (
-		ctrl  = r.Context().Value(contextKey("controller")).(*cce.Controller)
-		es    []cce.Entity
-		e     cce.Entity
-		err   error
-		bytes []byte
-	)
+func (h *handler) filter(w http.ResponseWriter, r *http.Request) {
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
 
-	if es, err = ctrl.PersistenceService.ReadAll(
-		r.Context(),
-		h.model,
-	); err != nil {
+	var filters []cce.Filter
+	for k, v := range r.URL.Query() {
+		filters = append(filters, cce.Filter{Field: k, Value: v[0]})
+	}
+
+	ps, err := ctrl.PersistenceService.Filter(r.Context(), h.model, filters)
+	if err != nil {
 		log.Printf("Error reading entities: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if h.handleGetAll != nil {
-		if _, err = h.handleGetAll(
-			r.Context(),
-			ctrl.PersistenceService,
-			es,
-		); err != nil {
-			log.Printf("Error handling get all logic: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			_, err = w.Write([]byte(err.Error()))
+	var res []cce.RespEntity
+	for _, p := range ps {
+		if h.handleGet != nil {
+			re, err := h.handleGet(r.Context(), ctrl.PersistenceService, p)
 			if err != nil {
-				log.Printf("Error writing response: %v", err)
+				log.Printf("Error handling get logic: %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				if _, err = w.Write([]byte(err.Error())); err != nil {
+					log.Printf("Error writing response: %v", err)
+					return
+				}
 			}
-			return
+			res = append(res, re)
+		} else {
+			res = append(res, p)
 		}
 	}
 
-	// TODO modify/update response based on result of handleGetAll
+	var bytes []byte
 	bytes = append(bytes, byte('['))
-	for _, e = range es {
+	for _, re := range res {
 		var appBytes []byte
-		if appBytes, err = json.Marshal(e); err != nil {
-			log.Printf("Error marshalling json: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		bytes = append(bytes, appBytes...)
-		bytes = append(bytes, byte(','))
-	}
-
-	if len(bytes) > 1 {
-		bytes = bytes[:len(bytes)-1]
-	}
-	bytes = append(bytes, byte(']'))
-
-	w.Header()["Content-Type"] = []string{"application/json"}
-	if _, err = w.Write(bytes); err != nil {
-		log.Printf("Error writing response: %v", err)
-		return
-	}
-}
-
-func (h *handler) getByFilter(w http.ResponseWriter, r *http.Request) {
-	var (
-		ctrl    = r.Context().Value(contextKey("controller")).(*cce.Controller)
-		k       string
-		v       []string
-		filters []cce.Filter
-		es      []cce.Entity
-		e       cce.Entity
-		err     error
-		bytes   []byte
-	)
-
-	for k, v = range r.URL.Query() {
-		filters = append(filters, cce.Filter{Field: k, Value: v[0]})
-	}
-
-	if es, err = ctrl.PersistenceService.Filter(
-		r.Context(),
-		h.model,
-		filters,
-	); err != nil {
-		log.Printf("Error getting entityRoutes: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if h.handleGetByFilter != nil {
-		if _, err = h.handleGetByFilter(
-			r.Context(),
-			ctrl.PersistenceService,
-			es,
-		); err != nil {
-			log.Printf("Error handling get all logic: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			_, err = w.Write([]byte(err.Error()))
-			if err != nil {
-				log.Printf("Error writing response: %v", err)
-			}
-			return
-		}
-	}
-
-	// TODO modify/update response based on result of handleGetByFilter
-	bytes = append(bytes, byte('['))
-	for _, e = range es {
-		var appBytes []byte
-		appBytes, err = json.Marshal(e)
+		appBytes, err := json.Marshal(re)
 		if err != nil {
 			log.Printf("Error marshalling json: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -281,44 +188,40 @@ func (h *handler) getByFilter(w http.ResponseWriter, r *http.Request) {
 	bytes = append(bytes, byte(']'))
 
 	w.Header()["Content-Type"] = []string{"application/json"}
-	_, err = w.Write(bytes)
-	if err != nil {
+	if _, err := w.Write(bytes); err != nil {
 		log.Printf("Error writing response: %v", err)
 		return
 	}
 }
 
 func (h *handler) getByID(w http.ResponseWriter, r *http.Request) {
-	var (
-		ctrl  = r.Context().Value(contextKey("controller")).(*cce.Controller)
-		id    = mux.Vars(r)["id"]
-		e     cce.Entity
-		err   error
-		bytes []byte
-	)
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
 
-	if e, err = ctrl.PersistenceService.Read(
-		r.Context(),
-		id,
-		h.model,
-	); err != nil {
+	id := mux.Vars(r)["id"]
+	if id == "" {
+		// TODO add test for this
+		log.Printf("ID missing from request")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	p, err := ctrl.PersistenceService.Read(r.Context(), id, h.model)
+	if err != nil {
 		log.Printf("Error reading entity: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if e == nil {
+	if p == nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	if h.handleGetByID != nil {
-		if _, err = h.handleGetByID(
-			r.Context(),
-			ctrl.PersistenceService,
-			e,
-		); err != nil {
-			log.Printf("Error handling get all logic: %v", err)
+	var re cce.RespEntity
+	if h.handleGet != nil {
+		re, err = h.handleGet(r.Context(), ctrl.PersistenceService, p)
+		if err != nil {
+			log.Printf("Error handling get logic: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			_, err = w.Write([]byte(err.Error()))
 			if err != nil {
@@ -326,10 +229,12 @@ func (h *handler) getByID(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
+	} else {
+		re = p
 	}
 
-	// TODO modify/update response based on result of handleGetByID
-	if bytes, err = json.Marshal(e); err != nil {
+	bytes, err := json.Marshal(re)
+	if err != nil {
 		log.Printf("Error marshalling json: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -342,44 +247,41 @@ func (h *handler) getByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) bulkUpdate(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
-	var (
-		ctrl = r.Context().Value(contextKey("controller")).(*cce.Controller)
-		body = r.Context().Value(contextKey("body")).([]byte)
-		ies  []interface{}
-		ie   interface{}
-		e    cce.Entity
-		err  error
-	)
+func (h *handler) bulkUpdate(w http.ResponseWriter, r *http.Request) { //nolint:gocyclo
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
+	body := r.Context().Value(contextKey("body")).([]byte)
 
-	if err = json.Unmarshal(body, &ies); err != nil {
+	var is []interface{}
+	if err := json.Unmarshal(body, &is); err != nil {
 		log.Printf("Error unmarshalling json: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	var es []cce.Entity
-	for _, ie = range ies {
-		var bytes []byte
-		if bytes, err = json.Marshal(ie); err != nil {
+	var ps []cce.Persistable
+	for _, i := range is {
+		bytes, err := json.Marshal(i)
+		if err != nil {
 			log.Printf("Error marshalling json: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		e = reflect.New(reflect.ValueOf(h.model).Elem().Type()).
-			Interface().(cce.Entity)
-		if err = json.Unmarshal(bytes, e); err != nil {
+		var v cce.Validatable
+		if h.reqModel != nil {
+			v = reflect.New(reflect.ValueOf(h.reqModel).Elem().Type()).Interface().(cce.Validatable)
+		} else {
+			v = reflect.New(reflect.ValueOf(h.model).Elem().Type()).Interface().(cce.Validatable)
+		}
+
+		if err := json.Unmarshal(bytes, &v); err != nil {
 			log.Printf("Error unmarshalling json: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		if err = e.Validate(); err != nil {
-			log.Printf("Validation failed for %#v: %v", e, err)
+		if err := v.Validate(); err != nil {
+			log.Printf("Validation failed for %#v: %v", v, err)
 			w.WriteHeader(http.StatusBadRequest)
 			_, err = w.Write([]byte(fmt.Sprintf("Validation failed: %v", err)))
 			if err != nil {
@@ -388,26 +290,22 @@ func (h *handler) bulkUpdate(
 			return
 		}
 
-		es = append(es, e)
-	}
-
-	if h.handleBulkUpdate != nil {
-		if err = h.handleBulkUpdate(
-			r.Context(),
-			ctrl.PersistenceService,
-			es,
-		); err != nil {
-			log.Printf("Error handling get all logic: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			_, err = w.Write([]byte(err.Error()))
-			if err != nil {
-				log.Printf("Error writing response: %v", err)
+		if h.handleUpdate != nil {
+			if err := h.handleUpdate(r.Context(), ctrl.PersistenceService, v); err != nil {
+				log.Printf("Error handling update logic: %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				_, err = w.Write([]byte(err.Error()))
+				if err != nil {
+					log.Printf("Error writing response: %v", err)
+				}
+				return
 			}
-			return
 		}
+
+		ps = append(ps, v.(cce.Persistable))
 	}
 
-	if err = ctrl.PersistenceService.BulkUpdate(r.Context(), es); err != nil {
+	if err := ctrl.PersistenceService.BulkUpdate(r.Context(), ps); err != nil {
 		log.Printf("Error updating entities: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -416,21 +314,19 @@ func (h *handler) bulkUpdate(
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *handler) delete(w http.ResponseWriter, r *http.Request) {
-	var (
-		ctrl = r.Context().Value(contextKey("controller")).(*cce.Controller)
-		id   = mux.Vars(r)["id"]
-		ok   bool
-		err  error
-	)
+func (h *handler) delete(w http.ResponseWriter, r *http.Request) { //nolint:gocyclo
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
+
+	id := mux.Vars(r)["id"]
+	if id == "" {
+		// TODO add test for this
+		log.Printf("ID missing from request")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	if h.checkDBDelete != nil {
-		var statusCode int
-		if statusCode, err = h.checkDBDelete(
-			r.Context(),
-			ctrl.PersistenceService,
-			id,
-		); err != nil {
+		if statusCode, err := h.checkDBDelete(r.Context(), ctrl.PersistenceService, id); err != nil {
 			log.Printf("Error running DB logic: %v", err)
 			w.WriteHeader(statusCode)
 			_, err = w.Write([]byte(err.Error()))
@@ -441,13 +337,25 @@ func (h *handler) delete(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	p, err := ctrl.PersistenceService.Read(r.Context(), id, h.model)
+	if err != nil {
+		log.Printf("Error reading entity: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, err = w.Write([]byte(err.Error()))
+		if err != nil {
+			log.Printf("Error writing response: %v", err)
+		}
+		return
+	}
+
+	if p == nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	if h.handleDelete != nil {
-		if err = h.handleDelete(
-			r.Context(),
-			ctrl.PersistenceService,
-			id,
-		); err != nil {
-			log.Printf("Error handling get all logic: %v", err)
+		if err = h.handleDelete(r.Context(), ctrl.PersistenceService, p); err != nil {
+			log.Printf("Error handling delete logic: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			_, err = w.Write([]byte(err.Error()))
 			if err != nil {
@@ -457,18 +365,16 @@ func (h *handler) delete(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if ok, err = ctrl.PersistenceService.Delete(
-		r.Context(),
-		id,
-		h.model,
-	); err != nil {
+	ok, err := ctrl.PersistenceService.Delete(r.Context(), id, h.model)
+	if err != nil {
 		log.Printf("Error deleting entity: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
+	// we just fetched the entity, so if !ok then something went wrong
 	if !ok {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }

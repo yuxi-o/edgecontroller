@@ -46,9 +46,8 @@ for guidelines.
 
 ## Architecture Notes
 
-- Domain models (types that implement the Entity interface) decouple application
-  logic from PB types
-
+- Domain models (types that implement the Persistable interface) decouple application logic from PB types
+  
 ### Controller CE UI
 ##### Pre requisites
 - Node & NPM installed (v10.15.3, or V10 LTS)

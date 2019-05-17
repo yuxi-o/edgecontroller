@@ -93,7 +93,8 @@ func NewGorilla( //nolint:gocyclo
 			checkDBCreate: checkDBCreateDNSConfigsVNFAliases,
 		},
 		nodesAppsHandler: &handler{
-			model: &cce.NodeApp{},
+			model:    &cce.NodeApp{},
+			reqModel: &cce.NodeAppReq{},
 
 			checkDBCreate: checkDBCreateNodesApps,
 			// TODO add checkDBDelete func + tests for
@@ -101,6 +102,9 @@ func NewGorilla( //nolint:gocyclo
 			// checkDBDelete: checkDBDeleteNodesApps,
 
 			handleCreate: handleCreateNodesApps,
+			handleGet:    handleGetNodesApps,
+			handleUpdate: handleUpdateNodesApps,
+			handleDelete: handleDeleteNodesApps,
 		},
 		nodesDNSConfigsHandler: &handler{
 			model:         &cce.NodeDNSConfig{},
@@ -127,69 +131,69 @@ func NewGorilla( //nolint:gocyclo
 
 		// entity routes
 		"POST   /nodes":      g.nodesHandler.create,
-		"GET    /nodes":      g.nodesHandler.getAll,
+		"GET    /nodes":      g.nodesHandler.filter,
 		"GET    /nodes/{id}": g.nodesHandler.getByID,
 		"PATCH  /nodes":      g.nodesHandler.bulkUpdate,
 		"DELETE /nodes/{id}": g.nodesHandler.delete,
 
 		"POST   /apps":      g.appsHandler.create,
-		"GET    /apps":      g.appsHandler.getAll,
+		"GET    /apps":      g.appsHandler.filter,
 		"GET    /apps/{id}": g.appsHandler.getByID,
 		"PATCH  /apps":      g.appsHandler.bulkUpdate,
 		"DELETE /apps/{id}": g.appsHandler.delete,
 
 		"POST   /vnfs":      g.vnfsHandler.create,
-		"GET    /vnfs":      g.vnfsHandler.getAll,
+		"GET    /vnfs":      g.vnfsHandler.filter,
 		"GET    /vnfs/{id}": g.vnfsHandler.getByID,
 		"PATCH  /vnfs":      g.vnfsHandler.bulkUpdate,
 		"DELETE /vnfs/{id}": g.vnfsHandler.delete,
 
 		"POST   /traffic_policies":      g.trafficPoliciesHandler.create,
-		"GET    /traffic_policies":      g.trafficPoliciesHandler.getAll,
+		"GET    /traffic_policies":      g.trafficPoliciesHandler.filter,
 		"GET    /traffic_policies/{id}": g.trafficPoliciesHandler.getByID,
 		"PATCH  /traffic_policies":      g.trafficPoliciesHandler.bulkUpdate,
 		"DELETE /traffic_policies/{id}": g.trafficPoliciesHandler.delete,
 
 		"POST   /dns_configs":      g.dnsConfigsHandler.create,
-		"GET    /dns_configs":      g.dnsConfigsHandler.getAll,
+		"GET    /dns_configs":      g.dnsConfigsHandler.filter,
 		"GET    /dns_configs/{id}": g.dnsConfigsHandler.getByID,
 		"PATCH  /dns_configs":      g.dnsConfigsHandler.bulkUpdate,
 		"DELETE /dns_configs/{id}": g.dnsConfigsHandler.delete,
 
 		// join routes
-		"POST   /dns_configs_app_aliases":      g.dnsConfigsAppAliasesHandler.create,  //nolint:lll
-		"GET    /dns_configs_app_aliases":      g.dnsConfigsAppAliasesHandler.getAll,  //nolint:lll
-		"GET    /dns_configs_app_aliases/{id}": g.dnsConfigsAppAliasesHandler.getByID, //nolint:lll
-		"DELETE /dns_configs_app_aliases/{id}": g.dnsConfigsAppAliasesHandler.delete,  //nolint:lll
+		"POST   /dns_configs_app_aliases":      g.dnsConfigsAppAliasesHandler.create,
+		"GET    /dns_configs_app_aliases":      g.dnsConfigsAppAliasesHandler.filter,
+		"GET    /dns_configs_app_aliases/{id}": g.dnsConfigsAppAliasesHandler.getByID,
+		"DELETE /dns_configs_app_aliases/{id}": g.dnsConfigsAppAliasesHandler.delete,
 
-		"POST   /dns_configs_vnf_aliases":      g.dnsConfigsVNFAliasesHandler.create,  //nolint:lll
-		"GET    /dns_configs_vnf_aliases":      g.dnsConfigsVNFAliasesHandler.getAll,  //nolint:lll
-		"GET    /dns_configs_vnf_aliases/{id}": g.dnsConfigsVNFAliasesHandler.getByID, //nolint:lll
-		"DELETE /dns_configs_vnf_aliases/{id}": g.dnsConfigsVNFAliasesHandler.delete,  //nolint:lll
+		"POST   /dns_configs_vnf_aliases":      g.dnsConfigsVNFAliasesHandler.create,
+		"GET    /dns_configs_vnf_aliases":      g.dnsConfigsVNFAliasesHandler.filter,
+		"GET    /dns_configs_vnf_aliases/{id}": g.dnsConfigsVNFAliasesHandler.getByID,
+		"DELETE /dns_configs_vnf_aliases/{id}": g.dnsConfigsVNFAliasesHandler.delete,
 
 		"POST   /nodes_dns_configs":      g.nodesDNSConfigsHandler.create,
-		"GET    /nodes_dns_configs":      g.nodesDNSConfigsHandler.getAll,
+		"GET    /nodes_dns_configs":      g.nodesDNSConfigsHandler.filter,
 		"GET    /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.getByID,
 		"DELETE /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.delete,
 
 		"POST   /nodes_apps":      g.nodesAppsHandler.create,
-		"GET    /nodes_apps":      g.nodesAppsHandler.getByFilter,
+		"GET    /nodes_apps":      g.nodesAppsHandler.filter,
 		"GET    /nodes_apps/{id}": g.nodesAppsHandler.getByID,
 		"PATCH  /nodes_apps":      g.nodesAppsHandler.bulkUpdate,
 		"DELETE /nodes_apps/{id}": g.nodesAppsHandler.delete,
 
-		// these endpoints still need API tests
+		// TODO these endpoints still need API tests
 		"POST   /nodes_vnfs":      g.nodesVNFsHandler.create,
-		"GET    /nodes_vnfs":      g.nodesVNFsHandler.getByFilter,
+		"GET    /nodes_vnfs":      g.nodesVNFsHandler.filter,
 		"DELETE /nodes_vnfs/{id}": g.nodesVNFsHandler.delete,
 
-		"POST   /nodes_apps_traffic_policies":      g.nodesAppsTrafficPoliciesHandler.create,      //nolint:lll
-		"GET    /nodes_apps_traffic_policies":      g.nodesAppsTrafficPoliciesHandler.getByFilter, //nolint:lll
-		"DELETE /nodes_apps_traffic_policies/{id}": g.nodesAppsTrafficPoliciesHandler.delete,      //nolint:lll
+		"POST   /nodes_apps_traffic_policies":      g.nodesAppsTrafficPoliciesHandler.create,
+		"GET    /nodes_apps_traffic_policies":      g.nodesAppsTrafficPoliciesHandler.filter,
+		"DELETE /nodes_apps_traffic_policies/{id}": g.nodesAppsTrafficPoliciesHandler.delete,
 
-		"POST   /nodes_vnfs_traffic_policies":      g.nodesVNFsTrafficPoliciesHandler.create,      //nolint:lll
-		"GET    /nodes_vnfs_traffic_policies":      g.nodesVNFsTrafficPoliciesHandler.getByFilter, //nolint:lll
-		"DELETE /nodes_vnfs_traffic_policies/{id}": g.nodesVNFsTrafficPoliciesHandler.delete,      //nolint:lll
+		"POST   /nodes_vnfs_traffic_policies":      g.nodesVNFsTrafficPoliciesHandler.create,
+		"GET    /nodes_vnfs_traffic_policies":      g.nodesVNFsTrafficPoliciesHandler.filter,
+		"DELETE /nodes_vnfs_traffic_policies/{id}": g.nodesVNFsTrafficPoliciesHandler.delete,
 	}
 
 	for endpoint, handlerFunc := range routes {

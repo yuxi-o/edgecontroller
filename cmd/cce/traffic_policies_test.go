@@ -250,7 +250,7 @@ var _ = Describe("/traffic_policies", func() {
 				}`,
 				"Validation failed: rules[0].description cannot be empty"),
 			Entry(
-				"POST /traffic_policies with rules[0].priority not in [1..65536]", //nolint:lll
+				"POST /traffic_policies with rules[0].priority not in [1..65536]",
 				`
 				{
 					"rules": [{
@@ -317,7 +317,7 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.description cannot be empty"), //nolint:lll
+				"Validation failed: rules[0].source.description cannot be empty"),
 			Entry("POST /traffic_policies without rules[0].source.macs|ip|gtp",
 				`
 				{
@@ -329,8 +329,8 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.macs|ip|gtp cannot all be nil"), //nolint:lll
-			Entry("POST /traffic_policies with invalid rules[0].source.macs.mac_addresses[0]", //nolint:lll
+				"Validation failed: rules[0].source.macs|ip|gtp cannot all be nil"),
+			Entry("POST /traffic_policies with invalid rules[0].source.macs.mac_addresses[0]",
 				`
 				{
 					"rules": [{
@@ -347,7 +347,7 @@ var _ = Describe("/traffic_policies", func() {
 					}]
 				}`,
 				"Validation failed: rules[0].source.macs.mac_addresses[0] could not be parsed (address abc-def: invalid MAC address)"), //nolint:lll
-			Entry("POST /traffic_policies with invalid rules[0].source.ip.address", //nolint:lll
+			Entry("POST /traffic_policies with invalid rules[0].source.ip.address",
 				`
 				{
 					"rules": [{
@@ -361,8 +361,8 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip.address could not be parsed"), //nolint:lll
-			Entry("POST /traffic_policies with rules[0].source.ip.mask not in [0..128]", //nolint:lll
+				"Validation failed: rules[0].source.ip.address could not be parsed"),
+			Entry("POST /traffic_policies with rules[0].source.ip.mask not in [0..128]",
 				`
 				{
 					"rules": [{
@@ -377,8 +377,8 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip.mask must be in [0..128]"), //nolint:lll
-			Entry("POST /traffic_policies with rules[0].source.ip.begin_port not in [1..65536]", //nolint:lll
+				"Validation failed: rules[0].source.ip.mask must be in [0..128]"),
+			Entry("POST /traffic_policies with rules[0].source.ip.begin_port not in [1..65536]",
 				`
 				{
 					"rules": [{
@@ -394,8 +394,8 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip.begin_port must be in [1..65536]"), //nolint:lll
-			Entry("POST /traffic_policies with rules[0].source.ip.end_port not in [1..65536]", //nolint:lll
+				"Validation failed: rules[0].source.ip.begin_port must be in [1..65536]"),
+			Entry("POST /traffic_policies with rules[0].source.ip.end_port not in [1..65536]",
 				`
 				{
 					"rules": [{
@@ -412,8 +412,8 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip.end_port must be in [1..65536]"), //nolint:lll
-			Entry("POST /traffic_policies with invalid rules[0].source.ip.protocol", //nolint:lll
+				"Validation failed: rules[0].source.ip.end_port must be in [1..65536]"),
+			Entry("POST /traffic_policies with invalid rules[0].source.ip.protocol",
 				`
 				{
 					"rules": [{
@@ -431,8 +431,8 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip.protocol must be one of [tcp, udp, icmp, sctp]"), //nolint:lll
-			Entry("POST /traffic_policies without rules[0].target.description", //nolint:lll
+				"Validation failed: rules[0].source.ip.protocol must be one of [tcp, udp, icmp, sctp]"),
+			Entry("POST /traffic_policies without rules[0].target.description",
 				`
 				{
 					"rules": [{
@@ -455,7 +455,7 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].target.description cannot be empty"), //nolint:lll
+				"Validation failed: rules[0].target.description cannot be empty"),
 			Entry("POST /traffic_policies with invalid rules[0].target.action",
 				`
 				{
@@ -480,7 +480,7 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].target.action must be one of [accept, reject, drop]"), //nolint:lll
+				"Validation failed: rules[0].target.action must be one of [accept, reject, drop]"),
 			Entry("POST /traffic_policies without rules[0].target.mac|ip",
 				`
 				{
@@ -534,7 +534,7 @@ var _ = Describe("/traffic_policies", func() {
 					}]
 				}`,
 				"Validation failed: rules[0].target.mac.mac_address could not be parsed (address abc-123: invalid MAC address)"), //nolint:lll
-			Entry("POST /traffic_policies with invalid rules[0].target.ip.address", //nolint:lll
+			Entry("POST /traffic_policies with invalid rules[0].target.ip.address",
 				`
 				{
 					"rules": [{
@@ -561,8 +561,8 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].target.ip.address could not be parsed"), //nolint:lll
-			Entry("POST /traffic_policies with rules[0].target.ip.port not in [1..65536]", //nolint:lll
+				"Validation failed: rules[0].target.ip.address could not be parsed"),
+			Entry("POST /traffic_policies with rules[0].target.ip.port not in [1..65536]",
 				`
 				{
 					"rules": [{
@@ -590,7 +590,7 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].target.ip.port must be in [1..65536]"), //nolint:lll
+				"Validation failed: rules[0].target.ip.port must be in [1..65536]"),
 		)
 	})
 
@@ -913,14 +913,14 @@ var _ = Describe("/traffic_policies", func() {
 					fmt.Sprintf(expectedResp, trafficPolicyID)))
 			},
 			Entry(
-				"DELETE /traffic_policies/{id} with nodes_apps_traffic_policies record", //nolint:lll
+				"DELETE /traffic_policies/{id} with nodes_apps_traffic_policies record",
 				"nodes_apps_traffic_policies",
-				"cannot delete traffic_policy_id %s: record in use in nodes_apps_traffic_policies", //nolint:lll
+				"cannot delete traffic_policy_id %s: record in use in nodes_apps_traffic_policies",
 			),
 			Entry(
-				"DELETE /traffic_policies/{id} with nodes_vnfs_traffic_policies record", //nolint:lll
+				"DELETE /traffic_policies/{id} with nodes_vnfs_traffic_policies record",
 				"nodes_vnfs_traffic_policies",
-				"cannot delete traffic_policy_id %s: record in use in nodes_vnfs_traffic_policies", //nolint:lll
+				"cannot delete traffic_policy_id %s: record in use in nodes_vnfs_traffic_policies",
 			),
 		)
 	})

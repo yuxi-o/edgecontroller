@@ -95,9 +95,7 @@ func main() { // nolint: gocyclo
 
 	log.Print("DB connection established")
 
-	if rootCA, err = pki.InitRootCA(
-		filepath.Join(certsDir, "ca"),
-	); err != nil {
+	if rootCA, err = pki.InitRootCA(filepath.Join(certsDir, "ca")); err != nil {
 		log.Fatal("Error initializing Controller CA: ", err)
 	}
 
@@ -134,19 +132,13 @@ func main() { // nolint: gocyclo
 	}
 
 	// Setup http server tcp listener
-	if httpListener, err = net.Listen(
-		"tcp",
-		fmt.Sprintf(":%d", httpPort),
-	); err != nil {
+	if httpListener, err = net.Listen("tcp", fmt.Sprintf(":%d", httpPort)); err != nil {
 		log.Fatal("Could not listen on : ", err)
 	}
 	defer httpListener.Close()
 
 	// Setup grpc server tcp listener
-	if grpcListener, err = net.Listen(
-		"tcp",
-		fmt.Sprintf(":%d", grpcPort),
-	); err != nil {
+	if grpcListener, err = net.Listen("tcp", fmt.Sprintf(":%d", grpcPort)); err != nil {
 		log.Fatal("Could not listen on : ", err)
 	}
 	defer grpcListener.Close()

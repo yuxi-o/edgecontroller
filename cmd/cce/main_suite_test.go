@@ -527,7 +527,7 @@ func postNodesApps(nodeID, appID string) (id string) {
 	return rb.ID
 }
 
-func getNodeApp(id string) *cce.NodeApp {
+func getNodeApp(id string) *cce.NodeAppResp {
 	By("Sending a GET /nodes_apps/{id} request")
 	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/nodes_apps/%s", id))
@@ -541,12 +541,34 @@ func getNodeApp(id string) *cce.NodeApp {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var nodeApp cce.NodeApp
+	var nodeAppResp cce.NodeAppResp
 
 	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &nodeApp)).To(Succeed())
+	Expect(json.Unmarshal(body, &nodeAppResp)).To(Succeed())
 
-	return &nodeApp
+	return &nodeAppResp
+}
+
+func getNodeApps(nodeID string) []*cce.NodeAppResp {
+	By("Sending a GET /nodes_apps request")
+	resp, err := apiCli.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes_apps?node_id=%s", nodeID))
+
+	By("Verifying a 200 OK response")
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var nodeAppsResp []*cce.NodeAppResp
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &nodeAppsResp)).To(Succeed())
+
+	return nodeAppsResp
 }
 
 func postNodesVNFs(nodeID, vnfID string) (id string) {

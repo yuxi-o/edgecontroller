@@ -21,46 +21,28 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
-func handleCreateNodesApps(
+func handleGetNodesApps(
 	ctx context.Context,
 	ps cce.PersistenceService,
 	e cce.Persistable,
-) error {
-	app, err := ps.Read(ctx, e.(*cce.NodeApp).AppID, &cce.App{})
-	if err != nil {
-		return err
-	}
-	log.Printf("Loaded app %s", app.GetID())
-	log.Println(app)
-
+) (cce.RespEntity, error) {
 	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
+
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	log.Println("Connection to node established:", nodeCC.Node)
+	log.Println(nodeCC.Node)
 
-	if err := nodeCC.AppDeploySvcCli.Deploy(ctx, app.(*cce.App)); err != nil {
-		return err
-	}
-
-	log.Printf("App %s deployed to node:", app.GetID())
-
-	return nil
-}
-
-func handleCreateNodesDNSConfigs(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) error {
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeDNSConfig))
+	status, err := nodeCC.AppDeploySvcCli.GetStatus(ctx, e.(*cce.NodeApp).AppID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// TODO add gRPC calls
-	log.Println("Connection to node established:", nodeCC.Node)
+	m := cce.NodeAppResp{
+		NodeApp: *e.(*cce.NodeApp),
+		Status:  status.String(),
+	}
 
-	return nil
+	return &m, nil
 }

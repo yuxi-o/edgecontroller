@@ -176,37 +176,26 @@ var _ = Describe("/nodes_apps", func() {
 
 		DescribeTable("200 OK",
 			func() {
-				By("Sending a GET /nodes_apps request")
-				resp, err := apiCli.Get(fmt.Sprintf(
-					"http://127.0.0.1:8080/nodes_apps?node_id=%s", nodeID))
-
-				By("Verifying a 200 OK response")
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-
-				var nodeApps []cce.NodeApp
-
-				By("Unmarshalling the response")
-				Expect(json.Unmarshal(body, &nodeApps)).
-					To(Succeed())
+				nodeAppsResp := getNodeApps(nodeID)
 
 				By("Verifying the 2 created node apps were returned")
-				Expect(nodeApps).To(ContainElement(
-					cce.NodeApp{
-						ID:     nodeAppID,
-						NodeID: nodeID,
-						AppID:  appID,
+				Expect(nodeAppsResp).To(ContainElement(
+					&cce.NodeAppResp{
+						NodeApp: cce.NodeApp{
+							ID:     nodeAppID,
+							NodeID: nodeID,
+							AppID:  appID,
+						},
+						Status: "deployed",
 					}))
-				Expect(nodeApps).To(ContainElement(
-					cce.NodeApp{
-						ID:     nodeApp2ID,
-						NodeID: nodeID,
-						AppID:  app2ID,
+				Expect(nodeAppsResp).To(ContainElement(
+					&cce.NodeAppResp{
+						NodeApp: cce.NodeApp{
+							ID:     nodeApp2ID,
+							NodeID: nodeID,
+							AppID:  app2ID,
+						},
+						Status: "deployed",
 					}))
 			},
 			Entry("GET /nodes_apps"),
@@ -224,14 +213,17 @@ var _ = Describe("/nodes_apps", func() {
 
 		DescribeTable("200 OK",
 			func() {
-				nodeApp := getNodeApp(nodeAppID)
+				nodeAppResp := getNodeApp(nodeAppID)
 
 				By("Verifying the created node app was returned")
-				Expect(nodeApp).To(Equal(
-					&cce.NodeApp{
-						ID:     nodeAppID,
-						NodeID: nodeID,
-						AppID:  appID,
+				Expect(nodeAppResp).To(Equal(
+					&cce.NodeAppResp{
+						NodeApp: cce.NodeApp{
+							ID:     nodeAppID,
+							NodeID: nodeID,
+							AppID:  appID,
+						},
+						Status: "deployed",
 					},
 				))
 			},
@@ -252,6 +244,137 @@ var _ = Describe("/nodes_apps", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry("GET /nodes_apps/{id} with nonexistent ID"),
+		)
+	})
+
+	Describe("PATCH /nodes_apps", func() {
+		var (
+			nodeAppID string
+		)
+
+		BeforeEach(func() {
+			nodeAppID = postNodesApps(nodeID, appID)
+		})
+
+		DescribeTable("204 No Content",
+			func(reqStr string, expectedNodeAppFull *cce.NodeAppResp) {
+				By("Sending a PATCH /nodes_apps request")
+				resp, err := apiCli.Patch(
+					"http://127.0.0.1:8080/nodes_apps",
+					"application/json",
+					strings.NewReader(
+						fmt.Sprintf(reqStr, nodeAppID, nodeID, appID)))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 204 No Content response")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
+
+				By("Getting the updated node")
+				updatedNodeAppFull := getNodeApp(nodeAppID)
+
+				By("Verifying the node was updated")
+				expectedNodeAppFull.NodeApp = cce.NodeApp{
+					ID:     nodeAppID,
+					NodeID: nodeID,
+					AppID:  appID,
+				}
+				Expect(updatedNodeAppFull).To(Equal(expectedNodeAppFull))
+			},
+			Entry(
+				"PATCH /nodes_apps",
+				`
+				[
+					{
+						"id": "%s",
+						"node_id": "%s",
+						"app_id": "%s",
+						"cmd": "start"
+					}
+				]`,
+				&cce.NodeAppResp{
+					Status: "running",
+				}),
+		)
+
+		DescribeTable("400 Bad Request",
+			func(reqStr string, expectedResp string) {
+				By("Sending a PATCH /nodes_apps request")
+				switch strings.Count(reqStr, "%s") {
+				case 2:
+					reqStr = fmt.Sprintf(reqStr, nodeAppID, nodeID)
+				case 3:
+					reqStr = fmt.Sprintf(reqStr, nodeAppID, nodeID, appID)
+				}
+				resp, err := apiCli.Patch(
+					"http://127.0.0.1:8080/nodes_apps",
+					"application/json",
+					strings.NewReader(reqStr))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 400 Bad Request")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying the response body")
+				Expect(string(body)).To(Equal(expectedResp))
+			},
+			Entry(
+				"PATCH /nodes_apps without id",
+				`
+				[
+					{
+						"node_id": "123",
+						"app_id": "456"
+					}
+				]`,
+				"Validation failed: id not a valid uuid"),
+			Entry(
+				"PATCH /nodes_apps without node_id",
+				`
+				[
+					{
+						"id": "%s",
+						"app_id": "%s"
+					}
+				]`,
+				"Validation failed: node_id not a valid uuid"),
+			Entry("PATCH /nodes_apps without app_id",
+				`
+				[
+					{
+						"id": "%s",
+						"node_id": "%s"
+					}
+				]`,
+				"Validation failed: app_id not a valid uuid"),
+			Entry("PATCH /nodes_apps without cmd",
+				`
+				[
+					{
+						"id": "%s",
+						"node_id": "%s",
+						"app_id": "%s"
+					}
+				]`,
+				"Validation failed: cmd missing"),
+			Entry("PATCH /nodes_apps with invalid cmd",
+				`
+				[
+					{
+						"id": "%s",
+						"node_id": "%s",
+						"app_id": "%s",
+						"cmd": "abc"
+					}
+				]`,
+				`Validation failed: cmd "abc" is invalid`),
 		)
 	})
 

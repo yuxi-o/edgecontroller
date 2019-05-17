@@ -21,46 +21,29 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
-func handleCreateNodesApps(
+func handleUpdateNodesApps(
 	ctx context.Context,
 	ps cce.PersistenceService,
-	e cce.Persistable,
+	e cce.Validatable,
 ) error {
-	app, err := ps.Read(ctx, e.(*cce.NodeApp).AppID, &cce.App{})
-	if err != nil {
-		return err
-	}
-	log.Printf("Loaded app %s", app.GetID())
-	log.Println(app)
-
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
+	nodeCC, err := connectNode(ctx, ps, &e.(*cce.NodeAppReq).NodeApp)
 	if err != nil {
 		return err
 	}
 
-	log.Println("Connection to node established:", nodeCC.Node)
+	log.Println(nodeCC.Node)
 
-	if err := nodeCC.AppDeploySvcCli.Deploy(ctx, app.(*cce.App)); err != nil {
-		return err
+	switch e.(*cce.NodeAppReq).Cmd {
+	case "start":
+		err = nodeCC.AppLifeSvcCli.Start(ctx, e.(*cce.NodeAppReq).AppID)
+	case "stop":
+		err = nodeCC.AppLifeSvcCli.Stop(ctx, e.(*cce.NodeAppReq).AppID)
+	case "restart":
+		err = nodeCC.AppLifeSvcCli.Restart(ctx, e.(*cce.NodeAppReq).AppID)
 	}
-
-	log.Printf("App %s deployed to node:", app.GetID())
-
-	return nil
-}
-
-func handleCreateNodesDNSConfigs(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) error {
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeDNSConfig))
 	if err != nil {
 		return err
 	}
-
-	// TODO add gRPC calls
-	log.Println("Connection to node established:", nodeCC.Node)
 
 	return nil
 }

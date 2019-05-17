@@ -223,7 +223,7 @@ var _ = Describe("/vnfs", func() {
 						Name:        "container vnf",
 						Vendor:      "smart edge",
 						Description: "my container vnf",
-						Image:       "http://www.test.com/my_container_vnf.tar.gz", //nolint:lll
+						Image:       "http://www.test.com/my_container_vnf.tar.gz",
 						Cores:       4,
 						Memory:      1024,
 					}))
@@ -264,7 +264,7 @@ var _ = Describe("/vnfs", func() {
 						Name:        "container vnf",
 						Vendor:      "smart edge",
 						Description: "my container vnf",
-						Image:       "http://www.test.com/my_container_vnf.tar.gz", //nolint:lll
+						Image:       "http://www.test.com/my_container_vnf.tar.gz",
 						Cores:       4,
 						Memory:      1024,
 					},
@@ -583,7 +583,7 @@ var _ = Describe("/vnfs", func() {
 			Entry(
 				"DELETE /vnfs/{id} with dns_configs_vnf_aliases record",
 				"dns_configs_vnf_aliases",
-				"cannot delete vnf_id %s: record in use in dns_configs_vnf_aliases", //nolint:lll
+				"cannot delete vnf_id %s: record in use in dns_configs_vnf_aliases",
 			),
 			Entry(
 				"DELETE /vnfs/{id} with nodes_vnfs record",

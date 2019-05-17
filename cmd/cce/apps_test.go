@@ -223,7 +223,7 @@ var _ = Describe("/apps", func() {
 						Name:        "container app",
 						Vendor:      "smart edge",
 						Description: "my container app",
-						Image:       "http://www.test.com/my_container_app.tar.gz", //nolint:lll
+						Image:       "http://www.test.com/my_container_app.tar.gz",
 						Cores:       4,
 						Memory:      1024,
 					}))
@@ -264,7 +264,7 @@ var _ = Describe("/apps", func() {
 						Name:        "container app",
 						Vendor:      "smart edge",
 						Description: "my container app",
-						Image:       "http://www.test.com/my_container_app.tar.gz", //nolint:lll
+						Image:       "http://www.test.com/my_container_app.tar.gz",
 						Cores:       4,
 						Memory:      1024,
 					},
@@ -583,7 +583,7 @@ var _ = Describe("/apps", func() {
 			Entry(
 				"DELETE /apps/{id} with dns_configs_app_aliases record",
 				"dns_configs_app_aliases",
-				"cannot delete app_id %s: record in use in dns_configs_app_aliases", //nolint:lll
+				"cannot delete app_id %s: record in use in dns_configs_app_aliases",
 			),
 			Entry(
 				"DELETE /apps/{id} with nodes_apps record",

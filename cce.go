@@ -28,36 +28,41 @@ type Controller struct {
 	AdminCreds         *AuthCreds
 }
 
-// PersistenceService manages entity persistence. The methods with EntityModel
-// parameters take a zero-value Entity for reflectively creating new instances
-// of the concrete type. In the case of Delete it is used to get the table name.
+// PersistenceService manages entity persistence. The methods with zv parameters take a zero-value Persistable for
+// reflectively creating new instances of the concrete type. In the case of Delete it is used to get the table name.
 type PersistenceService interface {
-	Create(ctx context.Context, e Entity) error
-	Read(ctx context.Context, id string, zv EntityModel) (e Entity, err error)
-	ReadAll(ctx context.Context, zv EntityModel) (es []Entity, err error)
-	Filter(ctx context.Context,
-		zv EntityModel, fs []Filter) (es []Entity, err error)
-	BulkUpdate(ctx context.Context, es []Entity) error
-	Delete(ctx context.Context, id string, zv EntityModel) (ok bool, err error)
+	Create(ctx context.Context, e Persistable) error
+	Read(ctx context.Context, id string, zv Persistable) (e Persistable, err error)
+	ReadAll(ctx context.Context, zv Persistable) (ps []Persistable, err error)
+	Filter(ctx context.Context, zv Persistable, fs []Filter) (ps []Persistable, err error)
+	BulkUpdate(ctx context.Context, ps []Persistable) error
+	Delete(ctx context.Context, id string, zv Persistable) (ok bool, err error)
 }
 
-// Entity is a persistable resource that has a table name and an ID and that can
-// be validated.
-type Entity interface {
-	GetTableName() string
-	GetID() string
-	SetID(id string)
+// Validatable can be validated.
+type Validatable interface {
 	Validate() error
 }
 
-// EntityModel is a placeholder for zero-value Entity objects. See the
-// PersistenceService for details on its usage.
-type EntityModel interface {
+// Persistable can be persisted.
+type Persistable interface {
+	GetTableName() string
+	GetID() string
+	SetID(id string)
+}
+
+// ReqEntity is a request entity.
+type ReqEntity interface {
+	Validate() error
 	GetTableName() string
 }
 
-// JoinEntity is a resource that joins a Node to another Entity.
-type JoinEntity interface {
+// RespEntity is a response entity.
+type RespEntity interface {
+}
+
+// NodeEntity has a node ID.
+type NodeEntity interface {
 	GetNodeID() string
 }
 

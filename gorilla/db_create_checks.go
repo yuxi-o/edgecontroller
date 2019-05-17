@@ -25,9 +25,9 @@ import (
 func checkDBCreateNodesApps(
 	ctx context.Context,
 	ps cce.PersistenceService,
-	e cce.Entity,
+	e cce.Persistable,
 ) (statusCode int, err error) {
-	var es []cce.Entity
+	var es []cce.Persistable
 
 	if es, err = ps.Filter(
 		ctx,
@@ -59,9 +59,9 @@ func checkDBCreateNodesApps(
 func checkDBCreateDNSConfigsAppAliases(
 	ctx context.Context,
 	ps cce.PersistenceService,
-	e cce.Entity,
+	e cce.Persistable,
 ) (statusCode int, err error) {
-	var es []cce.Entity
+	var es []cce.Persistable
 
 	if es, err = ps.Filter(
 		ctx,
@@ -93,9 +93,9 @@ func checkDBCreateDNSConfigsAppAliases(
 func checkDBCreateDNSConfigsVNFAliases(
 	ctx context.Context,
 	ps cce.PersistenceService,
-	e cce.Entity,
+	e cce.Persistable,
 ) (statusCode int, err error) {
-	var es []cce.Entity
+	var es []cce.Persistable
 
 	if es, err = ps.Filter(
 		ctx,
@@ -127,9 +127,9 @@ func checkDBCreateDNSConfigsVNFAliases(
 func checkDBCreateNodesDNSConfigs(
 	ctx context.Context,
 	ps cce.PersistenceService,
-	e cce.Entity,
+	e cce.Persistable,
 ) (statusCode int, err error) {
-	var es []cce.Entity
+	var es []cce.Persistable
 
 	if es, err = ps.Filter(
 		ctx,

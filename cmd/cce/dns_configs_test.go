@@ -553,17 +553,17 @@ var _ = Describe("/dns_configs", func() {
 			Entry(
 				"DELETE /dns_configs/{id} with dns_configs_app_aliases record",
 				"dns_configs_app_aliases",
-				"cannot delete dns_config_id %s: record in use in dns_configs_app_aliases", //nolint:lll
+				"cannot delete dns_config_id %s: record in use in dns_configs_app_aliases",
 			),
 			Entry(
 				"DELETE /dns_configs/{id} with dns_configs_vnf_aliases record",
 				"dns_configs_vnf_aliases",
-				"cannot delete dns_config_id %s: record in use in dns_configs_vnf_aliases", //nolint:lll
+				"cannot delete dns_config_id %s: record in use in dns_configs_vnf_aliases",
 			),
 			Entry(
 				"DELETE /dns_configs/{id} with nodes_dns_configs record",
 				"nodes_dns_configs",
-				"cannot delete dns_config_id %s: record in use in nodes_dns_configs", //nolint:lll
+				"cannot delete dns_config_id %s: record in use in nodes_dns_configs",
 			),
 		)
 	})

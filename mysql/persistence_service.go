@@ -20,7 +20,7 @@ type PersistenceService struct {
 // Create persists a resource.
 func (s *PersistenceService) Create(
 	ctx context.Context,
-	e cce.Entity,
+	e cce.Persistable,
 ) error {
 	bytes, err := json.Marshal(e)
 	if err != nil {
@@ -43,8 +43,8 @@ func (s *PersistenceService) Create(
 func (s *PersistenceService) Read(
 	ctx context.Context,
 	id string,
-	zv cce.EntityModel,
-) (e cce.Entity, err error) {
+	zv cce.Persistable,
+) (e cce.Persistable, err error) {
 	rows, err := s.DB.QueryContext(
 		ctx,
 		fmt.Sprintf( //nolint:gosec
@@ -71,9 +71,9 @@ func (s *PersistenceService) Read(
 // filters.
 func (s *PersistenceService) Filter(
 	ctx context.Context,
-	zv cce.EntityModel,
+	zv cce.Persistable,
 	fs []cce.Filter,
-) (es []cce.Entity, err error) {
+) (es []cce.Persistable, err error) {
 	q := fmt.Sprintf("SELECT entity FROM %s", zv.GetTableName()) //nolint:gosec
 	if len(fs) > 0 {
 		q += " WHERE "
@@ -106,8 +106,8 @@ func (s *PersistenceService) Filter(
 // ReadAll retrieves all resources of the given type.
 func (s *PersistenceService) ReadAll(
 	ctx context.Context,
-	zv cce.EntityModel,
-) (es []cce.Entity, err error) {
+	zv cce.Persistable,
+) (es []cce.Persistable, err error) {
 	rows, err := s.DB.QueryContext(
 		ctx,
 		fmt.Sprintf( //nolint:gosec
@@ -130,15 +130,14 @@ func (s *PersistenceService) ReadAll(
 
 func (s *PersistenceService) scan(
 	rows *sql.Rows,
-	zv cce.EntityModel,
-) (cce.Entity, error) {
+	zv cce.Persistable,
+) (cce.Persistable, error) {
 	var bytes []byte
 	if err := rows.Scan(&bytes); err != nil {
 		return nil, errors.Wrap(err, "error scanning row")
 	}
 
-	e := reflect.New(
-		reflect.ValueOf(zv).Elem().Type()).Interface().(cce.Entity)
+	e := reflect.New(reflect.ValueOf(zv).Elem().Type()).Interface().(cce.Persistable)
 	if err := json.Unmarshal(bytes, e); err != nil {
 		return nil, errors.Wrap(err, "error unmarshalling")
 	}
@@ -149,7 +148,7 @@ func (s *PersistenceService) scan(
 // BulkUpdate updates multiple resources.
 func (s *PersistenceService) BulkUpdate(
 	ctx context.Context,
-	es []cce.Entity,
+	es []cce.Persistable,
 ) error {
 	for _, e := range es {
 		bytes, err := json.Marshal(e)
@@ -177,7 +176,7 @@ func (s *PersistenceService) BulkUpdate(
 func (s *PersistenceService) Delete(
 	ctx context.Context,
 	id string,
-	zv cce.EntityModel,
+	zv cce.Persistable,
 ) (ok bool, err error) {
 	result, err := s.DB.ExecContext(
 		ctx,

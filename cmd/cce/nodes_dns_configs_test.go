@@ -152,7 +152,7 @@ var _ = Describe("/nodes_dns_configs", func() {
 					nodeID,
 					dnsConfigID)))
 			},
-			Entry("POST /nodes_dns_configs with duplicate node_id and dns_config_id"), //nolint:lll
+			Entry("POST /nodes_dns_configs with duplicate node_id and dns_config_id"),
 		)
 	})
 

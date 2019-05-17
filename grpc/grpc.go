@@ -53,27 +53,27 @@ func (c *ClientConn) Close() error {
 }
 
 // NewApplicationDeploymentServiceClient wraps the pb function.
-func (c *ClientConn) NewApplicationDeploymentServiceClient() pb.ApplicationDeploymentServiceClient { //nolint:lll
+func (c *ClientConn) NewApplicationDeploymentServiceClient() pb.ApplicationDeploymentServiceClient {
 	return pb.NewApplicationDeploymentServiceClient(c.conn)
 }
 
 // NewApplicationLifecycleServiceClient wraps the pb function.
-func (c *ClientConn) NewApplicationLifecycleServiceClient() pb.ApplicationLifecycleServiceClient { //nolint:lll
+func (c *ClientConn) NewApplicationLifecycleServiceClient() pb.ApplicationLifecycleServiceClient {
 	return pb.NewApplicationLifecycleServiceClient(c.conn)
 }
 
 // NewApplicationPolicyServiceClient wraps the pb function.
-func (c *ClientConn) NewApplicationPolicyServiceClient() pb.ApplicationPolicyServiceClient { //nolint:lll
+func (c *ClientConn) NewApplicationPolicyServiceClient() pb.ApplicationPolicyServiceClient {
 	return pb.NewApplicationPolicyServiceClient(c.conn)
 }
 
 // NewVNFDeploymentServiceClient wraps the pb function.
-func (c *ClientConn) NewVNFDeploymentServiceClient() pb.VNFDeploymentServiceClient { //nolint:lll
+func (c *ClientConn) NewVNFDeploymentServiceClient() pb.VNFDeploymentServiceClient {
 	return pb.NewVNFDeploymentServiceClient(c.conn)
 }
 
 // NewVNFLifecycleServiceClient wraps the pb function.
-func (c *ClientConn) NewVNFLifecycleServiceClient() pb.VNFLifecycleServiceClient { //nolint:lll
+func (c *ClientConn) NewVNFLifecycleServiceClient() pb.VNFLifecycleServiceClient {
 	return pb.NewVNFLifecycleServiceClient(c.conn)
 }
 
@@ -83,7 +83,7 @@ func (c *ClientConn) NewInterfaceServiceClient() pb.InterfaceServiceClient {
 }
 
 // NewInterfacePolicyServiceClient wraps the pb function.
-func (c *ClientConn) NewInterfacePolicyServiceClient() pb.InterfacePolicyServiceClient { //nolint:lll
+func (c *ClientConn) NewInterfacePolicyServiceClient() pb.InterfacePolicyServiceClient {
 	return pb.NewInterfacePolicyServiceClient(c.conn)
 }
 

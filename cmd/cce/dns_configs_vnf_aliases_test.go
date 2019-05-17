@@ -178,7 +178,7 @@ var _ = Describe("/dns_configs_vnf_aliases", func() {
 					dnsConfigID,
 					vnfID)))
 			},
-			Entry("POST /dns_configs_vnf_aliases with duplicate dns_config_id/vnf_id"), //nolint:lll
+			Entry("POST /dns_configs_vnf_aliases with duplicate dns_config_id/vnf_id"),
 		)
 	})
 

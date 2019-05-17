@@ -92,13 +92,13 @@ HjqhNuXFDM1RVkkcBuAD0lQZHQJdXJGmqNju
 				"certificate not PEM-encoded"))
 		})
 
-		It("Should return an error if Certificate is not a valid Certificate", func() { //nolint:lll
+		It("Should return an error if Certificate is not a valid Certificate", func() {
 			creds.Certificate = testInvalidCertificate
 			Expect(creds.Validate()).To(MatchError(
 				"certificate not a valid certificate"))
 		})
 
-		It("Should return an error if ID is not derived from Certificate public key", func() { //nolint:lll
+		It("Should return an error if ID is not derived from Certificate public key", func() {
 			creds.ID = "123"
 			Expect(creds.Validate()).To(MatchError(
 				"id not derived from certificate public key"))

@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [0.0.17] - 2019-05-17
+### Added
+- Node App gRPC calls and tests
+- Node App req/resp types
+
+### Changed
+- Refactored model/persistence interfaces
+
 ## [0.0.16] - 2019-05-16
 ### Added
 - Token authentication login endpoint
