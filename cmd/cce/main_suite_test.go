@@ -15,6 +15,7 @@
 package main_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -34,10 +35,13 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
+const adminPass = "word"
+
 var (
-	ctrl *gexec.Session
-	node *gexec.Session
-	ctx  = context.Background()
+	ctrl   *gexec.Session
+	node   *gexec.Session
+	apiCli *apiClient
+	ctx    = context.Background()
 
 	controllerRootPEM []byte
 )
@@ -66,7 +70,8 @@ func startup() {
 	cmd := exec.Command(exe,
 		"-dsn", "root:beer@tcp(:8083)/controller_ce",
 		"-httpPort", "8080",
-		"-grpcPort", "8081")
+		"-grpcPort", "8081",
+		"-adminPass", adminPass)
 
 	By("Starting the controller")
 	ctrl, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
@@ -87,6 +92,11 @@ func startup() {
 	Eventually(ctrl.Err, 3).Should(gbytes.Say(
 		"Controller CE ready"),
 		"Service did not start in time")
+
+	By("Requesting an authentication token from the controller")
+	apiCli = &apiClient{
+		Token: authToken(),
+	}
 
 	By("Building the node")
 	exe, err = gexec.Build(
@@ -117,13 +127,43 @@ func shutdown() {
 	}
 }
 
+func authToken() string {
+	payload, err := json.Marshal(
+		struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}{"admin", adminPass})
+	Expect(err).ToNot(HaveOccurred())
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		"http://localhost:8080/auth",
+		bytes.NewReader(payload),
+	)
+	Expect(err).ToNot(HaveOccurred())
+
+	resp, err := new(http.Client).Do(req)
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+
+	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+	var auth struct {
+		Token string `json:"token"`
+	}
+	Expect(json.NewDecoder(resp.Body).Decode(&auth)).To(Succeed())
+	Expect(auth.Token).ToNot(BeEmpty())
+
+	return auth.Token
+}
+
 type respBody struct {
 	ID string
 }
 
 func postApps(appType string) (id string) {
 	By("Sending a POST /apps request")
-	resp, err := http.Post(
+	resp, err := apiCli.Post(
 		"http://127.0.0.1:8080/apps",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
@@ -136,9 +176,10 @@ func postApps(appType string) (id string) {
 				"cores": 4,
 				"memory": 1024
 			}`, appType, appType, appType, appType)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 	By("Reading the response body")
@@ -155,11 +196,12 @@ func postApps(appType string) (id string) {
 
 func getApp(id string) *cce.App {
 	By("Sending a GET /apps/{id} request")
-	resp, err := http.Get(
+	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/apps/%s", id))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 200 OK response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Reading the response body")
@@ -176,7 +218,7 @@ func getApp(id string) *cce.App {
 
 func postVNFs(vnfType string) (id string) {
 	By("Sending a POST /vnfs request")
-	resp, err := http.Post(
+	resp, err := apiCli.Post(
 		"http://127.0.0.1:8080/vnfs",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
@@ -189,9 +231,10 @@ func postVNFs(vnfType string) (id string) {
 				"cores": 4,
 				"memory": 1024
 			}`, vnfType, vnfType, vnfType, vnfType)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 	By("Reading the response body")
@@ -208,11 +251,12 @@ func postVNFs(vnfType string) (id string) {
 
 func getVNF(id string) *cce.VNF {
 	By("Sending a GET /vnfs/{id} request")
-	resp, err := http.Get(
+	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/vnfs/%s", id))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 200 OK response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Reading the response body")
@@ -229,7 +273,7 @@ func getVNF(id string) *cce.VNF {
 
 func postDNSConfigs() (id string) {
 	By("Sending a POST /dns_configs request")
-	resp, err := http.Post(
+	resp, err := apiCli.Post(
 		"http://127.0.0.1:8080/dns_configs",
 		"application/json",
 		strings.NewReader(`
@@ -253,9 +297,10 @@ func postDNSConfigs() (id string) {
 					"ip": "1.1.1.1"
 				}]
 			}`))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 	By("Reading the response body")
@@ -272,11 +317,12 @@ func postDNSConfigs() (id string) {
 
 func getDNSConfig(id string) *cce.DNSConfig {
 	By("Sending a GET /dns_configs/{id} request")
-	resp, err := http.Get(
+	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/dns_configs/%s", id))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 200 OK response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Reading the response body")
@@ -296,7 +342,7 @@ func postDNSConfigsAppAliases(
 	appID string,
 ) (id string) {
 	By("Sending a POST /dns_configs_app_aliases request")
-	resp, err := http.Post(
+	resp, err := apiCli.Post(
 		"http://127.0.0.1:8080/dns_configs_app_aliases",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
@@ -306,9 +352,10 @@ func postDNSConfigsAppAliases(
 				"description": "my dns config app alias",
 				"app_id": "%s"
 			}`, dnsConfigID, appID)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 	By("Reading the response body")
@@ -325,11 +372,12 @@ func postDNSConfigsAppAliases(
 
 func getDNSConfigsAppAlias(id string) *cce.DNSConfigAppAlias {
 	By("Sending a GET /dns_configs_app_aliases/{id} request")
-	resp, err := http.Get(
+	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/dns_configs_app_aliases/%s", id))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 200 OK response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Reading the response body")
@@ -349,7 +397,7 @@ func postDNSConfigsVNFAliases(
 	vnfID string,
 ) (id string) {
 	By("Sending a POST /dns_configs_vnf_aliases request")
-	resp, err := http.Post(
+	resp, err := apiCli.Post(
 		"http://127.0.0.1:8080/dns_configs_vnf_aliases",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
@@ -359,9 +407,10 @@ func postDNSConfigsVNFAliases(
 				"description": "my dns config vnf alias",
 				"vnf_id": "%s"
 			}`, dnsConfigID, vnfID)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 	By("Reading the response body")
@@ -378,11 +427,12 @@ func postDNSConfigsVNFAliases(
 
 func getDNSConfigsVNFAlias(id string) *cce.DNSConfigVNFAlias {
 	By("Sending a GET /dns_configs_vnf_aliases/{id} request")
-	resp, err := http.Get(
+	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/dns_configs_vnf_aliases/%s", id))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 200 OK response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Reading the response body")
@@ -399,7 +449,7 @@ func getDNSConfigsVNFAlias(id string) *cce.DNSConfigVNFAlias {
 
 func postNodes() (id string) {
 	By("Sending a POST /nodes request")
-	resp, err := http.Post(
+	resp, err := apiCli.Post(
 		"http://127.0.0.1:8080/nodes",
 		"application/json",
 		strings.NewReader(`
@@ -409,9 +459,10 @@ func postNodes() (id string) {
 				"serial": "ABC-123",
 				"grpc_target": "127.0.0.1:8082"
 			}`))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 	By("Reading the response body")
@@ -428,11 +479,12 @@ func postNodes() (id string) {
 
 func getNode(id string) *cce.Node {
 	By("Sending a GET /nodes/{id} request")
-	resp, err := http.Get(
+	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s", id))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 200 OK response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Reading the response body")
@@ -449,7 +501,7 @@ func getNode(id string) *cce.Node {
 
 func postNodesApps(nodeID, appID string) (id string) {
 	By("Sending a POST /nodes_apps request")
-	resp, err := http.Post(
+	resp, err := apiCli.Post(
 		"http://127.0.0.1:8080/nodes_apps",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
@@ -457,9 +509,10 @@ func postNodesApps(nodeID, appID string) (id string) {
 				"node_id": "%s",
 				"app_id": "%s"
 			}`, nodeID, appID)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 	By("Reading the response body")
@@ -476,11 +529,12 @@ func postNodesApps(nodeID, appID string) (id string) {
 
 func getNodeApp(id string) *cce.NodeApp {
 	By("Sending a GET /nodes_apps/{id} request")
-	resp, err := http.Get(
+	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/nodes_apps/%s", id))
 
 	By("Verifying a 200 OK response")
 	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Reading the response body")
@@ -497,7 +551,7 @@ func getNodeApp(id string) *cce.NodeApp {
 
 func postNodesVNFs(nodeID, vnfID string) (id string) {
 	By("Sending a POST /nodes_vnfs request")
-	resp, err := http.Post(
+	resp, err := apiCli.Post(
 		"http://127.0.0.1:8080/nodes_vnfs",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
@@ -505,9 +559,10 @@ func postNodesVNFs(nodeID, vnfID string) (id string) {
 				"node_id": "%s",
 				"vnf_id": "%s"
 			}`, nodeID, vnfID)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 	By("Reading the response body")
@@ -524,7 +579,7 @@ func postNodesVNFs(nodeID, vnfID string) (id string) {
 
 func postNodesDNSConfigs(nodeID, dnsConfigID string) (id string) {
 	By("Sending a POST /nodes_dns_configs request")
-	resp, err := http.Post(
+	resp, err := apiCli.Post(
 		"http://127.0.0.1:8080/nodes_dns_configs",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
@@ -532,9 +587,10 @@ func postNodesDNSConfigs(nodeID, dnsConfigID string) (id string) {
 				"node_id": "%s",
 				"dns_config_id": "%s"
 			}`, nodeID, dnsConfigID)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 	By("Reading the response body")
@@ -551,11 +607,12 @@ func postNodesDNSConfigs(nodeID, dnsConfigID string) (id string) {
 
 func getNodeDNSConfig(id string) *cce.NodeDNSConfig {
 	By("Sending a GET /nodes_dns_configs/{id} request")
-	resp, err := http.Get(
+	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/nodes_dns_configs/%s", id))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 200 OK response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Reading the response body")
@@ -572,7 +629,7 @@ func getNodeDNSConfig(id string) *cce.NodeDNSConfig {
 
 func postTrafficPolicies() (id string) {
 	By("Sending a POST /traffic_policies request")
-	resp, err := http.Post(
+	resp, err := apiCli.Post(
 		"http://127.0.0.1:8080/traffic_policies",
 		"application/json",
 		strings.NewReader(`
@@ -645,9 +702,10 @@ func postTrafficPolicies() (id string) {
 				}
 			}]
 		}`))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 	By("Reading the response body")
@@ -664,11 +722,12 @@ func postTrafficPolicies() (id string) {
 
 func getTrafficPolicy(id string) *cce.TrafficPolicy {
 	By("Sending a GET /traffic_policies/{id} request")
-	resp, err := http.Get(
+	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/traffic_policies/%s", id))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 200 OK response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Reading the response body")
@@ -688,7 +747,7 @@ func postNodesAppsTrafficPolicies(
 	trafficPolicyID string,
 ) (id string) {
 	By("Sending a POST /nodes_apps_traffic_policies request")
-	resp, err := http.Post(
+	resp, err := apiCli.Post(
 		"http://127.0.0.1:8080/nodes_apps_traffic_policies",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
@@ -696,9 +755,10 @@ func postNodesAppsTrafficPolicies(
 				"nodes_apps_id": "%s",
 				"traffic_policy_id": "%s"
 			}`, nodeAppID, trafficPolicyID)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 	By("Reading the response body")
@@ -718,7 +778,7 @@ func postNodesVNFsTrafficPolicies(
 	trafficPolicyID string,
 ) (id string) {
 	By("Sending a POST /nodes_vnfs_traffic_policies request")
-	resp, err := http.Post(
+	resp, err := apiCli.Post(
 		"http://127.0.0.1:8080/nodes_vnfs_traffic_policies",
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
@@ -726,9 +786,10 @@ func postNodesVNFsTrafficPolicies(
 				"nodes_vnfs_id": "%s",
 				"traffic_policy_id": "%s"
 			}`, nodeVNFID, trafficPolicyID)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	By("Verifying a 201 Created response")
-	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 	By("Reading the response body")

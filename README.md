@@ -33,7 +33,11 @@ To run the test node which simulates an appliance listening as a gRPC server:
 
 To run the Controller CE:
 
-`./dist/cce -dsn "root:<db_pass>@tcp(:8083)/controller_ce" -httpPort 8080 -grpcPort 8081`
+`./dist/cce -dsn "root:<db_pass>@tcp(:8083)/controller_ce" -adminPass <admin_pass> -httpPort 8080 -grpcPort 8081`
+
+Replace the following **required** variables before executing the run command:
+- <db_pass>: The password for database user `root`.
+- <admin_pass>: The password for the API user `admin`.
 
 ## Project Layout
 
@@ -44,7 +48,7 @@ for guidelines.
 
 - Domain models (types that implement the Entity interface) decouple application
   logic from PB types
-  
+
 ### Controller CE UI
 ##### Pre requisites
 - Node & NPM installed (v10.15.3, or V10 LTS)

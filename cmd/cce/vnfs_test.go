@@ -34,11 +34,12 @@ var _ = Describe("/vnfs", func() {
 		DescribeTable("201 Created",
 			func(req string) {
 				By("Sending a POST /vnfs request")
-				resp, err := http.Post(
+				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/vnfs",
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 201 response")
 				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
@@ -85,11 +86,12 @@ var _ = Describe("/vnfs", func() {
 		DescribeTable("400 Bad Request",
 			func(req, expectedResp string) {
 				By("Sending a POST /vnfs request")
-				resp, err := http.Post(
+				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/vnfs",
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 400 Bad Request response")
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
@@ -197,10 +199,11 @@ var _ = Describe("/vnfs", func() {
 		DescribeTable("200 OK",
 			func() {
 				By("Sending a GET /vnfs request")
-				resp, err := http.Get("http://127.0.0.1:8080/vnfs")
+				resp, err := apiCli.Get("http://127.0.0.1:8080/vnfs")
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 200 OK response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Reading the response body")
@@ -273,12 +276,13 @@ var _ = Describe("/vnfs", func() {
 		DescribeTable("404 Not Found",
 			func() {
 				By("Sending a GET /vnfs/{id} request")
-				resp, err := http.Get(
+				resp, err := apiCli.Get(
 					fmt.Sprintf("http://127.0.0.1:8080/vnfs/%s",
 						uuid.New()))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry("GET /vnfs/{id} with nonexistent ID"),
@@ -297,18 +301,14 @@ var _ = Describe("/vnfs", func() {
 		DescribeTable("204 No Content",
 			func(reqStr string, expectedVNF *cce.VNF) {
 				By("Sending a PATCH /vnfs request")
-				req, err := http.NewRequest(
-					http.MethodPatch,
+				resp, err := apiCli.Patch(
 					"http://127.0.0.1:8080/vnfs",
+					"application/json",
 					strings.NewReader(fmt.Sprintf(reqStr, containerVNFID)))
 				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
-				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 204 No Content response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
 				By("Getting the updated VNF")
@@ -372,17 +372,14 @@ var _ = Describe("/vnfs", func() {
 				if strings.Contains(reqStr, "%s") {
 					reqStr = fmt.Sprintf(reqStr, containerVNFID)
 				}
-				req, err := http.NewRequest(
-					http.MethodPatch,
+				resp, err := apiCli.Patch(
 					"http://127.0.0.1:8080/vnfs",
+					"application/json",
 					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
+				defer resp.Body.Close()
 
 				By("Verifying a 400 Bad Request")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
 
 				By("Reading the response body")
@@ -510,30 +507,25 @@ var _ = Describe("/vnfs", func() {
 		DescribeTable("200 OK",
 			func() {
 				By("Sending a DELETE /vnfs/{id} request")
-				req, err := http.NewRequest(
-					http.MethodDelete,
+				resp, err := apiCli.Delete(
 					fmt.Sprintf("http://127.0.0.1:8080/vnfs/%s",
-						containerVNFID),
-					nil)
+						containerVNFID))
 				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
-				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 200 OK response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Verifying the VNF was deleted")
 
 				By("Sending a GET /vnfs/{id} request")
-				resp, err = http.Get(
+				resp, err = apiCli.Get(
 					fmt.Sprintf("http://127.0.0.1:8080/vnfs/%s",
 						containerVNFID))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry("DELETE /vnfs/{id}"),
@@ -542,18 +534,12 @@ var _ = Describe("/vnfs", func() {
 		DescribeTable("404 Not Found",
 			func(id string) {
 				By("Sending a DELETE /vnfs/{id} request")
-				req, err := http.NewRequest(
-					http.MethodDelete,
-					fmt.Sprintf("http://127.0.0.1:8080/vnfs/%s", id),
-					nil)
+				resp, err := apiCli.Delete(
+					fmt.Sprintf("http://127.0.0.1:8080/vnfs/%s", id))
 				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
-				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(
@@ -575,17 +561,12 @@ var _ = Describe("/vnfs", func() {
 				}
 
 				By("Sending a DELETE /vnfs/{id} request")
-				req, err := http.NewRequest(
-					http.MethodDelete,
+				resp, err := apiCli.Delete(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/vnfs/%s",
-						containerVNFID),
-					nil)
+						containerVNFID))
 				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
-				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 422 response")
 				Expect(resp.StatusCode).To(Equal(

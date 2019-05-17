@@ -40,6 +40,7 @@ import (
 	"github.com/smartedgemec/controller-ce/gorilla"
 	"github.com/smartedgemec/controller-ce/grpc"
 	"github.com/smartedgemec/controller-ce/http"
+	"github.com/smartedgemec/controller-ce/jose"
 	"github.com/smartedgemec/controller-ce/mysql"
 	"github.com/smartedgemec/controller-ce/pki"
 )
@@ -51,9 +52,10 @@ func main() { // nolint: gocyclo
 		err error
 
 		// flags
-		dsn      string
-		httpPort int
-		grpcPort int
+		dsn       string
+		adminPass string
+		httpPort  int
+		grpcPort  int
 
 		rootCA *pki.RootCA
 
@@ -72,9 +74,14 @@ func main() { // nolint: gocyclo
 
 	// CLI flags
 	flag.StringVar(&dsn, "dsn", "", "Data source name")
+	flag.StringVar(&adminPass, "adminPass", "", "Admin user password")
 	flag.IntVar(&httpPort, "httpPort", 8080, "Controller HTTP port")
 	flag.IntVar(&grpcPort, "grpcPort", 8081, "Controller gRPC port")
 	flag.Parse()
+
+	if adminPass == "" {
+		log.Fatal("User admin password cannot be empty")
+	}
 
 	// Connect to the db
 	if db, err = sql.Open("mysql", dsn); err != nil {
@@ -109,9 +116,21 @@ func main() { // nolint: gocyclo
 		},
 	))
 
+	jose := &jose.JWSTokenIssuer{
+		Key:          rootCA.Key,
+		KeyAlgorithm: "ES256",
+	}
+
+	admin := &cce.AuthCreds{
+		Username: "admin",
+		Password: adminPass,
+	}
+
 	controller = &cce.Controller{
 		PersistenceService: &mysql.PersistenceService{DB: db},
 		AuthorityService:   rootCA,
+		TokenService:       jose,
+		AdminCreds:         admin,
 	}
 
 	// Setup http server tcp listener
@@ -210,7 +229,7 @@ func main() { // nolint: gocyclo
 	})
 
 	// Start the grpc server
-	log.Printf("Starting gRPC server on port %d\n", httpPort)
+	log.Printf("Starting gRPC server on port %d\n", grpcPort)
 	eg.Go(func() error {
 		return grpcServer.Serve(grpcListener)
 	})

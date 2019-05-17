@@ -44,7 +44,7 @@ var _ = Describe("/nodes_dns_configs", func() {
 		DescribeTable("201 Created",
 			func() {
 				By("Sending a POST /nodes_dns_configs request")
-				resp, err := http.Post(
+				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/nodes_dns_configs",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
@@ -54,6 +54,7 @@ var _ = Describe("/nodes_dns_configs", func() {
 							"dns_config_id": "%s"
 						}`, nodeID, dnsConfigID)))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 201 response")
 				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
@@ -79,11 +80,12 @@ var _ = Describe("/nodes_dns_configs", func() {
 		DescribeTable("400 Bad Request",
 			func(req, expectedResp string) {
 				By("Sending a POST /nodes_dns_configs request")
-				resp, err := http.Post(
+				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/nodes_dns_configs",
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 400 Bad Request response")
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
@@ -119,16 +121,11 @@ var _ = Describe("/nodes_dns_configs", func() {
 
 		DescribeTable("422 Unprocessable Entity",
 			func() {
-				var (
-					resp *http.Response
-					err  error
-				)
-
 				By("Sending a POST /nodes_dns_configs request")
 				postNodesDNSConfigs(nodeID, dnsConfigID)
 
 				By("Repeating the first POST /nodes_dns_configs request")
-				resp, err = http.Post(
+				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/nodes_dns_configs",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
@@ -138,6 +135,7 @@ var _ = Describe("/nodes_dns_configs", func() {
 							"dns_config_id": "%s"
 						}`, nodeID, dnsConfigID)))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 422 response")
 				Expect(resp.StatusCode).To(Equal(
@@ -176,11 +174,12 @@ var _ = Describe("/nodes_dns_configs", func() {
 		DescribeTable("200 OK",
 			func() {
 				By("Sending a GET /nodes_dns_configs request")
-				resp, err := http.Get(
+				resp, err := apiCli.Get(
 					"http://127.0.0.1:8080/nodes_dns_configs")
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 200 OK response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Reading the response body")
@@ -239,13 +238,14 @@ var _ = Describe("/nodes_dns_configs", func() {
 		DescribeTable("404 Not Found",
 			func() {
 				By("Sending a GET /nodes_dns_configs/{id} request")
-				resp, err := http.Get(
+				resp, err := apiCli.Get(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/nodes_dns_configs/%s",
 						uuid.New()))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry("GET /nodes_dns_configs/{id} with nonexistent ID"),
@@ -264,32 +264,27 @@ var _ = Describe("/nodes_dns_configs", func() {
 		DescribeTable("200 OK",
 			func() {
 				By("Sending a DELETE /nodes_dns_configs/{id} request")
-				req, err := http.NewRequest(
-					http.MethodDelete,
+				resp, err := apiCli.Delete(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/nodes_dns_configs/%s",
-						nodeDNSConfigID),
-					nil)
+						nodeDNSConfigID))
 				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
-				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 200 OK response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Verifying the node <-> DNS config was deleted")
 
 				By("Sending a GET /nodes_dns_configs/{id} request")
-				resp, err = http.Get(
+				resp, err = apiCli.Get(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/nodes_dns_configs/%s",
 						nodeDNSConfigID))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry("DELETE /nodes_dns_configs/{id}"),
@@ -298,20 +293,14 @@ var _ = Describe("/nodes_dns_configs", func() {
 		DescribeTable("404 Not Found",
 			func(id string) {
 				By("Sending a DELETE /nodes_dns_configs/{id} request")
-				req, err := http.NewRequest(
-					http.MethodDelete,
+				resp, err := apiCli.Delete(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/nodes_dns_configs/%s",
-						id),
-					nil)
+						id))
 				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
-				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(

@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [0.0.16] - 2019-05-16
+### Added
+- Token authentication login endpoint
+- Require token authentication on all HTTP endpoints
+
+### Fixed
+- Update instances where HTTP response body was not being closed
+
 ## [0.0.15] - 2019-05-15
 ### Added
 - Add TLS to gRPC Server

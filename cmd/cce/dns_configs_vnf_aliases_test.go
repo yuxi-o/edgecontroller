@@ -44,7 +44,7 @@ var _ = Describe("/dns_configs_vnf_aliases", func() {
 		DescribeTable("201 Created",
 			func() {
 				By("Sending a POST /dns_configs_vnf_aliases request")
-				resp, err := http.Post(
+				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/dns_configs_vnf_aliases",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
@@ -56,6 +56,7 @@ var _ = Describe("/dns_configs_vnf_aliases", func() {
 							"vnf_id": "%s"
 						}`, dnsConfigID, vnfID)))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 201 response")
 				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
@@ -81,11 +82,12 @@ var _ = Describe("/dns_configs_vnf_aliases", func() {
 		DescribeTable("400 Bad Request",
 			func(req, expectedResp string) {
 				By("Sending a POST /dns_configs_vnf_aliases request")
-				resp, err := http.Post(
+				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/dns_configs_vnf_aliases",
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 400 Bad Request response")
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
@@ -147,7 +149,7 @@ var _ = Describe("/dns_configs_vnf_aliases", func() {
 				postDNSConfigsVNFAliases(dnsConfigID, vnfID)
 
 				By("Repeating the first POST /dns_configs_vnf_aliases request")
-				resp, err = http.Post(
+				resp, err = apiCli.Post(
 					"http://127.0.0.1:8080/dns_configs_vnf_aliases",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
@@ -159,6 +161,7 @@ var _ = Describe("/dns_configs_vnf_aliases", func() {
 							"vnf_id": "%s"
 						}`, dnsConfigID, vnfID)))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 422 response")
 				Expect(resp.StatusCode).To(Equal(
@@ -195,11 +198,12 @@ var _ = Describe("/dns_configs_vnf_aliases", func() {
 		DescribeTable("200 OK",
 			func() {
 				By("Sending a GET /dns_configs_vnf_aliases request")
-				resp, err := http.Get(
+				resp, err := apiCli.Get(
 					"http://127.0.0.1:8080/dns_configs_vnf_aliases")
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 200 OK response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Reading the response body")
@@ -265,13 +269,14 @@ var _ = Describe("/dns_configs_vnf_aliases", func() {
 		DescribeTable("404 Not Found",
 			func() {
 				By("Sending a GET /dns_configs_vnf_aliases/{id} request")
-				resp, err := http.Get(
+				resp, err := apiCli.Get(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/dns_configs_vnf_aliases/%s",
 						uuid.New()))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry("GET /dns_configs_vnf_aliases/{id} with nonexistent ID"),
@@ -291,32 +296,27 @@ var _ = Describe("/dns_configs_vnf_aliases", func() {
 		DescribeTable("200 OK",
 			func() {
 				By("Sending a DELETE /dns_configs_vnf_aliases/{id} request")
-				req, err := http.NewRequest(
-					http.MethodDelete,
+				resp, err := apiCli.Delete(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/dns_configs_vnf_aliases/%s",
-						dnsConfigVNFAliasID),
-					nil)
+						dnsConfigVNFAliasID))
 				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
-				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 200 OK response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Verifying the DNS config VNF alias was deleted")
 
 				By("Sending a GET /dns_configs_vnf_aliases/{id} request")
-				resp, err = http.Get(
+				resp, err = apiCli.Get(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/dns_configs_vnf_aliases/%s",
 						dnsConfigVNFAliasID))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry("DELETE /dns_configs_vnf_aliases/{id}"),
@@ -325,20 +325,14 @@ var _ = Describe("/dns_configs_vnf_aliases", func() {
 		DescribeTable("404 Not Found",
 			func(id string) {
 				By("Sending a DELETE /dns_configs_vnf_aliases/{id} request")
-				req, err := http.NewRequest(
-					http.MethodDelete,
+				resp, err := apiCli.Delete(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/dns_configs_vnf_aliases/%s",
-						id),
-					nil)
+						id))
 				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
-				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(

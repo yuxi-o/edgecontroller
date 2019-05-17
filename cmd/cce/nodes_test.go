@@ -34,11 +34,12 @@ var _ = Describe("/nodes", func() {
 		DescribeTable("201 Created",
 			func(req string) {
 				By("Sending a POST /nodes request")
-				resp, err := http.Post(
+				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/nodes",
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 201 response")
 				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
@@ -70,11 +71,12 @@ var _ = Describe("/nodes", func() {
 		DescribeTable("400 Bad Request",
 			func(req, expectedResp string) {
 				By("Sending a POST /nodes request")
-				resp, err := http.Post(
+				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/nodes",
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 400 Bad Request response")
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
@@ -134,10 +136,11 @@ var _ = Describe("/nodes", func() {
 		DescribeTable("200 OK",
 			func() {
 				By("Sending a GET /nodes request")
-				resp, err := http.Get("http://127.0.0.1:8080/nodes")
+				resp, err := apiCli.Get("http://127.0.0.1:8080/nodes")
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 200 OK response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Reading the response body")
@@ -201,12 +204,13 @@ var _ = Describe("/nodes", func() {
 		DescribeTable("404 Not Found",
 			func() {
 				By("Sending a GET /nodes/{id} request")
-				resp, err := http.Get(
+				resp, err := apiCli.Get(
 					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s",
 						uuid.New()))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry("GET /nodes/{id} with nonexistent ID"),
@@ -225,18 +229,14 @@ var _ = Describe("/nodes", func() {
 		DescribeTable("204 No Content",
 			func(reqStr string, expectedNode *cce.Node) {
 				By("Sending a PATCH /nodes request")
-				req, err := http.NewRequest(
-					http.MethodPatch,
+				resp, err := apiCli.Patch(
 					"http://127.0.0.1:8080/nodes",
+					"application/json",
 					strings.NewReader(fmt.Sprintf(reqStr, nodeID)))
 				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
-				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 204 No Content response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
 				By("Getting the updated node")
@@ -270,17 +270,14 @@ var _ = Describe("/nodes", func() {
 				if strings.Contains(reqStr, "%s") {
 					reqStr = fmt.Sprintf(reqStr, nodeID)
 				}
-				req, err := http.NewRequest(
-					http.MethodPatch,
+				resp, err := apiCli.Patch(
 					"http://127.0.0.1:8080/nodes",
+					"application/json",
 					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
+				defer resp.Body.Close()
 
 				By("Verifying a 400 Bad Request")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
 
 				By("Reading the response body")
@@ -347,30 +344,25 @@ var _ = Describe("/nodes", func() {
 		DescribeTable("200 OK",
 			func() {
 				By("Sending a DELETE /nodes/{id} request")
-				req, err := http.NewRequest(
-					http.MethodDelete,
+				resp, err := apiCli.Delete(
 					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s",
-						nodeID),
-					nil)
+						nodeID))
 				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
-				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 200 OK response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Verifying the node was deleted")
 
 				By("Sending a GET /nodes/{id} request")
-				resp, err = http.Get(
+				resp, err = apiCli.Get(
 					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s",
 						nodeID))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry("DELETE /nodes/{id}"),
@@ -379,18 +371,12 @@ var _ = Describe("/nodes", func() {
 		DescribeTable("404 Not Found",
 			func(id string) {
 				By("Sending a DELETE /nodes/{id} request")
-				req, err := http.NewRequest(
-					http.MethodDelete,
-					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s", id),
-					nil)
+				resp, err := apiCli.Delete(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s", id))
 				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
-				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
 
 				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(

@@ -123,6 +123,8 @@ func NewGorilla( //nolint:gocyclo
 	}
 
 	routes := map[string]http.HandlerFunc{
+		"POST /auth": authenticate,
+
 		// entity routes
 		"POST   /nodes":      g.nodesHandler.create,
 		"GET    /nodes":      g.nodesHandler.getAll,
@@ -216,8 +218,18 @@ func NewGorilla( //nolint:gocyclo
 				r.Context(),
 				contextKey("controller"),
 				controller)
-			log.Printf("Injected controller %#v", controller)
 			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	})
+
+	// Require auth token for all endpoints except POST /auth
+	g.router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodPost && r.RequestURI == "/auth" {
+				next.ServeHTTP(w, r)
+			} else {
+				requireAuthHandler(next).ServeHTTP(w, r)
+			}
 		})
 	})
 

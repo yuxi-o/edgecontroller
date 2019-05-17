@@ -28,4 +28,5 @@ require (
 	google.golang.org/genproto v0.0.0-20180831171423-11092d34479b
 	google.golang.org/grpc v1.19.0
 	gopkg.in/alexcesaro/statsd.v2 v2.0.0
+	gopkg.in/square/go-jose.v2 v2.3.1
 )

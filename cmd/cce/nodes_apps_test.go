@@ -44,7 +44,7 @@ var _ = Describe("/nodes_apps", func() {
 		DescribeTable("201 Created",
 			func() {
 				By("Sending a POST /nodes_apps request")
-				resp, err := http.Post(
+				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/nodes_apps",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
@@ -80,7 +80,7 @@ var _ = Describe("/nodes_apps", func() {
 		DescribeTable("400 Bad Request",
 			func(req, expectedResp string) {
 				By("Sending a POST /nodes_apps request")
-				resp, err := http.Post(
+				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/nodes_apps",
 					"application/json",
 					strings.NewReader(req))
@@ -130,7 +130,7 @@ var _ = Describe("/nodes_apps", func() {
 				postNodesApps(nodeID, appID)
 
 				By("Repeating the first POST /nodes_apps request")
-				resp, err = http.Post(
+				resp, err = apiCli.Post(
 					"http://127.0.0.1:8080/nodes_apps",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
@@ -177,7 +177,7 @@ var _ = Describe("/nodes_apps", func() {
 		DescribeTable("200 OK",
 			func() {
 				By("Sending a GET /nodes_apps request")
-				resp, err := http.Get(fmt.Sprintf(
+				resp, err := apiCli.Get(fmt.Sprintf(
 					"http://127.0.0.1:8080/nodes_apps?node_id=%s", nodeID))
 
 				By("Verifying a 200 OK response")
@@ -241,7 +241,7 @@ var _ = Describe("/nodes_apps", func() {
 		DescribeTable("404 Not Found",
 			func() {
 				By("Sending a GET /nodes_apps/{id} request")
-				resp, err := http.Get(
+				resp, err := apiCli.Get(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/nodes_apps/%s",
 						uuid.New()))
@@ -267,16 +267,10 @@ var _ = Describe("/nodes_apps", func() {
 		DescribeTable("200 OK",
 			func() {
 				By("Sending a DELETE /nodes_apps/{id} request")
-				req, err := http.NewRequest(
-					http.MethodDelete,
+				resp, err := apiCli.Delete(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/nodes_apps/%s",
-						nodeAppID),
-					nil)
-				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
+						nodeAppID))
 
 				By("Verifying a 200 OK response")
 				Expect(err).ToNot(HaveOccurred())
@@ -286,7 +280,7 @@ var _ = Describe("/nodes_apps", func() {
 				By("Verifying the node app was deleted")
 
 				By("Sending a GET /nodes_apps/{id} request")
-				resp2, err := http.Get(
+				resp2, err := apiCli.Get(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/nodes_apps/%s",
 						nodeAppID))
@@ -302,16 +296,10 @@ var _ = Describe("/nodes_apps", func() {
 		DescribeTable("404 Not Found",
 			func(id string) {
 				By("Sending a DELETE /nodes_apps/{id} request")
-				req, err := http.NewRequest(
-					http.MethodDelete,
+				resp, err := apiCli.Delete(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/nodes_apps/%s",
-						id),
-					nil)
-				Expect(err).ToNot(HaveOccurred())
-
-				c := http.Client{}
-				resp, err := c.Do(req)
+						id))
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())

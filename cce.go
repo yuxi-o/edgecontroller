@@ -16,12 +16,16 @@ package cce
 
 import (
 	"context"
+
+	"github.com/smartedgemec/controller-ce/jose"
 )
 
 // Controller aggregates controller services.
 type Controller struct {
 	PersistenceService PersistenceService
 	AuthorityService   AuthorityService
+	TokenService       *jose.JWSTokenIssuer
+	AdminCreds         *AuthCreds
 }
 
 // PersistenceService manages entity persistence. The methods with EntityModel
