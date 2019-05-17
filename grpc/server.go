@@ -16,7 +16,11 @@ package grpc
 
 import (
 	"context"
+	"crypto/md5"
 	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"log"
@@ -34,9 +38,9 @@ import (
 )
 
 const (
-	// Server name for TLS when connecting to the Controller post-enrollment
+	// SNI is the server name for TLS when connecting to the Controller post-enrollment
 	SNI = "v1.community.controller.mec"
-	// Server name for TLS when connecting to the Controller for enrollment
+	// EnrollmentSNI is the server name for TLS when connecting to the Controller for enrollment
 	EnrollmentSNI = "v1.enroll.community.controller.mec"
 
 	// This is the gRPC full RPC path (format: /${package}.${service}/${rpc})
@@ -48,6 +52,14 @@ const (
 	// receive a certificate. It is similar to how a REST app may require a
 	// session token for API paths other than /login.
 	enrollmentMethod = "/openness.auth.AuthService/RequestCredentials"
+
+	// TODO confirm this with Intel - see https://github.com/smartedgemec/controller-ce/pull/61/files#r285201296
+	// The appliance's port that it listens on for gRPC connections from the
+	// Controller. This will be removed in the future when the Appliance is
+	// assumed to not be routable from the Controller in all cases. Instead the
+	// Appliance will be required to open two TCP streams, one for outgoing
+	// RPCs to the Controller and one for inbound.
+	nodeGRPCPort = "8081"
 )
 
 // Server wraps grpc.Server
@@ -142,31 +154,55 @@ func (s *Server) Stop() {
 }
 
 // RequestCredentials requests authentication endpoint credentials.
-func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.Credentials, error) {
+func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.Credentials, error) { // nolint: gocyclo
+	// Parse and validate CSR
 	csr := id.GetCsr()
 	if csr == "" {
 		return nil, status.Error(codes.InvalidArgument, "CSR cannot be empty")
 	}
-
 	csrPEM, _ := pem.Decode([]byte(csr))
 	if csrPEM == nil {
 		return nil, status.Error(codes.InvalidArgument, "unable to decode CSR")
 	}
-
-	// TODO: INTC-432: Verify the Node's public key
-
-	cert, err := s.controller.AuthorityService.SignCSR(csrPEM.Bytes)
+	certReq, err := x509.ParseCertificateRequest(csrPEM.Bytes)
 	if err != nil {
-		log.Printf("Failed to sign CSR: %s\n", err.Error())
-		return nil, status.Error(codes.Internal, "unable to sign CSR")
+		return nil, status.Errorf(codes.InvalidArgument, "error parsing CSR: %v", err)
 	}
 
+	// Node's identity is base64-encoded (w/o padding) MD5 hash of the public key data
+	hash := md5.Sum(certReq.RawSubjectPublicKeyInfo)
+	serial := base64.RawURLEncoding.EncodeToString(hash[:])
+
+	// Verify the Node's pre-approval by public key data
+	entities, err := s.controller.PersistenceService.Filter(ctx, &cce.Node{}, []cce.Filter{{
+		Field: "entity->>'$.serial'",
+		Value: serial,
+	}})
+	if err != nil || len(entities) == 0 {
+		if err != nil {
+			log.Printf("error getting node approval: %v", err)
+		}
+		return nil, status.Errorf(codes.Unauthenticated, "node %s not approved", serial)
+	}
+	node := entities[0].(*cce.Node)
+
+	// Sign cert request
+	cert, err := s.controller.AuthorityService.SignCSR(
+		certReq.Raw,
+		&x509.Certificate{
+			Subject: pkix.Name{CommonName: node.ID},
+		})
+	if err != nil {
+		log.Printf("Failed to sign CSR: %v", err)
+		return nil, status.Error(codes.Internal, "unable to sign CSR")
+	}
 	certPEM := pem.EncodeToMemory(
 		&pem.Block{
 			Type:  "CERTIFICATE",
 			Bytes: cert.Raw,
 		})
 
+	// Get signer chain for response
 	caChain, err := s.controller.AuthorityService.CAChain()
 	if err != nil {
 		return nil, status.Error(codes.Internal, "unable to get CA chain")
@@ -191,17 +227,41 @@ func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.C
 	// Add the root CA to the Node's CA pool
 	caPoolPEM := chainPEM[len(chainPEM)-1:]
 
+	// Store Node credentials
 	creds := &cce.Credentials{
-		ID:          cert.Subject.CommonName,
+		ID:          node.ID,
 		Certificate: string(certPEM),
 	}
-
 	if err = s.controller.PersistenceService.Create(ctx, creds); err != nil {
-		log.Printf("Failed to store credentials: %s\n", err.Error())
+		log.Printf("Failed to store Node credentials: %v", err)
 		return nil, status.Error(codes.Internal, "unable to store credentials")
 	}
 
-	// TODO: INTC-431: Store the Node's IP address
+	// Get the Node's IP address
+	p, ok := peer.FromContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "missing peer data from context")
+	}
+	nodeIP, _, err := net.SplitHostPort(p.Addr.String())
+	if nodeIP == "" || err != nil {
+		return nil, status.Errorf(codes.Internal, "bad remote address in peer data: %s: %v",
+			p.Addr.String(), err)
+	}
+
+	// Store the Node's address
+	nodeWithTarget := &cce.Node{
+		ID:         node.ID,
+		Name:       node.Name,
+		Location:   node.Location,
+		Serial:     node.Serial,
+		GRPCTarget: net.JoinHostPort(nodeIP, nodeGRPCPort),
+	}
+	if err := s.controller.PersistenceService.BulkUpdate(ctx, []cce.Persistable{
+		nodeWithTarget,
+	}); err != nil {
+		log.Printf("Failed to store Node address: %v", err)
+		return nil, status.Error(codes.Internal, "unable to store node address")
+	}
 
 	return &pb.Credentials{
 		Certificate: creds.Certificate,

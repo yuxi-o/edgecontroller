@@ -22,5 +22,5 @@ type AuthorityService interface {
 	// issuing CA and ending with the root CA (inclusive).
 	CAChain() ([]*x509.Certificate, error)
 	// SignCSR signs a ASN.1 DER encoded certificate signing request.
-	SignCSR(der []byte) (*x509.Certificate, error)
+	SignCSR(der []byte, template *x509.Certificate) (*x509.Certificate, error)
 }

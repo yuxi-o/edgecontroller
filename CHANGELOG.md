@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.0.19] - 2019-05-17
+### Added
+- Check Node approval before enrollment
+- Store Node IP on enrollment
+
 ## [0.0.18] - 2019-05-17
 ### Added
 - Version, source fields to App and VNF models

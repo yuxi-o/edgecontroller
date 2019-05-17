@@ -202,7 +202,7 @@ var _ = Describe("/vnfs", func() {
 						"cores": 4,
 						"memory": 1024
 					}`,
-				"Validation failed: source can not be empty"),
+				"Validation failed: source cannot be empty"),
 			Entry(
 				"POST /vnfs without source",
 				`
@@ -555,7 +555,7 @@ var _ = Describe("/vnfs", func() {
 						"memory": 1024
 					}
 				]`,
-				"Validation failed: source can not be empty"),
+				"Validation failed: source cannot be empty"),
 			Entry("PATCH /vnfs without source",
 				`
 				[

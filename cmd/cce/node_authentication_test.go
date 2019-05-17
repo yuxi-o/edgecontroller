@@ -22,6 +22,7 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"time"
@@ -29,8 +30,11 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 
+	cce "github.com/smartedgemec/controller-ce"
 	cceGRPC "github.com/smartedgemec/controller-ce/grpc"
 	"github.com/smartedgemec/controller-ce/pb"
 )
@@ -72,6 +76,8 @@ var _ = Describe("Node Auth Service", func() {
 					key,
 				)
 				Expect(err).ToNot(HaveOccurred())
+				certReq, err := x509.ParseCertificateRequest(csrDER)
+				Expect(err).ToNot(HaveOccurred())
 
 				By("Encoding certificate signing request in PEM")
 				csrPEM := pem.EncodeToMemory(
@@ -79,6 +85,12 @@ var _ = Describe("Node Auth Service", func() {
 						Type:  "CERTIFICATE REQUEST",
 						Bytes: csrDER,
 					})
+
+				By("Pre-approving Node by serial")
+				hash := md5.Sum(certReq.RawSubjectPublicKeyInfo)
+				serial := base64.RawURLEncoding.EncodeToString(hash[:])
+
+				nodeRESTID := postNodesSerial(serial)
 
 				By("Requesting credentials from auth service")
 				credentials, err := authSvcCli.RequestCredentials(
@@ -109,9 +121,7 @@ var _ = Describe("Node Auth Service", func() {
 				Expect(cert.RawSubjectPublicKeyInfo).To(Equal(pubKeyDER))
 
 				By("Verifying the CN is derived from the public key")
-				hash := md5.Sum(pubKeyDER)
-				cn := base64.RawURLEncoding.EncodeToString(hash[:])
-				Expect(cert.Subject.CommonName).To(Equal(cn))
+				Expect(cert.Subject.CommonName).To(Equal(nodeRESTID))
 
 				By("Decoding CA certificates chain to DER")
 				var chainDER []byte
@@ -142,6 +152,15 @@ var _ = Describe("Node Auth Service", func() {
 
 				By("Verifying the CA pool contains the Controller CA")
 				Expect(poolCerts).To(ContainElement(chainCerts[0]))
+
+				By("Verifying the Node's gRPC target was set")
+				resp, err := apiCli.Get("http://127.0.0.1:8080/nodes/" + nodeRESTID)
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+				var nodeResp cce.Node
+				Expect(json.NewDecoder(resp.Body).Decode(&nodeResp)).To(Succeed())
+				Expect(nodeResp.Serial).To(Equal(serial))
+				Expect(nodeResp.GRPCTarget).To(Equal("127.0.0.1:8081"))
 			})
 		})
 	})
@@ -169,6 +188,44 @@ var _ = Describe("Node Auth Service", func() {
 			)
 			Expect(err).To(HaveOccurred())
 			Expect(credentials).To(BeNil())
+		})
+
+		It("Should return a gRPC Unauthenticated error if not pre-approved", func() {
+			By("Generating node private key")
+			key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Creating a certificate signing request with private key")
+			csrDER, err := x509.CreateCertificateRequest(
+				rand.Reader,
+				&x509.CertificateRequest{},
+				key,
+			)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Encoding certificate signing request in PEM")
+			csrPEM := pem.EncodeToMemory(
+				&pem.Block{
+					Type:  "CERTIFICATE REQUEST",
+					Bytes: csrDER,
+				})
+
+			By("Requesting credentials from auth service")
+			credentials, err := authSvcCli.RequestCredentials(
+				ctx,
+				&pb.Identity{
+					Csr: string(csrPEM),
+				},
+			)
+
+			By("Verifying an error occurred")
+			Expect(err).To(HaveOccurred())
+			Expect(credentials).To(BeNil())
+
+			By("Verifying the error was Unauthenticated")
+			st, ok := status.FromError(err)
+			Expect(ok).To(BeTrue())
+			Expect(st.Code()).To(Equal(codes.Unauthenticated))
 		})
 	})
 })

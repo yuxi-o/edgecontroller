@@ -450,17 +450,21 @@ func getDNSConfigsVNFAlias(id string) *cce.DNSConfigVNFAlias {
 }
 
 func postNodes() (id string) {
+	return postNodesSerial("ABC-123")
+}
+
+func postNodesSerial(serial string) (id string) {
 	By("Sending a POST /nodes request")
 	resp, err := apiCli.Post(
 		"http://127.0.0.1:8080/nodes",
 		"application/json",
-		strings.NewReader(`
+		strings.NewReader(fmt.Sprintf(`
 			{
 				"name": "Test Node 1",
 				"location": "Localhost port 8082",
-				"serial": "ABC-123",
+				"serial": "%s",
 				"grpc_target": "127.0.0.1:8082"
-			}`))
+			}`, serial)))
 	Expect(err).ToNot(HaveOccurred())
 	defer resp.Body.Close()
 

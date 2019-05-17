@@ -202,7 +202,7 @@ var _ = Describe("/apps", func() {
 							"cores": 4,
 							"memory": 1024
 						}`,
-				"Validation failed: source can not be empty"),
+				"Validation failed: source cannot be empty"),
 			Entry(
 				"POST /apps without source",
 				`
@@ -557,7 +557,7 @@ var _ = Describe("/apps", func() {
 						"memory": 1024
 					}
 				]`,
-				"Validation failed: source can not be empty"),
+				"Validation failed: source cannot be empty"),
 			Entry("PATCH /apps without source",
 				`
 				[

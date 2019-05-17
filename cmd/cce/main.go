@@ -172,7 +172,7 @@ func main() { // nolint: gocyclo
 	httpServer = http.NewServer(koko)
 
 	// Start the http server
-	log.Printf("Starting HTTP server on port %d\n", httpPort)
+	log.Printf("Starting HTTP server on port %d", httpPort)
 	eg.Go(func() error {
 
 		return httpServer.Serve(httpListener)
@@ -221,7 +221,7 @@ func main() { // nolint: gocyclo
 	})
 
 	// Start the grpc server
-	log.Printf("Starting gRPC server on port %d\n", grpcPort)
+	log.Printf("Starting gRPC server on port %d", grpcPort)
 	eg.Go(func() error {
 		return grpcServer.Serve(grpcListener)
 	})
