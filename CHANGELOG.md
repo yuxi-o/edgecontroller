@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.0.15] - 2019-05-15
+### Added
+- Add TLS to gRPC Server
+- Print self-signed CA at startup to output
+
 ## [0.0.14] - 2019-05-14
 ### Added
 - Node App tests, application logic handler func framework

@@ -126,38 +126,59 @@ func (ca *RootCA) SignCSR(der []byte) (*x509.Certificate, error) {
 	}
 
 	// Certificate CN is base64-encoded (w/o padding) MD5 hash of the public key
-	pub, err := x509.MarshalPKIXPublicKey(csr.PublicKey)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to marshal CSR public key")
-	}
-
-	hash := md5.Sum(pub)
-
+	hash := md5.Sum(csr.RawSubjectPublicKeyInfo)
 	cn := base64.RawURLEncoding.EncodeToString(hash[:])
 
-	subject := pkix.Name{CommonName: cn}
-
+	// Pick random serial number
 	source := rdm.NewSource(time.Now().UnixNano())
-
 	serial := big.NewInt(int64(rdm.New(source).Uint64()))
 
+	// Sign certificate request
 	template := &x509.Certificate{
-		Signature:          csr.Signature,
-		SignatureAlgorithm: csr.SignatureAlgorithm,
-		PublicKey:          csr.PublicKey,
-		PublicKeyAlgorithm: csr.PublicKeyAlgorithm,
-		SerialNumber:       serial,
-		Issuer:             ca.Cert.Subject,
-		Subject:            subject,
-		NotBefore:          time.Now(),
-		NotAfter:           ca.Cert.NotAfter, // Valid until CA expires
+		SerialNumber: serial,
+		Subject:      pkix.Name{CommonName: cn},
+		NotBefore:    time.Now(),
+		NotAfter:     ca.Cert.NotAfter, // Valid until CA expires
 	}
-
 	certDER, err := x509.CreateCertificate(
 		rand.Reader,
 		template,
 		ca.Cert,
-		template.PublicKey,
+		csr.PublicKey,
+		ca.Key,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to sign certificate")
+	}
+
+	return x509.ParseCertificate(certDER)
+}
+
+// NewTLSServerCert creates a new TLS server certificate with a given SNI.
+func (ca *RootCA) NewTLSServerCert(key crypto.PrivateKey, sni string) (*x509.Certificate, error) {
+	pkey, ok := key.(crypto.Signer)
+	if !ok {
+		return nil, errors.Errorf("invalid private key type: %T", key)
+	}
+
+	// Pick random serial number
+	source := rdm.NewSource(time.Now().UnixNano())
+	serial := big.NewInt(int64(rdm.New(source).Uint64()))
+
+	// Generate certificate
+	template := &x509.Certificate{
+		SerialNumber: serial,
+		Subject:      pkix.Name{CommonName: sni},
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		NotBefore:    time.Now(),
+		NotAfter:     ca.Cert.NotAfter, // Valid until CA expires
+	}
+	certDER, err := x509.CreateCertificate(
+		rand.Reader,
+		template,
+		ca.Cert,
+		pkey.Public(),
 		ca.Key,
 	)
 	if err != nil {

@@ -16,7 +16,13 @@ package main
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
+	"encoding/pem"
 	"errors"
 	"flag"
 	"fmt"
@@ -40,7 +46,7 @@ import (
 
 const certsDir = "./certificates"
 
-func main() {
+func main() { // nolint: gocyclo
 	var (
 		err error
 
@@ -89,6 +95,19 @@ func main() {
 	}
 
 	log.Print("Initialized Controller CA")
+
+	// Print self-signed Controller CA. This is used to manually configure the
+	// Appliance by adding the Controller to its trust anchor pool for TLS
+	// connections.
+	//
+	// TODO: Replace printing to STDERR with writing to a file or making the
+	// certificate available via an HTTP endpoint.
+	log.Printf("Root CA:\n%s", pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "CERTIFICATE",
+			Bytes: rootCA.Cert.Raw,
+		},
+	))
 
 	controller = &cce.Controller{
 		PersistenceService: &mysql.PersistenceService{DB: db},
@@ -163,7 +182,32 @@ func main() {
 	}()
 
 	// Configure grpc server
-	grpcServer = grpc.NewServer(controller)
+	serverConf, err := newTLSConf(rootCA, grpc.SNI)
+	if err != nil {
+		log.Fatal("Error creating TLS config for gRPC server: ", err)
+	}
+	serverConf.NextProtos = []string{"h2"}
+	serverConf.ClientAuth = tls.RequireAndVerifyClientCert
+	enrollmentConf, err := newTLSConf(rootCA, grpc.EnrollmentSNI)
+	if err != nil {
+		log.Fatal("Error creating TLS config for gRPC server: ", err)
+	}
+	enrollmentConf.NextProtos = []string{"h2"}
+	enrollmentConf.ClientAuth = tls.NoClientCert
+	grpcServer = grpc.NewServer(controller, &tls.Config{
+		GetConfigForClient: func(
+			hello *tls.ClientHelloInfo,
+		) (*tls.Config, error) {
+			switch hello.ServerName {
+			case grpc.SNI:
+				return serverConf, nil
+			case grpc.EnrollmentSNI:
+				return enrollmentConf, nil
+			default:
+				return nil, fmt.Errorf("unexpected server name: %s", hello.ServerName)
+			}
+		},
+	})
 
 	// Start the grpc server
 	log.Printf("Starting gRPC server on port %d\n", httpPort)
@@ -195,4 +239,33 @@ func main() {
 	if err = eg.Wait(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func newTLSConf(rootCA *pki.RootCA, sni string) (*tls.Config, error) {
+	tlsKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return nil, fmt.Errorf("error generating TLS key: %v", err)
+	}
+	tlsCert, err := rootCA.NewTLSServerCert(tlsKey, sni)
+	if err != nil {
+		return nil, fmt.Errorf("error generating TLS cert: %v", err)
+	}
+	tlsCAChain, err := rootCA.CAChain()
+	if err != nil {
+		return nil, fmt.Errorf("error getting TLS CA chain: %v", err)
+	}
+	tlsChain := [][]byte{tlsCert.Raw}
+	for _, caCert := range tlsCAChain {
+		tlsChain = append(tlsChain, caCert.Raw)
+	}
+	tlsRoots := x509.NewCertPool()
+	tlsRoots.AddCert(tlsCAChain[len(tlsCAChain)-1])
+	return &tls.Config{
+		Certificates: []tls.Certificate{{
+			Certificate: tlsChain,
+			PrivateKey:  tlsKey,
+			Leaf:        tlsCert,
+		}},
+		ClientCAs: tlsRoots,
+	}, nil
 }

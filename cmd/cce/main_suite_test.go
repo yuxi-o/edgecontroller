@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os/exec"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -28,6 +29,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	"google.golang.org/grpc/grpclog"
 
 	cce "github.com/smartedgemec/controller-ce"
 )
@@ -36,9 +38,14 @@ var (
 	ctrl *gexec.Session
 	node *gexec.Session
 	ctx  = context.Background()
+
+	controllerRootPEM []byte
 )
 
 var _ = BeforeSuite(func() {
+	logger := grpclog.NewLoggerV2(
+		GinkgoWriter, GinkgoWriter, GinkgoWriter)
+	grpclog.SetLoggerV2(logger)
 	startup()
 })
 
@@ -64,6 +71,17 @@ func startup() {
 	By("Starting the controller")
 	ctrl, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).ToNot(HaveOccurred(), "Problem starting service")
+
+	By("Reading the Controller self-signed CA from output")
+	Eventually(ctrl.Err, 3).Should(gbytes.Say(
+		`-----END CERTIFICATE-----`),
+		"Service did not print CA cert in time")
+	certMatches := regexp.MustCompile(
+		`(?s)-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----`,
+	).FindAll(ctrl.Err.Contents(), -1)
+	Expect(certMatches).To(HaveLen(1),
+		"Service did not print a single CA cert")
+	controllerRootPEM = certMatches[0]
 
 	By("Verifying that the controller started successfully")
 	Eventually(ctrl.Err, 3).Should(gbytes.Say(

@@ -29,7 +29,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
+	cceGRPC "github.com/smartedgemec/controller-ce/grpc"
 	"github.com/smartedgemec/controller-ce/pb"
 )
 
@@ -41,10 +43,15 @@ var _ = Describe("Node Auth Service", func() {
 			ctx, 2*time.Second)
 		defer cancel()
 
+		caPool := x509.NewCertPool()
+		Expect(caPool.AppendCertsFromPEM(controllerRootPEM)).To(BeTrue(),
+			"should load Controller self-signed root into trust pool")
+		tlsCreds := credentials.NewClientTLSFromCert(caPool, cceGRPC.EnrollmentSNI)
+
 		conn, err := grpc.DialContext(
 			timeoutCtx,
 			fmt.Sprintf("%s:%d", "127.0.0.1", 8081),
-			grpc.WithInsecure(),
+			grpc.WithTransportCredentials(tlsCreds),
 			grpc.WithBlock())
 		Expect(err).ToNot(HaveOccurred(), "Dial failed: %v", err)
 
