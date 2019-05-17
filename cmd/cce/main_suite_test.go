@@ -170,11 +170,12 @@ func postApps(appType string) (id string) {
 			{
 				"type": "%s",
 				"name": "%s app",
+				"version": "latest",
 				"vendor": "smart edge",
 				"description": "my %s app",
-				"image": "http://www.test.com/my_%s_app.tar.gz",
 				"cores": 4,
-				"memory": 1024
+				"memory": 1024,
+				"source": "http://www.test.com/my_%s_app.tar.gz"
 			}`, appType, appType, appType, appType)))
 	Expect(err).ToNot(HaveOccurred())
 	defer resp.Body.Close()
@@ -225,11 +226,12 @@ func postVNFs(vnfType string) (id string) {
 			{
 				"type": "%s",
 				"name": "%s vnf",
+				"version": "latest",
 				"vendor": "smart edge",
 				"description": "my %s vnf",
-				"image": "http://www.test.com/my_%s_vnf.tar.gz",
 				"cores": 4,
-				"memory": 1024
+				"memory": 1024,
+				"source": "http://www.test.com/my_%s_vnf.tar.gz"
 			}`, vnfType, vnfType, vnfType, vnfType)))
 	Expect(err).ToNot(HaveOccurred())
 	defer resp.Body.Close()

@@ -17,6 +17,7 @@ package cce
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/smartedgemec/controller-ce/uuid"
@@ -27,11 +28,12 @@ type App struct {
 	ID          string `json:"id"`
 	Type        string `json:"type"`
 	Name        string `json:"name"`
+	Version     string `json:"version"`
 	Vendor      string `json:"vendor"`
 	Description string `json:"description"`
-	Image       string `json:"image"`
 	Cores       int    `json:"cores"`
 	Memory      int    `json:"memory"` // in MB
+	Source      string `json:"source"`
 }
 
 // GetTableName returns the name of the persistence table.
@@ -50,7 +52,7 @@ func (app *App) SetID(id string) {
 }
 
 // Validate validates the model.
-func (app *App) Validate() error {
+func (app *App) Validate() error { // nolint: gocyclo
 	if !uuid.IsValid(app.ID) {
 		return errors.New("id not a valid uuid")
 	}
@@ -63,14 +65,20 @@ func (app *App) Validate() error {
 	if app.Vendor == "" {
 		return errors.New("vendor cannot be empty")
 	}
-	if app.Image == "" {
-		return errors.New("image cannot be empty")
+	if app.Version == "" {
+		return errors.New("version cannot be empty")
 	}
 	if app.Cores < 1 || app.Cores > MaxCores {
 		return fmt.Errorf("cores must be in [1..%d]", MaxCores)
 	}
 	if app.Memory < 1 || app.Memory > MaxMemory {
 		return fmt.Errorf("memory must be in [1..%d]", MaxMemory)
+	}
+	if app.Source == "" {
+		return errors.New("source cannot be empty")
+	}
+	if _, err := url.ParseRequestURI(app.Source); err != nil {
+		return errors.New("source cannot be parsed as a URI")
 	}
 
 	return nil
@@ -81,17 +89,19 @@ func (app *App) String() string {
 App[
     ID: %s
     Name: %s
+    Version: %s
     Vendor: %s
     Description: %s
-    Image: %s
     Cores: %d
     Memory: %d
+    Source: %s
 ]`),
 		app.ID,
 		app.Name,
+		app.Version,
 		app.Vendor,
 		app.Description,
-		app.Image,
 		app.Cores,
-		app.Memory)
+		app.Memory,
+		app.Source)
 }

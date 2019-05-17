@@ -57,9 +57,14 @@ func toPBVNF(vnf *cce.VNF) *pb.VNF {
 		Name:        vnf.Name,
 		Vendor:      vnf.Vendor,
 		Description: vnf.Description,
-		Image:       vnf.Image,
+		Version:     vnf.Version,
 		Cores:       int32(vnf.Cores),
 		Memory:      int32(vnf.Memory),
+		Source: &pb.VNF_HttpUri{
+			HttpUri: &pb.VNF_HTTPSource{
+				HttpUri: vnf.Source,
+			},
+		},
 	}
 }
 

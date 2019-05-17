@@ -64,9 +64,14 @@ func toPBApp(app *cce.App) *pb.Application {
 		Name:        app.Name,
 		Vendor:      app.Vendor,
 		Description: app.Description,
-		Image:       app.Image,
+		Version:     app.Version,
 		Cores:       int32(app.Cores),
 		Memory:      int32(app.Memory),
+		Source: &pb.Application_HttpUri{
+			HttpUri: &pb.Application_HTTPSource{
+				HttpUri: app.Source,
+			},
+		},
 	}
 }
 

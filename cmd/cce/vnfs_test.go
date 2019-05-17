@@ -64,11 +64,12 @@ var _ = Describe("/vnfs", func() {
 				{
 					"type": "container",
 					"name": "container vnf",
+					"version": "latest",
 					"vendor": "smart edge",
-					"description": "my container vnf",
-					"image": "http://www.test.com/my_container_vnf.tar.gz",
+					"description": "my container vnf",	
 					"cores": 4,
-					"memory": 1024
+					"memory": 1024,
+					"source": "http://www.test.com/my_container_vnf.tar.gz"
 				}`),
 			Entry(
 				"POST /vnfs without description",
@@ -76,10 +77,11 @@ var _ = Describe("/vnfs", func() {
 				{
 					"type": "container",
 					"name": "container vnf",
+					"version": "latest",
 					"vendor": "smart edge",
-					"image": "http://www.test.com/my_container_vnf.tar.gz",
 					"cores": 4,
-					"memory": 1024
+					"memory": 1024,
+					"source": "http://www.test.com/my_container_vnf.tar.gz"
 				}`),
 		)
 
@@ -115,11 +117,12 @@ var _ = Describe("/vnfs", func() {
 				`
 				{
 					"name": "container vnf",
+					"version": "latest",
 					"vendor": "smart edge",
 					"description": "my container vnf",
-					"image": "http://www.test.com/my_container_vnf.tar.gz",
 					"cores": 4,
-					"memory": 1024
+					"memory": 1024,
+					"source": "http://www.test.com/my_container_vnf.tar.gz"
 				}`,
 				`Validation failed: type must be either "container" or "vm"`),
 			Entry(
@@ -127,47 +130,51 @@ var _ = Describe("/vnfs", func() {
 				`
 				{
 					"type": "container",
+					"version": "latest",
 					"vendor": "smart edge",
 					"description": "my container vnf",
-					"image": "http://www.test.com/my_container_vnf.tar.gz",
 					"cores": 4,
-					"memory": 1024
+					"memory": 1024,
+					"source": "http://www.test.com/my_container_vnf.tar.gz"
 				}`,
 				"Validation failed: name cannot be empty"),
+			Entry(
+				"POST /vnfs without version",
+				`
+						{
+							"type": "container",
+							"name": "container vnf",
+							"vendor": "smart edge",
+							"description": "my container vnf",
+							"cores": 4,
+							"memory": 1024,
+							"source": "http://www.test.com/my_container_vnf.tar.gz"
+						}`,
+				"Validation failed: version cannot be empty"),
 			Entry(
 				"POST /vnfs without vendor",
 				`
 				{
 					"type": "container",
 					"name": "container vnf",
+					"version": "latest",
 					"description": "my container vnf",
-					"image": "http://www.test.com/my_container_vnf.tar.gz",
 					"cores": 4,
-					"memory": 1024
+					"memory": 1024,
+					"source": "http://www.test.com/my_container_vnf.tar.gz"
 				}`,
 				"Validation failed: vendor cannot be empty"),
-			Entry(
-				"POST /vnfs without image",
-				`
-				{
-					"type": "container",
-					"name": "container vnf",
-					"vendor": "smart edge",
-					"description": "my container vnf",
-					"cores": 4,
-					"memory": 1024
-				}`,
-				"Validation failed: image cannot be empty"),
 			Entry("POST /vnfs with cores not in [1..8]",
 				`
 				{
 					"type": "container",
 					"name": "container vnf",
+					"version": "latest",
 					"vendor": "smart edge",
 					"description": "my container vnf",
-					"image": "http://www.test.com/my_container_vnf.tar.gz",
 					"cores": 9,
-					"memory": 1024
+					"memory": 1024,
+					"source": "http://www.test.com/my_container_vnf.tar.gz"
 				}`,
 				"Validation failed: cores must be in [1..8]"),
 			Entry("POST /vnfs with memory not in [1..16384]",
@@ -175,13 +182,41 @@ var _ = Describe("/vnfs", func() {
 				{
 					"type": "container",
 					"name": "container vnf",
+					"version": "latest",
 					"vendor": "smart edge",
 					"description": "my container vnf",
-					"image": "http://www.test.com/my_container_vnf.tar.gz",
 					"cores": 8,
-					"memory": 16385
+					"memory": 16385,
+					"source": "http://www.test.com/my_container_vnf.tar.gz"
 				}`,
 				"Validation failed: memory must be in [1..16384]"),
+			Entry(
+				"POST /vnfs without source",
+				`
+					{
+						"type": "container",
+						"name": "container vnf",
+						"version": "latest",
+						"vendor": "smart edge",
+						"description": "my container vnf",
+						"cores": 4,
+						"memory": 1024
+					}`,
+				"Validation failed: source can not be empty"),
+			Entry(
+				"POST /vnfs without source",
+				`
+						{
+							"type": "container",
+							"name": "container vnf",
+							"version": "latest",
+							"vendor": "smart edge",
+							"description": "my container vnf",
+							"cores": 4,
+							"memory": 1024,
+							"source": "invalid.url"
+						}`,
+				"Validation failed: source cannot be parsed as a URI"),
 		)
 	})
 
@@ -223,9 +258,10 @@ var _ = Describe("/vnfs", func() {
 						Name:        "container vnf",
 						Vendor:      "smart edge",
 						Description: "my container vnf",
-						Image:       "http://www.test.com/my_container_vnf.tar.gz",
+						Version:     "latest",
 						Cores:       4,
 						Memory:      1024,
+						Source:      "http://www.test.com/my_container_vnf.tar.gz",
 					}))
 				Expect(vnfs).To(ContainElement(
 					cce.VNF{
@@ -234,9 +270,10 @@ var _ = Describe("/vnfs", func() {
 						Name:        "vm vnf",
 						Vendor:      "smart edge",
 						Description: "my vm vnf",
-						Image:       "http://www.test.com/my_vm_vnf.tar.gz",
+						Version:     "latest",
 						Cores:       4,
 						Memory:      1024,
+						Source:      "http://www.test.com/my_vm_vnf.tar.gz",
 					}))
 			},
 			Entry("GET /vnfs"),
@@ -264,9 +301,10 @@ var _ = Describe("/vnfs", func() {
 						Name:        "container vnf",
 						Vendor:      "smart edge",
 						Description: "my container vnf",
-						Image:       "http://www.test.com/my_container_vnf.tar.gz",
+						Version:     "latest",
 						Cores:       4,
 						Memory:      1024,
+						Source:      "http://www.test.com/my_container_vnf.tar.gz",
 					},
 				))
 			},
@@ -326,21 +364,23 @@ var _ = Describe("/vnfs", func() {
 						"id": "%s",
 						"type": "container",
 						"name": "container vnf2",
+						"version": "latest",
 						"vendor": "smart edge",
 						"description": "my container vnf",
-						"image": "http://www.test.com/my_container_vnf.tar.gz",
 						"cores": 4,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_vnf.tar.gz"
 					}
 				]`,
 				&cce.VNF{
 					Type:        "container",
 					Name:        "container vnf2",
+					Version:     "latest",
 					Vendor:      "smart edge",
 					Description: "my container vnf",
-					Image:       "http://www.test.com/my_container_vnf.tar.gz",
 					Cores:       4,
 					Memory:      1024,
+					Source:      "http://www.test.com/my_container_vnf.tar.gz",
 				}),
 			Entry("PATCH /vnfs with no description",
 				`
@@ -349,20 +389,22 @@ var _ = Describe("/vnfs", func() {
 						"id": "%s",
 						"type": "container",
 						"name": "container vnf2",
+						"version": "latest",
 						"vendor": "smart edge",
-						"image": "http://www.test.com/my_container_vnf.tar.gz",
 						"cores": 4,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_vnf.tar.gz"
 					}
 				]`,
 				&cce.VNF{
 					Type:        "container",
 					Name:        "container vnf2",
+					Version:     "latest",
 					Vendor:      "smart edge",
 					Description: "",
-					Image:       "http://www.test.com/my_container_vnf.tar.gz",
 					Cores:       4,
 					Memory:      1024,
+					Source:      "http://www.test.com/my_container_vnf.tar.gz",
 				}),
 		)
 
@@ -396,11 +438,12 @@ var _ = Describe("/vnfs", func() {
 					{
 						"type": "container",
 						"name": "container vnf2",
+						"version": "latest",
 						"vendor": "smart edge",
 						"description": "my container vnf",
-						"image": "http://www.test.com/my_container_vnf.tar.gz",
 						"cores": 4,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_vnf.tar.gz"
 					}
 				]`,
 				"Validation failed: id not a valid uuid"),
@@ -411,11 +454,12 @@ var _ = Describe("/vnfs", func() {
 					{
 						"id": "%s",
 						"name": "container vnf2",
+						"version": "latest",
 						"vendor": "smart edge",
 						"description": "my container vnf",
-						"image": "http://www.test.com/my_container_vnf.tar.gz",
 						"cores": 4,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_vnf.tar.gz"
 					}
 				]`,
 				`Validation failed: type must be either "container" or "vm"`),
@@ -426,14 +470,30 @@ var _ = Describe("/vnfs", func() {
 					{
 						"id": "%s",
 						"type": "container",
+						"version": "latest",
 						"vendor": "smart edge",
 						"description": "my container vnf",
-						"image": "http://www.test.com/my_container_vnf.tar.gz",
 						"cores": 4,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_vnf.tar.gz"
 					}
 				]`,
 				"Validation failed: name cannot be empty"),
+			Entry("PATCH /vnfs without version",
+				`
+				[
+					{
+						"id": "%s",
+						"type": "container",
+						"name": "container vnf2",
+						"vendor": "smart edge",
+						"description": "my container vnf",
+						"cores": 4,
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_vnf.tar.gz"
+					}
+				]`,
+				"Validation failed: version cannot be empty"),
 			Entry("PATCH /vnfs without vendor",
 				`
 				[
@@ -441,27 +501,14 @@ var _ = Describe("/vnfs", func() {
 						"id": "%s",
 						"type": "container",
 						"name": "container vnf2",
+						"version": "latest",
 						"description": "my container vnf",
-						"image": "http://www.test.com/my_container_vnf.tar.gz",
 						"cores": 4,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_vnf.tar.gz"
 					}
 				]`,
 				"Validation failed: vendor cannot be empty"),
-			Entry("PATCH /vnfs without image",
-				`
-				[
-					{
-						"id": "%s",
-						"type": "container",
-						"name": "container vnf2",
-						"vendor": "smart edge",
-						"description": "my container vnf",
-						"cores": 4,
-						"memory": 1024
-					}
-				]`,
-				"Validation failed: image cannot be empty"),
 			Entry("PATCH /vnfs with cores not in [1..8]",
 				`
 				[
@@ -469,11 +516,12 @@ var _ = Describe("/vnfs", func() {
 						"id": "%s",
 						"type": "container",
 						"name": "container vnf2",
+						"version": "latest",
 						"vendor": "smart edge",
 						"description": "my container vnf",
-						"image": "http://www.test.com/my_container_vnf.tar.gz",
 						"cores": 9,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_vnf.tar.gz"
 					}
 				]`,
 				"Validation failed: cores must be in [1..8]"),
@@ -484,14 +532,46 @@ var _ = Describe("/vnfs", func() {
 						"id": "%s",
 						"type": "container",
 						"name": "container vnf2",
+						"version": "latest",
 						"vendor": "smart edge",
 						"description": "my container vnf",
-						"image": "http://www.test.com/my_container_vnf.tar.gz",
 						"cores": 4,
-						"memory": 16385
+						"memory": 16385,
+						"source": "http://www.test.com/my_container_vnf.tar.gz"
 					}
 				]`,
 				"Validation failed: memory must be in [1..16384]"),
+			Entry("PATCH /vnfs without source",
+				`
+				[
+					{
+						"id": "%s",
+						"type": "container",
+						"name": "container vnf2",
+						"version": "latest",
+						"vendor": "smart edge",
+						"description": "my container vnf",
+						"cores": 4,
+						"memory": 1024
+					}
+				]`,
+				"Validation failed: source can not be empty"),
+			Entry("PATCH /vnfs without source",
+				`
+				[
+					{
+						"id": "%s",
+						"type": "container",
+						"name": "container vnf2",
+						"version": "latest",
+						"vendor": "smart edge",
+						"description": "my container vnf",
+						"cores": 4,
+						"memory": 1024,
+						"source" : "invalid.url"
+					}
+				]`,
+				"Validation failed: source cannot be parsed as a URI"),
 		)
 	})
 

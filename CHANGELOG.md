@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [0.0.18] - 2019-05-17
+### Added
+- Version, source fields to App and VNF models
+
+### Removed
+- Image field from App and VNF models
+
 ## [0.0.17] - 2019-05-17
 ### Added
 - Node App gRPC calls and tests

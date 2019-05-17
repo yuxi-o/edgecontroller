@@ -17,6 +17,7 @@ package cce
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/smartedgemec/controller-ce/uuid"
@@ -29,9 +30,10 @@ type VNF struct {
 	Name        string `json:"name"`
 	Vendor      string `json:"vendor"`
 	Description string `json:"description"`
-	Image       string `json:"image"`
+	Version     string `json:"version"`
 	Cores       int    `json:"cores"`
 	Memory      int    `json:"memory"`
+	Source      string `json:"source"`
 }
 
 // GetTableName returns the name of the persistence table.
@@ -50,7 +52,7 @@ func (vnf *VNF) SetID(id string) {
 }
 
 // Validate validates the model.
-func (vnf *VNF) Validate() error {
+func (vnf *VNF) Validate() error { // nolint: gocyclo
 	if !uuid.IsValid(vnf.ID) {
 		return errors.New("id not a valid uuid")
 	}
@@ -63,14 +65,20 @@ func (vnf *VNF) Validate() error {
 	if vnf.Vendor == "" {
 		return errors.New("vendor cannot be empty")
 	}
-	if vnf.Image == "" {
-		return errors.New("image cannot be empty")
+	if vnf.Version == "" {
+		return errors.New("version cannot be empty")
 	}
 	if vnf.Cores < 1 || vnf.Cores > MaxCores {
 		return fmt.Errorf("cores must be in [1..%d]", MaxCores)
 	}
 	if vnf.Memory < 1 || vnf.Memory > MaxMemory {
 		return fmt.Errorf("memory must be in [1..%d]", MaxMemory)
+	}
+	if vnf.Source == "" {
+		return errors.New("source cannot be empty")
+	}
+	if _, err := url.ParseRequestURI(vnf.Source); err != nil {
+		return errors.New("source cannot be parsed as a URI")
 	}
 
 	return nil
@@ -81,17 +89,19 @@ func (vnf *VNF) String() string {
 VNF[
     ID: %s
     Name: %s
+    Version: %s
     Vendor: %s
     Description: %s
-    Image: %s
     Cores: %d
     Memory: %d
+    Source: %s
 ]`),
 		vnf.ID,
 		vnf.Name,
+		vnf.Version,
 		vnf.Vendor,
 		vnf.Description,
-		vnf.Image,
 		vnf.Cores,
-		vnf.Memory)
+		vnf.Memory,
+		vnf.Source)
 }

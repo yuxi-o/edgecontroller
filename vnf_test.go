@@ -34,9 +34,10 @@ var _ = Describe("Entities: VNF", func() {
 			Name:        "test-container-vnf",
 			Vendor:      "test-vendor",
 			Description: "test-description",
-			Image:       "test-image",
+			Version:     "latest",
 			Cores:       4,
 			Memory:      1024,
+			Source:      "https://path/to/file.zip",
 		}
 	})
 
@@ -80,14 +81,14 @@ var _ = Describe("Entities: VNF", func() {
 			Expect(vnf.Validate()).To(MatchError("name cannot be empty"))
 		})
 
+		It("Should return an error if Version is empty", func() {
+			vnf.Version = ""
+			Expect(vnf.Validate()).To(MatchError("version cannot be empty"))
+		})
+
 		It("Should return an error if Vendor is empty", func() {
 			vnf.Vendor = ""
 			Expect(vnf.Validate()).To(MatchError("vendor cannot be empty"))
-		})
-
-		It("Should return an error if Image is empty", func() {
-			vnf.Image = ""
-			Expect(vnf.Validate()).To(MatchError("image cannot be empty"))
 		})
 
 		It("Should return an error if Cores is < 1", func() {
@@ -111,6 +112,16 @@ var _ = Describe("Entities: VNF", func() {
 			Expect(vnf.Validate()).To(MatchError(
 				"memory must be in [1..16384]"))
 		})
+
+		It("Should return an error if Source is empty", func() {
+			vnf.Source = ""
+			Expect(vnf.Validate()).To(MatchError("source cannot be empty"))
+		})
+
+		It("Should return an error if Source is an invalid HTTP URI", func() {
+			vnf.Source = "invalid.url"
+			Expect(vnf.Validate()).To(MatchError("source cannot be parsed as a URI"))
+		})
 	})
 
 	Describe("String", func() {
@@ -119,11 +130,12 @@ var _ = Describe("Entities: VNF", func() {
 VNF[
     ID: 28bbfdb2-dace-421d-a680-9ae893a95d37
     Name: test-container-vnf
+    Version: latest
     Vendor: test-vendor
     Description: test-description
-    Image: test-image
     Cores: 4
     Memory: 1024
+    Source: https://path/to/file.zip
 ]`,
 			)))
 		})

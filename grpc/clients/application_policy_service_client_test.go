@@ -44,9 +44,10 @@ var _ = Describe("Application Policy Service Client", func() {
 				Name:        "test_container_app",
 				Vendor:      "test_vendor",
 				Description: "test container app",
-				Image:       "http://test.com/container_app_123",
+				Version:     "latest",
 				Cores:       4,
 				Memory:      4096,
+				Source:      "https://path/to/file.zip",
 			})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(appID).ToNot(BeNil())

@@ -46,9 +46,10 @@ var _ = Describe("VNF Deployment Service Client", func() {
 				Name:        "test_container_vnf",
 				Vendor:      "test_vendor",
 				Description: "test container vnf",
-				Image:       "http://test.com/container_vnf_123",
+				Version:     "latest",
 				Cores:       4,
 				Memory:      4096,
+				Source:      "https://path/to/file.zip",
 			})
 		Expect(err).ToNot(HaveOccurred())
 
@@ -61,9 +62,10 @@ var _ = Describe("VNF Deployment Service Client", func() {
 				Name:        "test_vm_vnf",
 				Vendor:      "test_vendor",
 				Description: "test vm vnf",
-				Image:       "http://test.com/vm_vnf_123",
+				Version:     "latest",
 				Cores:       4,
 				Memory:      4096,
+				Source:      "https://path/to/file.zip",
 			})
 		Expect(err).ToNot(HaveOccurred())
 	})
@@ -134,9 +136,10 @@ var _ = Describe("VNF Deployment Service Client", func() {
 						Name:        "test_container_vnf",
 						Vendor:      "test_vendor",
 						Description: "test container vnf",
-						Image:       "http://test.com/container_vnf_123",
+						Version:     "latest",
 						Cores:       8,
 						Memory:      8192,
+						Source:      "https://path/to/file.zip",
 					})
 
 				By("Verifying a success response")
@@ -160,9 +163,10 @@ var _ = Describe("VNF Deployment Service Client", func() {
 						Name:        "test_vm_vnf",
 						Vendor:      "test_vendor",
 						Description: "test vm vnf",
-						Image:       "http://test.com/vm_vnf_123",
+						Version:     "latest",
 						Cores:       8,
 						Memory:      8192,
+						Source:      "https://path/to/file.zip",
 					})
 
 				By("Verifying a success response")

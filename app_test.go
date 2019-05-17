@@ -34,9 +34,10 @@ var _ = Describe("Entities: App", func() {
 			Name:        "test-container-app",
 			Vendor:      "test-vendor",
 			Description: "test-description",
-			Image:       "test-image",
+			Version:     "latest",
 			Cores:       4,
 			Memory:      1024,
+			Source:      "https://path/to/file.zip",
 		}
 	})
 
@@ -80,14 +81,14 @@ var _ = Describe("Entities: App", func() {
 			Expect(app.Validate()).To(MatchError("name cannot be empty"))
 		})
 
+		It("Should return an error if Version is empty", func() {
+			app.Version = ""
+			Expect(app.Validate()).To(MatchError("version cannot be empty"))
+		})
+
 		It("Should return an error if Vendor is empty", func() {
 			app.Vendor = ""
 			Expect(app.Validate()).To(MatchError("vendor cannot be empty"))
-		})
-
-		It("Should return an error if Image is empty", func() {
-			app.Image = ""
-			Expect(app.Validate()).To(MatchError("image cannot be empty"))
 		})
 
 		It("Should return an error if Cores is < 1", func() {
@@ -111,6 +112,16 @@ var _ = Describe("Entities: App", func() {
 			Expect(app.Validate()).To(MatchError(
 				"memory must be in [1..16384]"))
 		})
+
+		It("Should return an error if Source is empty", func() {
+			app.Source = ""
+			Expect(app.Validate()).To(MatchError("source cannot be empty"))
+		})
+
+		It("Should return an error if Source is an invalid HTTP URI", func() {
+			app.Source = "invalid.url"
+			Expect(app.Validate()).To(MatchError("source cannot be parsed as a URI"))
+		})
 	})
 
 	Describe("String", func() {
@@ -119,11 +130,12 @@ var _ = Describe("Entities: App", func() {
 App[
     ID: efcece3c-6b58-4993-8d45-bde6239d4baa
     Name: test-container-app
+    Version: latest
     Vendor: test-vendor
     Description: test-description
-    Image: test-image
     Cores: 4
     Memory: 1024
+    Source: https://path/to/file.zip
 ]`,
 			)))
 		})

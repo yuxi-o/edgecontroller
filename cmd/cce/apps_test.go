@@ -63,23 +63,25 @@ var _ = Describe("/apps", func() {
 				`
 				{
 					"name": "container app",
+					"version": "latest",
 					"type": "container",
 					"vendor": "smart edge",
 					"description": "my container app",
-					"image": "http://www.test.com/my_container_app.tar.gz",
 					"cores": 4,
-					"memory": 1024
+					"memory": 1024,
+					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`),
 			Entry(
 				"POST /apps without description",
 				`
 				{
 					"name": "container app",
+					"version": "latest",
 					"type": "container",
-					"vendor": "smart edge",
-					"image": "http://www.test.com/my_container_app.tar.gz",
+					"vendor": "smart edge",		
 					"cores": 4,
-					"memory": 1024
+					"memory": 1024,
+					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`),
 		)
 
@@ -115,11 +117,12 @@ var _ = Describe("/apps", func() {
 				`
 				{
 					"name": "container app",
+					"version": "latest",
 					"vendor": "smart edge",
 					"description": "my container app",
-					"image": "http://www.test.com/my_container_app.tar.gz",
 					"cores": 4,
-					"memory": 1024
+					"memory": 1024,
+					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`,
 				`Validation failed: type must be either "container" or "vm"`),
 			Entry(
@@ -128,46 +131,50 @@ var _ = Describe("/apps", func() {
 				{
 					"type": "container",
 					"vendor": "smart edge",
+					"version": "latest",
 					"description": "my container app",
-					"image": "http://www.test.com/my_container_app.tar.gz",
 					"cores": 4,
-					"memory": 1024
+					"memory": 1024,
+					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`,
 				"Validation failed: name cannot be empty"),
+			Entry(
+				"POST /apps without version",
+				`
+					{
+						"type": "container",
+						"name": "container app",
+						"vendor": "smart edge",
+						"description": "my container app",
+						"cores": 4,
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_app.tar.gz"
+					}`,
+				"Validation failed: version cannot be empty"),
 			Entry(
 				"POST /apps without vendor",
 				`
 				{
 					"type": "container",
 					"name": "container app",
+					"version": "latest",
 					"description": "my container app",
-					"image": "http://www.test.com/my_container_app.tar.gz",
 					"cores": 4,
-					"memory": 1024
+					"memory": 1024,
+					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`,
 				"Validation failed: vendor cannot be empty"),
-			Entry(
-				"POST /apps without image",
-				`
-				{
-					"type": "container",
-					"name": "container app",
-					"vendor": "smart edge",
-					"description": "my container app",
-					"cores": 4,
-					"memory": 1024
-				}`,
-				"Validation failed: image cannot be empty"),
 			Entry("POST /apps with cores not in [1..8]",
 				`
 				{
 					"type": "container",
 					"name": "container app",
+					"version": "latest",
 					"vendor": "smart edge",
 					"description": "my container app",
-					"image": "http://www.test.com/my_container_app.tar.gz",
 					"cores": 9,
-					"memory": 1024
+					"memory": 1024,
+					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`,
 				"Validation failed: cores must be in [1..8]"),
 			Entry("POST /apps with memory not in [1..16384]",
@@ -175,13 +182,41 @@ var _ = Describe("/apps", func() {
 				{
 					"type": "container",
 					"name": "container app",
+					"version": "latest",
 					"vendor": "smart edge",
 					"description": "my container app",
-					"image": "http://www.test.com/my_container_app.tar.gz",
 					"cores": 8,
-					"memory": 16385
+					"memory": 16385,
+					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`,
 				"Validation failed: memory must be in [1..16384]"),
+			Entry(
+				"POST /apps without source",
+				`
+						{
+							"type": "container",
+							"name": "container app",
+							"version": "latest",
+							"vendor": "smart edge",
+							"description": "my container app",
+							"cores": 4,
+							"memory": 1024
+						}`,
+				"Validation failed: source can not be empty"),
+			Entry(
+				"POST /apps without source",
+				`
+							{
+								"type": "container",
+								"name": "container app",
+								"version": "latest",
+								"vendor": "smart edge",
+								"description": "my container app",
+								"cores": 4,
+								"memory": 1024,
+								"source": "invalid.url"
+							}`,
+				"Validation failed: source cannot be parsed as a URI"),
 		)
 	})
 
@@ -221,22 +256,24 @@ var _ = Describe("/apps", func() {
 						ID:          containerAppID,
 						Type:        "container",
 						Name:        "container app",
+						Version:     "latest",
 						Vendor:      "smart edge",
 						Description: "my container app",
-						Image:       "http://www.test.com/my_container_app.tar.gz",
 						Cores:       4,
 						Memory:      1024,
+						Source:      "http://www.test.com/my_container_app.tar.gz",
 					}))
 				Expect(apps).To(ContainElement(
 					cce.App{
 						ID:          vmAppID,
 						Type:        "vm",
 						Name:        "vm app",
+						Version:     "latest",
 						Vendor:      "smart edge",
 						Description: "my vm app",
-						Image:       "http://www.test.com/my_vm_app.tar.gz",
 						Cores:       4,
 						Memory:      1024,
+						Source:      "http://www.test.com/my_vm_app.tar.gz",
 					}))
 			},
 			Entry("GET /apps"),
@@ -262,11 +299,12 @@ var _ = Describe("/apps", func() {
 						ID:          containerAppID,
 						Type:        "container",
 						Name:        "container app",
+						Version:     "latest",
 						Vendor:      "smart edge",
 						Description: "my container app",
-						Image:       "http://www.test.com/my_container_app.tar.gz",
 						Cores:       4,
 						Memory:      1024,
+						Source:      "http://www.test.com/my_container_app.tar.gz",
 					},
 				))
 			},
@@ -327,21 +365,23 @@ var _ = Describe("/apps", func() {
 						"id": "%s",
 						"type": "container",
 						"name": "container app2",
+						"version": "latest",
 						"vendor": "smart edge",
-						"description": "my container app",
-						"image": "http://www.test.com/my_container_app.tar.gz",
+						"description": "my container app",	
 						"cores": 4,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
 				&cce.App{
-					Name:        "container app2",
 					Type:        "container",
+					Name:        "container app2",
+					Version:     "latest",
 					Vendor:      "smart edge",
 					Description: "my container app",
-					Image:       "http://www.test.com/my_container_app.tar.gz",
 					Cores:       4,
 					Memory:      1024,
+					Source:      "http://www.test.com/my_container_app.tar.gz",
 				}),
 			Entry("PATCH /apps with no description",
 				`
@@ -350,10 +390,11 @@ var _ = Describe("/apps", func() {
 						"id": "%s",
 						"type": "container",
 						"name": "container app2",
+						"version": "latest",
 						"vendor": "smart edge",
-						"image": "http://www.test.com/my_container_app.tar.gz",
 						"cores": 4,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
 				&cce.App{
@@ -361,9 +402,10 @@ var _ = Describe("/apps", func() {
 					Type:        "container",
 					Vendor:      "smart edge",
 					Description: "",
-					Image:       "http://www.test.com/my_container_app.tar.gz",
+					Version:     "latest",
 					Cores:       4,
 					Memory:      1024,
+					Source:      "http://www.test.com/my_container_app.tar.gz",
 				}),
 		)
 
@@ -397,11 +439,12 @@ var _ = Describe("/apps", func() {
 					{
 						"type": "container",
 						"name": "container app2",
+						"version": "latest",
 						"vendor": "smart edge",
 						"description": "my container app",
-						"image": "http://www.test.com/my_container_app.tar.gz",
 						"cores": 4,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
 				"Validation failed: id not a valid uuid"),
@@ -412,11 +455,12 @@ var _ = Describe("/apps", func() {
 					{
 						"id": "%s",
 						"name": "container app2",
+						"version": "latest",
 						"vendor": "smart edge",
-						"description": "my container app",
-						"image": "http://www.test.com/my_container_app.tar.gz",
+						"description": "my container app",	
 						"cores": 4,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
 				`Validation failed: type must be either "container" or "vm"`),
@@ -427,14 +471,31 @@ var _ = Describe("/apps", func() {
 					{
 						"id": "%s",
 						"type": "container",
+						"version": "latest",
 						"vendor": "smart edge",
 						"description": "my container app",
-						"image": "http://www.test.com/my_container_app.tar.gz",
 						"cores": 4,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
 				"Validation failed: name cannot be empty"),
+			Entry("PATCH /apps without version",
+				`
+				[
+					{
+						"id": "%s",
+						"type": "container",
+						"name": "container app2",
+						"vendor": "smart edge",
+						"description": "my container app",
+						"cores": 4,
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_app.tar.gz"
+					}
+				]`,
+				"Validation failed: version cannot be empty"),
+
 			Entry("PATCH /apps without vendor",
 				`
 				[
@@ -442,27 +503,14 @@ var _ = Describe("/apps", func() {
 						"id": "%s",
 						"type": "container",
 						"name": "container app2",
+						"version": "latest",
 						"description": "my container app",
-						"image": "http://www.test.com/my_container_app.tar.gz",
 						"cores": 4,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
 				"Validation failed: vendor cannot be empty"),
-			Entry("PATCH /apps without image",
-				`
-				[
-					{
-						"id": "%s",
-						"type": "container",
-						"name": "container app2",
-						"vendor": "smart edge",
-						"description": "my container app",
-						"cores": 4,
-						"memory": 1024
-					}
-				]`,
-				"Validation failed: image cannot be empty"),
 			Entry("PATCH /apps with cores not in [1..8]",
 				`
 				[
@@ -470,11 +518,12 @@ var _ = Describe("/apps", func() {
 						"id": "%s",
 						"type": "container",
 						"name": "container app2",
+						"version": "latest",
 						"vendor": "smart edge",
 						"description": "my container app",
-						"image": "http://www.test.com/my_container_app.tar.gz",
 						"cores": 9,
-						"memory": 1024
+						"memory": 1024,
+						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
 				"Validation failed: cores must be in [1..8]"),
@@ -485,14 +534,46 @@ var _ = Describe("/apps", func() {
 						"id": "%s",
 						"type": "container",
 						"name": "container app2",
+						"version": "latest",
 						"vendor": "smart edge",
 						"description": "my container app",
-						"image": "http://www.test.com/my_container_app.tar.gz",
 						"cores": 4,
-						"memory": 16385
+						"memory": 16385,
+						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
 				"Validation failed: memory must be in [1..16384]"),
+			Entry("PATCH /apps without source",
+				`
+				[
+					{
+						"id": "%s",
+						"type": "container",
+						"name": "container app2",
+						"version": "latest",
+						"vendor": "smart edge",
+						"description": "my container app",
+						"cores": 4,
+						"memory": 1024
+					}
+				]`,
+				"Validation failed: source can not be empty"),
+			Entry("PATCH /apps without source",
+				`
+				[
+					{
+						"id": "%s",
+						"type": "container",
+						"name": "container app2",
+						"version": "latest",
+						"vendor": "smart edge",
+						"description": "my container app",
+						"cores": 4,
+						"memory": 1024,
+						"source": "invalid.url"
+					}
+				]`,
+				"Validation failed: source cannot be parsed as a URI"),
 		)
 	})
 
