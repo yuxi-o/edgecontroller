@@ -37,15 +37,15 @@ script:
   - make lint test
 
 jobs:
-    include:
-      - stage: FrontEnd
-        language: node_js
-        node_js:
-          - "lts/*"
-        before_script:
-          - cd ui/
-          - npm install -g yarn
-        script:
-          - yarn install
-          - yarn build
-          - yarn test
+  include:
+    - stage: FrontEnd
+      language: node_js
+      node_js:
+        - "lts/*"
+      before_script:
+        - cd ui/
+        - npm install -g yarn
+      script:
+        - yarn install
+        - yarn build
+        - yarn test

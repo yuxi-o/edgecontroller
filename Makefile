@@ -14,25 +14,41 @@
 
 export GO111MODULE = on
 
-.PHONY: help clean build lint test
+.PHONY: help clean build lint test \
+	db-up db-reset db-down \
+	statsd-up statsd-down syslog-up syslog-down \
+	ui-up ui-down ui-test \
+	test-unit test-syslog test-statsd test-api
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
-	@echo "  clean            to clean up build artifacts and docker"
-	@echo "  build            to build the release docker image"
+	@echo "Building:"
+	@echo "  clean            to clean up build artifacts and docker volumes"
+	@echo "  build            to build the project to the ./dist/ folder"
+	@echo ""
+	@echo "Services:"
+	@echo "  db-up            to start the MySQL database service"
+	@echo "  db-reset         to start and reset the MySQL database service"
+	@echo "  db-down          to stop the MySQL database service"
+	@echo ""
+	@echo "  syslog-up        to start the syslog service"
+	@echo "  syslog-down      to stop the syslog service"
+	@echo ""
+	@echo "  statsd-up        to start the statsd service"
+	@echo "  statsd-down      to stop the statsd service"
+	@echo ""
+	@echo "Testing:"
 	@echo "  lint             to run linters and static analysis on the code"
-	@echo "  db-up            to start the MySQL database using docker-compose"
-	@echo "  db-reset         to start and reset the MySQL database using docker-compose"
-	@echo "  db-down          to stop the MySQL database using docker-compose"
+	@echo "  test             to run all tests"
 	@echo "  test-unit        to run unit tests"
 	@echo "  test-api         to run api tests"
-	@echo "  test             to run unit followed by api tests"
+	@echo "  test-syslog      to run syslog tests"
+	@echo "  test-statsd      to run statsd tests"
 
 clean:
 	rm -rf dist certificates statsd/stats.log syslog/logs
 
 build:
-	mkdir -p dist
 	go build -o dist/cce ./cmd/cce
 	go build -o dist/test-node ./test/node/grpc
 
@@ -41,7 +57,10 @@ lint:
 
 db-up:
 	docker-compose up -d mysql
-	until mysql -P 8083 --protocol tcp -uroot -pbeer -e '' 2>/dev/null; do echo "Waiting for DB..."; sleep 1; done
+	until mysql -P 8083 --protocol tcp -uroot -pbeer -e '' 2>/dev/null; do \
+		echo "Waiting for DB..."; \
+		sleep 1; \
+		done
 
 db-reset: db-up
 	mysql -P 8083 --protocol tcp -u root -pbeer < mysql/schema.sql
@@ -68,7 +87,8 @@ ui-test:
 	cd ui/ && yarn install && yarn build && yarn test
 
 test-unit:
-	ginkgo -v -r --randomizeAllSpecs --randomizeSuites --skipPackage=vendor,statsd,syslog,cmd/cce
+	ginkgo -v -r --randomizeAllSpecs --randomizeSuites \
+		--skipPackage=vendor,statsd,syslog,cmd/cce
 
 test-statsd: statsd-up
 	ginkgo -v --randomizeAllSpecs --randomizeSuites statsd

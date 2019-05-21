@@ -15,7 +15,7 @@
 # EditorConfig - http://editorconfig.org/
 # Install the EditorConfig plugin for your favorite editor to benefit from this.
 
-root = true
+root = false
 
 [*]
 charset = utf-8
@@ -32,3 +32,9 @@ trim_trailing_whitespace = false
 
 [COMMIT_EDITMSG]
 max_line_length = 0
+
+[conf/*.conf]
+indent_size = 2
+
+[*.svg]
+indent_size = 4

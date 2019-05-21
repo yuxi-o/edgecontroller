@@ -16,7 +16,7 @@ services:
     ports:
       - 8125:8125/udp
     volumes:
-    - ./statsd:/etc/gostatsd
+      - ./statsd:/etc/gostatsd
 
   syslog:
     image: balabit/syslog-ng:3.19.1
