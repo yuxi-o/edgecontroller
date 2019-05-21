@@ -25,3 +25,7 @@ services:
     volumes:
       - ./syslog/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
       - ./syslog/logs:/var/log
+  ui:
+    image: cce-ui:latest
+    ports:
+      - 3000:80/tcp

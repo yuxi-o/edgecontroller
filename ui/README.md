@@ -66,12 +66,10 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 This project works in a docker container as well
 
 First run:
-`docker build . -t controller-ui`
+`docker build . -t cce-ui`
 
 Then:
-`docker run -p 2222:2222 controller-ui`
-
-_the 2222 port intend to make work on Azure websites as container for default, cause is the port they use to expose the server_
+`docker run -p 3000:80 cce-ui`
 
 ## Publish at Github pages
 `yarn deploy`

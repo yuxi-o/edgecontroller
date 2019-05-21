@@ -44,6 +44,12 @@ help:
 	@echo "  test-api         to run api tests"
 	@echo "  test-syslog      to run syslog tests"
 	@echo "  test-statsd      to run statsd tests"
+	@echo "  test             to run unit followed by api tests"
+	@echo ""
+	@echo "  ui-up            to start the production UI Container"
+	@echo "  ui-down          to stop the production UI container"
+	@echo "  ui-dev-up        to start local developer instance of the UI"
+	@echo "  ui-test          run the UI project tests"
 
 clean:
 	rm -rf dist certificates statsd/stats.log syslog/logs
@@ -81,6 +87,13 @@ syslog-down:
 	docker-compose stop syslog
 
 ui-up:
+	docker build -t cce-ui ./ui
+	docker-compose up -d ui
+
+ui-down:
+	docker-compose stop ui
+
+ui-dev-up:
 	cd ui/ && yarn install && yarn start
 
 ui-test:
