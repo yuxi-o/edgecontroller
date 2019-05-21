@@ -60,6 +60,7 @@ func main() {
 	pb.RegisterInterfaceServiceServer(server, mockNode.InterfaceSvc)
 	pb.RegisterInterfacePolicyServiceServer(server, mockNode.IfPolicySvc)
 	pb.RegisterZoneServiceServer(server, mockNode.ZoneSvc)
+	pb.RegisterDNSServiceServer(server, mockNode.DNSSvc)
 
 	// Shut down the server gracefully
 	go func() {

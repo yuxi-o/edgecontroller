@@ -147,14 +147,14 @@ var _ = Describe("/nodes", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var nodes []cce.Node
+				var nodes []*cce.Node
 
 				By("Unmarshalling the response")
 				Expect(json.Unmarshal(body, &nodes)).To(Succeed())
 
 				By("Verifying the 2 created nodes were returned")
 				Expect(nodes).To(ContainElement(
-					cce.Node{
+					&cce.Node{
 						ID:         nodeID,
 						Name:       "Test Node 1",
 						Location:   "Localhost port 8082",
@@ -162,7 +162,7 @@ var _ = Describe("/nodes", func() {
 						GRPCTarget: "127.0.0.1:8082",
 					}))
 				Expect(nodes).To(ContainElement(
-					cce.Node{
+					&cce.Node{
 						ID:         node2ID,
 						Name:       "Test Node 1",
 						Location:   "Localhost port 8082",

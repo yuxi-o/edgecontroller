@@ -46,3 +46,29 @@ func handleGetNodesApps(
 
 	return &m, nil
 }
+
+func handleGetNodesVNFs(
+	ctx context.Context,
+	ps cce.PersistenceService,
+	e cce.Persistable,
+) (cce.RespEntity, error) {
+	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeVNF))
+
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println(nodeCC.Node)
+
+	status, err := nodeCC.VNFDeploySvcCli.GetStatus(ctx, e.(*cce.NodeVNF).VNFID)
+	if err != nil {
+		return nil, err
+	}
+
+	m := cce.NodeVNFResp{
+		NodeVNF: *e.(*cce.NodeVNF),
+		Status:  status.String(),
+	}
+
+	return &m, nil
+}

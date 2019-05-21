@@ -22,20 +22,21 @@ import (
 	gclients "github.com/smartedgemec/controller-ce/grpc/clients"
 )
 
-// ClientConn wraps a Node and provides a Connect() method to create wrapped
-// gRPC clients.
-// TODO does this need an interface?
+// ClientConn wraps a Node and provides a Connect() method to create wrapped gRPC clients.
 type ClientConn struct {
 	Node *cce.Node
 
 	conn *grpc.ClientConn
 
-	AppDeploySvcCli *gclients.ApplicationDeploymentServiceClient
-	AppLifeSvcCli   *gclients.ApplicationLifecycleServiceClient
-	AppPolicySvcCli *gclients.ApplicationPolicyServiceClient
-	VNFDeploySvcCli *gclients.VNFDeploymentServiceClient
-	VNFLifeSvcCli   *gclients.VNFLifecycleServiceClient
-	DNSSvcCli       *gclients.DNSServiceClient
+	AppDeploySvcCli   *gclients.ApplicationDeploymentServiceClient
+	AppLifeSvcCli     *gclients.ApplicationLifecycleServiceClient
+	AppPolicySvcCli   *gclients.ApplicationPolicyServiceClient
+	IfacePolicySvcCli *gclients.InterfacePolicyServiceClient
+	IfaceSvcCli       *gclients.InterfaceServiceClient
+	VNFDeploySvcCli   *gclients.VNFDeploymentServiceClient
+	VNFLifeSvcCli     *gclients.VNFLifecycleServiceClient
+	DNSSvcCli         *gclients.DNSServiceClient
+	ZoneSvcCli        *gclients.ZoneServiceClient
 }
 
 // Connect connects to a node via grpc.Dial.
@@ -48,9 +49,12 @@ func (cc *ClientConn) Connect(ctx context.Context) error {
 	cc.AppDeploySvcCli = gclients.NewApplicationDeploymentServiceClient(cc.conn)
 	cc.AppLifeSvcCli = gclients.NewApplicationLifecycleServiceClient(cc.conn)
 	cc.AppPolicySvcCli = gclients.NewApplicationPolicyServiceClient(cc.conn)
+	cc.IfacePolicySvcCli = gclients.NewInterfacePolicyServiceClient(cc.conn)
+	cc.IfaceSvcCli = gclients.NewInterfaceServiceClient(cc.conn)
 	cc.VNFDeploySvcCli = gclients.NewVNFDeploymentServiceClient(cc.conn)
 	cc.VNFLifeSvcCli = gclients.NewVNFLifecycleServiceClient(cc.conn)
 	cc.DNSSvcCli = gclients.NewDNSServiceClient(cc.conn)
+	cc.ZoneSvcCli = gclients.NewZoneServiceClient(cc.conn)
 
 	return nil
 }

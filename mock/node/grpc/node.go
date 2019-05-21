@@ -25,10 +25,10 @@ type MockNode struct {
 	AppPolicySvc pb.ApplicationPolicyServiceServer
 	VNFDeploySvc pb.VNFDeploymentServiceServer
 	VNFLifeSvc   pb.VNFLifecycleServiceServer
+	DNSSvc       pb.DNSServiceServer
 	InterfaceSvc pb.InterfaceServiceServer
 	IfPolicySvc  pb.InterfacePolicyServiceServer
 	ZoneSvc      pb.ZoneServiceServer
-	DNSSvc       pb.DNSServiceServer
 }
 
 // NewMockNode creates a new MockNode with node services initialized.
@@ -39,10 +39,10 @@ func NewMockNode() *MockNode {
 		appDeployLifeSvc = newAppDeployLifeService()
 		appPolicySvc     = newAppPolicyService(appDeployLifeSvc)
 		vnfDeployLifeSvc = &vnfDeployLifeService{}
+		dnsSvc           = newDNSService()
 		interfaceSvc     = newInterfaceService()
 		ifPolicySvc      = newInterfacePolicyService(interfaceSvc)
 		zoneSvc          = &zoneService{}
-		dnsSvc           = newDNSService()
 	)
 
 	appDeployLifeSvc.appPolicyService = appPolicySvc

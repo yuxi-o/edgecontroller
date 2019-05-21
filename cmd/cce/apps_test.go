@@ -245,14 +245,14 @@ var _ = Describe("/apps", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var apps []cce.App
+				var apps []*cce.App
 
 				By("Unmarshalling the response")
 				Expect(json.Unmarshal(body, &apps)).To(Succeed())
 
 				By("Verifying the 2 created apps were returned")
 				Expect(apps).To(ContainElement(
-					cce.App{
+					&cce.App{
 						ID:          containerAppID,
 						Type:        "container",
 						Name:        "container app",
@@ -264,7 +264,7 @@ var _ = Describe("/apps", func() {
 						Source:      "http://www.test.com/my_container_app.tar.gz",
 					}))
 				Expect(apps).To(ContainElement(
-					cce.App{
+					&cce.App{
 						ID:          vmAppID,
 						Type:        "vm",
 						Name:        "vm app",

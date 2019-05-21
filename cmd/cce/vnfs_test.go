@@ -245,14 +245,14 @@ var _ = Describe("/vnfs", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var vnfs []cce.VNF
+				var vnfs []*cce.VNF
 
 				By("Unmarshalling the response")
 				Expect(json.Unmarshal(body, &vnfs)).To(Succeed())
 
 				By("Verifying the 2 created VNFs were returned")
 				Expect(vnfs).To(ContainElement(
-					cce.VNF{
+					&cce.VNF{
 						ID:          containerVNFID,
 						Type:        "container",
 						Name:        "container vnf",
@@ -264,7 +264,7 @@ var _ = Describe("/vnfs", func() {
 						Source:      "http://www.test.com/my_container_vnf.tar.gz",
 					}))
 				Expect(vnfs).To(ContainElement(
-					cce.VNF{
+					&cce.VNF{
 						ID:          vmVNFID,
 						Type:        "vm",
 						Name:        "vm vnf",

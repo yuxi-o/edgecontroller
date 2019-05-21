@@ -26,7 +26,8 @@ import (
 
 var _ = Describe("Application Policy Service Client", func() {
 	var (
-		appID string
+		appID           string
+		trafficPolicyID string
 	)
 
 	BeforeEach(func() {
@@ -34,6 +35,7 @@ var _ = Describe("Application Policy Service Client", func() {
 
 		By("Generating new IDs")
 		appID = uuid.New()
+		trafficPolicyID = uuid.New()
 
 		By("Deploying an application")
 		err = appDeploySvcCli.Deploy(
@@ -59,8 +61,9 @@ var _ = Describe("Application Policy Service Client", func() {
 				By("Updating the traffic policy")
 				err := appPolicySvcCli.Set(
 					ctx,
+					appID,
 					&cce.TrafficPolicy{
-						ID: appID,
+						ID: trafficPolicyID,
 						Rules: []*cce.TrafficRule{
 							{
 								Description: "updated_rule",
@@ -105,12 +108,41 @@ var _ = Describe("Application Policy Service Client", func() {
 		})
 
 		Describe("Errors", func() {
-			It("Should return an error if the ID does not exist", func() {
-				By("Passing a nonexistent ID")
+			It("Should return an error if the app ID does not exist", func() {
+				By("Passing a nonexistent app ID")
 				badID := uuid.New()
-				err := appPolicySvcCli.Set(ctx, &cce.TrafficPolicy{
-					ID: badID,
+				err := appPolicySvcCli.Set(ctx, badID, &cce.TrafficPolicy{
+					ID: trafficPolicyID,
 				})
+
+				By("Verifying a NotFound response")
+				Expect(err).To(HaveOccurred())
+				Expect(errors.Cause(err)).To(Equal(
+					status.Errorf(codes.NotFound,
+						"Application %s not found", badID)))
+			})
+		})
+	})
+
+	Describe("Delete", func() {
+		Describe("Success", func() {
+			It("Should delete the traffic policy", func() {
+				By("Deleting the traffic policy")
+				err := appPolicySvcCli.Delete(
+					ctx,
+					appID,
+				)
+
+				By("Verifying a success response")
+				Expect(err).ToNot(HaveOccurred())
+			})
+		})
+
+		Describe("Errors", func() {
+			It("Should return an error if the app ID does not exist", func() {
+				By("Passing a nonexistent app ID")
+				badID := uuid.New()
+				err := appPolicySvcCli.Delete(ctx, badID)
 
 				By("Verifying a NotFound response")
 				Expect(err).To(HaveOccurred())

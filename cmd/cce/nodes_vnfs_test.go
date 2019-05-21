@@ -29,30 +29,30 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("/nodes_apps", func() {
+var _ = Describe("/nodes_vnfs", func() {
 	var (
 		nodeID string
-		appID  string
+		vnfID  string
 	)
 
 	BeforeEach(func() {
 		nodeID = postNodes()
-		appID = postApps("container")
+		vnfID = postVNFs("container")
 	})
 
-	Describe("POST /nodes_apps", func() {
+	Describe("POST /nodes_vnfs", func() {
 		DescribeTable("201 Created",
 			func() {
-				By("Sending a POST /nodes_apps request")
+				By("Sending a POST /nodes_vnfs request")
 				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/nodes_apps",
+					"http://127.0.0.1:8080/nodes_vnfs",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
 						`
 						{
 							"node_id": "%s",
-							"app_id": "%s"
-						}`, nodeID, appID)))
+							"vnf_id": "%s"
+						}`, nodeID, vnfID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -74,14 +74,14 @@ var _ = Describe("/nodes_apps", func() {
 				Expect(uuid.IsValid(respBody.ID)).To(BeTrue())
 			},
 			Entry(
-				"POST /nodes_apps"),
+				"POST /nodes_vnfs"),
 		)
 
 		DescribeTable("400 Bad Request",
 			func(req, expectedResp string) {
-				By("Sending a POST /nodes_apps request")
+				By("Sending a POST /nodes_vnfs request")
 				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/nodes_apps",
+					"http://127.0.0.1:8080/nodes_vnfs",
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
@@ -98,25 +98,25 @@ var _ = Describe("/nodes_apps", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
-				"POST /nodes_apps with id",
+				"POST /nodes_vnfs with id",
 				`
 				{
 					"id": "123"
 				}`,
 				"Validation failed: id cannot be specified in POST request"),
 			Entry(
-				"POST /nodes_apps without node_id",
+				"POST /nodes_vnfs without node_id",
 				`
 				{
 				}`,
 				"Validation failed: node_id not a valid uuid"),
 			Entry(
-				"POST /nodes_apps without app_id",
+				"POST /nodes_vnfs without vnf_id",
 				fmt.Sprintf(`
 				{
 					"node_id": "%s"
 				}`, uuid.New()),
-				"Validation failed: app_id not a valid uuid"),
+				"Validation failed: vnf_id not a valid uuid"),
 		)
 
 		DescribeTable("422 Unprocessable Entity",
@@ -126,19 +126,19 @@ var _ = Describe("/nodes_apps", func() {
 					err  error
 				)
 
-				By("Sending a POST /nodes_apps request")
-				postNodesApps(nodeID, appID)
+				By("Sending a POST /nodes_vnfs request")
+				postNodesVNFs(nodeID, vnfID)
 
-				By("Repeating the first POST /nodes_apps request")
+				By("Repeating the first POST /nodes_vnfs request")
 				resp, err = apiCli.Post(
-					"http://127.0.0.1:8080/nodes_apps",
+					"http://127.0.0.1:8080/nodes_vnfs",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
 						`
 						{
 							"node_id": "%s",
-							"app_id": "%s"
-						}`, nodeID, appID)))
+							"vnf_id": "%s"
+						}`, nodeID, vnfID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -153,89 +153,89 @@ var _ = Describe("/nodes_apps", func() {
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(fmt.Sprintf(
 					"duplicate record detected for node_id %s and "+
-						"app_id %s",
+						"vnf_id %s",
 					nodeID,
-					appID)))
+					vnfID)))
 			},
-			Entry("POST /nodes_apps with duplicate node_id and app_id"),
+			Entry("POST /nodes_vnfs with duplicate node_id and vnf_id"),
 		)
 	})
 
-	Describe("GET /nodes_apps", func() {
+	Describe("GET /nodes_vnfs", func() {
 		var (
-			nodeAppID  string
-			app2ID     string
-			nodeApp2ID string
+			nodeVNFID  string
+			vnf2ID     string
+			nodeVNF2ID string
 		)
 
 		BeforeEach(func() {
-			nodeAppID = postNodesApps(nodeID, appID)
-			app2ID = postApps("container")
-			nodeApp2ID = postNodesApps(nodeID, app2ID)
+			nodeVNFID = postNodesVNFs(nodeID, vnfID)
+			vnf2ID = postVNFs("container")
+			nodeVNF2ID = postNodesVNFs(nodeID, vnf2ID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				nodeAppsResp := getNodeApps(nodeID)
+				nodeVNFsResp := getNodeVNFs(nodeID)
 
-				By("Verifying the 2 created node apps were returned")
-				Expect(nodeAppsResp).To(ContainElement(
-					&cce.NodeAppResp{
-						NodeApp: cce.NodeApp{
-							ID:     nodeAppID,
+				By("Verifying the 2 created node VNFs were returned")
+				Expect(nodeVNFsResp).To(ContainElement(
+					&cce.NodeVNFResp{
+						NodeVNF: cce.NodeVNF{
+							ID:     nodeVNFID,
 							NodeID: nodeID,
-							AppID:  appID,
+							VNFID:  vnfID,
 						},
 						Status: "deployed",
 					}))
-				Expect(nodeAppsResp).To(ContainElement(
-					&cce.NodeAppResp{
-						NodeApp: cce.NodeApp{
-							ID:     nodeApp2ID,
+				Expect(nodeVNFsResp).To(ContainElement(
+					&cce.NodeVNFResp{
+						NodeVNF: cce.NodeVNF{
+							ID:     nodeVNF2ID,
 							NodeID: nodeID,
-							AppID:  app2ID,
+							VNFID:  vnf2ID,
 						},
 						Status: "deployed",
 					}))
 			},
-			Entry("GET /nodes_apps"),
+			Entry("GET /nodes_vnfs"),
 		)
 	})
 
-	Describe("GET /nodes_apps/{id}", func() {
+	Describe("GET /nodes_vnfs/{id}", func() {
 		var (
-			nodeAppID string
+			nodeVNFID string
 		)
 
 		BeforeEach(func() {
-			nodeAppID = postNodesApps(nodeID, appID)
+			nodeVNFID = postNodesVNFs(nodeID, vnfID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				nodeAppResp := getNodeApp(nodeAppID)
+				nodeVNFResp := getNodeVNF(nodeVNFID)
 
-				By("Verifying the created node app was returned")
-				Expect(nodeAppResp).To(Equal(
-					&cce.NodeAppResp{
-						NodeApp: cce.NodeApp{
-							ID:     nodeAppID,
+				By("Verifying the created node VNF was returned")
+				Expect(nodeVNFResp).To(Equal(
+					&cce.NodeVNFResp{
+						NodeVNF: cce.NodeVNF{
+							ID:     nodeVNFID,
 							NodeID: nodeID,
-							AppID:  appID,
+							VNFID:  vnfID,
 						},
 						Status: "deployed",
 					},
 				))
 			},
-			Entry("GET /nodes_apps/{id}"),
+			Entry("GET /nodes_vnfs/{id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func() {
-				By("Sending a GET /nodes_apps/{id} request")
+				By("Sending a GET /nodes_vnfs/{id} request")
 				resp, err := apiCli.Get(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps/%s",
+						"http://127.0.0.1:8080/nodes_vnfs/%s",
 						uuid.New()))
 
 				By("Verifying a 404 Not Found response")
@@ -243,27 +243,27 @@ var _ = Describe("/nodes_apps", func() {
 				defer resp.Body.Close()
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("GET /nodes_apps/{id} with nonexistent ID"),
+			Entry("GET /nodes_vnfs/{id} with nonexistent ID"),
 		)
 	})
 
-	Describe("PATCH /nodes_apps", func() {
+	Describe("PATCH /nodes_vnfs", func() {
 		var (
-			nodeAppID string
+			nodeVNFID string
 		)
 
 		BeforeEach(func() {
-			nodeAppID = postNodesApps(nodeID, appID)
+			nodeVNFID = postNodesVNFs(nodeID, vnfID)
 		})
 
 		DescribeTable("204 No Content",
-			func(reqStr string, expectedNodeAppResp *cce.NodeAppResp) {
-				By("Sending a PATCH /nodes_apps request")
+			func(reqStr string, expectedNodeVNFResp *cce.NodeVNFResp) {
+				By("Sending a PATCH /nodes_vnfs request")
 				resp, err := apiCli.Patch(
-					"http://127.0.0.1:8080/nodes_apps",
+					"http://127.0.0.1:8080/nodes_vnfs",
 					"application/json",
 					strings.NewReader(
-						fmt.Sprintf(reqStr, nodeAppID, nodeID, appID)))
+						fmt.Sprintf(reqStr, nodeVNFID, nodeID, vnfID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -272,43 +272,43 @@ var _ = Describe("/nodes_apps", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
 				By("Getting the updated node")
-				updatedNodeAppResp := getNodeApp(nodeAppID)
+				updatedNodeVNFResp := getNodeVNF(nodeVNFID)
 
 				By("Verifying the node was updated")
-				expectedNodeAppResp.NodeApp = cce.NodeApp{
-					ID:     nodeAppID,
+				expectedNodeVNFResp.NodeVNF = cce.NodeVNF{
+					ID:     nodeVNFID,
 					NodeID: nodeID,
-					AppID:  appID,
+					VNFID:  vnfID,
 				}
-				Expect(updatedNodeAppResp).To(Equal(expectedNodeAppResp))
+				Expect(updatedNodeVNFResp).To(Equal(expectedNodeVNFResp))
 			},
 			Entry(
-				"PATCH /nodes_apps",
+				"PATCH /nodes_vnfs",
 				`
 				[
 					{
 						"id": "%s",
 						"node_id": "%s",
-						"app_id": "%s",
+						"vnf_id": "%s",
 						"cmd": "start"
 					}
 				]`,
-				&cce.NodeAppResp{
+				&cce.NodeVNFResp{
 					Status: "running",
 				}),
 		)
 
 		DescribeTable("400 Bad Request",
 			func(reqStr string, expectedResp string) {
-				By("Sending a PATCH /nodes_apps request")
+				By("Sending a PATCH /nodes_vnfs request")
 				switch strings.Count(reqStr, "%s") {
 				case 2:
-					reqStr = fmt.Sprintf(reqStr, nodeAppID, nodeID)
+					reqStr = fmt.Sprintf(reqStr, nodeVNFID, nodeID)
 				case 3:
-					reqStr = fmt.Sprintf(reqStr, nodeAppID, nodeID, appID)
+					reqStr = fmt.Sprintf(reqStr, nodeVNFID, nodeID, vnfID)
 				}
 				resp, err := apiCli.Patch(
-					"http://127.0.0.1:8080/nodes_apps",
+					"http://127.0.0.1:8080/nodes_vnfs",
 					"application/json",
 					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
@@ -326,26 +326,26 @@ var _ = Describe("/nodes_apps", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
-				"PATCH /nodes_apps without id",
+				"PATCH /nodes_vnfs without id",
 				`
 				[
 					{
 						"node_id": "123",
-						"app_id": "456"
+						"vnf_id": "456"
 					}
 				]`,
 				"Validation failed: id not a valid uuid"),
 			Entry(
-				"PATCH /nodes_apps without node_id",
+				"PATCH /nodes_vnfs without node_id",
 				`
 				[
 					{
 						"id": "%s",
-						"app_id": "%s"
+						"vnf_id": "%s"
 					}
 				]`,
 				"Validation failed: node_id not a valid uuid"),
-			Entry("PATCH /nodes_apps without app_id",
+			Entry("PATCH /nodes_vnfs without vnf_id",
 				`
 				[
 					{
@@ -353,24 +353,24 @@ var _ = Describe("/nodes_apps", func() {
 						"node_id": "%s"
 					}
 				]`,
-				"Validation failed: app_id not a valid uuid"),
-			Entry("PATCH /nodes_apps without cmd",
+				"Validation failed: vnf_id not a valid uuid"),
+			Entry("PATCH /nodes_vnfs without cmd",
 				`
 				[
 					{
 						"id": "%s",
 						"node_id": "%s",
-						"app_id": "%s"
+						"vnf_id": "%s"
 					}
 				]`,
 				"Validation failed: cmd missing"),
-			Entry("PATCH /nodes_apps with invalid cmd",
+			Entry("PATCH /nodes_vnfs with invalid cmd",
 				`
 				[
 					{
 						"id": "%s",
 						"node_id": "%s",
-						"app_id": "%s",
+						"vnf_id": "%s",
 						"cmd": "abc"
 					}
 				]`,
@@ -378,50 +378,50 @@ var _ = Describe("/nodes_apps", func() {
 		)
 	})
 
-	Describe("DELETE /nodes_apps/{id}", func() {
+	Describe("DELETE /nodes_vnfs/{id}", func() {
 		var (
-			nodeAppID string
+			nodeVNFID string
 		)
 
 		BeforeEach(func() {
-			nodeAppID = postNodesApps(nodeID, appID)
+			nodeVNFID = postNodesVNFs(nodeID, vnfID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				By("Sending a DELETE /nodes_apps/{id} request")
+				By("Sending a DELETE /nodes_vnfs/{id} request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps/%s",
-						nodeAppID))
+						"http://127.0.0.1:8080/nodes_vnfs/%s",
+						nodeVNFID))
 
 				By("Verifying a 200 OK response")
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-				By("Verifying the node app was deleted")
+				By("Verifying the node VNF was deleted")
 
-				By("Sending a GET /nodes_apps/{id} request")
+				By("Sending a GET /nodes_vnfs/{id} request")
 				resp2, err := apiCli.Get(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps/%s",
-						nodeAppID))
+						"http://127.0.0.1:8080/nodes_vnfs/%s",
+						nodeVNFID))
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())
 				defer resp2.Body.Close()
 				Expect(resp2.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("DELETE /nodes_apps/{id}"),
+			Entry("DELETE /nodes_vnfs/{id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func(id string) {
-				By("Sending a DELETE /nodes_apps/{id} request")
+				By("Sending a DELETE /nodes_vnfs/{id} request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps/%s",
+						"http://127.0.0.1:8080/nodes_vnfs/%s",
 						id))
 
 				By("Verifying a 404 Not Found response")
@@ -430,7 +430,7 @@ var _ = Describe("/nodes_apps", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(
-				"DELETE /nodes_apps/{id} with nonexistent ID",
+				"DELETE /nodes_vnfs/{id} with nonexistent ID",
 				uuid.New()),
 		)
 	})

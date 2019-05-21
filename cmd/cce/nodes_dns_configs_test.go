@@ -186,7 +186,7 @@ var _ = Describe("/nodes_dns_configs", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var nodeDNSConfigs []cce.NodeDNSConfig
+				var nodeDNSConfigs []*cce.NodeDNSConfig
 
 				By("Unmarshalling the response")
 				Expect(json.Unmarshal(body, &nodeDNSConfigs)).
@@ -194,13 +194,13 @@ var _ = Describe("/nodes_dns_configs", func() {
 
 				By("Verifying the 2 created node <-> DNS configs were returned")
 				Expect(nodeDNSConfigs).To(ContainElement(
-					cce.NodeDNSConfig{
+					&cce.NodeDNSConfig{
 						ID:          nodeDNSConfigID,
 						NodeID:      nodeID,
 						DNSConfigID: dnsConfigID,
 					}))
 				Expect(nodeDNSConfigs).To(ContainElement(
-					cce.NodeDNSConfig{
+					&cce.NodeDNSConfig{
 						ID:          nodeDNSConfig2ID,
 						NodeID:      node2ID,
 						DNSConfigID: dnsConfig2ID,

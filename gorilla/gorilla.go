@@ -60,11 +60,10 @@ func NewGorilla( //nolint:gocyclo
 		nodesHandler: &handler{
 			model: &cce.Node{},
 
-			// TODO add checkDBDelete func + tests for nodes_apps, nodes_vnfs,
-			// and nodes_dns_configs
+			// TODO (nice to have) add checkDBDelete func + tests for nodes_apps, nodes_vnfs, and nodes_dns_configs
 			// checkDBDelete: checkDBDeleteNodes,
 
-			// TODO add any application logic necessary + tests
+			// TODO add any handlers necessary + tests
 		},
 		appsHandler: &handler{
 			model:         &cce.App{},
@@ -97,8 +96,7 @@ func NewGorilla( //nolint:gocyclo
 			reqModel: &cce.NodeAppReq{},
 
 			checkDBCreate: checkDBCreateNodesApps,
-			// TODO add checkDBDelete func + tests for
-			// nodes_apps_traffic_policies
+			// TODO (nice to have) add checkDBDelete func + tests for nodes_apps_traffic_policies
 			// checkDBDelete: checkDBDeleteNodesApps,
 
 			handleCreate: handleCreateNodesApps,
@@ -106,23 +104,42 @@ func NewGorilla( //nolint:gocyclo
 			handleUpdate: handleUpdateNodesApps,
 			handleDelete: handleDeleteNodesApps,
 		},
-		nodesDNSConfigsHandler: &handler{
-			model:         &cce.NodeDNSConfig{},
-			checkDBCreate: checkDBCreateNodesDNSConfigs,
-			handleCreate:  handleCreateNodesDNSConfigs,
-		},
 		nodesVNFsHandler: &handler{
-			model: &cce.NodeVNF{},
+			model:    &cce.NodeVNF{},
+			reqModel: &cce.NodeVNFReq{},
 
-			// TODO add checkDBDelete func + tests for
-			// nodes_vnfs_traffic_policies
+			checkDBCreate: checkDBCreateNodesVNFs,
+			// TODO (nice to have) add checkDBDelete func + tests for nodes_vnfs_traffic_policies
 			// checkDBDelete: checkDBDeleteNodesVNF,
+
+			handleCreate: handleCreateNodesVNFs,
+			handleGet:    handleGetNodesVNFs,
+			handleUpdate: handleUpdateNodesVNFs,
+			handleDelete: handleDeleteNodesVNFs,
+		},
+		nodesDNSConfigsHandler: &handler{
+			model: &cce.NodeDNSConfig{},
+
+			checkDBCreate: checkDBCreateNodesDNSConfigs,
+
+			handleCreate: handleCreateNodesDNSConfigs,
+			handleDelete: handleDeleteNodesDNSConfigs,
 		},
 		nodesAppsTrafficPoliciesHandler: &handler{
 			model: &cce.NodeAppTrafficPolicy{},
+
+			checkDBCreate: checkDBCreateNodesAppsTrafficPolicies,
+
+			handleCreate: handleCreateNodesAppsTrafficPolicies,
+			handleDelete: handleDeleteNodesAppsTrafficPolicies,
 		},
 		nodesVNFsTrafficPoliciesHandler: &handler{
 			model: &cce.NodeVNFTrafficPolicy{},
+
+			checkDBCreate: checkDBCreateNodesVNFsTrafficPolicies,
+
+			handleCreate: handleCreateNodesVNFsTrafficPolicies,
+			handleDelete: handleDeleteNodesVNFsTrafficPolicies,
 		},
 	}
 
@@ -160,7 +177,7 @@ func NewGorilla( //nolint:gocyclo
 		"PATCH  /dns_configs":      g.dnsConfigsHandler.bulkUpdate,
 		"DELETE /dns_configs/{id}": g.dnsConfigsHandler.delete,
 
-		// join routes
+		// non-node join routes
 		"POST   /dns_configs_app_aliases":      g.dnsConfigsAppAliasesHandler.create,
 		"GET    /dns_configs_app_aliases":      g.dnsConfigsAppAliasesHandler.filter,
 		"GET    /dns_configs_app_aliases/{id}": g.dnsConfigsAppAliasesHandler.getByID,
@@ -171,28 +188,32 @@ func NewGorilla( //nolint:gocyclo
 		"GET    /dns_configs_vnf_aliases/{id}": g.dnsConfigsVNFAliasesHandler.getByID,
 		"DELETE /dns_configs_vnf_aliases/{id}": g.dnsConfigsVNFAliasesHandler.delete,
 
-		"POST   /nodes_dns_configs":      g.nodesDNSConfigsHandler.create,
-		"GET    /nodes_dns_configs":      g.nodesDNSConfigsHandler.filter,
-		"GET    /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.getByID,
-		"DELETE /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.delete,
-
+		// node join routes
 		"POST   /nodes_apps":      g.nodesAppsHandler.create,
 		"GET    /nodes_apps":      g.nodesAppsHandler.filter,
 		"GET    /nodes_apps/{id}": g.nodesAppsHandler.getByID,
 		"PATCH  /nodes_apps":      g.nodesAppsHandler.bulkUpdate,
 		"DELETE /nodes_apps/{id}": g.nodesAppsHandler.delete,
 
-		// TODO these endpoints still need API tests
 		"POST   /nodes_vnfs":      g.nodesVNFsHandler.create,
 		"GET    /nodes_vnfs":      g.nodesVNFsHandler.filter,
+		"GET    /nodes_vnfs/{id}": g.nodesVNFsHandler.getByID,
+		"PATCH  /nodes_vnfs":      g.nodesVNFsHandler.bulkUpdate,
 		"DELETE /nodes_vnfs/{id}": g.nodesVNFsHandler.delete,
+
+		"POST   /nodes_dns_configs":      g.nodesDNSConfigsHandler.create,
+		"GET    /nodes_dns_configs":      g.nodesDNSConfigsHandler.filter,
+		"GET    /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.getByID,
+		"DELETE /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.delete,
 
 		"POST   /nodes_apps_traffic_policies":      g.nodesAppsTrafficPoliciesHandler.create,
 		"GET    /nodes_apps_traffic_policies":      g.nodesAppsTrafficPoliciesHandler.filter,
+		"GET    /nodes_apps_traffic_policies/{id}": g.nodesAppsTrafficPoliciesHandler.getByID,
 		"DELETE /nodes_apps_traffic_policies/{id}": g.nodesAppsTrafficPoliciesHandler.delete,
 
 		"POST   /nodes_vnfs_traffic_policies":      g.nodesVNFsTrafficPoliciesHandler.create,
 		"GET    /nodes_vnfs_traffic_policies":      g.nodesVNFsTrafficPoliciesHandler.filter,
+		"GET    /nodes_vnfs_traffic_policies/{id}": g.nodesVNFsTrafficPoliciesHandler.getByID,
 		"DELETE /nodes_vnfs_traffic_policies/{id}": g.nodesVNFsTrafficPoliciesHandler.delete,
 	}
 

@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [0.0.20] - 2019-05-18
+### Added
+- Node VNF gRPC calls and API tests
+- Node VNF req/resp types
+- Node DNS config gRPC calls
+- Node App Traffic policies gRPC calls and API tests
+- Node VNF Traffic policies API tests
+
 ## [0.0.19] - 2019-05-17
 ### Added
 - Check Node approval before enrollment
@@ -14,7 +22,7 @@
 
 ## [0.0.17] - 2019-05-17
 ### Added
-- Node App gRPC calls and tests
+- Node App gRPC calls and API tests
 - Node App req/resp types
 
 ### Changed

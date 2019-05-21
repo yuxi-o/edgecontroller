@@ -216,14 +216,14 @@ var _ = Describe("/dns_configs", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var dnsConfigs []cce.DNSConfig
+				var dnsConfigs []*cce.DNSConfig
 
 				By("Unmarshalling the response")
 				Expect(json.Unmarshal(body, &dnsConfigs)).To(Succeed())
 
 				By("Verifying the 2 created DNS configs were returned")
 				Expect(dnsConfigs).To(ContainElement(
-					cce.DNSConfig{
+					&cce.DNSConfig{
 						ID:   dnsConfigID,
 						Name: "dns config 123",
 						ARecords: []*cce.DNSARecord{
@@ -250,7 +250,7 @@ var _ = Describe("/dns_configs", func() {
 						},
 					}))
 				Expect(dnsConfigs).To(ContainElement(
-					cce.DNSConfig{
+					&cce.DNSConfig{
 
 						ID:   dnsConfig2ID,
 						Name: "dns config 123",

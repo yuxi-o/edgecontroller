@@ -210,7 +210,7 @@ var _ = Describe("/dns_configs_vnf_aliases", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var dnsConfigVNFAliases []cce.DNSConfigVNFAlias
+				var dnsConfigVNFAliases []*cce.DNSConfigVNFAlias
 
 				By("Unmarshalling the response")
 				Expect(json.Unmarshal(body, &dnsConfigVNFAliases)).
@@ -218,7 +218,7 @@ var _ = Describe("/dns_configs_vnf_aliases", func() {
 
 				By("Verifying the 2 created VNF aliases were returned")
 				Expect(dnsConfigVNFAliases).To(ContainElement(
-					cce.DNSConfigVNFAlias{
+					&cce.DNSConfigVNFAlias{
 						ID:          dnsConfigVNFAliasID,
 						DNSConfigID: dnsConfigID,
 						Name:        "dns config vnf alias",
@@ -226,7 +226,7 @@ var _ = Describe("/dns_configs_vnf_aliases", func() {
 						VNFID:       vnfID,
 					}))
 				Expect(dnsConfigVNFAliases).To(ContainElement(
-					cce.DNSConfigVNFAlias{
+					&cce.DNSConfigVNFAlias{
 						ID:          dnsConfigVNFAlias2ID,
 						DNSConfigID: dnsConfigID,
 						Name:        "dns config vnf alias",

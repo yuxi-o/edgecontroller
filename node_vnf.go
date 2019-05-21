@@ -29,6 +29,18 @@ type NodeVNF struct {
 	VNFID  string `json:"vnf_id"`
 }
 
+// NodeVNFReq is a NodeVNF request.
+type NodeVNFReq struct {
+	NodeVNF
+	Cmd string `json:"cmd,omitempty"`
+}
+
+// NodeVNFResp is a NodeVNF response.
+type NodeVNFResp struct {
+	NodeVNF
+	Status string `json:"status"`
+}
+
 // GetTableName returns the name of the persistence table.
 func (*NodeVNF) GetTableName() string {
 	return "nodes_vnfs"
@@ -62,6 +74,26 @@ func (n_vnf *NodeVNF) Validate() error {
 	}
 
 	return nil
+}
+
+// Validate validates the request model.
+func (n_ar *NodeVNFReq) Validate() error {
+	if err := n_ar.NodeVNF.Validate(); err != nil {
+		return err
+	}
+	switch n_ar.Cmd {
+	case "start", "stop", "restart":
+		return nil
+	case "":
+		return errors.New("cmd missing")
+	default:
+		return fmt.Errorf(`cmd "%s" is invalid`, n_ar.Cmd)
+	}
+}
+
+// GetTableName returns the name of the persistence table.
+func (n_ar *NodeVNFReq) GetTableName() string {
+	return n_ar.NodeVNF.GetTableName()
 }
 
 func (n_vnf *NodeVNF) String() string {

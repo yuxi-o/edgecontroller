@@ -210,7 +210,7 @@ var _ = Describe("/dns_configs_app_aliases", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var dnsConfigAppAliases []cce.DNSConfigAppAlias
+				var dnsConfigAppAliases []*cce.DNSConfigAppAlias
 
 				By("Unmarshalling the response")
 				Expect(json.Unmarshal(body, &dnsConfigAppAliases)).
@@ -218,7 +218,7 @@ var _ = Describe("/dns_configs_app_aliases", func() {
 
 				By("Verifying the 2 created app aliases were returned")
 				Expect(dnsConfigAppAliases).To(ContainElement(
-					cce.DNSConfigAppAlias{
+					&cce.DNSConfigAppAlias{
 						ID:          dnsConfigAppAliasID,
 						DNSConfigID: dnsConfigID,
 						Name:        "dns config app alias",
@@ -226,7 +226,7 @@ var _ = Describe("/dns_configs_app_aliases", func() {
 						AppID:       appID,
 					}))
 				Expect(dnsConfigAppAliases).To(ContainElement(
-					cce.DNSConfigAppAlias{
+					&cce.DNSConfigAppAlias{
 						ID:          dnsConfigAppAlias2ID,
 						DNSConfigID: dnsConfigID,
 						Name:        "dns config app alias",

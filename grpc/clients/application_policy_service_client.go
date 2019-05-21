@@ -38,18 +38,21 @@ func NewApplicationPolicyServiceClient(
 	}
 }
 
-// Set sets the traffic policy.
+// Set sets an app's traffic policy.
 func (c *ApplicationPolicyServiceClient) Set(
 	ctx context.Context,
+	appID string,
 	policy *cce.TrafficPolicy,
 ) error {
 	pbPolicy := &pb.TrafficPolicy{
-		Id: policy.ID,
+		Id: appID,
 	}
 
-	for _, rule := range policy.Rules {
-		pbPolicy.TrafficRules = append(
-			pbPolicy.TrafficRules, toPBTrafficRule(rule))
+	if policy != nil {
+		for _, rule := range policy.Rules {
+			pbPolicy.TrafficRules = append(
+				pbPolicy.TrafficRules, toPBTrafficRule(rule))
+		}
 	}
 
 	_, err := c.PBCli.Set(
@@ -58,6 +61,18 @@ func (c *ApplicationPolicyServiceClient) Set(
 
 	if err != nil {
 		return errors.Wrap(err, "error setting policy")
+	}
+
+	return nil
+}
+
+// Delete deletes an app's traffic policy. This resets it to the default policy.
+func (c *ApplicationPolicyServiceClient) Delete(
+	ctx context.Context,
+	appID string,
+) error {
+	if err := c.Set(ctx, appID, nil); err != nil {
+		return errors.Wrap(err, "error deleting policy")
 	}
 
 	return nil

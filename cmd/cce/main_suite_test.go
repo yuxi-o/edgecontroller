@@ -605,6 +605,50 @@ func postNodesVNFs(nodeID, vnfID string) (id string) {
 	return rb.ID
 }
 
+func getNodeVNF(id string) *cce.NodeVNFResp {
+	By("Sending a GET /nodes_vnfs/{id} request")
+	resp, err := apiCli.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes_vnfs/%s", id))
+
+	By("Verifying a 200 OK response")
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var nodeVNFResp cce.NodeVNFResp
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &nodeVNFResp)).To(Succeed())
+
+	return &nodeVNFResp
+}
+
+func getNodeVNFs(nodeID string) []*cce.NodeVNFResp {
+	By("Sending a GET /nodes_vnfs request")
+	resp, err := apiCli.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes_vnfs?node_id=%s", nodeID))
+
+	By("Verifying a 200 OK response")
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var nodeVNFsResp []*cce.NodeVNFResp
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &nodeVNFsResp)).To(Succeed())
+
+	return nodeVNFsResp
+}
+
 func postNodesDNSConfigs(nodeID, dnsConfigID string) (id string) {
 	By("Sending a POST /nodes_dns_configs request")
 	resp, err := apiCli.Post(
@@ -801,6 +845,28 @@ func postNodesAppsTrafficPolicies(
 	return rb.ID
 }
 
+func getNodeAppTrafficPolicy(id string) *cce.NodeAppTrafficPolicy {
+	By("Sending a GET /nodes_apps_traffic_policies/{id} request")
+	resp, err := apiCli.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes_apps_traffic_policies/%s", id))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+
+	By("Verifying a 200 OK response")
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var nodeAppTrafficPolicy cce.NodeAppTrafficPolicy
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &nodeAppTrafficPolicy)).To(Succeed())
+
+	return &nodeAppTrafficPolicy
+}
+
 func postNodesVNFsTrafficPolicies(
 	nodeVNFID string,
 	trafficPolicyID string,
@@ -830,4 +896,26 @@ func postNodesVNFsTrafficPolicies(
 	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
 	return rb.ID
+}
+
+func getNodeVNFTrafficPolicy(id string) *cce.NodeVNFTrafficPolicy {
+	By("Sending a GET /nodes_vnfs_traffic_policies/{id} request")
+	resp, err := apiCli.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes_vnfs_traffic_policies/%s", id))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+
+	By("Verifying a 200 OK response")
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var nodeVNFTrafficPolicy cce.NodeVNFTrafficPolicy
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &nodeVNFTrafficPolicy)).To(Succeed())
+
+	return &nodeVNFTrafficPolicy
 }
