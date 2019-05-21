@@ -2,7 +2,7 @@ import React,  { Component } from 'react';
 import withStyles from '@material-ui/core/styles/withStyles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
-import CardItem from '../components/cards/CardItem';
+import VnfCard from '../components/cards/VnfCard';
 import Topbar from '../components/Topbar';
 import SectionHeader from '../components/typo/SectionHeader';
 const backgroundShape = require('../images/shape.svg');
@@ -27,8 +27,7 @@ const styles = theme => ({
 class VnfsView extends Component {
 
   render() {
-    const { classes } = this.props;
-    const currentPath = this.props.location.pathname;
+    const { location: {pathname: currentPath}, classes } = this.props;
 
     return (
       <React.Fragment>
@@ -39,10 +38,10 @@ class VnfsView extends Component {
             <Grid spacing={24} alignItems="center" justify="center" container className={classes.grid}>
               <Grid item xs={12}>
                 <SectionHeader title="Vnfs" subtitle="View of VNFs" />
-                <CardItem />
-                <CardItem />
-                <CardItem />
-                <CardItem />
+                <VnfCard vnfID={1} />
+                <VnfCard vnfID={2} />
+                <VnfCard vnfID={3} />
+                <VnfCard vnfID={4} />
               </Grid>
             </Grid>
           </Grid>

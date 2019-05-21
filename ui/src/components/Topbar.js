@@ -133,25 +133,30 @@ class Topbar extends Component {
   }
 
   current = () => {
-    if (this.props.currentPath === '/home') {
+    const pathMatcher = (path) => {
+      const matchRegExp = `${path}?.*`;
+      return this.props.currentPath.match(matchRegExp)
+    };
+
+    if (pathMatcher('/home')) {
       return 0
     }
-    if (this.props.currentPath === '/dashboard') {
+    if (pathMatcher('/dashboard')) {
       return 1
     }
-    if (this.props.currentPath === '/nodes') {
+    if (pathMatcher('/nodes')) {
       return 2
     }
-    if (this.props.currentPath === '/apps') {
+    if (pathMatcher('/apps')) {
       return 3
     }
-    if (this.props.currentPath === '/vnfs') {
+    if (pathMatcher('/vnfs')) {
       return 4
     }
-    if (this.props.currentPath === '/traffic-policies') {
+    if (pathMatcher('/traffic-policies')) {
       return 5
     }
-    if (this.props.currentPath === '/dns-configs') {
+    if (pathMatcher('/dns-configs')) {
       return 6
     }
 

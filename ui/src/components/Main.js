@@ -116,11 +116,11 @@ class Main extends Component {
   }
 
   render() {
-    const { classes } = this.props;
+    const { location: {pathname: currentPath}, classes } = this.props;
     return (
       <React.Fragment>
         <CssBaseline />
-        <Topbar />
+        <Topbar currentPath={currentPath}/>
         <div className={classes.root}>
           <Grid container justify="center">
             <Grid spacing={24} alignItems="center" justify="center" container className={classes.grid}>

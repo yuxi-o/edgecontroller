@@ -1,20 +1,20 @@
 class Auth {
-  login(email, password) {
+  static login(email, password) {
     //TODO: Hook up JWT Auth here
     if (email !== password) {
-      return this.authenticated = false;
+      return false;
     }
 
     sessionStorage.setItem('AuthToken', email);
-    return this.authenticated = true;
+    return this.isAuthenticated();
   }
 
-  logout(cb) {
+  static logout(cb) {
     return cb(sessionStorage.removeItem('AuthToken'));
   }
 
-  isAuthenticated() {
+  static isAuthenticated() {
     return !!sessionStorage.getItem('AuthToken');
   }
 }
-export default new Auth();
+export default Auth;

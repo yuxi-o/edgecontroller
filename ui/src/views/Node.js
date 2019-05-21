@@ -2,7 +2,6 @@ import React,  { Component } from 'react';
 import withStyles from '@material-ui/core/styles/withStyles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
-import AppCard from '../components/cards/AppCard';
 import Topbar from '../components/Topbar';
 import SectionHeader from '../components/typo/SectionHeader';
 const backgroundShape = require('../images/shape.svg');
@@ -22,12 +21,13 @@ const styles = theme => ({
   grid: {
     width: 1000
   }
-});
+})
 
-class AppsView extends Component {
+class NodesView extends Component {
 
   render() {
-    const { location: {pathname: currentPath}, classes } = this.props;
+    const { classes } = this.props;
+    const currentPath = this.props.location.pathname;
 
     return (
       <React.Fragment>
@@ -37,11 +37,7 @@ class AppsView extends Component {
           <Grid container justify="center">
             <Grid spacing={24} alignItems="center" justify="center" container className={classes.grid}>
               <Grid item xs={12}>
-                <SectionHeader title="Apps" subtitle="View of Applications" />
-                <AppCard appID={1} />
-                <AppCard appID={2} />
-                <AppCard appID={3} />
-                <AppCard appID={4} />
+                <SectionHeader title="Nodes" subtitle="View of nodes" />
               </Grid>
             </Grid>
           </Grid>
@@ -51,4 +47,4 @@ class AppsView extends Component {
   }
 }
 
-export default withStyles(styles)(AppsView);
+export default withStyles(styles)(NodesView);

@@ -13,26 +13,36 @@ const styles = theme => ({
   spaceTop: {
     marginTop: 20
   }
-})
+});
 
 class ButtonBar extends Component {
 
   render() {
-    const { classes } = this.props;
+    const {
+      classes,
+      primaryButtonName,
+      secondaryButtonName,
+      primaryLink,
+      secondaryLink
+    } = this.props;
+
+    console.log(this.props);
 
     return (
       <div className={classes.spaceTop}>
         <Button
           className={classes.primary}
+          component={primaryLink}
         >
-          Delete
+          {primaryButtonName}
         </Button>
         <Button
           variant="contained"
           color="primary"
           className={classes.secondary}
+          component={secondaryLink}
         >
-          Edit
+          {secondaryButtonName}
         </Button>
       </div>
     )

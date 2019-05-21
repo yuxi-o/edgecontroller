@@ -2,7 +2,8 @@ import React,  { Component } from 'react';
 import withStyles from '@material-ui/core/styles/withStyles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
-import CardItem from '../components/cards/CardItem';
+import { withRouter } from "react-router-dom";
+import NodeCard from '../components/cards/NodeCard';
 import Topbar from '../components/Topbar';
 import SectionHeader from '../components/typo/SectionHeader';
 const backgroundShape = require('../images/shape.svg');
@@ -27,8 +28,7 @@ const styles = theme => ({
 class NodesView extends Component {
 
   render() {
-    const { classes } = this.props;
-    const currentPath = this.props.location.pathname;
+    const { location: {pathname: currentPath}, classes } = this.props;
 
     return (
       <React.Fragment>
@@ -39,10 +39,10 @@ class NodesView extends Component {
             <Grid spacing={24} alignItems="center" justify="center" container className={classes.grid}>
               <Grid item xs={12}>
                 <SectionHeader title="Nodes" subtitle="View of nodes" />
-                <CardItem />
-                <CardItem />
-                <CardItem />
-                <CardItem />
+                <NodeCard nodeID={1} />
+                <NodeCard nodeID={2} />
+                <NodeCard nodeID={3} />
+                <NodeCard nodeID={4} />
               </Grid>
             </Grid>
           </Grid>
@@ -52,4 +52,4 @@ class NodesView extends Component {
   }
 }
 
-export default withStyles(styles)(NodesView);
+export default withRouter(withStyles(styles)(NodesView));

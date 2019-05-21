@@ -5,6 +5,7 @@ import Paper from '@material-ui/core/Paper';
 import Avatar from '@material-ui/core/Avatar';
 import DescriptionIcon from '@material-ui/icons/Description';
 import ButtonBar from '../buttons/ButtonBar';
+import {Link} from "react-router-dom";
 
 const styles = theme => ({
   paper: {
@@ -68,12 +69,13 @@ const styles = theme => ({
   backButton: {
     marginRight: theme.spacing.unit * 2
   }
-})
+});
 
-class CardItem extends Component {
+class AppCard extends Component {
 
   render() {
-    const { classes } = this.props;
+    const { classes, appID } = this.props;
+    const secondaryLink = (props) => <Link to={`/apps/${appID}`} {...props} />;
 
     return (
       <div className={classes.root}>
@@ -117,7 +119,7 @@ class CardItem extends Component {
               <Typography variant="h4" gutterBottom>
                 Once a month
               </Typography>
-              <ButtonBar />
+              <ButtonBar primaryButtonName="Delete" secondaryButtonName="Edit" secondaryLink={secondaryLink} />
             </div>
           </div>
         </Paper>
@@ -126,4 +128,4 @@ class CardItem extends Component {
   }
 }
 
-export default withStyles(styles)(CardItem);
+export default withStyles(styles)(AppCard);
