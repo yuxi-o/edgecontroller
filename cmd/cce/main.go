@@ -114,9 +114,19 @@ func main() { // nolint: gocyclo
 		},
 	))
 
+	// Generate a key for signing authentication tokens. The key is only stored
+	// in memory and will be re-generated upon Controller restart.
+	//
+	// TODO: Persist the key to avoid having API/UI users to have to login and
+	// get a new token every time the Controller is restarted.
+	joseKey, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+	if err != nil {
+		log.Fatal("error generating token signing key: ", err)
+	}
+
 	jose := &jose.JWSTokenIssuer{
-		Key:          rootCA.Key,
-		KeyAlgorithm: "ES256",
+		Key:          joseKey,
+		KeyAlgorithm: "ES384",
 	}
 
 	admin := &cce.AuthCreds{

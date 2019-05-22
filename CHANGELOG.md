@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.21] - 2019-05-22
+### Changed
+- Auth token signer uses a unique key to sign tokens
+
 ## [0.0.20] - 2019-05-18
 ### Added
 - Node VNF gRPC calls and API tests
