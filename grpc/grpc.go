@@ -67,16 +67,6 @@ func (c *ClientConn) NewApplicationPolicyServiceClient() pb.ApplicationPolicySer
 	return pb.NewApplicationPolicyServiceClient(c.conn)
 }
 
-// NewVNFDeploymentServiceClient wraps the pb function.
-func (c *ClientConn) NewVNFDeploymentServiceClient() pb.VNFDeploymentServiceClient {
-	return pb.NewVNFDeploymentServiceClient(c.conn)
-}
-
-// NewVNFLifecycleServiceClient wraps the pb function.
-func (c *ClientConn) NewVNFLifecycleServiceClient() pb.VNFLifecycleServiceClient {
-	return pb.NewVNFLifecycleServiceClient(c.conn)
-}
-
 // NewInterfaceServiceClient wraps the pb function.
 func (c *ClientConn) NewInterfaceServiceClient() pb.InterfaceServiceClient {
 	return pb.NewInterfaceServiceClient(c.conn)

@@ -885,12 +885,6 @@ var _ = Describe("/traffic_policies", func() {
 							postNodes(),
 							postApps("container")),
 						trafficPolicyID)
-				case "nodes_vnfs_traffic_policies":
-					postNodesVNFsTrafficPolicies(
-						postNodesVNFs(
-							postNodes(),
-							postVNFs("container")),
-						trafficPolicyID)
 				}
 
 				By("Sending a DELETE /traffic_policies/{id} request")
@@ -916,11 +910,6 @@ var _ = Describe("/traffic_policies", func() {
 				"DELETE /traffic_policies/{id} with nodes_apps_traffic_policies record",
 				"nodes_apps_traffic_policies",
 				"cannot delete traffic_policy_id %s: record in use in nodes_apps_traffic_policies",
-			),
-			Entry(
-				"DELETE /traffic_policies/{id} with nodes_vnfs_traffic_policies record",
-				"nodes_vnfs_traffic_policies",
-				"cannot delete traffic_policy_id %s: record in use in nodes_vnfs_traffic_policies",
 			),
 		)
 	})

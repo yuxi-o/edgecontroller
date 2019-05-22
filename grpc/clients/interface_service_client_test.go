@@ -170,11 +170,11 @@ var _ = Describe("Network Interface Service Client", func() {
 				"exist", func() {
 				By("Passing a nonexistent ID")
 				badID := uuid.New()
-				noVNF, err := interfaceSvcCli.Get(ctx, badID)
+				noIF, err := interfaceSvcCli.Get(ctx, badID)
 
 				By("Verifying a NotFound response")
 				Expect(err).To(HaveOccurred(),
-					"Expected error but got app: %v", noVNF)
+					"Expected error but got interface: %v", noIF)
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.NotFound,
 						"Network Interface %s not found", badID)))

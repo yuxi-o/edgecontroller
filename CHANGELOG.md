@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.22] - 2019-05-22
+### Removed
+- VNF models/endpoints (deferred from June release)
+
 ## [0.0.21] - 2019-05-22
 ### Changed
 - Auth token signer uses a unique key to sign tokens

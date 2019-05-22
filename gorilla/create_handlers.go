@@ -49,34 +49,6 @@ func handleCreateNodesApps(
 	return nil
 }
 
-func handleCreateNodesVNFs(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) error {
-	vnf, err := ps.Read(ctx, e.(*cce.NodeVNF).VNFID, &cce.VNF{})
-	if err != nil {
-		return err
-	}
-	log.Printf("Loaded VNF %s", vnf.GetID())
-	log.Println(vnf)
-
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeVNF))
-	if err != nil {
-		return err
-	}
-
-	log.Println("Connection to node established:", nodeCC.Node)
-
-	if err := nodeCC.VNFDeploySvcCli.Deploy(ctx, vnf.(*cce.VNF)); err != nil {
-		return err
-	}
-
-	log.Printf("VNF %s deployed to node:", vnf.GetID())
-
-	return nil
-}
-
 func handleCreateNodesDNSConfigs(
 	ctx context.Context,
 	ps cce.PersistenceService,
@@ -142,44 +114,6 @@ func handleCreateNodesAppsTrafficPolicies(
 	); err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func handleCreateNodesVNFsTrafficPolicies(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) error {
-	trafficPolicy, err := ps.Read(ctx, e.(*cce.NodeVNFTrafficPolicy).TrafficPolicyID, &cce.TrafficPolicy{})
-	if err != nil {
-		return err
-	}
-	log.Printf("Loaded traffic policy %s", trafficPolicy.GetID())
-	log.Println(trafficPolicy)
-
-	nodeVNF, err := ps.Read(ctx, e.(*cce.NodeVNFTrafficPolicy).NodeVNFID, &cce.NodeVNF{})
-	if err != nil {
-		return err
-	}
-	log.Printf("Loaded node VNF %s", nodeVNF.GetID())
-	log.Println(nodeVNF)
-
-	nodeCC, err := connectNode(ctx, ps, nodeVNF.(*cce.NodeVNF))
-	if err != nil {
-		return err
-	}
-
-	log.Println("Connection to node established:", nodeCC.Node)
-
-	// TODO there is currently no VNFPolicyService in https://github.com/smartedgemec/schema/blob/master/pb/ela.proto
-	// if err := nodeCC.VNFPolicySvcCli.Set(
-	// 	ctx,
-	// 	nodeVNF.(*cce.NodeVNF).VNFID,
-	// 	trafficPolicy.(*cce.TrafficPolicy),
-	// ); err != nil {
-	// 	return err
-	// }
 
 	return nil
 }

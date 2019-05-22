@@ -40,25 +40,6 @@ func handleDeleteNodesApps(
 	return nil
 }
 
-func handleDeleteNodesVNFs(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) error {
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeVNF))
-	if err != nil {
-		return err
-	}
-
-	log.Println(nodeCC.Node)
-
-	if err := nodeCC.VNFDeploySvcCli.Undeploy(ctx, e.(*cce.NodeVNF).VNFID); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func handleDeleteNodesDNSConfigs(
 	ctx context.Context,
 	ps cce.PersistenceService,
@@ -113,33 +94,6 @@ func handleDeleteNodesAppsTrafficPolicies(
 	if err := nodeCC.AppPolicySvcCli.Delete(ctx, nodeApp.(*cce.NodeApp).AppID); err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func handleDeleteNodesVNFsTrafficPolicies(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) error {
-	nodeVNF, err := ps.Read(ctx, e.(*cce.NodeVNFTrafficPolicy).NodeVNFID, &cce.NodeVNF{})
-	if err != nil {
-		return err
-	}
-	log.Printf("Loaded node VNF %s", nodeVNF.GetID())
-	log.Println(nodeVNF)
-
-	nodeCC, err := connectNode(ctx, ps, nodeVNF.(*cce.NodeVNF))
-	if err != nil {
-		return err
-	}
-
-	log.Println("Connection to node established:", nodeCC.Node)
-
-	// TODO there is currently no VNFPolicyService in https://github.com/smartedgemec/schema/blob/master/pb/ela.proto
-	// if err := nodeCC.VNFPolicySvcCli.Delete(ctx, nodeVNF.(*cce.NodeVNF).VNFID); err != nil {
-	// 	return err
-	// }
 
 	return nil
 }

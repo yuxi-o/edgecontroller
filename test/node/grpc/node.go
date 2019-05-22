@@ -55,8 +55,6 @@ func main() {
 	pb.RegisterApplicationDeploymentServiceServer(server, mockNode.AppDeploySvc)
 	pb.RegisterApplicationLifecycleServiceServer(server, mockNode.AppLifeSvc)
 	pb.RegisterApplicationPolicyServiceServer(server, mockNode.AppPolicySvc)
-	pb.RegisterVNFDeploymentServiceServer(server, mockNode.VNFDeploySvc)
-	pb.RegisterVNFLifecycleServiceServer(server, mockNode.VNFLifeSvc)
 	pb.RegisterInterfaceServiceServer(server, mockNode.InterfaceSvc)
 	pb.RegisterInterfacePolicyServiceServer(server, mockNode.IfPolicySvc)
 	pb.RegisterZoneServiceServer(server, mockNode.ZoneSvc)

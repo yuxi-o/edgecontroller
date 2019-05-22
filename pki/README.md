@@ -26,7 +26,7 @@ What we ended up settling on was the following:
 
 - Certificate authentication for...
     - Controller <-> Node communication
-    - Node <-> App/VNF communication
+    - Node <-> App communication
 - Token authentication for...
     - User <-> Controller communication
 

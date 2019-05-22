@@ -6,8 +6,6 @@ import NodesView from './views/Nodes'
 import NodeView from './views/Node'
 import AppsView from './views/Apps'
 import AppView from './views/App'
-import VnfsView from './views/Vnfs'
-import VnfView from './views/Vnf'
 import LoginForm from './components/Login'
 import Wizard from './components/Wizard'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -29,8 +27,6 @@ export default props => (
       <ProtectedRoute exact path='/dashboard' component={Dashboard} />
       <ProtectedRoute exact path='/nodes' component={NodesView} />
       <ProtectedRoute path='/nodes/:id' component={NodeView} />
-      <ProtectedRoute exact path='/vnfs' component={VnfsView} />
-      <ProtectedRoute path='/vnfs/:id' component={VnfView} />
       <ProtectedRoute exact path='/apps' component={AppsView} />
       <ProtectedRoute path='/apps/:id' component={AppView} />
       <ProtectedRoute exact path='/traffic-policies' component={Wizard} />

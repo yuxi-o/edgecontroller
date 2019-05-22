@@ -43,16 +43,6 @@ var (
 			MockNode: mockNode,
 		},
 	}
-	vnfDeploySvcCli = &gclients.VNFDeploymentServiceClient{
-		PBCli: &ctrlgmock.MockPBVNFDeploymentServiceClient{
-			MockNode: mockNode,
-		},
-	}
-	vnfLifeSvcCli = &gclients.VNFLifecycleServiceClient{
-		PBCli: &ctrlgmock.MockPBVNFLifecycleServiceClient{
-			MockNode: mockNode,
-		},
-	}
 	interfaceSvcCli = &gclients.InterfaceServiceClient{
 		PBCli: &ctrlgmock.MockPBInterfaceServiceClient{
 			MockNode: mockNode,

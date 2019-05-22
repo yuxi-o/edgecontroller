@@ -34,18 +34,14 @@ type Gorilla struct {
 	// entity routes handlers
 	nodesHandler           *handler
 	appsHandler            *handler
-	vnfsHandler            *handler
 	trafficPoliciesHandler *handler
 	dnsConfigsHandler      *handler
 
 	// join routes handlers
 	dnsConfigsAppAliasesHandler     *handler
-	dnsConfigsVNFAliasesHandler     *handler
 	nodesDNSConfigsHandler          *handler
 	nodesAppsHandler                *handler
-	nodesVNFsHandler                *handler
 	nodesAppsTrafficPoliciesHandler *handler
-	nodesVNFsTrafficPoliciesHandler *handler
 }
 
 // NewGorilla creates a new Gorilla.
@@ -60,7 +56,7 @@ func NewGorilla( //nolint:gocyclo
 		nodesHandler: &handler{
 			model: &cce.Node{},
 
-			// TODO (nice to have) add checkDBDelete func + tests for nodes_apps, nodes_vnfs, and nodes_dns_configs
+			// TODO (nice to have) add checkDBDelete func + tests for nodes_apps, and nodes_dns_configs
 			// checkDBDelete: checkDBDeleteNodes,
 
 			// TODO add any handlers necessary + tests
@@ -68,10 +64,6 @@ func NewGorilla( //nolint:gocyclo
 		appsHandler: &handler{
 			model:         &cce.App{},
 			checkDBDelete: checkDBDeleteApps,
-		},
-		vnfsHandler: &handler{
-			model:         &cce.VNF{},
-			checkDBDelete: checkDBDeleteVNFs,
 		},
 		trafficPoliciesHandler: &handler{
 			model:         &cce.TrafficPolicy{},
@@ -87,10 +79,6 @@ func NewGorilla( //nolint:gocyclo
 			model:         &cce.DNSConfigAppAlias{},
 			checkDBCreate: checkDBCreateDNSConfigsAppAliases,
 		},
-		dnsConfigsVNFAliasesHandler: &handler{
-			model:         &cce.DNSConfigVNFAlias{},
-			checkDBCreate: checkDBCreateDNSConfigsVNFAliases,
-		},
 		nodesAppsHandler: &handler{
 			model:    &cce.NodeApp{},
 			reqModel: &cce.NodeAppReq{},
@@ -103,19 +91,6 @@ func NewGorilla( //nolint:gocyclo
 			handleGet:    handleGetNodesApps,
 			handleUpdate: handleUpdateNodesApps,
 			handleDelete: handleDeleteNodesApps,
-		},
-		nodesVNFsHandler: &handler{
-			model:    &cce.NodeVNF{},
-			reqModel: &cce.NodeVNFReq{},
-
-			checkDBCreate: checkDBCreateNodesVNFs,
-			// TODO (nice to have) add checkDBDelete func + tests for nodes_vnfs_traffic_policies
-			// checkDBDelete: checkDBDeleteNodesVNF,
-
-			handleCreate: handleCreateNodesVNFs,
-			handleGet:    handleGetNodesVNFs,
-			handleUpdate: handleUpdateNodesVNFs,
-			handleDelete: handleDeleteNodesVNFs,
 		},
 		nodesDNSConfigsHandler: &handler{
 			model: &cce.NodeDNSConfig{},
@@ -132,14 +107,6 @@ func NewGorilla( //nolint:gocyclo
 
 			handleCreate: handleCreateNodesAppsTrafficPolicies,
 			handleDelete: handleDeleteNodesAppsTrafficPolicies,
-		},
-		nodesVNFsTrafficPoliciesHandler: &handler{
-			model: &cce.NodeVNFTrafficPolicy{},
-
-			checkDBCreate: checkDBCreateNodesVNFsTrafficPolicies,
-
-			handleCreate: handleCreateNodesVNFsTrafficPolicies,
-			handleDelete: handleDeleteNodesVNFsTrafficPolicies,
 		},
 	}
 
@@ -159,12 +126,6 @@ func NewGorilla( //nolint:gocyclo
 		"PATCH  /apps":      g.appsHandler.bulkUpdate,
 		"DELETE /apps/{id}": g.appsHandler.delete,
 
-		"POST   /vnfs":      g.vnfsHandler.create,
-		"GET    /vnfs":      g.vnfsHandler.filter,
-		"GET    /vnfs/{id}": g.vnfsHandler.getByID,
-		"PATCH  /vnfs":      g.vnfsHandler.bulkUpdate,
-		"DELETE /vnfs/{id}": g.vnfsHandler.delete,
-
 		"POST   /traffic_policies":      g.trafficPoliciesHandler.create,
 		"GET    /traffic_policies":      g.trafficPoliciesHandler.filter,
 		"GET    /traffic_policies/{id}": g.trafficPoliciesHandler.getByID,
@@ -183,23 +144,12 @@ func NewGorilla( //nolint:gocyclo
 		"GET    /dns_configs_app_aliases/{id}": g.dnsConfigsAppAliasesHandler.getByID,
 		"DELETE /dns_configs_app_aliases/{id}": g.dnsConfigsAppAliasesHandler.delete,
 
-		"POST   /dns_configs_vnf_aliases":      g.dnsConfigsVNFAliasesHandler.create,
-		"GET    /dns_configs_vnf_aliases":      g.dnsConfigsVNFAliasesHandler.filter,
-		"GET    /dns_configs_vnf_aliases/{id}": g.dnsConfigsVNFAliasesHandler.getByID,
-		"DELETE /dns_configs_vnf_aliases/{id}": g.dnsConfigsVNFAliasesHandler.delete,
-
 		// node join routes
 		"POST   /nodes_apps":      g.nodesAppsHandler.create,
 		"GET    /nodes_apps":      g.nodesAppsHandler.filter,
 		"GET    /nodes_apps/{id}": g.nodesAppsHandler.getByID,
 		"PATCH  /nodes_apps":      g.nodesAppsHandler.bulkUpdate,
 		"DELETE /nodes_apps/{id}": g.nodesAppsHandler.delete,
-
-		"POST   /nodes_vnfs":      g.nodesVNFsHandler.create,
-		"GET    /nodes_vnfs":      g.nodesVNFsHandler.filter,
-		"GET    /nodes_vnfs/{id}": g.nodesVNFsHandler.getByID,
-		"PATCH  /nodes_vnfs":      g.nodesVNFsHandler.bulkUpdate,
-		"DELETE /nodes_vnfs/{id}": g.nodesVNFsHandler.delete,
 
 		"POST   /nodes_dns_configs":      g.nodesDNSConfigsHandler.create,
 		"GET    /nodes_dns_configs":      g.nodesDNSConfigsHandler.filter,
@@ -210,11 +160,6 @@ func NewGorilla( //nolint:gocyclo
 		"GET    /nodes_apps_traffic_policies":      g.nodesAppsTrafficPoliciesHandler.filter,
 		"GET    /nodes_apps_traffic_policies/{id}": g.nodesAppsTrafficPoliciesHandler.getByID,
 		"DELETE /nodes_apps_traffic_policies/{id}": g.nodesAppsTrafficPoliciesHandler.delete,
-
-		"POST   /nodes_vnfs_traffic_policies":      g.nodesVNFsTrafficPoliciesHandler.create,
-		"GET    /nodes_vnfs_traffic_policies":      g.nodesVNFsTrafficPoliciesHandler.filter,
-		"GET    /nodes_vnfs_traffic_policies/{id}": g.nodesVNFsTrafficPoliciesHandler.getByID,
-		"DELETE /nodes_vnfs_traffic_policies/{id}": g.nodesVNFsTrafficPoliciesHandler.delete,
 	}
 
 	for endpoint, handlerFunc := range routes {

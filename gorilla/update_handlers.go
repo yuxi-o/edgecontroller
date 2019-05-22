@@ -47,30 +47,3 @@ func handleUpdateNodesApps(
 
 	return nil
 }
-
-func handleUpdateNodesVNFs(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Validatable,
-) error {
-	nodeCC, err := connectNode(ctx, ps, &e.(*cce.NodeVNFReq).NodeVNF)
-	if err != nil {
-		return err
-	}
-
-	log.Println(nodeCC.Node)
-
-	switch e.(*cce.NodeVNFReq).Cmd {
-	case "start":
-		err = nodeCC.VNFLifeSvcCli.Start(ctx, e.(*cce.NodeVNFReq).VNFID)
-	case "stop":
-		err = nodeCC.VNFLifeSvcCli.Stop(ctx, e.(*cce.NodeVNFReq).VNFID)
-	case "restart":
-		err = nodeCC.VNFLifeSvcCli.Restart(ctx, e.(*cce.NodeVNFReq).VNFID)
-	}
-	if err != nil {
-		return err
-	}
-
-	return nil
-}

@@ -33,8 +33,6 @@ type ClientConn struct {
 	AppPolicySvcCli   *gclients.ApplicationPolicyServiceClient
 	IfacePolicySvcCli *gclients.InterfacePolicyServiceClient
 	IfaceSvcCli       *gclients.InterfaceServiceClient
-	VNFDeploySvcCli   *gclients.VNFDeploymentServiceClient
-	VNFLifeSvcCli     *gclients.VNFLifecycleServiceClient
 	DNSSvcCli         *gclients.DNSServiceClient
 	ZoneSvcCli        *gclients.ZoneServiceClient
 }
@@ -51,8 +49,6 @@ func (cc *ClientConn) Connect(ctx context.Context) error {
 	cc.AppPolicySvcCli = gclients.NewApplicationPolicyServiceClient(cc.conn)
 	cc.IfacePolicySvcCli = gclients.NewInterfacePolicyServiceClient(cc.conn)
 	cc.IfaceSvcCli = gclients.NewInterfaceServiceClient(cc.conn)
-	cc.VNFDeploySvcCli = gclients.NewVNFDeploymentServiceClient(cc.conn)
-	cc.VNFLifeSvcCli = gclients.NewVNFLifecycleServiceClient(cc.conn)
 	cc.DNSSvcCli = gclients.NewDNSServiceClient(cc.conn)
 	cc.ZoneSvcCli = gclients.NewZoneServiceClient(cc.conn)
 

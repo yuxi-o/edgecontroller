@@ -33,12 +33,6 @@ CREATE TABLE apps (
     entity JSON
 );
 
-CREATE TABLE vnfs (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    type VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.type') STORED,
-    entity JSON
-);
-
 CREATE TABLE traffic_policies (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
     entity JSON
@@ -72,18 +66,6 @@ CREATE TABLE dns_configs_app_aliases (
     UNIQUE KEY (dns_config_id, app_id)
 );
 
--- dns_configs x vnfs
-CREATE TABLE dns_configs_vnf_aliases (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    dns_config_id  VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.dns_config_id') STORED,
-    vnf_id  VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.vnf_id') STORED,
-    entity JSON,
-    FOREIGN KEY (dns_config_id) REFERENCES dns_configs(id),
-    FOREIGN KEY (vnf_id) REFERENCES vnfs(id),
-    UNIQUE KEY (dns_config_id, vnf_id)
-);
-
 -- nodes x apps
 CREATE TABLE nodes_apps (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
@@ -93,17 +75,6 @@ CREATE TABLE nodes_apps (
     FOREIGN KEY (node_id) REFERENCES nodes(id),
     FOREIGN KEY (app_id) REFERENCES apps(id),
     UNIQUE KEY (node_id, app_id)
-);
-
--- nodes x vnfs
-CREATE TABLE nodes_vnfs (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    node_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.node_id') STORED,
-    vnf_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.vnf_id') STORED,
-    entity JSON,
-    FOREIGN KEY (node_id) REFERENCES nodes(id),
-    FOREIGN KEY (vnf_id) REFERENCES vnfs(id),
-    UNIQUE KEY (node_id, vnf_id)
 );
 
 -- nodes x dns_configs
@@ -135,17 +106,4 @@ CREATE TABLE nodes_apps_traffic_policies (
     FOREIGN KEY (nodes_apps_id) REFERENCES nodes_apps(id),
     FOREIGN KEY (traffic_policy_id) REFERENCES traffic_policies(id),
     UNIQUE KEY (nodes_apps_id, traffic_policy_id)
-);
-
--- nodes_vnfs x traffic_policies
-CREATE TABLE nodes_vnfs_traffic_policies (
-    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    nodes_vnfs_id VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.nodes_vnfs_id') STORED,
-    traffic_policy_id VARCHAR(36) GENERATED ALWAYS AS
-        (entity->>'$.traffic_policy_id') STORED,
-    entity JSON,
-    FOREIGN KEY (nodes_vnfs_id) REFERENCES nodes_vnfs(id),
-    FOREIGN KEY (traffic_policy_id) REFERENCES traffic_policies(id),
-    UNIQUE KEY (nodes_vnfs_id, traffic_policy_id)
 );

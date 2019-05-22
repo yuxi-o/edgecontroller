@@ -56,40 +56,6 @@ func checkDBCreateNodesApps(
 	return 0, nil
 }
 
-func checkDBCreateNodesVNFs(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) (statusCode int, err error) {
-	var es []cce.Persistable
-
-	if es, err = ps.Filter(
-		ctx,
-		&cce.NodeVNF{},
-		[]cce.Filter{
-			{
-				Field: "node_id",
-				Value: e.(*cce.NodeVNF).NodeID,
-			},
-			{
-				Field: "vnf_id",
-				Value: e.(*cce.NodeVNF).VNFID,
-			},
-		},
-	); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	if len(es) != 0 {
-		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"duplicate record detected for node_id %s and vnf_id %s",
-			e.(*cce.NodeVNF).NodeID,
-			e.(*cce.NodeVNF).VNFID)
-	}
-
-	return 0, nil
-}
-
 func checkDBCreateDNSConfigsAppAliases(
 	ctx context.Context,
 	ps cce.PersistenceService,
@@ -119,40 +85,6 @@ func checkDBCreateDNSConfigsAppAliases(
 			"duplicate record detected for dns_config_id %s and app_id %s",
 			e.(*cce.DNSConfigAppAlias).DNSConfigID,
 			e.(*cce.DNSConfigAppAlias).AppID)
-	}
-
-	return 0, nil
-}
-
-func checkDBCreateDNSConfigsVNFAliases(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) (statusCode int, err error) {
-	var es []cce.Persistable
-
-	if es, err = ps.Filter(
-		ctx,
-		&cce.DNSConfigVNFAlias{},
-		[]cce.Filter{
-			{
-				Field: "dns_config_id",
-				Value: e.(*cce.DNSConfigVNFAlias).DNSConfigID,
-			},
-			{
-				Field: "vnf_id",
-				Value: e.(*cce.DNSConfigVNFAlias).VNFID,
-			},
-		},
-	); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	if len(es) != 0 {
-		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"duplicate record detected for dns_config_id %s and vnf_id %s",
-			e.(*cce.DNSConfigVNFAlias).DNSConfigID,
-			e.(*cce.DNSConfigVNFAlias).VNFID)
 	}
 
 	return 0, nil
@@ -197,6 +129,7 @@ func checkDBCreateNodesAppsTrafficPolicies(
 ) (statusCode int, err error) {
 	var es []cce.Persistable
 
+	// the nodes_dns_configs table has a unique constraint on node_id so we don't filter on dns_config_id
 	if es, err = ps.Filter(
 		ctx,
 		&cce.NodeAppTrafficPolicy{},
@@ -220,41 +153,6 @@ func checkDBCreateNodesAppsTrafficPolicies(
 				"traffic_policy_id %s",
 			e.(*cce.NodeAppTrafficPolicy).NodeAppID,
 			e.(*cce.NodeAppTrafficPolicy).TrafficPolicyID)
-	}
-
-	return 0, nil
-}
-
-func checkDBCreateNodesVNFsTrafficPolicies(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) (statusCode int, err error) {
-	var es []cce.Persistable
-
-	if es, err = ps.Filter(
-		ctx,
-		&cce.NodeVNFTrafficPolicy{},
-		[]cce.Filter{
-			{
-				Field: "nodes_vnfs_id",
-				Value: e.(*cce.NodeVNFTrafficPolicy).NodeVNFID,
-			},
-			{
-				Field: "traffic_policy_id",
-				Value: e.(*cce.NodeVNFTrafficPolicy).TrafficPolicyID,
-			},
-		},
-	); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	if len(es) != 0 {
-		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"duplicate record detected for nodes_vnfs_id %s and "+
-				"traffic_policy_id %s",
-			e.(*cce.NodeVNFTrafficPolicy).NodeVNFID,
-			e.(*cce.NodeVNFTrafficPolicy).TrafficPolicyID)
 	}
 
 	return 0, nil

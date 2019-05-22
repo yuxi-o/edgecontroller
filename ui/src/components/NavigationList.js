@@ -16,10 +16,6 @@ const NavigationList = [
     pathname: "/apps"
   },
   {
-    label: "VNFs",
-    pathname: "/vnfs"
-  },
-  {
     label: "Traffic Policies",
     pathname: "/traffic-policies"
   },
