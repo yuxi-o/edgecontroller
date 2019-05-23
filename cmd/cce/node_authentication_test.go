@@ -66,7 +66,7 @@ var _ = Describe("Node Auth Service", func() {
 		Describe("Success", func() {
 			It("Should return auth credentials", func() {
 				By("Generating node private key")
-				key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+				key, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Creating a certificate signing request with private key")
@@ -192,7 +192,7 @@ var _ = Describe("Node Auth Service", func() {
 
 		It("Should return a gRPC Unauthenticated error if not pre-approved", func() {
 			By("Generating node private key")
-			key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+			key, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Creating a certificate signing request with private key")

@@ -265,7 +265,7 @@ func main() { // nolint: gocyclo
 }
 
 func newTLSConf(rootCA *pki.RootCA, sni string) (*tls.Config, error) {
-	tlsKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	tlsKey, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 	if err != nil {
 		return nil, fmt.Errorf("error generating TLS key: %v", err)
 	}

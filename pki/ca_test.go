@@ -117,7 +117,7 @@ var _ = Describe("Controller CA", func() {
 				Expect(rootCA1.Cert).ToNot(BeNil())
 
 				By("Generating a new private key")
-				key2, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+				key2, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Signing a new certificate")

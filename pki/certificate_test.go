@@ -62,7 +62,7 @@ var _ = Describe("Certificate Persistence", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		By("Generating a private key")
-		key, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		key, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 		Expect(err).ToNot(HaveOccurred())
 
 		By("Generating a certificate")

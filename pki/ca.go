@@ -59,7 +59,7 @@ func InitRootCA(certsDir string) (*RootCA, error) {
 	keyFile = filepath.Join(certsDir, "key.pem")
 
 	if key, err = LoadKey(keyFile); err != nil {
-		if key, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader); err != nil {
+		if key, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader); err != nil {
 			return nil, errors.Wrap(err, "unable to generate CA key")
 		}
 

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.24] - 2019-05-22
+### Changed
+- Change EC key generation from P256 to P384
+
 ## [0.0.23] - 2019-05-22
 ### Added
 - Add -log-level flag
