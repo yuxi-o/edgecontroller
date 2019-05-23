@@ -150,10 +150,10 @@ class Topbar extends Component {
     if (pathMatcher('/apps')) {
       return 3
     }
-    if (pathMatcher('/traffic-policies')) {
+    if (pathMatcher('/policies')) {
       return 4
     }
-    if (pathMatcher('/dns-configs')) {
+    if (pathMatcher('/dns')) {
       return 5
     }
 

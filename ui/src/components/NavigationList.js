@@ -17,11 +17,11 @@ const NavigationList = [
   },
   {
     label: "Traffic Policies",
-    pathname: "/traffic-policies"
+    pathname: "/policies"
   },
   {
     label: "DNS Configurations",
-    pathname: "/dns-configs"
+    pathname: "/dns"
   }
 
 ];
