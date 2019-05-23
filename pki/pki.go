@@ -12,36 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gorilla
+package pki
 
 import (
-	"context"
-
-	cce "github.com/smartedgemec/controller-ce"
+	logger "github.com/smartedgemec/log"
 )
 
-func handleGetNodesApps(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) (cce.RespEntity, error) {
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
-
-	if err != nil {
-		return nil, err
-	}
-
-	log.Debug(nodeCC.Node)
-
-	status, err := nodeCC.AppDeploySvcCli.GetStatus(ctx, e.(*cce.NodeApp).AppID)
-	if err != nil {
-		return nil, err
-	}
-
-	m := cce.NodeAppResp{
-		NodeApp: *e.(*cce.NodeApp),
-		Status:  status.String(),
-	}
-
-	return &m, nil
-}
+var log = logger.DefaultLogger.WithField("pkg", "pki")

@@ -16,7 +16,6 @@ package gorilla
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
 
@@ -45,12 +44,12 @@ func authenticate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
-	log.Printf("Successfully authenticated user: %s", u.Username)
+	log.Debugf("Successfully authenticated user: %s", u.Username)
 
 	// Create an auth token
 	token, err := ctrl.TokenService.Issue()
 	if err != nil {
-		log.Printf("Error signing authentication token: %v", err)
+		log.Debugf("Error signing authentication token: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -63,7 +62,7 @@ func authenticate(w http.ResponseWriter, r *http.Request) {
 			token,
 		})
 	if err != nil {
-		log.Printf("Error marshaling authentication token: %v", err)
+		log.Errf("Error marshaling authentication token: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -73,7 +72,7 @@ func authenticate(w http.ResponseWriter, r *http.Request) {
 
 	// Return JSON-encoded auth token
 	if _, err = w.Write(bytes); err != nil {
-		log.Printf("Error writing response: %v", err)
+		log.Errf("Error writing response: %v", err)
 	}
 }
 

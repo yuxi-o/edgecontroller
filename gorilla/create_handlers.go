@@ -16,7 +16,6 @@ package gorilla
 
 import (
 	"context"
-	"log"
 
 	cce "github.com/smartedgemec/controller-ce"
 )
@@ -30,21 +29,20 @@ func handleCreateNodesApps(
 	if err != nil {
 		return err
 	}
-	log.Printf("Loaded app %s", app.GetID())
-	log.Println(app)
+	log.Debugf("Loaded app %s\n%+v", app.GetID(), app)
 
 	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
 	if err != nil {
 		return err
 	}
 
-	log.Println("Connection to node established:", nodeCC.Node)
+	log.Debugf("Connection to node established: %+v", nodeCC.Node)
 
 	if err := nodeCC.AppDeploySvcCli.Deploy(ctx, app.(*cce.App)); err != nil {
 		return err
 	}
 
-	log.Printf("App %s deployed to node:", app.GetID())
+	log.Infof("App %s deployed to node", app.GetID())
 
 	return nil
 }
@@ -58,15 +56,14 @@ func handleCreateNodesDNSConfigs(
 	if err != nil {
 		return err
 	}
-	log.Printf("Loaded DNS Config %s", dnsConfig.GetID())
-	log.Println(dnsConfig)
+	log.Debugf("Loaded DNS Config %s\n%+v", dnsConfig.GetID(), dnsConfig)
 
 	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeDNSConfig))
 	if err != nil {
 		return err
 	}
 
-	log.Println("Connection to node established:", nodeCC.Node)
+	log.Debugf("Connection to node established: %+v", nodeCC.Node)
 
 	for _, aRecord := range dnsConfig.(*cce.DNSConfig).ARecords {
 		if err := nodeCC.DNSSvcCli.SetA(ctx, aRecord); err != nil {
@@ -90,22 +87,20 @@ func handleCreateNodesAppsTrafficPolicies(
 	if err != nil {
 		return err
 	}
-	log.Printf("Loaded traffic policy %s", trafficPolicy.GetID())
-	log.Println(trafficPolicy)
+	log.Debugf("Loaded traffic policy %s\n%+v", trafficPolicy.GetID(), trafficPolicy)
 
 	nodeApp, err := ps.Read(ctx, e.(*cce.NodeAppTrafficPolicy).NodeAppID, &cce.NodeApp{})
 	if err != nil {
 		return err
 	}
-	log.Printf("Loaded node app %s", nodeApp.GetID())
-	log.Println(nodeApp)
+	log.Debugf("Loaded node app %s\n%+v", nodeApp.GetID(), nodeApp)
 
 	nodeCC, err := connectNode(ctx, ps, nodeApp.(*cce.NodeApp))
 	if err != nil {
 		return err
 	}
 
-	log.Println("Connection to node established:", nodeCC.Node)
+	log.Debugf("Connection to node established: %+v", nodeCC.Node)
 
 	if err := nodeCC.AppPolicySvcCli.Set(
 		ctx,

@@ -17,14 +17,16 @@ package gorilla
 import (
 	"context"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"runtime/debug"
 	"strings"
 
 	"github.com/gorilla/mux"
 	cce "github.com/smartedgemec/controller-ce"
+	logger "github.com/smartedgemec/log"
 )
+
+var log = logger.DefaultLogger.WithField("pkg", "gorilla")
 
 // Gorilla wraps the gorilla router and application routes.
 type Gorilla struct {
@@ -172,8 +174,8 @@ func NewGorilla( //nolint:gocyclo
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if r := recover(); r != nil {
-					log.Println("Recovered in handler func:", r)
-					log.Println("Stack trace:", string(debug.Stack()))
+					log.Critf("Recovered in handler func: %q\nStack trace:\n%s",
+						r, string(debug.Stack()))
 					w.WriteHeader(http.StatusInternalServerError)
 				}
 			}()
@@ -210,13 +212,13 @@ func NewGorilla( //nolint:gocyclo
 			case "POST", "PATCH":
 				body, err := ioutil.ReadAll(r.Body)
 				if err != nil {
-					log.Printf("Error reading body: %v", err)
+					log.Errf("Error reading body: %v", err)
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				}
 
 				ctx := context.WithValue(r.Context(), contextKey("body"), body)
-				log.Println("Injected body", string(body))
+				log.Debugf("Injected body: %s", string(body))
 				next.ServeHTTP(w, r.WithContext(ctx))
 			default:
 				next.ServeHTTP(w, r)

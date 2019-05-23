@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [0.0.23] - 2019-05-22
+### Added
+- Add -log-level flag
+
+### Changed
+- Use github.com/smartedgemec/log
+
 ## [0.0.22] - 2019-05-22
 ### Removed
 - VNF models/endpoints (deferred from June release)

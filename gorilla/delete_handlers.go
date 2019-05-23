@@ -16,7 +16,6 @@ package gorilla
 
 import (
 	"context"
-	"log"
 
 	cce "github.com/smartedgemec/controller-ce"
 )
@@ -31,7 +30,7 @@ func handleDeleteNodesApps(
 		return err
 	}
 
-	log.Println(nodeCC.Node)
+	log.Debug(nodeCC.Node)
 
 	if err := nodeCC.AppDeploySvcCli.Undeploy(ctx, e.(*cce.NodeApp).AppID); err != nil {
 		return err
@@ -49,15 +48,14 @@ func handleDeleteNodesDNSConfigs(
 	if err != nil {
 		return err
 	}
-	log.Printf("Loaded DNS Config %s", dnsConfig.GetID())
-	log.Println(dnsConfig)
+	log.Debugf("Loaded DNS Config %s\n%+v", dnsConfig.GetID(), dnsConfig)
 
 	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeDNSConfig))
 	if err != nil {
 		return err
 	}
 
-	log.Println(nodeCC.Node)
+	log.Debug(nodeCC.Node)
 
 	for _, aRecord := range dnsConfig.(*cce.DNSConfig).ARecords {
 		if err := nodeCC.DNSSvcCli.DeleteA(ctx, aRecord); err != nil {
@@ -81,15 +79,14 @@ func handleDeleteNodesAppsTrafficPolicies(
 	if err != nil {
 		return err
 	}
-	log.Printf("Loaded node app %s", nodeApp.GetID())
-	log.Println(nodeApp)
+	log.Debugf("Loaded node app %s: %+v", nodeApp.GetID(), nodeApp)
 
 	nodeCC, err := connectNode(ctx, ps, nodeApp.(*cce.NodeApp))
 	if err != nil {
 		return err
 	}
 
-	log.Println("Connection to node established:", nodeCC.Node)
+	log.Debugf("Connection to node established: %+v", nodeCC.Node)
 
 	if err := nodeCC.AppPolicySvcCli.Delete(ctx, nodeApp.(*cce.NodeApp).AppID); err != nil {
 		return err

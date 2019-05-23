@@ -22,7 +22,6 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"log"
 	"math/big"
 	rdm "math/rand"
 	"os"
@@ -68,7 +67,7 @@ func InitRootCA(certsDir string) (*RootCA, error) {
 			return nil, errors.Wrap(err, "unable to store CA key")
 		}
 
-		log.Printf("Generated and stored CA key at: %s", keyFile)
+		log.Debugf("Generated and stored CA key at: %s", keyFile)
 	}
 
 	certFile = filepath.Join(certsDir, "cert.pem")
@@ -82,7 +81,7 @@ func InitRootCA(certsDir string) (*RootCA, error) {
 			return nil, errors.Wrap(err, "unable to store CA certificate")
 		}
 
-		log.Printf("Generated and stored CA certificate at: %s", certFile)
+		log.Debugf("Generated and stored CA certificate at: %s", certFile)
 	}
 
 	if certDER, err = x509.MarshalPKIXPublicKey(key.(crypto.Signer).Public()); err != nil {

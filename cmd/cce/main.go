@@ -26,7 +26,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -43,63 +42,66 @@ import (
 	"github.com/smartedgemec/controller-ce/jose"
 	"github.com/smartedgemec/controller-ce/mysql"
 	"github.com/smartedgemec/controller-ce/pki"
+	logger "github.com/smartedgemec/log"
 )
 
 const certsDir = "./certificates"
 
-func main() { // nolint: gocyclo
-	var (
-		err error
+var log = logger.DefaultLogger.WithField("pkg", "main")
 
-		// flags
-		dsn       string
-		adminPass string
-		httpPort  int
-		grpcPort  int
+// CLI flags
+var (
+	dsn       string
+	adminPass string
+	logLevel  string
+	httpPort  int
+	grpcPort  int
+)
 
-		rootCA *pki.RootCA
-
-		db         *sql.DB
-		controller *cce.Controller
-
-		httpListener net.Listener
-		koko         *gorilla.Gorilla
-		httpServer   *http.Server
-
-		grpcListener net.Listener
-		grpcServer   *grpc.Server
-	)
-
-	log.Print("Controller CE starting")
-
-	// CLI flags
+func init() {
 	flag.StringVar(&dsn, "dsn", "", "Data source name")
 	flag.StringVar(&adminPass, "adminPass", "", "Admin user password")
+	flag.StringVar(&logLevel, "log-level", "info", "Syslog level")
 	flag.IntVar(&httpPort, "httpPort", 8080, "Controller HTTP port")
 	flag.IntVar(&grpcPort, "grpcPort", 8081, "Controller gRPC port")
+}
+
+func main() { // nolint: gocyclo
 	flag.Parse()
+	log.Info("Controller CE starting")
 
+	// Set log level
+	lvl, err := logger.ParseLevel(logLevel)
+	if err != nil {
+		log.Alert("Bad log level %q: %v", logLevel, err)
+		os.Exit(1)
+	}
+	logger.SetLevel(lvl)
+
+	// Connect to the db and verify
 	if adminPass == "" {
-		log.Fatal("User admin password cannot be empty")
+		log.Alert("User admin password cannot be empty")
+		os.Exit(1)
 	}
-
-	// Connect to the db
-	if db, err = sql.Open("mysql", dsn); err != nil {
-		log.Fatal("Error opening db: ", err)
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		log.Alertf("Error opening db: %v", err)
+		os.Exit(1)
 	}
-
-	// Verify connection
 	if err = db.Ping(); err != nil {
-		log.Fatal("DB ping failed: ", err)
+		log.Alertf("DB ping failed: %v", err)
+		os.Exit(1)
+	}
+	log.Info("DB connection established")
+
+	// Initialize self-signed root CA
+	rootCA, err := pki.InitRootCA(filepath.Join(certsDir, "ca"))
+	if err != nil {
+		log.Alertf("Error initializing Controller CA: %v", err)
+		os.Exit(1)
 	}
 
-	log.Print("DB connection established")
-
-	if rootCA, err = pki.InitRootCA(filepath.Join(certsDir, "ca")); err != nil {
-		log.Fatal("Error initializing Controller CA: ", err)
-	}
-
-	log.Print("Initialized Controller CA")
+	log.Info("Initialized Controller CA")
 
 	// Print self-signed Controller CA. This is used to manually configure the
 	// Appliance by adding the Controller to its trust anchor pool for TLS
@@ -107,12 +109,12 @@ func main() { // nolint: gocyclo
 	//
 	// TODO: Replace printing to STDERR with writing to a file or making the
 	// certificate available via an HTTP endpoint.
-	log.Printf("Root CA:\n%s", pem.EncodeToMemory(
+	log.Info("Root CA:\n%s", string(pem.EncodeToMemory(
 		&pem.Block{
 			Type:  "CERTIFICATE",
 			Bytes: rootCA.Cert.Raw,
 		},
-	))
+	)))
 
 	// Generate a key for signing authentication tokens. The key is only stored
 	// in memory and will be re-generated upon Controller restart.
@@ -121,35 +123,36 @@ func main() { // nolint: gocyclo
 	// get a new token every time the Controller is restarted.
 	joseKey, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 	if err != nil {
-		log.Fatal("error generating token signing key: ", err)
+		log.Alertf("error generating token signing key: %v", err)
+		os.Exit(1)
 	}
 
-	jose := &jose.JWSTokenIssuer{
-		Key:          joseKey,
-		KeyAlgorithm: "ES384",
-	}
-
-	admin := &cce.AuthCreds{
-		Username: "admin",
-		Password: adminPass,
-	}
-
-	controller = &cce.Controller{
+	controller := &cce.Controller{
 		PersistenceService: &mysql.PersistenceService{DB: db},
 		AuthorityService:   rootCA,
-		TokenService:       jose,
-		AdminCreds:         admin,
+		TokenService: &jose.JWSTokenIssuer{
+			Key:          joseKey,
+			KeyAlgorithm: "ES384",
+		},
+		AdminCreds: &cce.AuthCreds{
+			Username: "admin",
+			Password: adminPass,
+		},
 	}
 
 	// Setup http server tcp listener
-	if httpListener, err = net.Listen("tcp", fmt.Sprintf(":%d", httpPort)); err != nil {
-		log.Fatal("Could not listen on : ", err)
+	httpListener, err := net.Listen("tcp", fmt.Sprintf(":%d", httpPort))
+	if err != nil {
+		log.Alertf("Could not listen on port %d: %v", httpPort, err)
+		os.Exit(1)
 	}
 	defer httpListener.Close()
 
 	// Setup grpc server tcp listener
-	if grpcListener, err = net.Listen("tcp", fmt.Sprintf(":%d", grpcPort)); err != nil {
-		log.Fatal("Could not listen on : ", err)
+	grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
+	if err != nil {
+		log.Alertf("Could not listen on port %d: %v", grpcPort, err)
+		os.Exit(1)
 	}
 	defer grpcListener.Close()
 
@@ -163,28 +166,24 @@ func main() { // nolint: gocyclo
 		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 
 		select {
-
 		case <-ctx.Done():
 			return ctx.Err()
-
 		case signal := <-ch:
 			return errors.New(signal.String())
-
 		}
 	})
 
 	// Create the gorilla and feed it a controller and its nodes
-	koko = gorilla.NewGorilla(controller)
+	koko := gorilla.NewGorilla(controller)
 
-	log.Println("HTTP handler ready")
+	log.Info("HTTP handler ready")
 
 	// Configure http server
-	httpServer = http.NewServer(koko)
+	httpServer := http.NewServer(koko)
 
 	// Start the http server
-	log.Printf("Starting HTTP server on port %d", httpPort)
+	log.Infof("Starting HTTP server on port %d", httpPort)
 	eg.Go(func() error {
-
 		return httpServer.Serve(httpListener)
 	})
 
@@ -197,7 +196,7 @@ func main() { // nolint: gocyclo
 
 		err = httpServer.Shutdown(ctxShutdown)
 		if err != nil {
-			log.Println("HTTP graceful shutdown exceeded timeout, using force")
+			log.Info("HTTP graceful shutdown exceeded timeout, using force")
 			httpServer.Close()
 		}
 	}()
@@ -205,17 +204,19 @@ func main() { // nolint: gocyclo
 	// Configure grpc server
 	serverConf, err := newTLSConf(rootCA, grpc.SNI)
 	if err != nil {
-		log.Fatal("Error creating TLS config for gRPC server: ", err)
+		log.Alertf("Error creating TLS config for gRPC server: %v", err)
+		os.Exit(1)
 	}
 	serverConf.NextProtos = []string{"h2"}
 	serverConf.ClientAuth = tls.RequireAndVerifyClientCert
 	enrollmentConf, err := newTLSConf(rootCA, grpc.EnrollmentSNI)
 	if err != nil {
-		log.Fatal("Error creating TLS config for gRPC server: ", err)
+		log.Alertf("Error creating TLS config for gRPC server: %v", err)
+		os.Exit(1)
 	}
 	enrollmentConf.NextProtos = []string{"h2"}
 	enrollmentConf.ClientAuth = tls.NoClientCert
-	grpcServer = grpc.NewServer(controller, &tls.Config{
+	grpcServer := grpc.NewServer(controller, &tls.Config{
 		GetConfigForClient: func(
 			hello *tls.ClientHelloInfo,
 		) (*tls.Config, error) {
@@ -231,7 +232,7 @@ func main() { // nolint: gocyclo
 	})
 
 	// Start the grpc server
-	log.Printf("Starting gRPC server on port %d", grpcPort)
+	log.Infof("Starting gRPC server on port %d", grpcPort)
 	eg.Go(func() error {
 		return grpcServer.Serve(grpcListener)
 	})
@@ -249,16 +250,17 @@ func main() { // nolint: gocyclo
 
 		select {
 		case <-time.After(time.Minute):
-			log.Println("gRPC server shutdown exceeded timeout, using force")
+			log.Info("gRPC server shutdown exceeded timeout, using force")
 			grpcServer.Stop()
 		case <-stopped:
 			return
 		}
 	}()
 
-	log.Println("Controller CE ready")
-	if err = eg.Wait(); err != nil {
-		log.Fatal(err)
+	log.Info("Controller CE ready")
+	if err := eg.Wait(); err != nil {
+		log.Alert(err)
+		os.Exit(1)
 	}
 }
 

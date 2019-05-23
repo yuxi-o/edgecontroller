@@ -18,7 +18,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -26,6 +25,7 @@ import (
 
 	nodegmock "github.com/smartedgemec/controller-ce/mock/node/grpc"
 	"github.com/smartedgemec/controller-ce/pb"
+	"github.com/smartedgemec/log"
 	"google.golang.org/grpc"
 )
 
@@ -36,7 +36,7 @@ func main() {
 		err  error
 		port uint
 	)
-	log.Print(name, ": starting")
+	log.Info(name, ": starting")
 
 	// CLI flags
 	flag.UintVar(&port, "port", 8080, "Port for service to listen on")
@@ -63,7 +63,7 @@ func main() {
 	// Shut down the server gracefully
 	go func() {
 		<-sigChan
-		log.Printf("%s: shutting down", name)
+		log.Infof("%s: shutting down", name)
 
 		server.GracefulStop()
 	}()
@@ -71,15 +71,17 @@ func main() {
 	// Start the listener
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		log.Fatal("Error listening on port:", err)
+		log.Alert("Error listening on port:", err)
+		os.Exit(1)
 	}
 	defer listener.Close()
 
 	// Start the server
-	log.Print(name, ": listening on port: ",
+	log.Info(name, ": listening on port: ",
 		listener.Addr().(*net.TCPAddr).Port)
 	err = server.Serve(listener)
 	if err != nil && context.Canceled == nil {
-		log.Fatal("Error starting GRPC server:", err)
+		log.Alert("Error starting GRPC server:", err)
+		os.Exit(1)
 	}
 }

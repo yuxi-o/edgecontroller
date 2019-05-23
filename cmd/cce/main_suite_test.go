@@ -68,6 +68,7 @@ func startup() {
 	Expect(err).ToNot(HaveOccurred(), "Problem building service")
 
 	cmd := exec.Command(exe,
+		"-log-level", "debug",
 		"-dsn", "root:beer@tcp(:8083)/controller_ce",
 		"-httpPort", "8080",
 		"-grpcPort", "8081",

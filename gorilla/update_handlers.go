@@ -16,7 +16,6 @@ package gorilla
 
 import (
 	"context"
-	"log"
 
 	cce "github.com/smartedgemec/controller-ce"
 )
@@ -31,7 +30,7 @@ func handleUpdateNodesApps(
 		return err
 	}
 
-	log.Println(nodeCC.Node)
+	log.Debug(nodeCC.Node)
 
 	switch e.(*cce.NodeAppReq).Cmd {
 	case "start":

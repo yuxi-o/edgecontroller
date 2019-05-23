@@ -16,7 +16,6 @@ package gorilla
 
 import (
 	"context"
-	"log"
 
 	"github.com/pkg/errors"
 	cce "github.com/smartedgemec/controller-ce"
@@ -37,12 +36,11 @@ func connectNode(
 	}
 	nodeCC := node.ClientConn{Node: n.(*cce.Node)}
 	if err := nodeCC.Connect(ctx); err != nil {
-		log.Printf("Could not connect to node: %v", err)
+		log.Noticef("Could not connect to node: %v", err)
 		return nil, errors.Wrap(err, "could not connect to node: %v")
 	}
 
-	log.Printf("Connection to node %v established", nodeCC.Node.ID)
-	log.Println(nodeCC.Node)
+	log.Debugf("Connection to node %v established: %+v", nodeCC.Node.ID, nodeCC.Node)
 
 	return &nodeCC, nil
 }

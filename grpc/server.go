@@ -23,7 +23,6 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
-	"log"
 	"net"
 
 	"google.golang.org/grpc"
@@ -180,7 +179,7 @@ func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.C
 	}})
 	if err != nil || len(entities) == 0 {
 		if err != nil {
-			log.Printf("error getting node approval: %v", err)
+			log.Errf("error getting node approval: %v", err)
 		}
 		return nil, status.Errorf(codes.Unauthenticated, "node %s not approved", serial)
 	}
@@ -193,7 +192,7 @@ func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.C
 			Subject: pkix.Name{CommonName: node.ID},
 		})
 	if err != nil {
-		log.Printf("Failed to sign CSR: %v", err)
+		log.Errf("Failed to sign CSR: %v", err)
 		return nil, status.Error(codes.Internal, "unable to sign CSR")
 	}
 	certPEM := pem.EncodeToMemory(
@@ -208,7 +207,7 @@ func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.C
 		return nil, status.Error(codes.Internal, "unable to get CA chain")
 	}
 	if len(caChain) == 0 {
-		log.Println("Failed to get CA chain: CA chain is empty")
+		log.Errf("Failed to get CA chain: CA chain is empty")
 		return nil, status.Error(codes.Internal, "CA chain is empty")
 	}
 
@@ -233,7 +232,7 @@ func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.C
 		Certificate: string(certPEM),
 	}
 	if err = s.controller.PersistenceService.Create(ctx, creds); err != nil {
-		log.Printf("Failed to store Node credentials: %v", err)
+		log.Errf("Failed to store Node credentials: %v", err)
 		return nil, status.Error(codes.Internal, "unable to store credentials")
 	}
 
@@ -259,7 +258,7 @@ func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.C
 	if err := s.controller.PersistenceService.BulkUpdate(ctx, []cce.Persistable{
 		nodeWithTarget,
 	}); err != nil {
-		log.Printf("Failed to store Node address: %v", err)
+		log.Errf("Failed to store Node address: %v", err)
 		return nil, status.Error(codes.Internal, "unable to store node address")
 	}
 

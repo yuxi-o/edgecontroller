@@ -22,7 +22,10 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/smartedgemec/controller-ce/pb"
+	logger "github.com/smartedgemec/log"
 )
+
+var log = logger.DefaultLogger.WithField("pkg", "grpc")
 
 // ClientConn wraps grpc.ClientConn
 type ClientConn struct {
