@@ -13,12 +13,25 @@
 # limitations under the License.
 
 language: go
+
+sudo: required
+
+# We need the systemd for the kubeadm and it's default from 16.04+
+dist: xenial
+
 go:
   - 1.12.x
   - 1.11.x
 
 env:
-  - GO111MODULE=on
+  global:
+    - GO111MODULE=on
+    - CHANGE_MINIKUBE_NONE_USER=true
+    - MINIKUBE_WANTUPDATENOTIFICATION=false
+    - MINIKUBE_WANTREPORTERRORPROMPT=false
+    - MINIKUBE_HOME=$HOME
+    - CHANGE_MINIKUBE_NONE_USER=true
+    - KUBECONFIG=$HOME/.kube/config
 
 services:
   - docker
@@ -32,6 +45,9 @@ before_install:
 before_script:
   # Get project dependencies
   - go mod download
+  # minikube kubectl
+  - make kubectl-install minikube-install minikube-start minikube-wait
+
 
 script:
   - make lint test

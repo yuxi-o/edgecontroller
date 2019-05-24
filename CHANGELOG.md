@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.25] - 2019-05-24
+### Added
+- Kubernetes App deployment
+
 ## [0.0.24] - 2019-05-22
 ### Changed
 - Change EC key generation from P256 to P384

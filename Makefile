@@ -13,6 +13,11 @@
 # limitations under the License.
 
 export GO111MODULE = on
+export MINIKUBE_WANTUPDATENOTIFICATION=false
+export MINIKUBE_WANTREPORTERRORPROMPT=false
+export MINIKUBE_HOME=$(HOME)
+export CHANGE_MINIKUBE_NONE_USER=true
+export KUBECONFIG=$(HOME)/.kube/config
 
 .PHONY: help clean build lint test \
 	db-up db-reset db-down \
@@ -37,13 +42,19 @@ help:
 	@echo "  statsd-up        to start the statsd service"
 	@echo "  statsd-down      to stop the statsd service"
 	@echo ""
+	@echo "  minikube-install to install minikube"
+	@echo "  kubectl-install  to install kubectl"
+	@echo "  minikube-wait    to wait for nimikube installation to finish"
+	@echo ""
 	@echo "Testing:"
 	@echo "  lint             to run linters and static analysis on the code"
 	@echo "  test             to run all tests"
 	@echo "  test-unit        to run unit tests"
 	@echo "  test-api         to run api tests"
+	@echo "  test-api-k8s     to run k8s app deployment api tests"
 	@echo "  test-syslog      to run syslog tests"
 	@echo "  test-statsd      to run statsd tests"
+	@echo "  test-k8s         to run kubernetes orchestration tests"
 	@echo "  test             to run unit followed by api tests"
 	@echo ""
 	@echo "  ui-up            to start the production UI Container"
@@ -74,6 +85,32 @@ db-reset: db-up
 db-down:
 	docker-compose stop mysql
 
+kubectl-install:
+	curl -Lo kubectl \
+		https://storage.googleapis.com/kubernetes-release/release/v1.14.2/bin/linux/amd64/kubectl \
+		&& sudo install kubectl /usr/local/bin/
+
+minikube-install:
+	curl -Lo minikube \
+		https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 \
+		&& sudo install minikube /usr/local/bin/
+	mkdir -p $(HOME)/.kube $(HOME)/.minikube
+	touch $(KUBECONFIG)
+
+minikube-start:
+	sudo -E minikube start --vm-driver=none
+	sudo chown -R travis: $(HOME)/.minikube/
+	
+minikube-wait:
+	kubectl cluster-info
+	# kube-addon-manager is responsible for managing other kubernetes components, such as kube-dns, dashboard, storage-provisioner.
+	until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
+	# Wait for kube-dns to be ready.
+	until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
+
+minikube-stop:
+	sudo -E minikube delete
+
 statsd-up:
 	docker-compose up -d statsd
 
@@ -101,7 +138,7 @@ ui-test:
 
 test-unit:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites \
-		--skipPackage=vendor,statsd,syslog,cmd/cce
+		--skipPackage=vendor,statsd,syslog,cmd/cce,cmd/cce/k8s
 
 test-statsd: statsd-up
 	ginkgo -v --randomizeAllSpecs --randomizeSuites statsd
@@ -112,4 +149,11 @@ test-syslog: syslog-up
 test-api: db-reset
 	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce
 
-test: test-unit test-statsd test-syslog test-api
+test-api-k8s: db-reset
+	docker pull nginx:1.12
+	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce/k8s
+
+test-k8s:
+	ginkgo -v -r --randomizeAllSpecs --randomizeSuites k8s
+
+test: test-unit test-statsd test-syslog test-api test-k8s test-api-k8s

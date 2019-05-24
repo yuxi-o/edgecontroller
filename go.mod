@@ -24,10 +24,16 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/smartedgemec/log v0.0.0-20190425151715-68de2de26397
-	golang.org/x/net v0.0.0-20190313220215-9f648a60d977 // indirect
-	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
+	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c // indirect
+	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
 	google.golang.org/genproto v0.0.0-20180831171423-11092d34479b
 	google.golang.org/grpc v1.19.0
 	gopkg.in/alexcesaro/statsd.v2 v2.0.0
 	gopkg.in/square/go-jose.v2 v2.3.1
+	k8s.io/api v0.0.0-20190515023547-db5a9d1c40eb
+	k8s.io/apimachinery v0.0.0-20190515023456-b74e4c97951f
+	k8s.io/client-go v0.0.0-20190501104856-ef81ee0960bf
+	k8s.io/utils v0.0.0-20190520173318-324c5df7d3f0 // indirect
 )
+
+replace golang.org/x/sys => golang.org/x/sys v0.0.0-20190226215855-775f8194d0f9 // indirect

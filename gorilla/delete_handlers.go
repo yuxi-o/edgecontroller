@@ -20,22 +20,45 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
-func handleDeleteNodesApps(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) error {
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
+func handleDeleteNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Persistable) error {
+	app, err := ps.Read(
+		ctx,
+		e.(*cce.NodeApp).AppID,
+		&cce.App{})
 	if err != nil {
 		return err
 	}
 
-	log.Debug(nodeCC.Node)
-
-	if err := nodeCC.AppDeploySvcCli.Undeploy(ctx, e.(*cce.NodeApp).AppID); err != nil {
+	node, err := ps.Read(
+		ctx,
+		e.(cce.NodeEntity).GetNodeID(),
+		&cce.Node{})
+	if err != nil {
 		return err
 	}
 
+	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
+	if err != nil {
+		return err
+	}
+	log.Debug(nodeCC.Node)
+
+	// if kubernetes un-deploy application
+	ctrl := getController(ctx)
+
+	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes {
+		if err = ctrl.KubernetesClient.Undeploy(
+			ctx,
+			node.(*cce.Node).Serial,
+			toK8SApp(app.(*cce.App)),
+		); err != nil {
+			return err
+		}
+	}
+
+	if err = nodeCC.AppDeploySvcCli.Undeploy(ctx, app.GetID()); err != nil {
+		return err
+	}
 	return nil
 }
 

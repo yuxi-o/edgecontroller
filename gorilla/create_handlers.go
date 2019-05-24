@@ -16,30 +16,44 @@ package gorilla
 
 import (
 	"context"
+	"fmt"
 
 	cce "github.com/smartedgemec/controller-ce"
 )
 
-func handleCreateNodesApps(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) error {
+func handleCreateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Persistable) error {
+	node, err := ps.Read(ctx, e.(cce.NodeEntity).GetNodeID(), &cce.Node{})
+	if err != nil {
+		return fmt.Errorf("Error fetching node app from DB: %v", err)
+	}
+
 	app, err := ps.Read(ctx, e.(*cce.NodeApp).AppID, &cce.App{})
 	if err != nil {
-		return err
+		return fmt.Errorf("Error fetching app from DB: %v", err)
 	}
+
 	log.Debugf("Loaded app %s\n%+v", app.GetID(), app)
 
 	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
 	if err != nil {
-		return err
+		return fmt.Errorf("Error connecting to node: %v", err)
 	}
 
 	log.Debugf("Connection to node established: %+v", nodeCC.Node)
 
+	ctrl := getController(ctx)
 	if err := nodeCC.AppDeploySvcCli.Deploy(ctx, app.(*cce.App)); err != nil {
 		return err
+	}
+
+	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes {
+		if err := ctrl.KubernetesClient.Deploy(
+			ctx,
+			node.(*cce.Node).Serial,
+			toK8SApp(app.(*cce.App)),
+		); err != nil {
+			return err
+		}
 	}
 
 	log.Infof("App %s deployed to node", app.GetID())

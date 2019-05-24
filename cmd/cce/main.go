@@ -26,6 +26,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+
+	"golang.org/x/sync/errgroup"
+
 	"net"
 	"os"
 	"os/signal"
@@ -33,13 +36,12 @@ import (
 	"syscall"
 	"time"
 
-	"golang.org/x/sync/errgroup"
-
 	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/gorilla"
 	"github.com/smartedgemec/controller-ce/grpc"
 	"github.com/smartedgemec/controller-ce/http"
 	"github.com/smartedgemec/controller-ce/jose"
+	"github.com/smartedgemec/controller-ce/k8s"
 	"github.com/smartedgemec/controller-ce/mysql"
 	"github.com/smartedgemec/controller-ce/pki"
 	logger "github.com/smartedgemec/log"
@@ -56,6 +58,8 @@ var (
 	logLevel  string
 	httpPort  int
 	grpcPort  int
+	orchMode  string
+	k8sClient k8s.Client
 )
 
 func init() {
@@ -64,6 +68,17 @@ func init() {
 	flag.StringVar(&logLevel, "log-level", "info", "Syslog level")
 	flag.IntVar(&httpPort, "httpPort", 8080, "Controller HTTP port")
 	flag.IntVar(&grpcPort, "grpcPort", 8081, "Controller gRPC port")
+
+	// application orchestration mode
+	flag.StringVar(&orchMode, "orchestration-mode", "native", "Orchestration mode. options [native, kubernetes] ")
+
+	// k8s
+	flag.StringVar(&k8sClient.CAFile, "k8s-client-ca-path", "", "Kubernetes root certificate path")
+	flag.StringVar(&k8sClient.CertFile, "k8s-client-cert-path", "", "Kubernetes client certificate path")
+	flag.StringVar(&k8sClient.KeyFile, "k8s-client-key-path", "", "Kubernetes client private key path")
+	flag.StringVar(&k8sClient.Host, "k8s-master-host", "", "Kubernetes master host")
+	flag.StringVar(&k8sClient.APIPath, "k8s-api-path", "", "Kubernetes api path")
+	flag.StringVar(&k8sClient.Username, "k8s-master-user", "", "Kubernetes default user")
 }
 
 func main() { // nolint: gocyclo
@@ -77,6 +92,22 @@ func main() { // nolint: gocyclo
 		os.Exit(1)
 	}
 	logger.SetLevel(lvl)
+
+	// Setup orchestrator
+	var orchestrationMode cce.OrchestrationMode
+	switch orchMode {
+	case "native":
+		orchestrationMode = cce.OrchestrationModeNative
+	case "kubernetes":
+		orchestrationMode = cce.OrchestrationModeKubernetes
+		if err = k8sClient.Ping(); err != nil {
+			log.Alertf("Error configuring kubernetes client: %v", err)
+			os.Exit(1)
+		}
+	default:
+		log.Alertf("Invalid orchestration mode %q", orchMode)
+		os.Exit(1)
+	}
 
 	// Connect to the db and verify
 	if adminPass == "" {
@@ -138,6 +169,8 @@ func main() { // nolint: gocyclo
 			Username: "admin",
 			Password: adminPass,
 		},
+		OrchestrationMode: orchestrationMode,
+		KubernetesClient:  &k8sClient,
 	}
 
 	// Setup http server tcp listener

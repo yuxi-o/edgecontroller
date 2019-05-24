@@ -20,11 +20,12 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
-func handleUpdateNodesApps(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Validatable,
-) error {
+func handleUpdateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Validatable) error { // nolint: gocyclo
+	node, err := ps.Read(ctx, e.(*cce.NodeAppReq).GetNodeID(), &cce.Node{})
+	if err != nil {
+		return err
+	}
+
 	nodeCC, err := connectNode(ctx, ps, &e.(*cce.NodeAppReq).NodeApp)
 	if err != nil {
 		return err
@@ -32,17 +33,33 @@ func handleUpdateNodesApps(
 
 	log.Debug(nodeCC.Node)
 
-	switch e.(*cce.NodeAppReq).Cmd {
-	case "start":
-		err = nodeCC.AppLifeSvcCli.Start(ctx, e.(*cce.NodeAppReq).AppID)
-	case "stop":
-		err = nodeCC.AppLifeSvcCli.Stop(ctx, e.(*cce.NodeAppReq).AppID)
-	case "restart":
-		err = nodeCC.AppLifeSvcCli.Restart(ctx, e.(*cce.NodeAppReq).AppID)
-	}
-	if err != nil {
-		return err
-	}
+	ctrl := getController(ctx)
 
+	switch ctrl.OrchestrationMode {
+	case cce.OrchestrationModeNative:
+		switch e.(*cce.NodeAppReq).Cmd {
+		case "start":
+			err = nodeCC.AppLifeSvcCli.Start(ctx, e.(*cce.NodeAppReq).AppID)
+		case "stop":
+			err = nodeCC.AppLifeSvcCli.Stop(ctx, e.(*cce.NodeAppReq).AppID)
+		case "restart":
+			err = nodeCC.AppLifeSvcCli.Restart(ctx, e.(*cce.NodeAppReq).AppID)
+		}
+		if err != nil {
+			return err
+		}
+	case cce.OrchestrationModeKubernetes:
+		switch e.(*cce.NodeAppReq).Cmd {
+		case "start":
+			err = ctrl.KubernetesClient.Start(ctx, node.(*cce.Node).Serial, e.(*cce.NodeAppReq).AppID)
+		case "stop":
+			err = ctrl.KubernetesClient.Stop(ctx, node.(*cce.Node).Serial, e.(*cce.NodeAppReq).AppID)
+		case "restart":
+			err = ctrl.KubernetesClient.Restart(ctx, node.(*cce.Node).Serial, e.(*cce.NodeAppReq).AppID)
+		}
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

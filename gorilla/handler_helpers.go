@@ -20,6 +20,7 @@ import (
 	"github.com/pkg/errors"
 	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/grpc/node"
+	"github.com/smartedgemec/controller-ce/k8s"
 )
 
 func connectNode(
@@ -43,4 +44,18 @@ func connectNode(
 	log.Debugf("Connection to node %v established: %+v", nodeCC.Node.ID, nodeCC.Node)
 
 	return &nodeCC, nil
+}
+
+func getController(ctx context.Context) *cce.Controller {
+	return ctx.Value(contextKey("controller")).(*cce.Controller)
+}
+
+func toK8SApp(app *cce.App) *k8s.App {
+	return &k8s.App{
+		ID:     app.ID,
+		Name:   app.Name,
+		Image:  app.ID + ":latest",
+		Cores:  app.Cores,
+		Memory: app.Memory,
+	}
 }

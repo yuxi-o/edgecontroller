@@ -20,28 +20,43 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
-func handleGetNodesApps(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) (cce.RespEntity, error) {
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
+func handleGetNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Persistable) (cce.RespEntity, error) {
+	np, err := ps.Read(
+		ctx,
+		e.(cce.NodeEntity).GetNodeID(),
+		&cce.Node{})
+	if err != nil {
+		return nil, err
+	}
+	n := np.(*cce.Node)
 
+	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
 	if err != nil {
 		return nil, err
 	}
 
 	log.Debug(nodeCC.Node)
 
-	status, err := nodeCC.AppDeploySvcCli.GetStatus(ctx, e.(*cce.NodeApp).AppID)
-	if err != nil {
-		return nil, err
+	ctrl := getController(ctx)
+
+	var status string
+	switch ctrl.OrchestrationMode {
+	case cce.OrchestrationModeNative:
+		s, err := nodeCC.AppDeploySvcCli.GetStatus(ctx, e.(*cce.NodeApp).AppID)
+		if err != nil {
+			return nil, err
+		}
+		status = s.String()
+	case cce.OrchestrationModeKubernetes:
+		s, err := ctrl.KubernetesClient.Status(ctx, n.Serial, e.(*cce.NodeApp).AppID)
+		if err != nil {
+			return nil, err
+		}
+		status = s.String()
 	}
 
-	m := cce.NodeAppResp{
+	return &cce.NodeAppResp{
 		NodeApp: *e.(*cce.NodeApp),
-		Status:  status.String(),
-	}
-
-	return &m, nil
+		Status:  status,
+	}, nil
 }

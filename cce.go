@@ -18,10 +18,25 @@ import (
 	"context"
 
 	"github.com/smartedgemec/controller-ce/jose"
+	"github.com/smartedgemec/controller-ce/k8s"
+)
+
+// OrchestrationMode global level orchestration mode for application deployment
+type OrchestrationMode int
+
+const (
+	// OrchestrationModeNative uses Docker on the node to control application
+	// container instances
+	OrchestrationModeNative OrchestrationMode = iota
+	// OrchestrationModeKubernetes uses an external Kubernetes master to
+	// control application container instances on nodes
+	OrchestrationModeKubernetes
 )
 
 // Controller aggregates controller services.
 type Controller struct {
+	OrchestrationMode  OrchestrationMode
+	KubernetesClient   *k8s.Client // must not be nil if OrchestrationModeKubernetes
 	PersistenceService PersistenceService
 	AuthorityService   AuthorityService
 	TokenService       *jose.JWSTokenIssuer
