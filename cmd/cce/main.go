@@ -81,9 +81,14 @@ func init() {
 	flag.StringVar(&k8sClient.Username, "k8s-master-user", "", "Kubernetes default user")
 }
 
-func main() { // nolint: gocyclo
+func main() {
 	flag.Parse()
-	log.Info("Controller CE starting")
+
+	// Validate flags
+	if adminPass == "" {
+		log.Alert("User admin password cannot be empty")
+		os.Exit(1)
+	}
 
 	// Set log level
 	lvl, err := logger.ParseLevel(logLevel)
@@ -92,6 +97,8 @@ func main() { // nolint: gocyclo
 		os.Exit(1)
 	}
 	logger.SetLevel(lvl)
+
+	log.Info("Controller CE starting")
 
 	// Setup orchestrator
 	var orchestrationMode cce.OrchestrationMode
@@ -110,20 +117,7 @@ func main() { // nolint: gocyclo
 	}
 
 	// Connect to the db and verify
-	if adminPass == "" {
-		log.Alert("User admin password cannot be empty")
-		os.Exit(1)
-	}
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		log.Alertf("Error opening db: %v", err)
-		os.Exit(1)
-	}
-	if err = db.Ping(); err != nil {
-		log.Alertf("DB ping failed: %v", err)
-		os.Exit(1)
-	}
-	log.Info("DB connection established")
+	db := connectDB(dsn)
 
 	// Initialize self-signed root CA
 	rootCA, err := pki.InitRootCA(filepath.Join(certsDir, "ca"))
@@ -131,40 +125,17 @@ func main() { // nolint: gocyclo
 		log.Alertf("Error initializing Controller CA: %v", err)
 		os.Exit(1)
 	}
-
 	log.Info("Initialized Controller CA")
 
-	// Print self-signed Controller CA. This is used to manually configure the
-	// Appliance by adding the Controller to its trust anchor pool for TLS
-	// connections.
-	//
 	// TODO: Replace printing to STDERR with writing to a file or making the
 	// certificate available via an HTTP endpoint.
-	log.Info("Root CA:\n%s", string(pem.EncodeToMemory(
-		&pem.Block{
-			Type:  "CERTIFICATE",
-			Bytes: rootCA.Cert.Raw,
-		},
-	)))
+	log.Infof("Root CA:\n%s", encodeCA(rootCA))
 
-	// Generate a key for signing authentication tokens. The key is only stored
-	// in memory and will be re-generated upon Controller restart.
-	//
-	// TODO: Persist the key to avoid having API/UI users to have to login and
-	// get a new token every time the Controller is restarted.
-	joseKey, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-	if err != nil {
-		log.Alertf("error generating token signing key: %v", err)
-		os.Exit(1)
-	}
-
+	// Define controller service
 	controller := &cce.Controller{
 		PersistenceService: &mysql.PersistenceService{DB: db},
 		AuthorityService:   rootCA,
-		TokenService: &jose.JWSTokenIssuer{
-			Key:          joseKey,
-			KeyAlgorithm: "ES384",
-		},
+		TokenService:       getTokenSigner(),
 		AdminCreds: &cce.AuthCreds{
 			Username: "admin",
 			Password: adminPass,
@@ -173,26 +144,11 @@ func main() { // nolint: gocyclo
 		KubernetesClient:  &k8sClient,
 	}
 
-	// Setup http server tcp listener
-	httpListener, err := net.Listen("tcp", fmt.Sprintf(":%d", httpPort))
-	if err != nil {
-		log.Alertf("Could not listen on port %d: %v", httpPort, err)
-		os.Exit(1)
-	}
-	defer httpListener.Close()
-
-	// Setup grpc server tcp listener
-	grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
-	if err != nil {
-		log.Alertf("Could not listen on port %d: %v", grpcPort, err)
-		os.Exit(1)
-	}
-	defer grpcListener.Close()
-
 	// Create an error group to manage server goroutines
 	eg, ctx := errgroup.WithContext(context.Background())
 
-	// Catch exit signals
+	// Catch SIGINT/SIGTERM and initiate shutdown
+	var errSignalShutdown = errors.New("received INT/TERM signal, shutting down")
 	eg.Go(func() error {
 		ch := make(chan os.Signal, 2)
 
@@ -201,24 +157,85 @@ func main() { // nolint: gocyclo
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case signal := <-ch:
-			return errors.New(signal.String())
+		case <-ch:
+			return errSignalShutdown
 		}
 	})
 
-	// Create the gorilla and feed it a controller and its nodes
-	koko := gorilla.NewGorilla(controller)
+	// Serve handlers
+	httpAddr := fmt.Sprintf(":%d", httpPort)
+	grpcAddr := fmt.Sprintf(":%d", grpcPort)
+	eg.Go(serveHTTP(ctx, controller, httpAddr))
+	eg.Go(serveGRPC(ctx, controller, grpcAddr, getGRPCTLS(rootCA)))
 
-	log.Info("HTTP handler ready")
+	log.Info("Controller CE ready")
+
+	// Wait until all servers exit. The context is canceled upon any server
+	// shutting down unexpectedly or a SIGINT/SIGTERM being received, causing
+	// all running servers to start shutting down, but Wait does not return
+	// until all shutdowns have completed.
+	if err := eg.Wait(); err != nil && err != errSignalShutdown {
+		log.Alert(err)
+		os.Exit(1)
+	}
+}
+
+// Connect to a mysql DB and ping it for readiness.
+func connectDB(dsn string) *sql.DB {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		log.Alertf("Error opening db: %v", err)
+		os.Exit(1)
+	}
+	// TODO: retry ping with backoff rather than exiting because DB may still
+	// be initializing
+	if err = db.Ping(); err != nil {
+		log.Alertf("DB ping failed: %v", err)
+		os.Exit(1)
+	}
+	log.Info("DB connection established")
+	return db
+}
+
+// Encode self-signed Controller CA. This is used to manually configure the
+// Appliance by adding the Controller to its trust anchor pool for TLS
+// connections.
+func encodeCA(rootCA *pki.RootCA) string {
+	return string(pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "CERTIFICATE",
+			Bytes: rootCA.Cert.Raw,
+		},
+	))
+}
+
+// Generate a key for signing authentication tokens. The key is only stored
+// in memory and will be re-generated upon Controller restart.
+//
+// TODO: Persist the key to avoid having API/UI users have to login and get a
+// new token every time the Controller is restarted.
+func getTokenSigner() *jose.JWSTokenIssuer {
+	joseKey, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+	if err != nil {
+		log.Alertf("error generating token signing key: %v", err)
+		os.Exit(1)
+	}
+	return &jose.JWSTokenIssuer{
+		Key:          joseKey,
+		KeyAlgorithm: "ES384",
+	}
+}
+
+func serveHTTP(ctx context.Context, controller *cce.Controller, addr string) func() error {
+	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		log.Alertf("Could not listen on %q: %v", addr, err)
+		os.Exit(1)
+	}
 
 	// Configure http server
+	koko := gorilla.NewGorilla(controller)
 	httpServer := http.NewServer(koko)
-
-	// Start the http server
-	log.Infof("Starting HTTP server on port %d", httpPort)
-	eg.Go(func() error {
-		return httpServer.Serve(httpListener)
-	})
 
 	// Shutdown http server on exit signal
 	go func() {
@@ -234,41 +251,23 @@ func main() { // nolint: gocyclo
 		}
 	}()
 
-	// Configure grpc server
-	serverConf, err := newTLSConf(rootCA, grpc.SNI)
-	if err != nil {
-		log.Alertf("Error creating TLS config for gRPC server: %v", err)
-		os.Exit(1)
+	// Start the http server
+	log.Infof("HTTP server serving on %q", addr)
+	return func() error {
+		defer lis.Close()
+		return httpServer.Serve(lis)
 	}
-	serverConf.NextProtos = []string{"h2"}
-	serverConf.ClientAuth = tls.RequireAndVerifyClientCert
-	enrollmentConf, err := newTLSConf(rootCA, grpc.EnrollmentSNI)
-	if err != nil {
-		log.Alertf("Error creating TLS config for gRPC server: %v", err)
-		os.Exit(1)
-	}
-	enrollmentConf.NextProtos = []string{"h2"}
-	enrollmentConf.ClientAuth = tls.NoClientCert
-	grpcServer := grpc.NewServer(controller, &tls.Config{
-		GetConfigForClient: func(
-			hello *tls.ClientHelloInfo,
-		) (*tls.Config, error) {
-			switch hello.ServerName {
-			case grpc.SNI:
-				return serverConf, nil
-			case grpc.EnrollmentSNI:
-				return enrollmentConf, nil
-			default:
-				return nil, fmt.Errorf("unexpected server name: %s", hello.ServerName)
-			}
-		},
-	})
+}
 
-	// Start the grpc server
-	log.Infof("Starting gRPC server on port %d", grpcPort)
-	eg.Go(func() error {
-		return grpcServer.Serve(grpcListener)
-	})
+func serveGRPC(ctx context.Context, controller *cce.Controller, addr string, conf *tls.Config) func() error {
+	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		log.Alertf("Could not listen on %q: %v", addr, err)
+		os.Exit(1)
+	}
+
+	// Configure grpc server
+	grpcServer := grpc.NewServer(controller, conf)
 
 	// Shutdown grpc server on exit signal
 	go func() {
@@ -290,25 +289,66 @@ func main() { // nolint: gocyclo
 		}
 	}()
 
-	log.Info("Controller CE ready")
-	if err := eg.Wait(); err != nil {
-		log.Alert(err)
-		os.Exit(1)
+	// Start the grpc server
+	log.Infof("gRPC server serving on %q", addr)
+	return func() error {
+		defer lis.Close()
+		return grpcServer.Serve(lis)
 	}
 }
 
-func newTLSConf(rootCA *pki.RootCA, sni string) (*tls.Config, error) {
+// Generate a TLS config that handles two server names:
+//
+//     v1.community.controller.mec: requires and verifies peer cert
+//     enroll.community.controller.mec: no peer cert required
+//
+// In the gRPC server the servername will be considered for the particular RPCs
+// authorized to the client.
+func getGRPCTLS(rootCA *pki.RootCA) *tls.Config {
+	// Generate server TLS config for post-enrollment
+	serverConf := newTLSConf(rootCA, grpc.SNI)
+	serverConf.NextProtos = []string{"h2"}
+	serverConf.ClientAuth = tls.RequireAndVerifyClientCert
+
+	// Generate server TLS config for enrollment
+	enrollmentConf := newTLSConf(rootCA, grpc.EnrollmentSNI)
+	enrollmentConf.NextProtos = []string{"h2"}
+	enrollmentConf.ClientAuth = tls.NoClientCert
+
+	// Dynamically fetch TLS config by server name
+	return &tls.Config{
+		GetConfigForClient: func(
+			hello *tls.ClientHelloInfo,
+		) (*tls.Config, error) {
+			switch hello.ServerName {
+			case grpc.SNI:
+				return serverConf, nil
+			case grpc.EnrollmentSNI:
+				return enrollmentConf, nil
+			default:
+				return nil, fmt.Errorf("unexpected server name: %s", hello.ServerName)
+			}
+		},
+	}
+}
+
+// Generate a new TLS key/cert pair from a root CA for use in a TLS server with
+// some server name.
+func newTLSConf(rootCA *pki.RootCA, sni string) *tls.Config {
 	tlsKey, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 	if err != nil {
-		return nil, fmt.Errorf("error generating TLS key: %v", err)
+		log.Alertf("error generating TLS key for server %q: %v", sni, err)
+		os.Exit(1)
 	}
 	tlsCert, err := rootCA.NewTLSServerCert(tlsKey, sni)
 	if err != nil {
-		return nil, fmt.Errorf("error generating TLS cert: %v", err)
+		log.Alertf("error generating TLS cert for server %q: %v", sni, err)
+		os.Exit(1)
 	}
 	tlsCAChain, err := rootCA.CAChain()
 	if err != nil {
-		return nil, fmt.Errorf("error getting TLS CA chain: %v", err)
+		log.Alertf("error getting TLS CA chain for server %q: %v", sni, err)
+		os.Exit(1)
 	}
 	tlsChain := [][]byte{tlsCert.Raw}
 	for _, caCert := range tlsCAChain {
@@ -323,5 +363,5 @@ func newTLSConf(rootCA *pki.RootCA, sni string) (*tls.Config, error) {
 			Leaf:        tlsCert,
 		}},
 		ClientCAs: tlsRoots,
-	}, nil
+	}
 }
