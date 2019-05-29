@@ -1,4 +1,7 @@
 # CHANGELOG
+## [0.0.26] - 2019-05-23
+### Added
+- Support for apps to specify ports and protocols that need to be exposed
 
 ## [0.0.25] - 2019-05-24
 ### Added

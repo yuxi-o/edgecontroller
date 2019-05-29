@@ -198,7 +198,8 @@ func postApps(appType string) (id string) {
 				"description": "my %s app",
 				"cores": 4,
 				"memory": 1024,
-				"source": "http://www.test.com/my_%s_app.tar.gz"
+				"source": "http://www.test.com/my_%s_app.tar.gz",
+				"ports": [{"port": 80, "protocol": "tcp"}]
 			}`, appType, appType, appType, appType)))
 	Expect(err).ToNot(HaveOccurred())
 	defer resp.Body.Close()

@@ -59,6 +59,11 @@ func (c *ApplicationDeploymentServiceClient) Deploy(
 }
 
 func toPBApp(app *cce.App) *pb.Application {
+	var ports []*pb.PortProto
+	for _, pp := range app.Ports {
+		ports = append(ports, &pb.PortProto{Port: pp.Port, Protocol: pp.Protocol})
+	}
+
 	return &pb.Application{
 		Id:          app.ID,
 		Name:        app.Name,
@@ -67,6 +72,7 @@ func toPBApp(app *cce.App) *pb.Application {
 		Version:     app.Version,
 		Cores:       int32(app.Cores),
 		Memory:      int32(app.Memory),
+		Ports:       ports,
 		Source: &pb.Application_HttpUri{
 			HttpUri: &pb.Application_HTTPSource{
 				HttpUri: app.Source,

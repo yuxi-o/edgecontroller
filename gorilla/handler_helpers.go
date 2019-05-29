@@ -51,11 +51,19 @@ func getController(ctx context.Context) *cce.Controller {
 }
 
 func toK8SApp(app *cce.App) *k8s.App {
+	var ports []*k8s.PortProto
+	for _, port := range app.Ports {
+		ports = append(ports, &k8s.PortProto{
+			Port:     int32(port.Port),
+			Protocol: port.Protocol,
+		})
+	}
 	return &k8s.App{
 		ID:     app.ID,
 		Name:   app.Name,
 		Image:  app.ID + ":latest",
 		Cores:  app.Cores,
 		Memory: app.Memory,
+		Ports:  ports,
 	}
 }

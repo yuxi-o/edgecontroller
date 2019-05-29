@@ -176,6 +176,7 @@ func postApps(appType string) (id string) {
 				"description": "my %s app",
 				"cores": 4,
 				"memory": 1024,
+				"ports": [{"port": 80, "protocol": "tcp"}],
 				"source": "http://www.test.com/my_%s_app.tar.gz"
 			}`, appType, appType, appType, appType)))
 	Expect(err).ToNot(HaveOccurred())

@@ -49,6 +49,7 @@ var _ = Describe("Application Deployment Service Client", func() {
 				Version:     "latest",
 				Cores:       4,
 				Memory:      4096,
+				Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
 				Source:      "http://path/to/file.zip",
 			})
 		Expect(err).ToNot(HaveOccurred())
@@ -65,6 +66,7 @@ var _ = Describe("Application Deployment Service Client", func() {
 				Version:     "latest",
 				Cores:       4,
 				Memory:      4096,
+				Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
 				Source:      "http://path/to/file.zip",
 			})
 		Expect(err).ToNot(HaveOccurred())
@@ -139,6 +141,7 @@ var _ = Describe("Application Deployment Service Client", func() {
 						Version:     "latest",
 						Cores:       8,
 						Memory:      8192,
+						Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
 						Source:      "http://path/to/file.zip",
 					})
 
@@ -166,6 +169,7 @@ var _ = Describe("Application Deployment Service Client", func() {
 						Version:     "latest",
 						Cores:       8,
 						Memory:      8192,
+						Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
 						Source:      "http://path/to/file.zip",
 					})
 

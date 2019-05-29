@@ -37,7 +37,11 @@ var _ = Describe("Entities: App", func() {
 			Version:     "latest",
 			Cores:       4,
 			Memory:      1024,
-			Source:      "https://path/to/file.zip",
+			Ports: []cce.PortProto{
+				{Port: 80, Protocol: "tcp"},
+				{Port: 443, Protocol: "tcp"},
+			},
+			Source: "https://path/to/file.zip",
 		}
 	})
 
@@ -113,6 +117,18 @@ var _ = Describe("Entities: App", func() {
 				"memory must be in [1..16384]"))
 		})
 
+		It("Should return an error if Ports (port) is invalid", func() {
+			app.Ports[0].Port = 99999
+			Expect(app.Validate()).To(MatchError(
+				"port must be in [1..65535]"))
+		})
+
+		It("Should return an error if Ports (protocol) is invalid", func() {
+			app.Ports[0].Protocol = "protocolthatdoesnotexist"
+			Expect(app.Validate()).To(MatchError(
+				"protocol must be tcp, udp, sctp or icmp"))
+		})
+
 		It("Should return an error if Source is empty", func() {
 			app.Source = ""
 			Expect(app.Validate()).To(MatchError("source cannot be empty"))
@@ -135,6 +151,7 @@ App[
     Description: test-description
     Cores: 4
     Memory: 1024
+    Ports: [80/tcp 443/tcp]
     Source: https://path/to/file.zip
 ]`,
 			)))

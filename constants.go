@@ -20,6 +20,9 @@ const MaxCores = 8
 // MaxMemory is the maximum memory (in MB) that an application can use.
 const MaxMemory = 16 * 1024
 
+// MaxPort is the maximum port allowed in the TCP/IP stack
+const MaxPort = 65535
+
 // LifecycleStatus is an application's status.
 type LifecycleStatus int
 

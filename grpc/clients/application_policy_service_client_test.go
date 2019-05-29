@@ -49,6 +49,7 @@ var _ = Describe("Application Policy Service Client", func() {
 				Version:     "latest",
 				Cores:       4,
 				Memory:      4096,
+				Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
 				Source:      "https://path/to/file.zip",
 			})
 		Expect(err).ToNot(HaveOccurred())

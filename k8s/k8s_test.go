@@ -96,6 +96,12 @@ var _ = Describe("K8S", func() {
 				ID:    "1234",
 				Name:  "smellascope",
 				Image: "nginx:1.12", // commonly used public docker container
+				Ports: []*k8s.PortProto{
+					{
+						Port:     8080,
+						Protocol: "tcp",
+					},
+				},
 			}
 			ctx := context.Background()
 			ctx, cancel0 := context.WithTimeout(ctx, 5*time.Second)

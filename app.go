@@ -25,15 +25,27 @@ import (
 
 // App is an application.
 type App struct {
-	ID          string `json:"id"`
-	Type        string `json:"type"`
-	Name        string `json:"name"`
-	Version     string `json:"version"`
-	Vendor      string `json:"vendor"`
-	Description string `json:"description"`
-	Cores       int    `json:"cores"`
-	Memory      int    `json:"memory"` // in MB
-	Source      string `json:"source"`
+	ID          string      `json:"id"`
+	Type        string      `json:"type"`
+	Name        string      `json:"name"`
+	Version     string      `json:"version"`
+	Vendor      string      `json:"vendor"`
+	Description string      `json:"description"`
+	Cores       int         `json:"cores"`
+	Memory      int         `json:"memory"` // in MB
+	Ports       []PortProto `json:"ports"`
+	Source      string      `json:"source"`
+}
+
+// PortProto is a port and protocol combination. It is typically used to represent the ports and protocols that an
+// application is listening on and needs exposed.
+type PortProto struct {
+	Port     uint32 `json:"port"`
+	Protocol string `json:"protocol"`
+}
+
+func (pp PortProto) String() string {
+	return fmt.Sprintf("%d/%s", pp.Port, pp.Protocol)
 }
 
 // GetTableName returns the name of the persistence table.
@@ -74,6 +86,15 @@ func (app *App) Validate() error { // nolint: gocyclo
 	if app.Memory < 1 || app.Memory > MaxMemory {
 		return fmt.Errorf("memory must be in [1..%d]", MaxMemory)
 	}
+	for _, pp := range app.Ports {
+		if pp.Port < 1 || pp.Port > MaxPort {
+			return fmt.Errorf("port must be in [1..%d]", MaxPort)
+		}
+		protos := map[string]struct{}{"tcp": {}, "udp": {}, "icmp": {}, "sctp": {}}
+		if _, ok := protos[pp.Protocol]; !ok {
+			return fmt.Errorf("protocol must be tcp, udp, sctp or icmp")
+		}
+	}
 	if app.Source == "" {
 		return errors.New("source cannot be empty")
 	}
@@ -94,6 +115,7 @@ App[
     Description: %s
     Cores: %d
     Memory: %d
+    Ports: %s
     Source: %s
 ]`),
 		app.ID,
@@ -103,5 +125,6 @@ App[
 		app.Description,
 		app.Cores,
 		app.Memory,
+		app.Ports,
 		app.Source)
 }

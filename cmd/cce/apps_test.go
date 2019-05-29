@@ -69,6 +69,7 @@ var _ = Describe("/apps", func() {
 					"description": "my container app",
 					"cores": 4,
 					"memory": 1024,
+					"ports": [{"port": 80, "protocol": "tcp"}],
 					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`),
 			Entry(
@@ -81,6 +82,7 @@ var _ = Describe("/apps", func() {
 					"vendor": "smart edge",		
 					"cores": 4,
 					"memory": 1024,
+					"ports": [{"port": 80, "protocol": "tcp"}],
 					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`),
 		)
@@ -122,6 +124,7 @@ var _ = Describe("/apps", func() {
 					"description": "my container app",
 					"cores": 4,
 					"memory": 1024,
+					"ports": [{"port": 80, "protocol": "tcp"}],
 					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`,
 				`Validation failed: type must be either "container" or "vm"`),
@@ -135,6 +138,7 @@ var _ = Describe("/apps", func() {
 					"description": "my container app",
 					"cores": 4,
 					"memory": 1024,
+					"ports": [{"port": 80, "protocol": "tcp"}],
 					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`,
 				"Validation failed: name cannot be empty"),
@@ -148,6 +152,7 @@ var _ = Describe("/apps", func() {
 						"description": "my container app",
 						"cores": 4,
 						"memory": 1024,
+						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}`,
 				"Validation failed: version cannot be empty"),
@@ -161,6 +166,7 @@ var _ = Describe("/apps", func() {
 					"description": "my container app",
 					"cores": 4,
 					"memory": 1024,
+					"ports": [{"port": 80, "protocol": "tcp"}],
 					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`,
 				"Validation failed: vendor cannot be empty"),
@@ -174,6 +180,7 @@ var _ = Describe("/apps", func() {
 					"description": "my container app",
 					"cores": 9,
 					"memory": 1024,
+					"ports": [{"port": 80, "protocol": "tcp"}],
 					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`,
 				"Validation failed: cores must be in [1..8]"),
@@ -187,9 +194,38 @@ var _ = Describe("/apps", func() {
 					"description": "my container app",
 					"cores": 8,
 					"memory": 16385,
+					"ports": [{"port": 80, "protocol": "tcp"}],
 					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`,
 				"Validation failed: memory must be in [1..16384]"),
+			Entry("POST /apps with ports not in [1..65535]",
+				`
+				{
+					"type": "container",
+					"name": "container app",
+					"version": "latest",
+					"vendor": "smart edge",
+					"description": "my container app",
+					"cores": 8,
+					"memory": 1024,
+					"ports": [{"port": 99999, "protocol": "tcp"}],
+					"source": "http://www.test.com/my_container_app.tar.gz"
+				}`,
+				"Validation failed: port must be in [1..65535]"),
+			Entry("POST /apps with protocol not tcp, udp, sctp or icmp",
+				`
+				{
+					"type": "container",
+					"name": "container app",
+					"version": "latest",
+					"vendor": "smart edge",
+					"description": "my container app",
+					"cores": 8,
+					"memory": 1024,
+					"ports": [{"port": 80, "protocol": "thisisnotaprotocol"}],
+					"source": "http://www.test.com/my_container_app.tar.gz"
+				}`,
+				"Validation failed: protocol must be tcp, udp, sctp or icmp"),
 			Entry(
 				"POST /apps without source",
 				`
@@ -200,6 +236,7 @@ var _ = Describe("/apps", func() {
 							"vendor": "smart edge",
 							"description": "my container app",
 							"cores": 4,
+							"ports": [{"port": 80, "protocol": "tcp"}],
 							"memory": 1024
 						}`,
 				"Validation failed: source cannot be empty"),
@@ -214,6 +251,7 @@ var _ = Describe("/apps", func() {
 								"description": "my container app",
 								"cores": 4,
 								"memory": 1024,
+								"ports": [{"port": 80, "protocol": "tcp"}],
 								"source": "invalid.url"
 							}`,
 				"Validation failed: source cannot be parsed as a URI"),
@@ -261,6 +299,7 @@ var _ = Describe("/apps", func() {
 						Description: "my container app",
 						Cores:       4,
 						Memory:      1024,
+						Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
 						Source:      "http://www.test.com/my_container_app.tar.gz",
 					}))
 				Expect(apps).To(ContainElement(
@@ -273,6 +312,7 @@ var _ = Describe("/apps", func() {
 						Description: "my vm app",
 						Cores:       4,
 						Memory:      1024,
+						Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
 						Source:      "http://www.test.com/my_vm_app.tar.gz",
 					}))
 			},
@@ -304,6 +344,7 @@ var _ = Describe("/apps", func() {
 						Description: "my container app",
 						Cores:       4,
 						Memory:      1024,
+						Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
 						Source:      "http://www.test.com/my_container_app.tar.gz",
 					},
 				))
@@ -370,6 +411,7 @@ var _ = Describe("/apps", func() {
 						"description": "my container app",	
 						"cores": 4,
 						"memory": 1024,
+						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
@@ -381,6 +423,7 @@ var _ = Describe("/apps", func() {
 					Description: "my container app",
 					Cores:       4,
 					Memory:      1024,
+					Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
 					Source:      "http://www.test.com/my_container_app.tar.gz",
 				}),
 			Entry("PATCH /apps with no description",
@@ -394,6 +437,7 @@ var _ = Describe("/apps", func() {
 						"vendor": "smart edge",
 						"cores": 4,
 						"memory": 1024,
+						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
@@ -405,6 +449,7 @@ var _ = Describe("/apps", func() {
 					Version:     "latest",
 					Cores:       4,
 					Memory:      1024,
+					Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
 					Source:      "http://www.test.com/my_container_app.tar.gz",
 				}),
 		)
@@ -444,6 +489,7 @@ var _ = Describe("/apps", func() {
 						"description": "my container app",
 						"cores": 4,
 						"memory": 1024,
+						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
@@ -460,6 +506,7 @@ var _ = Describe("/apps", func() {
 						"description": "my container app",	
 						"cores": 4,
 						"memory": 1024,
+						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
@@ -476,6 +523,7 @@ var _ = Describe("/apps", func() {
 						"description": "my container app",
 						"cores": 4,
 						"memory": 1024,
+						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
@@ -491,6 +539,7 @@ var _ = Describe("/apps", func() {
 						"description": "my container app",
 						"cores": 4,
 						"memory": 1024,
+						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
@@ -507,6 +556,7 @@ var _ = Describe("/apps", func() {
 						"description": "my container app",
 						"cores": 4,
 						"memory": 1024,
+						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
@@ -523,6 +573,7 @@ var _ = Describe("/apps", func() {
 						"description": "my container app",
 						"cores": 9,
 						"memory": 1024,
+						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
@@ -539,6 +590,7 @@ var _ = Describe("/apps", func() {
 						"description": "my container app",
 						"cores": 4,
 						"memory": 16385,
+						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
 				]`,
@@ -554,6 +606,7 @@ var _ = Describe("/apps", func() {
 						"vendor": "smart edge",
 						"description": "my container app",
 						"cores": 4,
+						"ports": [{"port": 80, "protocol": "tcp"}],
 						"memory": 1024
 					}
 				]`,
@@ -570,6 +623,7 @@ var _ = Describe("/apps", func() {
 						"description": "my container app",
 						"cores": 4,
 						"memory": 1024,
+						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "invalid.url"
 					}
 				]`,

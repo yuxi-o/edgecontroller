@@ -37,6 +37,13 @@ type App struct {
 	Image  string
 	Cores  int
 	Memory int // in MB
+	Ports  []*PortProto
+}
+
+// PortProto is a port and protocol tuple
+type PortProto struct {
+	Port     int32
+	Protocol string
 }
 
 const (
@@ -163,6 +170,25 @@ func (ks *Client) deploy(serial string, app *App) error {
 	podName := podName(app.ID, serial)
 	appName := appName(app.ID, serial)
 
+	protos := map[string]apiV1.Protocol{
+		// ProtocolTCP is the TCP protocol.
+		"tcp":  apiV1.ProtocolTCP,
+		"udp":  apiV1.ProtocolUDP,
+		"sctp": apiV1.ProtocolSCTP,
+	}
+
+	var ports []apiV1.ContainerPort
+	for _, portProt := range app.Ports {
+		proto, ok := protos[portProt.Protocol]
+		if !ok {
+			return errors.New("unsupported protocol for kubernetes error")
+		}
+		ports = append(ports, apiV1.ContainerPort{
+			ContainerPort: portProt.Port,
+			Protocol:      proto,
+		})
+	}
+
 	// deployment client
 	deploymentsClient := ks.clientSet.AppsV1().
 		Deployments(apiV1.NamespaceDefault)
@@ -194,6 +220,7 @@ func (ks *Client) deploy(serial string, app *App) error {
 							Resources: apiV1.ResourceRequirements{},
 							Name:      appName,
 							Image:     app.Image,
+							Ports:     ports,
 							// never pull the image, use the local image provided
 							ImagePullPolicy: apiV1.PullNever,
 						},
