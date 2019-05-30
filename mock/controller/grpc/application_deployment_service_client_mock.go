@@ -46,15 +46,6 @@ func (c *MockPBApplicationDeploymentServiceClient) DeployVM(
 	return c.MockNode.AppDeploySvc.DeployVM(ctx, in)
 }
 
-// GetStatus delegates to a MockNode.
-func (c *MockPBApplicationDeploymentServiceClient) GetStatus(
-	ctx context.Context,
-	in *pb.ApplicationID,
-	opts ...grpc.CallOption,
-) (*pb.LifecycleStatus, error) {
-	return c.MockNode.AppDeploySvc.GetStatus(ctx, in)
-}
-
 // Redeploy delegates to a MockNode.
 func (c *MockPBApplicationDeploymentServiceClient) Redeploy(
 	ctx context.Context,

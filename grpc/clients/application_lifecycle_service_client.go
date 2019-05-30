@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/grpc"
 	"github.com/smartedgemec/controller-ce/pb"
 )
@@ -91,4 +92,20 @@ func (c *ApplicationLifecycleServiceClient) Restart(
 	}
 
 	return nil
+}
+
+// GetStatus retrieves an application's status.
+func (c *ApplicationLifecycleServiceClient) GetStatus(
+	ctx context.Context,
+	id string,
+) (cce.LifecycleStatus, error) {
+	pbStatus, err := c.PBCli.GetStatus(
+		ctx,
+		&pb.ApplicationID{Id: id})
+
+	if err != nil {
+		return cce.Unknown, errors.Wrap(err, "error retrieving application")
+	}
+
+	return fromPBLifecycleStatus(pbStatus), nil
 }

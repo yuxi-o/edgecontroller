@@ -82,7 +82,7 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the container application is started")
-				status, err := appDeploySvcCli.GetStatus(ctx, containerAppID)
+				status, err := appLifeSvcCli.GetStatus(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(status).To(Equal(cce.Running))
 			})
@@ -96,7 +96,7 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the VM application is started")
-				status, err := appDeploySvcCli.GetStatus(ctx, vmAppID)
+				status, err := appLifeSvcCli.GetStatus(ctx, vmAppID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(status).To(Equal(cce.Running))
 			})
@@ -135,7 +135,7 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the container application is restarted")
-				status, err := appDeploySvcCli.GetStatus(ctx, containerAppID)
+				status, err := appLifeSvcCli.GetStatus(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(status).To(Equal(cce.Running))
 			})
@@ -152,7 +152,7 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the VM application is restarted")
-				status, err := appDeploySvcCli.GetStatus(ctx, vmAppID)
+				status, err := appLifeSvcCli.GetStatus(ctx, vmAppID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(status).To(Equal(cce.Running))
 			})
@@ -187,7 +187,7 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the container application is stopped")
-				status, err := appDeploySvcCli.GetStatus(ctx, containerAppID)
+				status, err := appLifeSvcCli.GetStatus(ctx, containerAppID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(status).To(Equal(cce.Stopped))
 			})
@@ -204,7 +204,7 @@ var _ = Describe("Application Lifecycle Service Client", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the VM application is stopped")
-				status, err := appDeploySvcCli.GetStatus(ctx, vmAppID)
+				status, err := appLifeSvcCli.GetStatus(ctx, vmAppID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(status).To(Equal(cce.Stopped))
 			})

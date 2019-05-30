@@ -1,4 +1,9 @@
 # CHANGELOG
+
+## [0.0.27] - 2019-05-29
+### Changed
+- Move GetStatus invocation from Application DeploymentServiceClient to ApplicationLifecycleServiceClient
+
 ## [0.0.26] - 2019-05-23
 ### Added
 - Support for apps to specify ports and protocols that need to be exposed

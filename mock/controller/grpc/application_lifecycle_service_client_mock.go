@@ -54,3 +54,12 @@ func (c *MockPBApplicationLifecycleServiceClient) Restart(
 ) (*empty.Empty, error) {
 	return c.MockNode.AppLifeSvc.Restart(ctx, in)
 }
+
+// GetStatus delegates to a MockNode.
+func (c *MockPBApplicationLifecycleServiceClient) GetStatus(
+	ctx context.Context,
+	in *pb.ApplicationID,
+	opts ...grpc.CallOption,
+) (*pb.LifecycleStatus, error) {
+	return c.MockNode.AppLifeSvc.GetStatus(ctx, in)
+}

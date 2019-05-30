@@ -81,22 +81,6 @@ func toPBApp(app *cce.App) *pb.Application {
 	}
 }
 
-// GetStatus retrieves an application's status.
-func (c *ApplicationDeploymentServiceClient) GetStatus(
-	ctx context.Context,
-	id string,
-) (cce.LifecycleStatus, error) {
-	pbStatus, err := c.PBCli.GetStatus(
-		ctx,
-		&pb.ApplicationID{Id: id})
-
-	if err != nil {
-		return cce.Unknown, errors.Wrap(err, "error retrieving application")
-	}
-
-	return fromPBLifecycleStatus(pbStatus), nil
-}
-
 // Redeploy redeploys an application.
 func (c *ApplicationDeploymentServiceClient) Redeploy(
 	ctx context.Context,

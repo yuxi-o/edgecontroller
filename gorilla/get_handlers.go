@@ -42,7 +42,7 @@ func handleGetNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Pe
 	var status string
 	switch ctrl.OrchestrationMode {
 	case cce.OrchestrationModeNative:
-		s, err := nodeCC.AppDeploySvcCli.GetStatus(ctx, e.(*cce.NodeApp).AppID)
+		s, err := nodeCC.AppLifeSvcCli.GetStatus(ctx, e.(*cce.NodeApp).AppID)
 		if err != nil {
 			return nil, err
 		}

@@ -92,7 +92,7 @@ var _ = Describe("Application Deployment Service Client", func() {
 		Describe("Success", func() {
 			It("Should get container application status", func() {
 				By("Getting the container application's status")
-				status, err := appDeploySvcCli.GetStatus(ctx, containerAppID)
+				status, err := appLifeSvcCli.GetStatus(ctx, containerAppID)
 
 				By("Verifying the status is Deployed")
 				Expect(err).ToNot(HaveOccurred())
@@ -101,7 +101,7 @@ var _ = Describe("Application Deployment Service Client", func() {
 
 			It("Should get VM application status", func() {
 				By("Getting the VM application's status")
-				status, err := appDeploySvcCli.GetStatus(ctx, vmAppID)
+				status, err := appLifeSvcCli.GetStatus(ctx, vmAppID)
 
 				By("Verifying the status is Deployed")
 				Expect(err).ToNot(HaveOccurred())
@@ -114,7 +114,7 @@ var _ = Describe("Application Deployment Service Client", func() {
 				"exist", func() {
 				By("Passing a nonexistent ID")
 				badID := uuid.New()
-				s, err := appDeploySvcCli.GetStatus(ctx, badID)
+				s, err := appLifeSvcCli.GetStatus(ctx, badID)
 
 				By("Verifying a NotFound response")
 				Expect(err).To(HaveOccurred(),
@@ -149,7 +149,7 @@ var _ = Describe("Application Deployment Service Client", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Getting the redeployed application's status")
-				status, err := appDeploySvcCli.GetStatus(ctx, containerAppID)
+				status, err := appLifeSvcCli.GetStatus(ctx, containerAppID)
 
 				By("Verifying the status is Deployed")
 				Expect(err).ToNot(HaveOccurred())
@@ -177,7 +177,7 @@ var _ = Describe("Application Deployment Service Client", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Getting the redeployed application's status")
-				status, err := appDeploySvcCli.GetStatus(ctx, vmAppID)
+				status, err := appLifeSvcCli.GetStatus(ctx, vmAppID)
 
 				By("Verifying the status is Deployed")
 				Expect(err).ToNot(HaveOccurred())
@@ -213,7 +213,7 @@ var _ = Describe("Application Deployment Service Client", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the container application was removed")
-				_, err = appDeploySvcCli.GetStatus(ctx, containerAppID)
+				_, err = appLifeSvcCli.GetStatus(ctx, containerAppID)
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.NotFound,
@@ -228,7 +228,7 @@ var _ = Describe("Application Deployment Service Client", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying the VM application was removed")
-				_, err = appDeploySvcCli.GetStatus(ctx, vmAppID)
+				_, err = appLifeSvcCli.GetStatus(ctx, vmAppID)
 				Expect(err).To(HaveOccurred())
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.NotFound,
