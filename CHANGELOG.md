@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.0.28] - 2019-05-31
+### Added
+- Syslog ingress server
+- StatsD ingress server
+
 ## [0.0.27] - 2019-05-29
 ### Changed
 - Move GetStatus invocation from Application DeploymentServiceClient to ApplicationLifecycleServiceClient

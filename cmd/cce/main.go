@@ -26,6 +26,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 
 	"golang.org/x/sync/errgroup"
 
@@ -44,6 +45,7 @@ import (
 	"github.com/smartedgemec/controller-ce/k8s"
 	"github.com/smartedgemec/controller-ce/mysql"
 	"github.com/smartedgemec/controller-ce/pki"
+	"github.com/smartedgemec/controller-ce/telemetry"
 	logger "github.com/smartedgemec/log"
 )
 
@@ -53,13 +55,17 @@ var log = logger.DefaultLogger.WithField("pkg", "main")
 
 // CLI flags
 var (
-	dsn       string
-	adminPass string
-	logLevel  string
-	httpPort  int
-	grpcPort  int
-	orchMode  string
-	k8sClient k8s.Client
+	dsn        string
+	adminPass  string
+	logLevel   string
+	httpPort   int
+	grpcPort   int
+	syslogPort int
+	statsdPort int
+	syslogOut  string
+	statsdOut  string
+	orchMode   string
+	k8sClient  k8s.Client
 )
 
 func init() {
@@ -68,6 +74,10 @@ func init() {
 	flag.StringVar(&logLevel, "log-level", "info", "Syslog level")
 	flag.IntVar(&httpPort, "httpPort", 8080, "Controller HTTP port")
 	flag.IntVar(&grpcPort, "grpcPort", 8081, "Controller gRPC port")
+	flag.IntVar(&syslogPort, "syslogPort", 6514, "Telemetry ingress port for syslog")
+	flag.IntVar(&statsdPort, "statsdPort", 8125, "Telemetry ingress port for statsd")
+	flag.StringVar(&syslogOut, "syslog-path", "./syslog.log", "Syslog output file path")
+	flag.StringVar(&statsdOut, "statsd-path", "./statsd.log", "StatsD output file path")
 
 	// application orchestration mode
 	flag.StringVar(&orchMode, "orchestration-mode", "native", "Orchestration mode. options [native, kubernetes] ")
@@ -165,8 +175,12 @@ func main() {
 	// Serve handlers
 	httpAddr := fmt.Sprintf(":%d", httpPort)
 	grpcAddr := fmt.Sprintf(":%d", grpcPort)
+	syslogAddr := fmt.Sprintf(":%d", syslogPort)
+	statsdAddr := fmt.Sprintf(":%d", statsdPort)
 	eg.Go(serveHTTP(ctx, controller, httpAddr))
 	eg.Go(serveGRPC(ctx, controller, grpcAddr, getGRPCTLS(rootCA)))
+	eg.Go(serveTelemetry(ctx, syslogOut, syslogAddr, newTLSConf(rootCA, telemetry.SyslogSNI)))
+	eg.Go(serveTelemetry(ctx, statsdOut, statsdAddr, newTLSConf(rootCA, telemetry.StatsdSNI)))
 
 	log.Info("Controller CE ready")
 
@@ -244,10 +258,11 @@ func serveHTTP(ctx context.Context, controller *cce.Controller, addr string) fun
 		ctxShutdown, cancel := context.WithTimeout(context.TODO(), time.Minute)
 		defer cancel()
 
-		err = httpServer.Shutdown(ctxShutdown)
-		if err != nil {
+		if err := httpServer.Shutdown(ctxShutdown); err != nil {
 			log.Info("HTTP graceful shutdown exceeded timeout, using force")
-			httpServer.Close()
+			if err := httpServer.Close(); err != nil {
+				log.Errf("error closing HTTP server: %v", err)
+			}
 		}
 	}()
 
@@ -294,6 +309,49 @@ func serveGRPC(ctx context.Context, controller *cce.Controller, addr string, con
 	return func() error {
 		defer lis.Close()
 		return grpcServer.Serve(lis)
+	}
+}
+
+func serveTelemetry(ctx context.Context, outfile, addr string, conf *tls.Config) func() error {
+	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		log.Alertf("Could not listen on %q: %v", addr, err)
+		os.Exit(1)
+	}
+
+	// Upgrade to TLS
+	conf.ClientAuth = tls.RequireAndVerifyClientCert
+	lis = tls.NewListener(lis, conf)
+
+	// Shutdown syslog server on exit signal
+	go func() {
+		defer lis.Close()
+		<-ctx.Done()
+	}()
+
+	// Start the syslog server
+	if err = os.MkdirAll(filepath.Dir(outfile), 0750); err != nil {
+		log.Alertf("Error creating directory for telemetry file %q: %v", outfile, err)
+		os.Exit(1)
+	}
+	f, err := os.OpenFile(outfile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+	if err != nil {
+		log.Alertf("Error opening telemetry file %q: %v", outfile, err)
+		os.Exit(1)
+	}
+	log.Infof("Telemetry server serving on %q, writing to %q", addr, outfile)
+	return func() error {
+		defer f.Close()
+
+		// TODO: Buffer writes for performance. This currently causes telemetry
+		// integration tests to fail, because writes won't occur until shutdown
+		// of the Controller is initiated and the buffered writer is flushed.
+		//
+		//     w := bufio.NewWriter(f)
+		//     defer w.Flush()
+		w := io.Writer(f)
+
+		return telemetry.WriteToByLine(w, 0, telemetry.AcceptTCP(lis))
 	}
 }
 

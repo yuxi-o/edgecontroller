@@ -44,7 +44,7 @@ var _ = Describe("Node Auth Service", func() {
 
 	BeforeEach(func() {
 		timeoutCtx, cancel := context.WithTimeout(
-			ctx, 2*time.Second)
+			context.Background(), 2*time.Second)
 		defer cancel()
 
 		caPool := x509.NewCertPool()
@@ -94,7 +94,7 @@ var _ = Describe("Node Auth Service", func() {
 
 				By("Requesting credentials from auth service")
 				credentials, err := authSvcCli.RequestCredentials(
-					ctx,
+					context.TODO(),
 					&pb.Identity{
 						Csr: string(csrPEM),
 					},
@@ -169,7 +169,7 @@ var _ = Describe("Node Auth Service", func() {
 		It("Should return an error if payload is empty", func() {
 			By("Requesting credentials from auth service")
 			credentials, err := authSvcCli.RequestCredentials(
-				ctx,
+				context.TODO(),
 				&pb.Identity{
 					Csr: "",
 				},
@@ -181,7 +181,7 @@ var _ = Describe("Node Auth Service", func() {
 		It("Should return an error if payload is invalid", func() {
 			By("Requesting credentials from auth service")
 			credentials, err := authSvcCli.RequestCredentials(
-				ctx,
+				context.TODO(),
 				&pb.Identity{
 					Csr: "123",
 				},
@@ -212,7 +212,7 @@ var _ = Describe("Node Auth Service", func() {
 
 			By("Requesting credentials from auth service")
 			credentials, err := authSvcCli.RequestCredentials(
-				ctx,
+				context.TODO(),
 				&pb.Identity{
 					Csr: string(csrPEM),
 				},

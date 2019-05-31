@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"os/user"
 	"path"
@@ -86,6 +87,8 @@ func startup() {
 		"-dsn", "root:beer@tcp(:8083)/controller_ce",
 		"-httpPort", "8080",
 		"-grpcPort", "8081",
+		"-syslog-path", "./temp_telemetry/syslog.out",
+		"-statsd-path", "./temp_telemetry/statsd.out",
 		"-adminPass", adminPass,
 		"-orchestration-mode", "kubernetes",
 		"-k8s-client-ca-path", config.TLSClientConfig.CAFile,
@@ -148,6 +151,7 @@ func shutdown() {
 		By("Stopping the test node")
 		node.Kill()
 	}
+	os.RemoveAll("./temp_telemetry")
 }
 
 func authToken() string {

@@ -1,7 +1,6 @@
 version: '2'
 
 services:
-
   mysql:
     image: mysql:8.0
     command: mysqld --default-authentication-plugin=mysql_native_password
@@ -9,22 +8,6 @@ services:
       - 8083:3306
     environment:
       MYSQL_ROOT_PASSWORD: beer
-
-  statsd:
-    image: atlassianlabs/gostatsd:15.0.1
-    entrypoint: /bin/sh -c "gostatsd --backends=stdout > /etc/gostatsd/stats.log 2>&1"
-    ports:
-      - 8125:8125/udp
-    volumes:
-      - ./statsd:/etc/gostatsd
-
-  syslog:
-    image: balabit/syslog-ng:3.19.1
-    ports:
-      - 514:514/udp
-    volumes:
-      - ./syslog/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
-      - ./syslog/logs:/var/log
   ui:
     image: cce-ui:latest
     ports:

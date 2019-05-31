@@ -21,9 +21,10 @@ export KUBECONFIG=$(HOME)/.kube/config
 
 .PHONY: help clean build lint test \
 	db-up db-reset db-down \
-	statsd-up statsd-down syslog-up syslog-down \
+	minikube-install kubectl-install minikube-wait \
 	ui-up ui-down ui-test \
-	test-unit test-syslog test-statsd test-api
+	test-k8s test-api-k8s \
+	test-unit test-api
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
@@ -36,12 +37,6 @@ help:
 	@echo "  db-reset         to start and reset the MySQL database service"
 	@echo "  db-down          to stop the MySQL database service"
 	@echo ""
-	@echo "  syslog-up        to start the syslog service"
-	@echo "  syslog-down      to stop the syslog service"
-	@echo ""
-	@echo "  statsd-up        to start the statsd service"
-	@echo "  statsd-down      to stop the statsd service"
-	@echo ""
 	@echo "  minikube-install to install minikube"
 	@echo "  kubectl-install  to install kubectl"
 	@echo "  minikube-wait    to wait for nimikube installation to finish"
@@ -52,8 +47,6 @@ help:
 	@echo "  test-unit        to run unit tests"
 	@echo "  test-api         to run api tests"
 	@echo "  test-api-k8s     to run k8s app deployment api tests"
-	@echo "  test-syslog      to run syslog tests"
-	@echo "  test-statsd      to run statsd tests"
 	@echo "  test-k8s         to run kubernetes orchestration tests"
 	@echo "  test             to run unit followed by api tests"
 	@echo ""
@@ -63,7 +56,7 @@ help:
 	@echo "  ui-test          run the UI project tests"
 
 clean:
-	rm -rf dist certificates statsd/stats.log syslog/logs
+	rm -rf dist certificates
 
 build:
 	go build -o dist/cce ./cmd/cce
@@ -111,18 +104,6 @@ minikube-wait:
 minikube-stop:
 	sudo -E minikube delete
 
-statsd-up:
-	docker-compose up -d statsd
-
-statsd-down:
-	docker-compose stop statsd
-
-syslog-up:
-	docker-compose up -d syslog
-
-syslog-down:
-	docker-compose stop syslog
-
 ui-up:
 	docker build -t cce-ui ./ui
 	docker-compose up -d ui
@@ -138,13 +119,7 @@ ui-test:
 
 test-unit:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites \
-		--skipPackage=vendor,statsd,syslog,cmd/cce,cmd/cce/k8s
-
-test-statsd: statsd-up
-	ginkgo -v --randomizeAllSpecs --randomizeSuites statsd
-
-test-syslog: syslog-up
-	ginkgo -v --randomizeAllSpecs --randomizeSuites syslog
+		--skipPackage=vendor,k8s,cmd/cce,cmd/cce/k8s
 
 test-api: db-reset
 	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce
@@ -156,4 +131,4 @@ test-api-k8s: db-reset
 test-k8s:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites k8s
 
-test: test-unit test-statsd test-syslog test-api test-k8s test-api-k8s
+test: test-unit test-api test-k8s test-api-k8s

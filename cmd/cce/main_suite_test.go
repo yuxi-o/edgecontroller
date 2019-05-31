@@ -16,12 +16,15 @@ package main_test
 
 import (
 	"bytes"
-	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -33,15 +36,17 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	cce "github.com/smartedgemec/controller-ce"
+	"github.com/smartedgemec/controller-ce/pki"
 )
 
 const adminPass = "word"
 
 var (
-	ctrl   *gexec.Session
-	node   *gexec.Session
-	apiCli *apiClient
-	ctx    = context.Background()
+	ctrl     *gexec.Session
+	node     *gexec.Session
+	apiCli   *apiClient
+	conf     *tls.Config
+	telemDir string
 
 	controllerRootPEM []byte
 )
@@ -67,14 +72,23 @@ func startup() {
 	exe, err := gexec.Build("github.com/smartedgemec/controller-ce/cmd/cce")
 	Expect(err).ToNot(HaveOccurred(), "Problem building service")
 
+	By("Creating a temp dir for telemetry output files")
+	tmpdir, err := ioutil.TempDir(".", "telemetry")
+	Expect(err).NotTo(HaveOccurred())
+	telemDir, err = filepath.Abs(tmpdir)
+	Expect(err).NotTo(HaveOccurred())
+
+	By("Starting the controller")
 	cmd := exec.Command(exe,
 		"-log-level", "debug",
 		"-dsn", "root:beer@tcp(:8083)/controller_ce",
 		"-httpPort", "8080",
 		"-grpcPort", "8081",
+		"-syslogPort", "6514",
+		"-statsdPort", "8125",
+		"-syslog-path", filepath.Join(telemDir, "syslog.log"),
+		"-statsd-path", filepath.Join(telemDir, "statsd.log"),
 		"-adminPass", adminPass)
-
-	By("Starting the controller")
 	ctrl, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).ToNot(HaveOccurred(), "Problem starting service")
 
@@ -88,6 +102,7 @@ func startup() {
 	Expect(certMatches).To(HaveLen(1),
 		"Service did not print a single CA cert")
 	controllerRootPEM = certMatches[0]
+	conf = loadTLSConfig(filepath.Join(".", "certificates", "ca"))
 
 	By("Verifying that the controller started successfully")
 	Eventually(ctrl.Err, 3).Should(gbytes.Say(
@@ -125,6 +140,10 @@ func shutdown() {
 	if node != nil {
 		By("Stopping the test node")
 		node.Kill()
+	}
+	if telemDir != "" {
+		By("Cleaning up telemetry output")
+		Expect(os.RemoveAll(telemDir)).To(Succeed())
 	}
 }
 
@@ -684,4 +703,21 @@ func getNodeAppTrafficPolicy(id string) *cce.NodeAppTrafficPolicy {
 	Expect(json.Unmarshal(body, &nodeAppTrafficPolicy)).To(Succeed())
 
 	return &nodeAppTrafficPolicy
+}
+
+func loadTLSConfig(dir string) *tls.Config {
+	key, err := pki.LoadKey(filepath.Join(dir, "key.pem"))
+	Expect(err).NotTo(HaveOccurred())
+	cert, err := pki.LoadCertificate(filepath.Join(dir, "cert.pem"))
+	Expect(err).NotTo(HaveOccurred())
+	certPool := x509.NewCertPool()
+	certPool.AddCert(cert)
+	return &tls.Config{
+		Certificates: []tls.Certificate{{
+			Certificate: [][]byte{cert.Raw},
+			PrivateKey:  key,
+			Leaf:        cert,
+		}},
+		RootCAs: certPool,
+	}
 }

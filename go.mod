@@ -23,7 +23,7 @@ require (
 	github.com/onsi/gomega v1.5.0
 	github.com/pkg/errors v0.8.1
 	github.com/satori/go.uuid v1.2.0
-	github.com/smartedgemec/log v0.0.0-20190425151715-68de2de26397
+	github.com/smartedgemec/log v0.0.0-20190528164224-a4280b88c44b
 	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
 	google.golang.org/genproto v0.0.0-20180831171423-11092d34479b
