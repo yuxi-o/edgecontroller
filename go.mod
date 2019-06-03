@@ -28,7 +28,6 @@ require (
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
 	google.golang.org/genproto v0.0.0-20180831171423-11092d34479b
 	google.golang.org/grpc v1.19.0
-	gopkg.in/alexcesaro/statsd.v2 v2.0.0
 	gopkg.in/square/go-jose.v2 v2.3.1
 	k8s.io/api v0.0.0-20190515023547-db5a9d1c40eb
 	k8s.io/apimachinery v0.0.0-20190515023456-b74e4c97951f
@@ -36,4 +35,4 @@ require (
 	k8s.io/utils v0.0.0-20190520173318-324c5df7d3f0 // indirect
 )
 
-replace golang.org/x/sys => golang.org/x/sys v0.0.0-20190226215855-775f8194d0f9 // indirect
+replace golang.org/x/sys => golang.org/x/sys v0.0.0-20190226215855-775f8194d0f9

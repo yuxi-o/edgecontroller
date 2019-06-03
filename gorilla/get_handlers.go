@@ -21,15 +21,6 @@ import (
 )
 
 func handleGetNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Persistable) (cce.RespEntity, error) {
-	np, err := ps.Read(
-		ctx,
-		e.(cce.NodeEntity).GetNodeID(),
-		&cce.Node{})
-	if err != nil {
-		return nil, err
-	}
-	n := np.(*cce.Node)
-
 	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
 	if err != nil {
 		return nil, err
@@ -48,7 +39,7 @@ func handleGetNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Pe
 		}
 		status = s.String()
 	case cce.OrchestrationModeKubernetes:
-		s, err := ctrl.KubernetesClient.Status(ctx, n.Serial, e.(*cce.NodeApp).AppID)
+		s, err := ctrl.KubernetesClient.Status(ctx, e.(*cce.NodeApp).NodeID, e.(*cce.NodeApp).AppID)
 		if err != nil {
 			return nil, err
 		}

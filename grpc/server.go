@@ -107,7 +107,7 @@ func NewServer(controller *cce.Controller, conf *tls.Config) *Server {
 	}
 
 	pb.RegisterAuthServiceServer(s.grpc, s)
-	// TODO: register more services
+	pb.RegisterControllerVirtualizationAgentServer(s.grpc, s)
 
 	return s
 }
@@ -124,6 +124,7 @@ func checkAuth(ctx context.Context, method string) error {
 	if !ok {
 		return status.Errorf(codes.Unauthenticated, "expected peer auth to be TLS, got %T", p.AuthInfo)
 	}
+
 	switch tlsInfo.State.ServerName {
 	case EnrollmentSNI:
 		if method != enrollmentMethod {
@@ -267,4 +268,50 @@ func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.C
 		CaChain:     chainPEM,
 		CaPool:      caPoolPEM,
 	}, nil
+}
+
+// GetContainerByIP retrieves info of deployed application with IP provided
+func (s *Server) GetContainerByIP(ctx context.Context, containerIP *pb.ContainerIP) (*pb.ContainerInfo, error) {
+	nodeID, err := getNodeID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if ip := net.ParseIP(containerIP.Ip); ip == nil {
+		return nil, status.Error(codes.InvalidArgument, "container ip value is not parsable")
+	}
+
+	id, err := s.controller.KubernetesClient.GetAppIDByIP(ctx, nodeID, containerIP.Ip)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "unable to get pod name by ip")
+	}
+
+	return &pb.ContainerInfo{Id: id}, nil
+}
+
+// getNodeID extracts the node info from the client TLS certificate. A context
+// from a gRPC endpoint must be passed.
+func getNodeID(ctx context.Context) (string, error) {
+	p, ok := peer.FromContext(ctx)
+	if !ok {
+		return "", status.Error(codes.FailedPrecondition,
+			"gRPC call missing peer context")
+	}
+	authInfo, ok := p.AuthInfo.(credentials.TLSInfo)
+	if !ok {
+		return "", status.Error(codes.FailedPrecondition,
+			"gRPC peer missing TLS auth info")
+	}
+	chains := authInfo.State.VerifiedChains
+	if len(chains) < 1 {
+		return "", status.Error(codes.Unauthenticated,
+			"gRPC peer was not authenticated with a client TLS certificate")
+	}
+	nodeID := chains[0][0].Subject.CommonName
+	if nodeID == "" {
+		return "", status.Error(codes.FailedPrecondition,
+			"gRPC peer connected with a client TLS cert with no Common Name")
+	}
+
+	return nodeID, nil
 }

@@ -16,6 +16,7 @@ package k8s_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -29,6 +30,7 @@ import (
 	"testing"
 	"time"
 
+	k8sV1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
 
 	. "github.com/onsi/ginkgo"
@@ -38,14 +40,19 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	cce "github.com/smartedgemec/controller-ce"
+	"github.com/smartedgemec/controller-ce/k8s"
 )
 
-const adminPass = "word"
+const (
+	adminPass = "word"
+	appID     = "99459845-422d-4b32-8395-e8f50fd34792"
+)
 
 var (
 	ctrl   *gexec.Session
 	node   *gexec.Session
 	apiCli *apiClient
+	k8sCli *k8s.Client
 
 	controllerRootPEM []byte
 )
@@ -55,15 +62,10 @@ var _ = BeforeSuite(func() {
 		GinkgoWriter, GinkgoWriter, GinkgoWriter)
 	grpclog.SetLoggerV2(logger)
 	startup()
-
-	// label node with correct serial
-	Expect(exec.Command("kubectl", "label", "nodes", "minikube", "node-uuid=minikube").Run()).To(Succeed())
 })
 
 var _ = AfterSuite(func() {
 	shutdown()
-	// un-label node with serial
-	Expect(exec.Command("kubectl", "label", "nodes", "minikube", "node-uuid-").Run()).To(Succeed())
 })
 
 func TestApplicationClient(t *testing.T) {
@@ -77,11 +79,11 @@ func startup() {
 	Expect(err).ToNot(HaveOccurred(), "Problem building service")
 
 	u, err := user.Current()
-	Expect(err).NotTo(HaveOccurred())
+	Expect(err).ToNot(HaveOccurred())
 	kubeConfig := path.Join(u.HomeDir, ".kube", "config")
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
-	Expect(err).NotTo(HaveOccurred())
+	Expect(err).ToNot(HaveOccurred())
 
 	cmd := exec.Command(exe,
 		"-dsn", "root:beer@tcp(:8083)/controller_ce",
@@ -200,8 +202,8 @@ func postApps(appType string) (id string) {
 				"version": "latest",
 				"vendor": "smart edge",
 				"description": "my %s app",
-				"cores": 4,
-				"memory": 1024,
+				"cores": 1,
+				"memory": 128,
 				"source": "http://www.test.com/my_%s_app.tar.gz",
 				"ports": [{"port": 80, "protocol": "tcp"}]
 			}`, appType, appType, appType, appType)))
@@ -232,7 +234,7 @@ func postNodes() (id string) {
 			{
 				"name": "Test-Node-1",
 				"location": "Localhost port 8082",
-				"serial": "minikube",
+				"serial": "serial",
 				"grpc_target": "127.0.0.1:8082"
 			}`))
 	Expect(err).ToNot(HaveOccurred())
@@ -276,7 +278,7 @@ func postNodesApps(nodeID, appID string) (id string) {
 	var rb respBody
 	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
-	By("Verify deployment success")
+	By("Verifying app deployment success")
 	count := 0
 	Eventually(func() []*cce.NodeAppResp {
 		count++
@@ -296,6 +298,67 @@ func postNodesApps(nodeID, appID string) (id string) {
 	))
 
 	return rb.ID
+}
+
+func deployApp(nodeID string) {
+	By("Getting the current user")
+	u, err := user.Current()
+	Expect(err).ToNot(HaveOccurred())
+
+	By("Building path to minikube config file")
+	config, err := clientcmd.BuildConfigFromFlags("", path.Join(u.HomeDir, ".kube", "config"))
+	Expect(err).ToNot(HaveOccurred())
+
+	By("Initializing kubernetes client")
+	k8sCli = &k8s.Client{
+		Username: config.Username,
+		Host:     config.Host,
+		APIPath:  config.APIPath,
+		CertFile: config.TLSClientConfig.CertFile,
+		KeyFile:  config.TLSClientConfig.KeyFile,
+		CAFile:   config.TLSClientConfig.CAFile,
+	}
+	By("Verifying Kubernetes client can connet to Kubernetes API")
+	Expect(k8sCli.Ping()).To(Succeed())
+
+	app := k8s.App{
+		ID:     appID,
+		Image:  "nginx:1.12", // commonly used public docker container
+		Cores:  1,
+		Memory: 100,
+	}
+
+	// override image pull policy to always pull image
+	k8sCli.ImagePullPolicy = k8sV1.PullAlways
+
+	By("Verifying app deployment call to to Kubernetes API successful")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err = k8sCli.Deploy(ctx, nodeID, app)
+	Expect(err).ToNot(HaveOccurred())
+
+	By("Verifying app start call to Kubernetes API successful")
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err = k8sCli.Start(ctx, nodeID, appID)
+	Expect(err).ToNot(HaveOccurred())
+
+	// revert image pull policy back to default value: never pull
+	k8sCli.ImagePullPolicy = k8sV1.PullNever
+
+	By("Verifying app deployment success")
+	count := 0
+	Eventually(func() k8s.LifecycleStatus {
+		count++
+		By(fmt.Sprintf("Attempt #%d: Verifying if k8s deployment status is deployed", count))
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		status, err := k8sCli.Status(ctx, nodeID, appID)
+		Expect(err).ToNot(HaveOccurred())
+
+		return status
+	}, 60*time.Second, 1*time.Second).Should(Equal(k8s.Deployed))
 }
 
 func getNodeApp(id string) *cce.NodeAppResp {
@@ -339,4 +402,34 @@ func getNodeApps(nodeID string) []*cce.NodeAppResp {
 	Expect(json.Unmarshal(body, &nodeAppsResp)).To(Succeed())
 
 	return nodeAppsResp
+}
+
+func approveNodeEnrollment(serial string) (id string) {
+	By("Sending a POST /nodes request")
+	resp, err := apiCli.Post(
+		"http://127.0.0.1:8080/nodes",
+		"application/json",
+		strings.NewReader(fmt.Sprintf(`
+			{
+				"name": "Test Node 1",
+				"location": "Localhost port 8082",
+				"serial": "%s",
+				"grpc_target": "127.0.0.1:8082"
+			}`, serial)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+
+	By("Verifying a 201 Created response")
+	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var rb respBody
+
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
+
+	return rb.ID
 }

@@ -74,10 +74,6 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
 github.com/satori/go.uuid v1.2.0 h1:0uYX9dsZ2yD7q2RtLRtPSdGDWzjeM3TbMJP9utgA0ww=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
-github.com/smartedgemec/log v0.0.0-20190425151715-68de2de26397 h1:7HaGTJUWm/dZ6aDjtPxjr1aDasPbZMapTR2MHZm/ank=
-github.com/smartedgemec/log v0.0.0-20190425151715-68de2de26397/go.mod h1:1ByVDVDpMmdG2Y/y/yAQfOjmKkguPqfEbmrL61GhA8k=
-github.com/smartedgemec/log v0.0.0-20190522024711-a06a8cd26f8f h1:V4M5U4EuzPF8ta9bQCihYAFB4eIXA0QvYVPEr0a6yOo=
-github.com/smartedgemec/log v0.0.0-20190522024711-a06a8cd26f8f/go.mod h1:1ByVDVDpMmdG2Y/y/yAQfOjmKkguPqfEbmrL61GhA8k=
 github.com/smartedgemec/log v0.0.0-20190528164224-a4280b88c44b h1:QOKPyY8dh0lceudrXEhA+Go5Jb0BKGLiEQRszrZTboY=
 github.com/smartedgemec/log v0.0.0-20190528164224-a4280b88c44b/go.mod h1:1ByVDVDpMmdG2Y/y/yAQfOjmKkguPqfEbmrL61GhA8k=
 github.com/spf13/afero v1.2.2/go.mod h1:9ZxEEn6pIJ8Rxe320qSDBk6AsU0r9pR7Q4OcevTdifk=
@@ -140,8 +136,6 @@ google.golang.org/genproto v0.0.0-20180831171423-11092d34479b h1:lohp5blsw53GBXt
 google.golang.org/genproto v0.0.0-20180831171423-11092d34479b/go.mod h1:JiN7NxoALGmiZfu7CAH4rXhgtRTLTxftemlI0sWmxmc=
 google.golang.org/grpc v1.19.0 h1:cfg4PD8YEdSFnm7qLV4++93WcmhH2nIUhMjhdCvl3j8=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
-gopkg.in/alexcesaro/statsd.v2 v2.0.0 h1:FXkZSCZIH17vLCO5sO2UucTHsH9pc+17F6pl3JVCwMc=
-gopkg.in/alexcesaro/statsd.v2 v2.0.0/go.mod h1:i0ubccKGzBVNBpdGV5MocxyA/XlLUJzA7SLonnE4drU=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 h1:qIbj1fsPNlZgppZ+VLlY7N33q108Sa+fhmuc+sWQYwY=
 gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

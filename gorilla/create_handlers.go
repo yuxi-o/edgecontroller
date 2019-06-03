@@ -22,11 +22,6 @@ import (
 )
 
 func handleCreateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Persistable) error {
-	node, err := ps.Read(ctx, e.(cce.NodeEntity).GetNodeID(), &cce.Node{})
-	if err != nil {
-		return fmt.Errorf("Error fetching node app from DB: %v", err)
-	}
-
 	app, err := ps.Read(ctx, e.(*cce.NodeApp).AppID, &cce.App{})
 	if err != nil {
 		return fmt.Errorf("Error fetching app from DB: %v", err)
@@ -47,11 +42,11 @@ func handleCreateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 	}
 
 	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes {
-		if err := ctrl.KubernetesClient.Deploy(
+		err := ctrl.KubernetesClient.Deploy(
 			ctx,
-			node.(*cce.Node).Serial,
-			toK8SApp(app.(*cce.App)),
-		); err != nil {
+			e.(*cce.NodeApp).GetNodeID(),
+			toK8SApp(app.(*cce.App)))
+		if err != nil {
 			return err
 		}
 	}

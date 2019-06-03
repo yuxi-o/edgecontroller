@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.29] - 2019-06-03
+### Added
+- GetContainerByIP gRPC endpoint
+
 ## [0.0.28] - 2019-05-31
 ### Added
 - Syslog ingress server

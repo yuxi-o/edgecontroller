@@ -41,13 +41,22 @@ var _ = Describe("/nodes_apps for k8s", func() {
 	BeforeEach(func() {
 		// clean
 		nodeID = postNodes()
+
+		// label node with correct id
+		Expect(exec.Command("kubectl",
+			"label", "nodes", "minikube", fmt.Sprintf("node-id=%s", nodeID)).Run()).To(Succeed())
+
 		appID = postApps("container")
+
 		// tag docker with app id
 		cmd := exec.Command("docker", "tag", "nginx:1.12", fmt.Sprintf("%s:%s", appID, "latest"))
 		Expect(cmd.Run()).To(Succeed())
 	})
 
 	AfterEach(func() {
+		// un-label node
+		Expect(exec.Command("kubectl", "label", "nodes", "minikube", "node-id-").Run()).To(Succeed())
+
 		// clean up all k8s deployments
 		cmd := exec.Command("kubectl", "delete", "--all", "deployments,pods", "--namespace=default")
 		Expect(cmd.Run()).To(Succeed())
@@ -236,10 +245,10 @@ var _ = Describe("/nodes_apps for k8s", func() {
 					By(fmt.Sprintf("Attempt #%d: Verifying if k8s deployment status is %s",
 						count, expectedNodeAppFull.Status))
 					return getNodeApp(nodeAppID)
-				}, 60*time.Second, 1*time.Second).Should(Equal(expectedNodeAppFull))
+				}, 30*time.Second, 1*time.Second).Should(Equal(expectedNodeAppFull))
 			},
 			Entry(
-				"PATCH /nodes_apps",
+				"PATCH /nodes_apps (cmd='start')",
 				`
 				[
 					{
@@ -255,7 +264,7 @@ var _ = Describe("/nodes_apps for k8s", func() {
 				},
 			),
 			Entry(
-				"PATCH /nodes_apps",
+				"PATCH /nodes_apps (cmd='stop')",
 				`
 					[
 						{
@@ -270,7 +279,7 @@ var _ = Describe("/nodes_apps for k8s", func() {
 				},
 			),
 			Entry(
-				"PATCH /nodes_apps",
+				"PATCH /nodes_apps (cmd='restart')",
 				`
 					[
 						{

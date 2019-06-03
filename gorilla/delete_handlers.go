@@ -29,14 +29,6 @@ func handleDeleteNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 		return err
 	}
 
-	node, err := ps.Read(
-		ctx,
-		e.(cce.NodeEntity).GetNodeID(),
-		&cce.Node{})
-	if err != nil {
-		return err
-	}
-
 	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
 	if err != nil {
 		return err
@@ -49,8 +41,8 @@ func handleDeleteNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes {
 		if err = ctrl.KubernetesClient.Undeploy(
 			ctx,
-			node.(*cce.Node).Serial,
-			toK8SApp(app.(*cce.App)),
+			e.(*cce.NodeApp).NodeID,
+			e.(*cce.NodeApp).AppID,
 		); err != nil {
 			return err
 		}

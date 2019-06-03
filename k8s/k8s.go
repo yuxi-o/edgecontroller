@@ -21,22 +21,23 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"github.com/smartedgemec/controller-ce/uuid"
 	appsV1 "k8s.io/api/apps/v1"
 	autoscalingV1 "k8s.io/api/autoscaling/v1"
 	apiV1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	restClient "k8s.io/client-go/rest"
 )
 
-// App is kubernetes app
+// App contains the information for deploying an application with
+// Kubernetes.
 type App struct {
 	ID     string
-	Name   string
-	Vendor string
-	Image  string
 	Cores  int
 	Memory int // in MB
+	Image  string
 	Ports  []*PortProto
 }
 
@@ -47,10 +48,10 @@ type PortProto struct {
 }
 
 const (
-	// labelNodeID this label is used to uniquely identify node
-	labelNodeID = "node-uuid"
-	// labelApplicationPod this label is used to uniquely identify a pod
-	labelApplicationPod = "app-pod-id"
+	// Key for the label attached to a k8s pod or k8s node containing the Node ID
+	nodeIDLabelKey = "node-id"
+	// Key for the label attached to a k8s pod containing the App ID
+	appIDLabelKey = "app-id"
 )
 
 // Client abstracts out calls to k8s master API
@@ -69,6 +70,11 @@ type Client struct {
 	CertFile string
 	KeyFile  string
 	CAFile   string
+
+	// ImagePullPolicy specifies container retrieval policy. If not provided,
+	// PullNever policy will be used. This field is intended for overriding default
+	// policy for testing.
+	ImagePullPolicy apiV1.PullPolicy
 
 	// NewClientSet creates a new Kubernetes clientset interface. If it is nil,
 	// a REST client with TLS will be used. This field is intended for use
@@ -90,6 +96,11 @@ func (ks *Client) Ping() error {
 }
 
 func (ks *Client) init() {
+	// default image pull policy is never pull the image, only use the local image provided
+	if ks.ImagePullPolicy == "" {
+		ks.ImagePullPolicy = apiV1.PullNever
+	}
+
 	csCreate := ks.NewClientSet
 	if csCreate == nil {
 		csCreate = func() (kubernetes.Interface, error) {
@@ -112,46 +123,40 @@ func (ks *Client) init() {
 }
 
 // Deploy creates a kubernetes deployment
-func (ks *Client) Deploy(ctx context.Context, serial string, app *App) error {
+func (ks *Client) Deploy(ctx context.Context, nodeID string, app App) error {
 	ks.connectOnce.Do(ks.init)
 	if ks.err != nil {
 		return ks.err
 	}
-
 	// initial checks
-	if err := ks.checkNode(serial); err != nil {
+	if err := ks.checkNode(nodeID); err != nil {
 		return errors.Wrap(err, "deploy: node available error")
 	}
 	// make the deployment to the correct node
-	if err := ks.deploy(serial, app); err != nil {
+	if err := ks.deploy(nodeID, app); err != nil {
 		return errors.Wrap(err, "deploy: deployment error")
 	}
 	return nil
 }
 
 // Undeploy cascade deletes a kubernetes deployment
-func (ks *Client) Undeploy(ctx context.Context, serial string, app *App) error {
+func (ks *Client) Undeploy(ctx context.Context, nodeID, appID string) error {
 	ks.connectOnce.Do(ks.init)
 	if ks.err != nil {
 		return ks.err
 	}
-
-	// initial checks
-	if err := ks.checkNode(serial); err != nil {
-		return errors.Wrap(err, "undeploy: node available error")
-	}
 	// make the deployment to the correct node
-	if err := ks.undeploy(serial, app); err != nil {
+	if err := ks.undeploy(nodeID, appID); err != nil {
 		return errors.Wrap(err, "undeploy: un-deployment error")
 	}
 	return nil
 }
 
-// check if a node is available for the deployment
-func (ks *Client) checkNode(serial string) error {
+// Check if a node is available for the deployment. THIS IS A SANITY CHECK.
+func (ks *Client) checkNode(nodeID string) error {
 	nodeList, err := ks.clientSet.CoreV1().Nodes().List(
 		metaV1.ListOptions{
-			LabelSelector: fmt.Sprintf("%s=%s", labelNodeID, serial),
+			LabelSelector: fmt.Sprintf("%s=%s", nodeIDLabelKey, nodeID),
 		},
 	)
 	if err != nil {
@@ -164,14 +169,8 @@ func (ks *Client) checkNode(serial string) error {
 }
 
 // create a kubernetes deployment
-func (ks *Client) deploy(serial string, app *App) error {
-	// create naming convention
-	deploymentName := deploymentName(app.ID, serial)
-	podName := podName(app.ID, serial)
-	appName := appName(app.ID, serial)
-
-	protos := map[string]apiV1.Protocol{
-		// ProtocolTCP is the TCP protocol.
+func (ks *Client) deploy(nodeID string, app App) error {
+	protoConverter := map[string]apiV1.Protocol{
 		"tcp":  apiV1.ProtocolTCP,
 		"udp":  apiV1.ProtocolUDP,
 		"sctp": apiV1.ProtocolSCTP,
@@ -179,7 +178,7 @@ func (ks *Client) deploy(serial string, app *App) error {
 
 	var ports []apiV1.ContainerPort
 	for _, portProt := range app.Ports {
-		proto, ok := protos[portProt.Protocol]
+		proto, ok := protoConverter[portProt.Protocol]
 		if !ok {
 			return errors.New("unsupported protocol for kubernetes error")
 		}
@@ -190,19 +189,25 @@ func (ks *Client) deploy(serial string, app *App) error {
 	}
 
 	// deployment client
-	deploymentsClient := ks.clientSet.AppsV1().
-		Deployments(apiV1.NamespaceDefault)
-	deployment := &appsV1.Deployment{
+	deploymentsClient := ks.clientSet.AppsV1().Deployments(apiV1.NamespaceDefault)
+	_, err := deploymentsClient.Create(&appsV1.Deployment{
 		ObjectMeta: metaV1.ObjectMeta{
-			Name: deploymentName,
+			GenerateName: "app",
+			Labels: map[string]string{
+				appIDLabelKey:  app.ID,
+				nodeIDLabelKey: nodeID,
+			},
 		},
 		Spec: appsV1.DeploymentSpec{
 			// only creates a deployment. no replicas created,
 			// to be consistent with docker native deploy
 			Replicas: int32Ptr(0),
+			// Must match Template.ObjectMeta.Labels according to
+			// https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#deploymentspec-v1-apps
 			Selector: &metaV1.LabelSelector{
 				MatchLabels: map[string]string{
-					labelApplicationPod: podName,
+					appIDLabelKey:  app.ID,
+					nodeIDLabelKey: nodeID,
 				},
 			},
 			Strategy: appsV1.DeploymentStrategy{
@@ -211,28 +216,49 @@ func (ks *Client) deploy(serial string, app *App) error {
 			Template: apiV1.PodTemplateSpec{
 				ObjectMeta: metaV1.ObjectMeta{
 					Labels: map[string]string{
-						labelApplicationPod: podName,
+						appIDLabelKey:  app.ID,
+						nodeIDLabelKey: nodeID,
 					},
 				},
 				Spec: apiV1.PodSpec{
 					Containers: []apiV1.Container{
 						{
-							Resources: apiV1.ResourceRequirements{},
-							Name:      appName,
-							Image:     app.Image,
-							Ports:     ports,
-							// never pull the image, use the local image provided
-							ImagePullPolicy: apiV1.PullNever,
+							Resources: apiV1.ResourceRequirements{
+								Limits: apiV1.ResourceList{
+									// CPU, in cores. (500m = .5 cores)
+									apiV1.ResourceCPU: *resource.NewQuantity(
+										int64(app.Cores),
+										resource.DecimalSI,
+									),
+
+									// Memory, in bytes. (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
+									apiV1.ResourceMemory: *resource.NewQuantity(
+										int64(1024*1024*app.Memory),
+										resource.BinarySI,
+									),
+
+									// Volume size, in bytes (e,g. 5Gi = 5GiB = 5 * 1024 * 1024 * 1024)
+									// apiV1.ResourceStorage: resource.MustParse(d.Storage),
+
+									// Local ephemeral storage, in bytes. (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
+									// The resource name for ResourceEphemeralStorage is alpha and it can change
+									// across releases.
+									// apiV1.ResourceEphemeralStorage: resource.MustParse(d.EphemeralStorage),
+								},
+							},
+							Name:            uuid.New(),
+							Image:           app.ID,
+							Ports:           ports,
+							ImagePullPolicy: ks.ImagePullPolicy,
 						},
 					},
 					NodeSelector: map[string]string{
-						labelNodeID: serial,
+						nodeIDLabelKey: nodeID,
 					},
 				},
 			},
 		},
-	}
-	_, err := deploymentsClient.Create(deployment)
+	})
 	if err != nil {
 		return errors.Wrap(err, "create kubernetes deployment error")
 	}
@@ -240,34 +266,31 @@ func (ks *Client) deploy(serial string, app *App) error {
 }
 
 // delete a kubernetes deployment
-func (ks *Client) undeploy(serial string, app *App) error {
-	// create naming convention
-	deploymentName := deploymentName(app.ID, serial)
-	// deployment client
-	deploymentsClient := ks.clientSet.AppsV1().Deployments(apiV1.NamespaceDefault)
-	dpp := metaV1.DeletePropagationForeground
-	err := deploymentsClient.Delete(deploymentName, &metaV1.DeleteOptions{
-		PropagationPolicy: &dpp,
-	})
+func (ks *Client) undeploy(nodeID, appID string) error {
+	deploymentName, err := ks.getDeploymentName(nodeID, appID)
 	if err != nil {
-		return errors.Wrap(err, "create kubernetes deployment error")
+		return errors.Wrap(err, "start: error getting deployment name by ID")
 	}
-	return nil
+
+	deploymentsClient := ks.clientSet.AppsV1().Deployments(apiV1.NamespaceDefault)
+	foreground := metaV1.DeletePropagationForeground
+	err = deploymentsClient.Delete(deploymentName, &metaV1.DeleteOptions{
+		PropagationPolicy: &foreground,
+	})
+	return errors.Wrap(err, "create kubernetes deployment error")
 }
 
 func int32Ptr(i int32) *int32 { return &i }
 
 // Start scales up the number of replicas of kubernetes deployment to 1.
-func (ks *Client) Start(ctx context.Context, serial, id string) error {
-	if _, err := ks.checkDeployment(serial, id); err != nil {
-		return errors.Wrap(err, "start: correct amount of deployments not available")
+func (ks *Client) Start(ctx context.Context, nodeID, appID string) error {
+	deploymentName, err := ks.getDeploymentName(nodeID, appID)
+	if err != nil {
+		return errors.Wrap(err, "start: error getting deployment name by ID")
 	}
-	// create naming convention
-	deploymentName := deploymentName(id, serial)
-	deploymentsClient := ks.clientSet.AppsV1().
-		Deployments(apiV1.NamespaceDefault)
 
-	if _, err := deploymentsClient.UpdateScale(
+	deploymentsClient := ks.clientSet.AppsV1().Deployments(apiV1.NamespaceDefault)
+	_, err = deploymentsClient.UpdateScale(
 		deploymentName,
 		&autoscalingV1.Scale{
 			ObjectMeta: metaV1.ObjectMeta{
@@ -275,20 +298,19 @@ func (ks *Client) Start(ctx context.Context, serial, id string) error {
 				Namespace: apiV1.NamespaceDefault,
 			},
 			Spec: autoscalingV1.ScaleSpec{Replicas: 1},
-		}); err != nil {
-		return errors.Wrap(err, "start: update deployment replicas to 1 error")
-	}
-	return nil
+		})
+	return errors.Wrap(err, "start: error scaling deployment to 1 replica")
 }
 
 // Stop scales down the number of replicas of kubernetes deployment to 0.
-func (ks *Client) Stop(ctx context.Context, serial, id string) error {
-	if _, err := ks.checkDeployment(serial, id); err != nil {
-		return errors.Wrap(err, "stop: checking for kubernetes deployment error")
+func (ks *Client) Stop(ctx context.Context, nodeID, appID string) error {
+	deploymentName, err := ks.getDeploymentName(nodeID, appID)
+	if err != nil {
+		return errors.Wrap(err, "stop: error getting deployment name by ID")
 	}
-	deploymentName := deploymentName(id, serial)
+
 	deploymentsClient := ks.clientSet.AppsV1().Deployments(apiV1.NamespaceDefault)
-	if _, err := deploymentsClient.UpdateScale(
+	_, err = deploymentsClient.UpdateScale(
 		deploymentName,
 		&autoscalingV1.Scale{
 			ObjectMeta: metaV1.ObjectMeta{
@@ -296,22 +318,21 @@ func (ks *Client) Stop(ctx context.Context, serial, id string) error {
 				Namespace: apiV1.NamespaceDefault,
 			},
 			Spec: autoscalingV1.ScaleSpec{Replicas: 0},
-		}); err != nil {
-		return errors.Wrap(err, "stop: scale down deployments to 0 replicas error")
-	}
-	return nil
+		})
+	return errors.Wrap(err, "stop: error scaling deployment to 0 replicas")
 }
 
 // Restart scales down the number of replicas of kubernetes deployment to 0 and then scale up to 1.
-func (ks *Client) Restart(ctx context.Context, serial, id string) error {
-	if _, err := ks.checkDeployment(serial, id); err != nil {
-		return errors.Wrap(err, "restart: correct amount of deployments not available")
+func (ks *Client) Restart(ctx context.Context, nodeID, appID string) error {
+	deploymentName, err := ks.getDeploymentName(nodeID, appID)
+	if err != nil {
+		return errors.Wrap(err, "stop: error getting deployment name by ID")
 	}
-	// create naming convention
-	deploymentName := deploymentName(id, serial)
-	deploymentsClient := ks.clientSet.AppsV1().
-		Deployments(apiV1.NamespaceDefault)
-	if _, err := deploymentsClient.UpdateScale(
+
+	deploymentsClient := ks.clientSet.AppsV1().Deployments(apiV1.NamespaceDefault)
+
+	// Scale down to 0
+	_, err = deploymentsClient.UpdateScale(
 		deploymentName,
 		&autoscalingV1.Scale{
 			ObjectMeta: metaV1.ObjectMeta{
@@ -320,11 +341,13 @@ func (ks *Client) Restart(ctx context.Context, serial, id string) error {
 			},
 			Spec: autoscalingV1.ScaleSpec{Replicas: 0},
 		},
-	); err != nil {
-		return errors.Wrap(err,
-			"restart: scale down deployments to 0 replicas error")
+	)
+	if err != nil {
+		return errors.Wrap(err, "restart: error scaling deployment to 0 replicas")
 	}
-	if _, err := deploymentsClient.UpdateScale(
+
+	// Scale up to 1
+	_, err = deploymentsClient.UpdateScale(
 		deploymentName,
 		&autoscalingV1.Scale{
 			ObjectMeta: metaV1.ObjectMeta{
@@ -333,82 +356,92 @@ func (ks *Client) Restart(ctx context.Context, serial, id string) error {
 			},
 			Spec: autoscalingV1.ScaleSpec{Replicas: 1},
 		},
-	); err != nil {
-		return errors.Wrap(err, "restart: scale up deployments to 1 replicas error")
-	}
-	return nil
+	)
+	return errors.Wrap(err, "restart: error scaling deployment to 1 replica")
 }
 
-// check if a kubernetes deployment is available
-func (ks *Client) checkDeployment(serial, id string) (*appsV1.Deployment, error) {
-	deploymentName := deploymentName(id, serial)
-	deployment, err := ks.clientSet.AppsV1().Deployments(apiV1.NamespaceDefault).
-		Get(deploymentName, metaV1.GetOptions{})
+// get unique generated deployment name by controller deployment ID
+func (ks *Client) getDeploymentName(nodeID, appID string) (string, error) {
+	deployment, err := ks.getDeployment(nodeID, appID)
 	if err != nil {
-		return nil, errors.Wrap(err, "get kubernetes deployment error")
+		return "", err
 	}
-	if deployment == nil {
-		return nil, errors.Wrap(err, "kubernetes deployment not found error")
+	return deployment.ObjectMeta.Name, nil
+}
+
+// get deployment info by controller deployment ID
+func (ks *Client) getDeployment(nodeID, appID string) (*appsV1.Deployment, error) {
+	deployments, err := ks.clientSet.AppsV1().Deployments(apiV1.NamespaceDefault).
+		List(metaV1.ListOptions{
+			LabelSelector: fmt.Sprintf("%s=%s,%s=%s", appIDLabelKey, appID, nodeIDLabelKey, nodeID),
+		})
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting list of deployments")
 	}
-	return deployment, nil
+
+	deps := deployments.Items
+	if len(deps) == 0 {
+		return nil, errors.New("deployment not found")
+	}
+	if len(deps) > 1 {
+		return nil, errors.New("more than one deployment found")
+	}
+
+	return &deps[0], nil
 }
 
 // Status gets the status of kubernetes deployment
-func (ks *Client) Status(ctx context.Context, serial, id string) (LifecycleStatus, error) {
-	deploymentName := deploymentName(id, serial)
-	deploymentsClient := ks.clientSet.AppsV1().Deployments(apiV1.NamespaceDefault)
-	deployment, err := deploymentsClient.Get(deploymentName, metaV1.GetOptions{})
+func (ks *Client) Status(ctx context.Context, nodeID, appID string) (LifecycleStatus, error) {
+	deployment, err := ks.getDeployment(nodeID, appID)
 	if err != nil {
-		return Unknown, errors.Wrap(err, "getting deployment error")
+		return Unknown, err
 	}
 
-	deployConditions := deployment.Status.Conditions
+	conditions := deployment.Status.Conditions
 
-	filter := func() []appsV1.DeploymentCondition {
-		var filtered []appsV1.DeploymentCondition
-		for _, condition := range deployConditions {
-			if condition.Status == apiV1.ConditionTrue {
-				filtered = append(filtered, condition)
-			}
-		}
-		return filtered
-	}
-
-	deployConditions = filter()
-
-	if len(deployConditions) == 0 {
-		return Stopped, nil
-	}
-
-	// incoming condition list not sorted according to last updated timestamp
-	sort.Slice(deployConditions, func(i, j int) bool {
-		return deployConditions[i].LastUpdateTime.Time.After(
-			deployConditions[j].LastUpdateTime.Time,
+	// Sort condition status by latest timestamp
+	sort.Slice(conditions, func(i, j int) bool {
+		return conditions[i].LastUpdateTime.Time.After(
+			conditions[j].LastUpdateTime.Time,
 		)
 	})
 
-	switch deployConditions[0].Type {
-	case appsV1.DeploymentAvailable:
-		return Deployed, nil
-	case appsV1.DeploymentProgressing:
-		return Deploying, nil
-	case appsV1.DeploymentReplicaFailure:
-		return Error, nil
+	// Return first "true" condition
+	for _, condition := range conditions {
+		if condition.Status == apiV1.ConditionTrue {
+			switch conditions[0].Type {
+			case appsV1.DeploymentAvailable:
+				return Deployed, nil
+			case appsV1.DeploymentProgressing:
+				return Deploying, nil
+			case appsV1.DeploymentReplicaFailure:
+				return Error, nil
+			}
+		}
 	}
 	return Unknown, nil
 }
 
-// retrieve unique name for k8s deployment
-func deploymentName(appID, serial string) string {
-	return fmt.Sprintf("deploy-%s-%s", appID, serial)
-}
+// GetAppIDByIP gets the ID of an application running on a node by its pod IP address
+func (ks *Client) GetAppIDByIP(ctx context.Context, nodeID, ipAddr string) (string, error) {
+	pods, err := ks.clientSet.CoreV1().Pods(apiV1.NamespaceDefault).List(
+		metaV1.ListOptions{
+			LabelSelector: fmt.Sprintf("%s=%s", nodeIDLabelKey, nodeID),
+		},
+	)
+	if err != nil {
+		return "", errors.Wrapf(err, "error getting pods on node %s", nodeID)
+	}
 
-// retrieve unique name for the k8s pod
-func podName(appID, serial string) string {
-	return fmt.Sprintf("pod-%s-%s", appID, serial)
-}
+	for _, pod := range pods.Items {
+		if pod.Status.PodIP == ipAddr {
+			val, ok := pod.GetLabels()[appIDLabelKey]
+			if !ok {
+				return "", errors.Errorf("pod with IP '%s' missing required deployment label(s)", ipAddr)
+			}
+			return val, nil
+		}
+	}
 
-// retrieve unique name for the k8s app
-func appName(appID, serial string) string {
-	return fmt.Sprintf("app-%s-%s", appID, serial)
+	return "", errors.Errorf("no pod found with IP '%s'", ipAddr)
 }
