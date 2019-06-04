@@ -5,11 +5,13 @@
   "homepage": "/",
   "dependencies": {
     "@material-ui/core": "^3.9.3",
-    "@material-ui/icons": "^3.0.1",
+    "@material-ui/icons": "^3.0.2",
     "@material-ui/lab": "^3.0.0-alpha.30",
     "axios": "^0.18.0",
     "connected-react-router": "^6.4.0",
     "gh-pages": "^2.0.1",
+    "http-proxy-middleware": "^0.19.1",
+    "notistack": "^0.8.5",
     "numeral": "^2.0.6",
     "query-string": "^6.5.0",
     "react": "^16.8.6",
@@ -21,7 +23,9 @@
     "react-swipeable-views-utils": "^0.13.1",
     "recharts": "^1.5.0",
     "redux": "^4.0.1",
-    "redux-saga": "^1.0.2"
+    "redux-saga": "^1.0.2",
+    "typeface-lato": "^0.0.54",
+    "typeface-roboto": "^0.0.54"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -41,10 +45,14 @@
     "not op_mini all"
   ],
   "devDependencies": {
+    "@types/enzyme": "^3.9.3",
+    "@types/jest": "^24.0.13",
+    "axios-mock-adapter": "^1.16.0",
     "enzyme": "^3.9.0",
     "enzyme-adapter-react-16": "^1.13.0",
     "jest-dom": "^3.2.2",
     "jest-enzyme": "^7.0.2",
+    "jest-localstorage-mock": "^2.4.0",
     "react-test-renderer": "^16.8.6",
     "react-testing-library": "^7.0.0"
   }

@@ -16,6 +16,14 @@ const styles = theme => ({
 });
 
 class ButtonBar extends Component {
+  constructor(props) {
+    super(props);
+    this.handlePrimaryAction = this.handlePrimaryAction.bind(this);
+  }
+
+  handlePrimaryAction(e) {
+    this.props.primaryButtonAction(e);
+  }
 
   render() {
     const {
@@ -26,13 +34,12 @@ class ButtonBar extends Component {
       secondaryLink
     } = this.props;
 
-    console.log(this.props);
-
     return (
       <div className={classes.spaceTop}>
         <Button
           className={classes.primary}
           component={primaryLink}
+          onClick={this.handlePrimaryAction}
         >
           {primaryButtonName}
         </Button>

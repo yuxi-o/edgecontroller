@@ -1,20 +1,33 @@
-class Auth {
-  static login(email, password) {
-    //TODO: Hook up JWT Auth here
-    if (email !== password) {
-      return false;
-    }
+import ApiClient from '../api/ApiClient';
 
-    sessionStorage.setItem('AuthToken', email);
-    return this.isAuthenticated();
+class Auth {
+  static async login(email, password) {
+
+    try {
+      const authResp = await ApiClient.login(email, password);
+
+      if(!authResp.data.token) {
+        return false;
+      }
+
+      ApiClient.setJWT(authResp.data.token);
+      return {success: true};
+    } catch(err) {
+
+      if("response" in err && "data" in err.response) {
+        return {success: false, errorText: err.response.data};
+      }
+
+      return {success: false, errorText: "Login Failed Try again Later"};
+    }
   }
 
   static logout(cb) {
-    return cb(sessionStorage.removeItem('AuthToken'));
+    return cb(sessionStorage.removeItem('JWT'));
   }
 
   static isAuthenticated() {
-    return !!sessionStorage.getItem('AuthToken');
+    return !!sessionStorage.getItem('JWT');
   }
 }
 export default Auth;

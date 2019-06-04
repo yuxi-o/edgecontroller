@@ -1,22 +1,40 @@
-# React Material UI template - Material Sense
-A full simple application for react material ui
+# Controller CE - UI
 
-## Pre requisites
-- Node & NPM installed (v10.15.3, or V10 LTS)
-  - recommended to use NVM https://github.com/nvm-sh/nvm to manage your Node versions
-- Yarn installed globally `npm install -g yarn`
-- install dependencies via `yarn install` within the project
 
 ## Features
+- Forked from: [Material Sense](https://github.com/alexanmtz/material-sense)
 - Responsive
 - Include a Graph using [recharts](https://github.com/recharts/recharts)
 - With [Router](https://github.com/ReactTraining/react-router) included
 - A docker container for production build
 - Created with [Create react app](https://github.com/facebook/create-react-app)
 
-![Dashboard](screenshot-dashboard.png)
-
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+## Prerequisites
+- Node & NPM installed (v10.15.3, or V10 LTS)
+  - recommended to use NVM https://github.com/nvm-sh/nvm to manage your Node versions
+- Yarn installed globally `npm install -g yarn`
+- Install dependencies via `yarn install` within the project
+
+## Environment Setup
+
+### Development
+A development .env under `.env.development` is already configured with the default URLs
+for the controller API, CUPs API, and CUPs UI local development
+
+The local development server is proxied via create-react-app's proxy functionality.
+This is to resolve CORS local dev concerns.
+
+### Production
+
+In order to setup a Production build, you must create a file under the project root
+with the filename of `.env.production`
+
+Here are the following variables
+- `REACT_APP_CONTROLLER_API`
+- `REACT_APP_CUPS_API`
+- `REACT_APP_CUPS_UI_URL`
 
 ## Available Scripts
 

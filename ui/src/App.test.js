@@ -1,44 +1,60 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { mount, shallow } from 'enzyme';
 import MuiThemeProvider from '@material-ui/core/styles/MuiThemeProvider';
 import Routes from "./routes";
 import MuiTheme from "./MuiTheme";
 import Login from "./components/Login";
+import renderer from 'react-test-renderer';
 
-// Use React Dom to render App Component
-it('renders without crashing (ReactDOM)', () => {
-  const div = document.createElement('div');
-  ReactDOM.render(<App />, div);
-  ReactDOM.unmountComponentAtNode(div);
-});
+describe('Smoke Tests for Main App.js', () => {
+  beforeEach(() => {
+    // values stored in tests will also be available in other tests unless you run
+    sessionStorage.clear();
+  });
 
-// Use Enzyme Shallow rendering for App Component
-it('renders without crashing (Shallow)', () => {
-  const sut = shallow(<App />);
-  expect(sut.contains('div'));
-});
+  // Use React Dom to render App Component
+  it('renders without crashing (ReactDOM)', () => {
+    const div = document.createElement('div');
+    ReactDOM.render(<App />, div);
+    ReactDOM.unmountComponentAtNode(div);
+  });
 
-// Use Enzyme Mount for App Component
-it('renders without crashing (Mount)', () => {
-  const sut = mount(<App />);
-  const ThemeWrapper = (
-    <MuiThemeProvider theme={MuiTheme}>
-      <Routes />
-    </MuiThemeProvider>
-  );
+  // Use Enzyme Shallow rendering for App Component
+  it('renders without crashing (Shallow)', () => {
+    const sut = shallow(<App />);
+    expect(sut.contains('div'));
+  });
 
-  expect(sut.contains(ThemeWrapper)).toEqual(true);
-});
+  // Use Enzyme Mount for App Component
+  it('renders without crashing (Mount)', () => {
+    const sut = mount(<App />);
+    const ThemeWrapper = (
+      <MuiThemeProvider theme={MuiTheme}>
+        <BrowserRouter>
+          <Routes />
+        </BrowserRouter>
+      </MuiThemeProvider>
+    );
 
-// Validate Route exists
+    expect(sut.contains(ThemeWrapper)).toEqual(true);
+  });
 
-it('Prompts Login screen', () => {
-  const sut = mount(<App />);
+  // Validate Route exists
+  it('Prompts Login screen', () => {
+    const sut = mount(<App />);
 
-  expect(sut.contains(Login));
+    expect(sut.contains(Login));
 
-  // Expect total of 3 input field
-  expect(sut.find('input')).toHaveLength(3);
+    // Expect total of 3 input field
+    expect(sut.find('input')).toHaveLength(2);
+  });
+
+  it('Validate App Screen snapshot', () => {
+    const appTree = renderer.create(<App />).toJSON();
+
+    expect(appTree).toMatchSnapshot();
+  });
 });

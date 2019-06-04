@@ -2,8 +2,8 @@ import React,  { Component } from 'react';
 import withStyles from '@material-ui/core/styles/withStyles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Topbar from '../components/Topbar';
-const backgroundShape = require('../images/shape.svg');
 
+const backgroundShape = require('../images/shape.svg');
 const styles = theme => ({
   root: {
     flexGrow: 1,

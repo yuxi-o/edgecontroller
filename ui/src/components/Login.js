@@ -7,9 +7,8 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
+import FormHelperText from '@material-ui/core/FormHelperText';
 import Avatar from '@material-ui/core/Avatar';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
@@ -55,22 +54,12 @@ const styles = theme => ({
     width: '80%'
   },
   buttonBar: {
-    marginTop: 32,
+    marginTop: 10,
     display: 'flex',
     justifyContent: 'center'
   },
   button: {
     backgroundColor: theme.palette.primary['A100']
-  },
-  backButton: {
-    marginRight: theme.spacing.unit,
-  },
-  outlinedButtom: {
-    textTransform: 'uppercase',
-    margin: theme.spacing.unit
-  },
-  stepper: {
-    backgroundColor: 'transparent'
   },
   paper: {
     padding: theme.spacing.unit * 3,
@@ -86,9 +75,9 @@ const styles = theme => ({
   formControl: {
     width: '100%'
   },
-  selectEmpty: {
-    marginTop: theme.spacing.unit * 2,
-  }
+  passwordBox: {
+    minHeight: "5rem",
+  },
 });
 
 class LoginForm extends Component {
@@ -99,17 +88,26 @@ class LoginForm extends Component {
   handleLogin = event => {
     event.preventDefault();
 
-    const {email, password} = this.state;
+    const {username, password} = this.state;
 
-    if (!Auth.login(email, password)) {
-      alert('Auth Failed');
-    }
+    Auth.login(username, password)
+      .then(({success, errorText}) => {
+        if (success) {
+          this.props.history.push('/home');
+          return;
+        }
 
-    setTimeout(() => this.props.history.push('/home'), 500)
+        this.setState({loginError: true, helperText: errorText})
+      });
   };
+
 
   constructor(props) {
     super(props);
+    this.state = {
+      loginError: false,
+      helperText: ""
+    };
 
     // This binding is necessary to make `this` work in the callback
     this.handleInputChange = this.handleInputChange.bind(this);
@@ -144,25 +142,28 @@ class LoginForm extends Component {
                         <Typography component="h1" variant="h5">
                           Controller Login
                         </Typography>
-                        <form onSubmit={this.handleLogin} className={classes.form}>
+                        <form onSubmit={this.handleLogin} className={classes.form} autoComplete="off">
                           <FormControl margin="normal" required fullWidth>
-                            <InputLabel htmlFor="email">Email Address</InputLabel>
-                            <Input id="email" name="email" autoComplete="email" onChange={this.handleInputChange} autoFocus />
+                            <InputLabel htmlFor="username">Username</InputLabel>
+                            <Input error={this.state.loginError}  id="username" name="username" autoComplete="off" onChange={this.handleInputChange} autoFocus />
                           </FormControl>
-                          <FormControl margin="normal" required fullWidth>
+                          <FormControl className={classes.passwordBox} margin="normal" required fullWidth>
                             <InputLabel htmlFor="password">Password</InputLabel>
-                            <Input name="password" type="password" id="password" onChange={this.handleInputChange} autoComplete="current-password" />
+                            <Input error={this.state.loginError} aria-describedby="component-error-text" name="password" type="password" id="password" onChange={this.handleInputChange} autoComplete="off" />
+
+                            { this.state.helperText !== "" ?
+                              <FormHelperText id="component-error-text">
+                                {this.state.helperText}
+                              </FormHelperText> : null
+                            }
+
                           </FormControl>
-                          <FormControlLabel
-                            control={<Checkbox value="remember" color="primary" />}
-                            label="Remember me"
-                          />
                           <Button
                             type="submit"
                             fullWidth
                             variant="contained"
                             color="primary"
-                            className={classes.submit}
+                            className={classes.buttonBar}
                           >
                             Sign in
                           </Button>

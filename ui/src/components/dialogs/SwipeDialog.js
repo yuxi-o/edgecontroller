@@ -88,11 +88,11 @@ class SwipeDialog extends Component {
   };
 
   render() {
-    const { classes } = this.props;
     const maxSteps = tutorialSteps.length;
     const { activeStep } = this.state;
+    const {classes, ...otherProps} = this.props;
     return (
-      <BaseDialog {...this.props}>
+      <BaseDialog {...otherProps}>
         <div className={classes.container}>
           <div className={classes.gutterBottom}>
             <img width={100} src={logo} alt="" />

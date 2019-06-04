@@ -1122,7 +1122,7 @@
     recompose "0.28.0 - 0.30.0"
     warning "^4.0.1"
 
-"@material-ui/icons@^3.0.1":
+"@material-ui/icons@^3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@material-ui/icons/-/icons-3.0.2.tgz#d67a6dd1ec8312d3a88ec97944a63daeef24fe10"
   integrity sha512-QY/3gJnObZQ3O/e6WjH+0ah2M3MOgLOzCy8HTUoUx9B6dDrS18vP7Ycw3qrDEKlB6q1KNxy6CZHm5FCauWGy2g==
@@ -1360,6 +1360,21 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
+"@types/cheerio@*":
+  version "0.22.11"
+  resolved "https://registry.yarnpkg.com/@types/cheerio/-/cheerio-0.22.11.tgz#61c0facf9636d14ba5f77fc65ed8913aa845d717"
+  integrity sha512-x0X3kPbholdJZng9wDMhb2swvUi3UYRNAuWAmIPIWlfgAJZp//cql/qblE7181Mg7SjWVwq6ldCPCLn5AY/e7w==
+  dependencies:
+    "@types/node" "*"
+
+"@types/enzyme@^3.9.3":
+  version "3.9.3"
+  resolved "https://registry.yarnpkg.com/@types/enzyme/-/enzyme-3.9.3.tgz#d1029c0edd353d7b00f3924803eb88216460beed"
+  integrity sha512-jDKoZiiMA3lGO3skSO7dfqEHNvmiTLLV+PHD9EBQVlJANJvpY6qq1zzjRI24ZOtG7F+CS7BVWDXKewRmN8PjHQ==
+  dependencies:
+    "@types/cheerio" "*"
+    "@types/react" "*"
+
 "@types/istanbul-lib-coverage@*", "@types/istanbul-lib-coverage@^2.0.0":
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@types/istanbul-lib-coverage/-/istanbul-lib-coverage-2.0.1.tgz#42995b446db9a48a11a07ec083499a860e9138ff"
@@ -1379,6 +1394,18 @@
   dependencies:
     "@types/istanbul-lib-coverage" "*"
     "@types/istanbul-lib-report" "*"
+
+"@types/jest-diff@*":
+  version "20.0.1"
+  resolved "https://registry.yarnpkg.com/@types/jest-diff/-/jest-diff-20.0.1.tgz#35cc15b9c4f30a18ef21852e255fdb02f6d59b89"
+  integrity sha512-yALhelO3i0hqZwhjtcr6dYyaLoCHbAMshwtj6cGxTvHZAKXHsYGdff6E8EPw3xLKY0ELUTQ69Q1rQiJENnccMA==
+
+"@types/jest@^24.0.13":
+  version "24.0.13"
+  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-24.0.13.tgz#10f50b64cb05fb02411fbba49e9042a3a11da3f9"
+  integrity sha512-3m6RPnO35r7Dg+uMLj1+xfZaOgIHHHut61djNjzwExXN4/Pm9has9C6I1KMYSfz7mahDhWUOVg4HW/nZdv5Pww==
+  dependencies:
+    "@types/jest-diff" "*"
 
 "@types/jss@^9.5.6":
   version "9.5.8"
@@ -2012,6 +2039,13 @@ aws4@^1.8.0:
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.8.0.tgz#f0e003d9ca9e7f59c7a508945d7b2ef9a04a542f"
   integrity sha512-ReZxvNHIOv88FlT7rxcXIIC0fPt4KZqZbOlivyWtXLt8ESx84zd3kMC6iK5jVeS2qt+g7ftS7ye4fi06X5rtRQ==
+
+axios-mock-adapter@^1.16.0:
+  version "1.16.0"
+  resolved "https://registry.yarnpkg.com/axios-mock-adapter/-/axios-mock-adapter-1.16.0.tgz#cdd55bb60d8cb3fcd77fdb9cbb269e47b8b95180"
+  integrity sha512-m2D8ngMTQ5p4zZNBsPKoENgwz5rDfd0pZmXI/spdE2eeeKIcR3jquk+NRiBVFtb9UJlciBYplNzSUmgQ6X385Q==
+  dependencies:
+    deep-equal "^1.0.1"
 
 axios@^0.18.0:
   version "0.18.0"
@@ -2661,7 +2695,7 @@ class-utils@^0.3.5:
     isobject "^3.0.0"
     static-extend "^0.1.1"
 
-classnames@^2.2.5, classnames@~2.2.5:
+classnames@^2.2.5, classnames@^2.2.6, classnames@~2.2.5:
   version "2.2.6"
   resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.2.6.tgz#43935bffdd291f326dad0a205309b38d00f650ce"
   integrity sha512-JR/iSQOSt+LQIWwrwEzJ9uk0xfN3mTVYMwt1Ir5mUcSN6pU+V4zQFFaJsclJbPuAUQH+yfWef6tm7l1quW3C8Q==
@@ -5954,6 +5988,11 @@ jest-leak-detector@^24.8.0:
   dependencies:
     pretty-format "^24.8.0"
 
+jest-localstorage-mock@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/jest-localstorage-mock/-/jest-localstorage-mock-2.4.0.tgz#c6073810735dd3af74020ea6c3885ec1cc6d0d13"
+  integrity sha512-/mC1JxnMeuIlAaQBsDMilskC/x/BicsQ/BXQxEOw+5b1aGZkkOAqAF3nu8yq449CpzGtp5jJ5wCmDNxLgA2m6A==
+
 jest-matcher-utils@^24.0.0, jest-matcher-utils@^24.8.0:
   version "24.8.0"
   resolved "https://registry.yarnpkg.com/jest-matcher-utils/-/jest-matcher-utils-24.8.0.tgz#2bce42204c9af12bde46f83dc839efe8be832495"
@@ -7222,6 +7261,16 @@ normalize-url@^3.0.0:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/normalize-url/-/normalize-url-3.3.0.tgz#b2e1c4dc4f7c6d57743df733a4f5978d18650559"
   integrity sha512-U+JJi7duF1o+u2pynbp2zXDW2/PADgC30f0GsHZtRh+HOcXHnw137TrNlyxxRvWW5fjKd3bcLHPxofWuCjaeZg==
+
+notistack@^0.8.5:
+  version "0.8.5"
+  resolved "https://registry.yarnpkg.com/notistack/-/notistack-0.8.5.tgz#f113db69d5b5bf60f0818b364c2443320856a7d6"
+  integrity sha512-etxjUgvVOVxN1vNmWEujRkFIKEFz0Ev3q+to4U9j8VrX+wnF7NC3op1XCaCBaHu9eIQvPAzgtz+VKZ3gV3Qxnw==
+  dependencies:
+    classnames "^2.2.6"
+    hoist-non-react-statics "^3.3.0"
+    prop-types "^15.6.2"
+    react-is "^16.8.6"
 
 npm-bundled@^1.0.1:
   version "1.0.6"
@@ -10481,6 +10530,16 @@ typedarray@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
+
+typeface-lato@^0.0.54:
+  version "0.0.54"
+  resolved "https://registry.yarnpkg.com/typeface-lato/-/typeface-lato-0.0.54.tgz#6ea56309a8b0cfdb7e8246e05de4b58b8272b47c"
+  integrity sha512-2/oP5YrXCBSLg+N2ZdWnMbJ0PRIidrJVFHgRoLxo5MNsdu9eE4aBwsoEY/K/+9rKdktGO8zpiXBYPRn9F6U/Sw==
+
+typeface-roboto@^0.0.54:
+  version "0.0.54"
+  resolved "https://registry.yarnpkg.com/typeface-roboto/-/typeface-roboto-0.0.54.tgz#8f02c9a18d1cfa7f49381a6ff0d21ff061f38ad2"
+  integrity sha512-sOFA1FXgP0gOgBYlS6irwq6hHYA370KE3dPlgYEJHL3PJd5X8gQE0RmL79ONif6fL5JZuGDj+rtOrFeOqz5IZQ==
 
 typescript-compare@^0.0.2:
   version "0.0.2"

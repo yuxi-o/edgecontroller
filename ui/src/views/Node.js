@@ -21,7 +21,7 @@ const styles = theme => ({
   grid: {
     width: 1000
   }
-})
+});
 
 class NodesView extends Component {
 
