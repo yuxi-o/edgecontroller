@@ -31,18 +31,19 @@ import (
 
 var _ = Describe("/nodes_apps", func() {
 	var (
-		nodeID string
-		appID  string
+		appID string
 	)
 
 	BeforeEach(func() {
-		nodeID = postNodes()
+		clearGRPCTargetsTable()
 		appID = postApps("container")
 	})
 
 	Describe("POST /nodes_apps", func() {
 		DescribeTable("201 Created",
 			func() {
+				nodeCfg := createAndRegisterNode()
+
 				By("Sending a POST /nodes_apps request")
 				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/nodes_apps",
@@ -52,7 +53,7 @@ var _ = Describe("/nodes_apps", func() {
 						{
 							"node_id": "%s",
 							"app_id": "%s"
-						}`, nodeID, appID)))
+						}`, nodeCfg.nodeID, appID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -121,16 +122,13 @@ var _ = Describe("/nodes_apps", func() {
 
 		DescribeTable("422 Unprocessable Entity",
 			func() {
-				var (
-					resp *http.Response
-					err  error
-				)
+				nodeCfg := createAndRegisterNode()
 
 				By("Sending a POST /nodes_apps request")
-				postNodesApps(nodeID, appID)
+				postNodesApps(nodeCfg.nodeID, appID)
 
 				By("Repeating the first POST /nodes_apps request")
-				resp, err = apiCli.Post(
+				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/nodes_apps",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
@@ -138,7 +136,7 @@ var _ = Describe("/nodes_apps", func() {
 						{
 							"node_id": "%s",
 							"app_id": "%s"
-						}`, nodeID, appID)))
+						}`, nodeCfg.nodeID, appID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -152,9 +150,9 @@ var _ = Describe("/nodes_apps", func() {
 
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(fmt.Sprintf(
-					"duplicate record detected for node_id %s and "+
+					"duplicate record in nodes_apps detected for node_id %s and "+
 						"app_id %s",
-					nodeID,
+					nodeCfg.nodeID,
 					appID)))
 			},
 			Entry("POST /nodes_apps with duplicate node_id and app_id"),
@@ -163,39 +161,35 @@ var _ = Describe("/nodes_apps", func() {
 
 	Describe("GET /nodes_apps", func() {
 		var (
+			nodeCfg    *nodeConfig
 			nodeAppID  string
 			app2ID     string
 			nodeApp2ID string
 		)
 
 		BeforeEach(func() {
-			nodeAppID = postNodesApps(nodeID, appID)
+			nodeCfg = createAndRegisterNode()
+			nodeAppID = postNodesApps(nodeCfg.nodeID, appID)
 			app2ID = postApps("container")
-			nodeApp2ID = postNodesApps(nodeID, app2ID)
+			nodeApp2ID = postNodesApps(nodeCfg.nodeID, app2ID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				nodeAppsResp := getNodeApps(nodeID)
+				nodeApps := getNodeApps(nodeCfg.nodeID)
 
 				By("Verifying the 2 created node apps were returned")
-				Expect(nodeAppsResp).To(ContainElement(
-					&cce.NodeAppResp{
-						NodeApp: cce.NodeApp{
-							ID:     nodeAppID,
-							NodeID: nodeID,
-							AppID:  appID,
-						},
-						Status: "deployed",
+				Expect(nodeApps).To(ContainElement(
+					&cce.NodeApp{
+						ID:     nodeAppID,
+						NodeID: nodeCfg.nodeID,
+						AppID:  appID,
 					}))
-				Expect(nodeAppsResp).To(ContainElement(
-					&cce.NodeAppResp{
-						NodeApp: cce.NodeApp{
-							ID:     nodeApp2ID,
-							NodeID: nodeID,
-							AppID:  app2ID,
-						},
-						Status: "deployed",
+				Expect(nodeApps).To(ContainElement(
+					&cce.NodeApp{
+						ID:     nodeApp2ID,
+						NodeID: nodeCfg.nodeID,
+						AppID:  app2ID,
 					}))
 			},
 			Entry("GET /nodes_apps"),
@@ -203,16 +197,10 @@ var _ = Describe("/nodes_apps", func() {
 	})
 
 	Describe("GET /nodes_apps/{id}", func() {
-		var (
-			nodeAppID string
-		)
-
-		BeforeEach(func() {
-			nodeAppID = postNodesApps(nodeID, appID)
-		})
-
 		DescribeTable("200 OK",
 			func() {
+				nodeCfg := createAndRegisterNode()
+				nodeAppID := postNodesApps(nodeCfg.nodeID, appID)
 				nodeAppResp := getNodeApp(nodeAppID)
 
 				By("Verifying the created node app was returned")
@@ -220,7 +208,7 @@ var _ = Describe("/nodes_apps", func() {
 					&cce.NodeAppResp{
 						NodeApp: cce.NodeApp{
 							ID:     nodeAppID,
-							NodeID: nodeID,
+							NodeID: nodeCfg.nodeID,
 							AppID:  appID,
 						},
 						Status: "deployed",
@@ -248,22 +236,17 @@ var _ = Describe("/nodes_apps", func() {
 	})
 
 	Describe("PATCH /nodes_apps", func() {
-		var (
-			nodeAppID string
-		)
-
-		BeforeEach(func() {
-			nodeAppID = postNodesApps(nodeID, appID)
-		})
-
 		DescribeTable("204 No Content",
 			func(reqStr string, expectedNodeAppResp *cce.NodeAppResp) {
+				nodeCfg := createAndRegisterNode()
+				nodeAppID := postNodesApps(nodeCfg.nodeID, appID)
+
 				By("Sending a PATCH /nodes_apps request")
 				resp, err := apiCli.Patch(
 					"http://127.0.0.1:8080/nodes_apps",
 					"application/json",
 					strings.NewReader(
-						fmt.Sprintf(reqStr, nodeAppID, nodeID, appID)))
+						fmt.Sprintf(reqStr, nodeAppID, nodeCfg.nodeID, appID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -277,7 +260,7 @@ var _ = Describe("/nodes_apps", func() {
 				By("Verifying the node was updated")
 				expectedNodeAppResp.NodeApp = cce.NodeApp{
 					ID:     nodeAppID,
-					NodeID: nodeID,
+					NodeID: nodeCfg.nodeID,
 					AppID:  appID,
 				}
 				Expect(updatedNodeAppResp).To(Equal(expectedNodeAppResp))
@@ -300,12 +283,15 @@ var _ = Describe("/nodes_apps", func() {
 
 		DescribeTable("400 Bad Request",
 			func(reqStr string, expectedResp string) {
+				nodeCfg := createAndRegisterNode()
+				nodeAppID := postNodesApps(nodeCfg.nodeID, appID)
+
 				By("Sending a PATCH /nodes_apps request")
 				switch strings.Count(reqStr, "%s") {
 				case 2:
-					reqStr = fmt.Sprintf(reqStr, nodeAppID, nodeID)
+					reqStr = fmt.Sprintf(reqStr, nodeAppID, nodeCfg.nodeID)
 				case 3:
-					reqStr = fmt.Sprintf(reqStr, nodeAppID, nodeID, appID)
+					reqStr = fmt.Sprintf(reqStr, nodeAppID, nodeCfg.nodeID, appID)
 				}
 				resp, err := apiCli.Patch(
 					"http://127.0.0.1:8080/nodes_apps",
@@ -379,16 +365,11 @@ var _ = Describe("/nodes_apps", func() {
 	})
 
 	Describe("DELETE /nodes_apps/{id}", func() {
-		var (
-			nodeAppID string
-		)
-
-		BeforeEach(func() {
-			nodeAppID = postNodesApps(nodeID, appID)
-		})
-
 		DescribeTable("200 OK",
 			func() {
+				nodeCfg := createAndRegisterNode()
+				nodeAppID := postNodesApps(nodeCfg.nodeID, appID)
+
 				By("Sending a DELETE /nodes_apps/{id} request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf(
@@ -432,6 +413,44 @@ var _ = Describe("/nodes_apps", func() {
 			Entry(
 				"DELETE /nodes_apps/{id} with nonexistent ID",
 				uuid.New()),
+		)
+
+		DescribeTable("422 Unprocessable Entity",
+			func(resource, expectedResp string) {
+				nodeCfg := createAndRegisterNode()
+				nodeAppID := postNodesApps(nodeCfg.nodeID, appID)
+
+				switch resource {
+				case "nodes_apps_traffic_policies":
+					postNodesAppsTrafficPolicies(
+						nodeAppID,
+						postTrafficPolicies())
+				}
+
+				By("Sending a DELETE /nodes_apps/{id} request")
+				resp, err := apiCli.Delete(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes_apps/%s",
+						nodeAppID))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 422 response")
+				Expect(resp.StatusCode).To(Equal(
+					http.StatusUnprocessableEntity))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying the response body")
+				Expect(string(body)).To(Equal(
+					fmt.Sprintf(expectedResp, nodeAppID)))
+			},
+			Entry(
+				"DELETE /nodes_apps/{id} with nodes_apps_traffic_policies record",
+				"nodes_apps_traffic_policies",
+				"cannot delete node_app_id %s: record in use in nodes_apps_traffic_policies",
+			),
 		)
 	})
 })

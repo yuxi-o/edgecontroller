@@ -54,7 +54,7 @@ const (
 	appIDLabelKey = "app-id"
 )
 
-// Client abstracts out calls to k8s master API
+// Client abstracts calls to k8s master API
 type Client struct {
 	// Host must be a host string, a host:port pair, or a URL to the base of the apiserver.
 	// If a URL is given then the (optional) Path of that URL represents a prefix that must
@@ -326,7 +326,7 @@ func (ks *Client) Stop(ctx context.Context, nodeID, appID string) error {
 func (ks *Client) Restart(ctx context.Context, nodeID, appID string) error {
 	deploymentName, err := ks.getDeploymentName(nodeID, appID)
 	if err != nil {
-		return errors.Wrap(err, "stop: error getting deployment name by ID")
+		return errors.Wrap(err, "restart: error getting deployment name by ID")
 	}
 
 	deploymentsClient := ks.clientSet.AppsV1().Deployments(apiV1.NamespaceDefault)

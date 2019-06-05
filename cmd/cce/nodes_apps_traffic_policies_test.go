@@ -30,23 +30,14 @@ import (
 )
 
 var _ = Describe("/nodes_apps_traffic_policies", func() {
-	var (
-		nodeID          string
-		appID           string
-		nodeAppID       string
-		trafficPolicyID string
-	)
-
-	BeforeEach(func() {
-		nodeID = postNodes()
-		appID = postApps("container")
-		nodeAppID = postNodesApps(nodeID, appID)
-		trafficPolicyID = postTrafficPolicies()
-	})
-
 	Describe("POST /nodes_apps_traffic_policies", func() {
 		DescribeTable("201 Created",
 			func() {
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
+				trafficPolicyID := postTrafficPolicies()
+
 				By("Sending a POST /nodes_apps_traffic_policies request")
 				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/nodes_apps_traffic_policies",
@@ -125,16 +116,16 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 
 		DescribeTable("422 Unprocessable Entity",
 			func() {
-				var (
-					resp *http.Response
-					err  error
-				)
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
+				trafficPolicyID := postTrafficPolicies()
 
 				By("Sending a POST /nodes_apps_traffic_policies request")
 				postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
 
 				By("Repeating the first POST /nodes_apps_traffic_policies request")
-				resp, err = apiCli.Post(
+				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/nodes_apps_traffic_policies",
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
@@ -156,7 +147,7 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(fmt.Sprintf(
-					"duplicate record detected for nodes_apps_id %s and "+
+					"duplicate record in nodes_apps_traffic_policies detected for nodes_apps_id %s and "+
 						"traffic_policy_id %s",
 					nodeAppID,
 					trafficPolicyID)))
@@ -166,26 +157,19 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 	})
 
 	Describe("GET /nodes_apps_traffic_policies", func() {
-		var (
-			nodeAppTrafficPolicyID  string
-			node2ID                 string
-			app2ID                  string
-			nodeApp2ID              string
-			trafficPolicy2ID        string
-			nodeAppTrafficPolicy2ID string
-		)
-
-		BeforeEach(func() {
-			nodeAppTrafficPolicyID = postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
-			node2ID = postNodes()
-			app2ID = postApps("container")
-			nodeApp2ID = postNodesApps(node2ID, app2ID)
-			trafficPolicy2ID = postTrafficPolicies()
-			nodeAppTrafficPolicy2ID = postNodesAppsTrafficPolicies(nodeApp2ID, trafficPolicy2ID)
-		})
-
 		DescribeTable("200 OK",
 			func() {
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+
+				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
+				trafficPolicyID := postTrafficPolicies()
+				nodeAppTrafficPolicyID := postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
+
+				nodeApp2ID := postNodesApps(nodeCfg.nodeID, postApps("container"))
+				trafficPolicy2ID := postTrafficPolicies()
+				nodeAppTrafficPolicy2ID := postNodesAppsTrafficPolicies(nodeApp2ID, trafficPolicy2ID)
+
 				By("Sending a GET /nodes_apps_traffic_policies request")
 				resp, err := apiCli.Get("http://127.0.0.1:8080/nodes_apps_traffic_policies")
 				Expect(err).ToNot(HaveOccurred())
@@ -222,16 +206,15 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 	})
 
 	Describe("GET /nodes_apps_traffic_policies/{id}", func() {
-		var (
-			nodeAppTrafficPolicyID string
-		)
-
-		BeforeEach(func() {
-			nodeAppTrafficPolicyID = postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
-		})
-
 		DescribeTable("200 OK",
 			func() {
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+
+				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
+				trafficPolicyID := postTrafficPolicies()
+				nodeAppTrafficPolicyID := postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
+
 				nodeAppTrafficPolicy := getNodeAppTrafficPolicy(nodeAppTrafficPolicyID)
 
 				By("Verifying the created node app traffic policy was returned")
@@ -264,16 +247,16 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 	})
 
 	Describe("DELETE /nodes_apps_traffic_policies/{id}", func() {
-		var (
-			nodeAppTrafficPolicyID string
-		)
-
-		BeforeEach(func() {
-			nodeAppTrafficPolicyID = postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
-		})
-
 		DescribeTable("200 OK",
 			func() {
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+
+				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
+				trafficPolicyID := postTrafficPolicies()
+
+				nodeAppTrafficPolicyID := postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
+
 				By("Sending a DELETE /nodes_apps_traffic_policies/{id} request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf(

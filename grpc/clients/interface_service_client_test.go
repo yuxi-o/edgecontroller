@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	"github.com/smartedgemec/controller-ce/pb"
+	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -29,44 +29,42 @@ var _ = Describe("Network Interface Service Client", func() {
 		By("Resetting the interfaces")
 		err := interfaceSvcCli.BulkUpdate(
 			ctx,
-			&pb.NetworkInterfaces{
-				NetworkInterfaces: []*pb.NetworkInterface{
-					{
-						Id:          "if0",
-						Description: "interface0",
-						Driver:      pb.NetworkInterface_KERNEL,
-						Type:        pb.NetworkInterface_NONE,
-						MacAddress:  "mac0",
-						Vlan:        0,
-						Zones:       nil,
-					},
-					{
-						Id:          "if1",
-						Description: "interface1",
-						Driver:      pb.NetworkInterface_KERNEL,
-						Type:        pb.NetworkInterface_NONE,
-						MacAddress:  "mac1",
-						Vlan:        1,
-						Zones:       nil,
-					},
-					{
-						Id:          "if2",
-						Description: "interface2",
-						Driver:      pb.NetworkInterface_KERNEL,
-						Type:        pb.NetworkInterface_NONE,
-						MacAddress:  "mac2",
-						Vlan:        2,
-						Zones:       nil,
-					},
-					{
-						Id:          "if3",
-						Description: "interface3",
-						Driver:      pb.NetworkInterface_KERNEL,
-						Type:        pb.NetworkInterface_NONE,
-						MacAddress:  "mac3",
-						Vlan:        3,
-						Zones:       nil,
-					},
+			[]*cce.NetworkInterface{
+				{
+					ID:          "if0",
+					Description: "interface0",
+					Driver:      "kernel",
+					Type:        "none",
+					MACAddress:  "mac0",
+					VLAN:        0,
+					Zones:       nil,
+				},
+				{
+					ID:          "if1",
+					Description: "interface1",
+					Driver:      "kernel",
+					Type:        "none",
+					MACAddress:  "mac1",
+					VLAN:        1,
+					Zones:       nil,
+				},
+				{
+					ID:          "if2",
+					Description: "interface2",
+					Driver:      "kernel",
+					Type:        "none",
+					MACAddress:  "mac2",
+					VLAN:        2,
+					Zones:       nil,
+				},
+				{
+					ID:          "if3",
+					Description: "interface3",
+					Driver:      "kernel",
+					Type:        "none",
+					MACAddress:  "mac3",
+					VLAN:        3,
+					Zones:       nil,
 				},
 			},
 		)
@@ -81,59 +79,47 @@ var _ = Describe("Network Interface Service Client", func() {
 
 				By("Verifying the response contains all four interfaces")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(nis.NetworkInterfaces).To(Equal(
-					[]*pb.NetworkInterface{
+				Expect(nis).To(Equal(
+					[]*cce.NetworkInterface{
 						{
-							Id:                   "if0",
-							Description:          "interface0",
-							Driver:               pb.NetworkInterface_KERNEL,
-							Type:                 pb.NetworkInterface_NONE,
-							MacAddress:           "mac0",
-							Vlan:                 0,
-							Zones:                nil,
-							FallbackInterface:    "",
-							XXX_NoUnkeyedLiteral: *new(struct{}),
-							XXX_unrecognized:     nil,
-							XXX_sizecache:        0,
+							ID:                "if0",
+							Description:       "interface0",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac0",
+							VLAN:              0,
+							Zones:             nil,
+							FallbackInterface: "",
 						},
 						{
-							Id:                   "if1",
-							Description:          "interface1",
-							Driver:               pb.NetworkInterface_KERNEL,
-							Type:                 pb.NetworkInterface_NONE,
-							MacAddress:           "mac1",
-							Vlan:                 1,
-							Zones:                nil,
-							FallbackInterface:    "",
-							XXX_NoUnkeyedLiteral: *new(struct{}),
-							XXX_unrecognized:     nil,
-							XXX_sizecache:        0,
+							ID:                "if1",
+							Description:       "interface1",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac1",
+							VLAN:              1,
+							Zones:             nil,
+							FallbackInterface: "",
 						},
 						{
-							Id:                   "if2",
-							Description:          "interface2",
-							Driver:               pb.NetworkInterface_KERNEL,
-							Type:                 pb.NetworkInterface_NONE,
-							MacAddress:           "mac2",
-							Vlan:                 2,
-							Zones:                nil,
-							FallbackInterface:    "",
-							XXX_NoUnkeyedLiteral: *new(struct{}),
-							XXX_unrecognized:     nil,
-							XXX_sizecache:        0,
+							ID:                "if2",
+							Description:       "interface2",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac2",
+							VLAN:              2,
+							Zones:             nil,
+							FallbackInterface: "",
 						},
 						{
-							Id:                   "if3",
-							Description:          "interface3",
-							Driver:               pb.NetworkInterface_KERNEL,
-							Type:                 pb.NetworkInterface_NONE,
-							MacAddress:           "mac3",
-							Vlan:                 3,
-							Zones:                nil,
-							FallbackInterface:    "",
-							XXX_NoUnkeyedLiteral: *new(struct{}),
-							XXX_unrecognized:     nil,
-							XXX_sizecache:        0,
+							ID:                "if3",
+							Description:       "interface3",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac3",
+							VLAN:              3,
+							Zones:             nil,
+							FallbackInterface: "",
 						},
 					},
 				))
@@ -152,13 +138,13 @@ var _ = Describe("Network Interface Service Client", func() {
 				By("Verifying the response")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(ni0).To(Equal(
-					&pb.NetworkInterface{
-						Id:          "if0",
+					&cce.NetworkInterface{
+						ID:          "if0",
 						Description: "interface0",
-						Driver:      pb.NetworkInterface_KERNEL,
-						Type:        pb.NetworkInterface_NONE,
-						MacAddress:  "mac0",
-						Vlan:        0,
+						Driver:      "kernel",
+						Type:        "none",
+						MACAddress:  "mac0",
+						VLAN:        0,
 						Zones:       nil,
 					},
 				))
@@ -188,13 +174,13 @@ var _ = Describe("Network Interface Service Client", func() {
 				By("Updating the third network interface")
 				err := interfaceSvcCli.Update(
 					ctx,
-					&pb.NetworkInterface{
-						Id:          "if2",
+					&cce.NetworkInterface{
+						ID:          "if2",
 						Description: "interface2",
-						Driver:      pb.NetworkInterface_USERSPACE,
-						Type:        pb.NetworkInterface_BIDIRECTIONAL,
-						MacAddress:  "mac2",
-						Vlan:        2,
+						Driver:      "userspace",
+						Type:        "bidirectional",
+						MACAddress:  "mac2",
+						VLAN:        2,
 						Zones:       nil,
 					},
 				)
@@ -208,13 +194,13 @@ var _ = Describe("Network Interface Service Client", func() {
 				By("Verifying the response matches the updated interface")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(ni2).To(Equal(
-					&pb.NetworkInterface{
-						Id:          "if2",
+					&cce.NetworkInterface{
+						ID:          "if2",
 						Description: "interface2",
-						Driver:      pb.NetworkInterface_USERSPACE,
-						Type:        pb.NetworkInterface_BIDIRECTIONAL,
-						MacAddress:  "mac2",
-						Vlan:        2,
+						Driver:      "userspace",
+						Type:        "bidirectional",
+						MACAddress:  "mac2",
+						VLAN:        2,
 						Zones:       nil,
 					},
 				))
@@ -226,7 +212,7 @@ var _ = Describe("Network Interface Service Client", func() {
 				By("Passing a nonexistent ID")
 				badID := uuid.New()
 				err := interfaceSvcCli.Update(ctx,
-					&pb.NetworkInterface{Id: badID})
+					&cce.NetworkInterface{ID: badID})
 
 				By("Verifying a NotFound response")
 				Expect(err).To(HaveOccurred())
@@ -243,26 +229,42 @@ var _ = Describe("Network Interface Service Client", func() {
 				By("Bulk updating the second and fourth network interfaces")
 				err := interfaceSvcCli.BulkUpdate(
 					ctx,
-					&pb.NetworkInterfaces{
-						NetworkInterfaces: []*pb.NetworkInterface{
-							{
-								Id:          "if1",
-								Description: "interface1",
-								Driver:      pb.NetworkInterface_USERSPACE,
-								Type:        pb.NetworkInterface_UPSTREAM,
-								MacAddress:  "mac1",
-								Vlan:        1,
-								Zones:       nil,
-							},
-							{
-								Id:          "if3",
-								Description: "interface3",
-								Driver:      pb.NetworkInterface_USERSPACE,
-								Type:        pb.NetworkInterface_DOWNSTREAM,
-								MacAddress:  "mac3",
-								Vlan:        3,
-								Zones:       nil,
-							},
+					[]*cce.NetworkInterface{
+						{
+							ID:          "if0",
+							Description: "interface0",
+							Driver:      "kernel",
+							Type:        "none",
+							MACAddress:  "mac0",
+							VLAN:        0,
+							Zones:       nil,
+						},
+						{
+							ID:          "if1",
+							Description: "interface1",
+							Driver:      "userspace",
+							Type:        "upstream",
+							MACAddress:  "mac1",
+							VLAN:        1,
+							Zones:       nil,
+						},
+						{
+							ID:          "if2",
+							Description: "interface2",
+							Driver:      "kernel",
+							Type:        "none",
+							MACAddress:  "mac2",
+							VLAN:        2,
+							Zones:       nil,
+						},
+						{
+							ID:          "if3",
+							Description: "interface3",
+							Driver:      "userspace",
+							Type:        "downstream",
+							MACAddress:  "mac3",
+							VLAN:        3,
+							Zones:       nil,
 						},
 					},
 				)
@@ -276,13 +278,13 @@ var _ = Describe("Network Interface Service Client", func() {
 				By("Verifying the response matches the updated interface")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(ni1).To(Equal(
-					&pb.NetworkInterface{
-						Id:          "if1",
+					&cce.NetworkInterface{
+						ID:          "if1",
 						Description: "interface1",
-						Driver:      pb.NetworkInterface_USERSPACE,
-						Type:        pb.NetworkInterface_UPSTREAM,
-						MacAddress:  "mac1",
-						Vlan:        1,
+						Driver:      "userspace",
+						Type:        "upstream",
+						MACAddress:  "mac1",
+						VLAN:        1,
 						Zones:       nil,
 					},
 				))
@@ -293,13 +295,13 @@ var _ = Describe("Network Interface Service Client", func() {
 				By("Verifying the response matches the updated interface")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(ni3).To(Equal(
-					&pb.NetworkInterface{
-						Id:          "if3",
+					&cce.NetworkInterface{
+						ID:          "if3",
 						Description: "interface3",
-						Driver:      pb.NetworkInterface_USERSPACE,
-						Type:        pb.NetworkInterface_DOWNSTREAM,
-						MacAddress:  "mac3",
-						Vlan:        3,
+						Driver:      "userspace",
+						Type:        "downstream",
+						MACAddress:  "mac3",
+						VLAN:        3,
 						Zones:       nil,
 					},
 				))
@@ -312,10 +314,8 @@ var _ = Describe("Network Interface Service Client", func() {
 				badID := uuid.New()
 				err := interfaceSvcCli.BulkUpdate(
 					ctx,
-					&pb.NetworkInterfaces{
-						NetworkInterfaces: []*pb.NetworkInterface{
-							{Id: badID},
-						},
+					[]*cce.NetworkInterface{
+						{ID: badID},
 					},
 				)
 
@@ -324,6 +324,30 @@ var _ = Describe("Network Interface Service Client", func() {
 				Expect(errors.Cause(err)).To(Equal(
 					status.Errorf(codes.NotFound,
 						"Network Interface %s not found", badID)))
+			})
+
+			It("Should return an error if not all interfaces are sent in the request", func() {
+				By("Not passing all interfaces")
+				err := interfaceSvcCli.BulkUpdate(
+					ctx,
+					[]*cce.NetworkInterface{
+						{
+							ID:          "if0",
+							Description: "interface0",
+							Driver:      "kernel",
+							Type:        "none",
+							MACAddress:  "mac0",
+							VLAN:        0,
+							Zones:       nil,
+						},
+					},
+				)
+
+				By("Verifying a FailedPrecondition response")
+				Expect(err).To(HaveOccurred())
+				Expect(errors.Cause(err)).To(Equal(
+					status.Errorf(codes.FailedPrecondition,
+						"Network Interface if1 missing from request")))
 			})
 		})
 	})

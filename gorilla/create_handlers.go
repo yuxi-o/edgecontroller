@@ -34,8 +34,6 @@ func handleCreateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 		return fmt.Errorf("Error connecting to node: %v", err)
 	}
 
-	log.Debugf("Connection to node established: %+v", nodeCC.Node)
-
 	ctrl := getController(ctx)
 	if err := nodeCC.AppDeploySvcCli.Deploy(ctx, app.(*cce.App)); err != nil {
 		return err
@@ -72,19 +70,13 @@ func handleCreateNodesDNSConfigs(
 		return err
 	}
 
-	log.Debugf("Connection to node established: %+v", nodeCC.Node)
-
 	for _, aRecord := range dnsConfig.(*cce.DNSConfig).ARecords {
 		if err := nodeCC.DNSSvcCli.SetA(ctx, aRecord); err != nil {
 			return err
 		}
 	}
 
-	if err := nodeCC.DNSSvcCli.SetForwarders(ctx, dnsConfig.(*cce.DNSConfig).Forwarders); err != nil {
-		return err
-	}
-
-	return nil
+	return nodeCC.DNSSvcCli.SetForwarders(ctx, dnsConfig.(*cce.DNSConfig).Forwarders)
 }
 
 func handleCreateNodesAppsTrafficPolicies(
@@ -109,15 +101,5 @@ func handleCreateNodesAppsTrafficPolicies(
 		return err
 	}
 
-	log.Debugf("Connection to node established: %+v", nodeCC.Node)
-
-	if err := nodeCC.AppPolicySvcCli.Set(
-		ctx,
-		nodeApp.(*cce.NodeApp).AppID,
-		trafficPolicy.(*cce.TrafficPolicy),
-	); err != nil {
-		return err
-	}
-
-	return nil
+	return nodeCC.AppPolicySvcCli.Set(ctx, nodeApp.(*cce.NodeApp).AppID, trafficPolicy.(*cce.TrafficPolicy))
 }

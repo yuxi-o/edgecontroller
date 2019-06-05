@@ -880,9 +880,12 @@ var _ = Describe("/traffic_policies", func() {
 			func(resource, expectedResp string) {
 				switch resource {
 				case "nodes_apps_traffic_policies":
+					clearGRPCTargetsTable()
+					nodeCfg := createAndRegisterNode()
+					trafficPolicyID = postTrafficPolicies()
 					postNodesAppsTrafficPolicies(
 						postNodesApps(
-							postNodes(),
+							nodeCfg.nodeID,
 							postApps("container")),
 						trafficPolicyID)
 				}

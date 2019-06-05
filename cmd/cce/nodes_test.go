@@ -124,13 +124,12 @@ var _ = Describe("/nodes", func() {
 
 	Describe("GET /nodes", func() {
 		var (
-			nodeID  string
-			node2ID string
+			nodeCfg *nodeConfig
 		)
 
 		BeforeEach(func() {
-			nodeID = postNodes()
-			node2ID = postNodes()
+			clearGRPCTargetsTable()
+			nodeCfg = createAndRegisterNode()
 		})
 
 		DescribeTable("200 OK",
@@ -155,19 +154,10 @@ var _ = Describe("/nodes", func() {
 				By("Verifying the 2 created nodes were returned")
 				Expect(nodes).To(ContainElement(
 					&cce.Node{
-						ID:         nodeID,
-						Name:       "Test Node 1",
-						Location:   "Localhost port 8082",
-						Serial:     "ABC-123",
-						GRPCTarget: "127.0.0.1:8082",
-					}))
-				Expect(nodes).To(ContainElement(
-					&cce.Node{
-						ID:         node2ID,
-						Name:       "Test Node 1",
-						Location:   "Localhost port 8082",
-						Serial:     "ABC-123",
-						GRPCTarget: "127.0.0.1:8082",
+						ID:       nodeCfg.nodeID,
+						Name:     "Test Node 1",
+						Location: "Localhost port 8082",
+						Serial:   nodeCfg.serial,
 					}))
 			},
 			Entry("GET /nodes"),
@@ -175,26 +165,63 @@ var _ = Describe("/nodes", func() {
 	})
 
 	Describe("GET /nodes/{id}", func() {
-		var (
-			nodeID string
-		)
-
-		BeforeEach(func() {
-			nodeID = postNodes()
-		})
-
 		DescribeTable("200 OK",
 			func() {
-				node := getNode(nodeID)
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				node := getNode(nodeCfg.nodeID)
 
 				By("Verifying the created node was returned")
 				Expect(node).To(Equal(
-					&cce.Node{
-						ID:         nodeID,
-						Name:       "Test Node 1",
-						Location:   "Localhost port 8082",
-						Serial:     "ABC-123",
-						GRPCTarget: "127.0.0.1:8082",
+					&cce.NodeResp{
+						Node: cce.Node{
+							ID:       nodeCfg.nodeID,
+							Name:     "Test Node 1",
+							Location: "Localhost port 8082",
+							Serial:   nodeCfg.serial,
+						},
+						NetworkInterfaces: []*cce.NetworkInterface{
+							{
+								ID:                "if0",
+								Description:       "interface0",
+								Driver:            "kernel",
+								Type:              "none",
+								MACAddress:        "mac0",
+								VLAN:              0,
+								Zones:             nil,
+								FallbackInterface: "",
+							},
+							{
+								ID:                "if1",
+								Description:       "interface1",
+								Driver:            "kernel",
+								Type:              "none",
+								MACAddress:        "mac1",
+								VLAN:              1,
+								Zones:             nil,
+								FallbackInterface: "",
+							},
+							{
+								ID:                "if2",
+								Description:       "interface2",
+								Driver:            "kernel",
+								Type:              "none",
+								MACAddress:        "mac2",
+								VLAN:              2,
+								Zones:             nil,
+								FallbackInterface: "",
+							},
+							{
+								ID:                "if3",
+								Description:       "interface3",
+								Driver:            "kernel",
+								Type:              "none",
+								MACAddress:        "mac3",
+								VLAN:              3,
+								Zones:             nil,
+								FallbackInterface: "",
+							},
+						},
 					},
 				))
 			},
@@ -219,20 +246,29 @@ var _ = Describe("/nodes", func() {
 
 	Describe("PATCH /nodes", func() {
 		var (
-			nodeID string
+			nodeCfg *nodeConfig
 		)
 
 		BeforeEach(func() {
-			nodeID = postNodes()
+			clearGRPCTargetsTable()
+			nodeCfg = createAndRegisterNode()
 		})
 
 		DescribeTable("204 No Content",
-			func(reqStr string, expectedNode *cce.Node) {
+			func(reqStr string, expectedNodeResp *cce.NodeResp) {
 				By("Sending a PATCH /nodes request")
+				switch strings.Count(reqStr, "%s") {
+				case 1:
+					reqStr = fmt.Sprintf(reqStr, nodeCfg.nodeID)
+				case 5:
+					trafficPolicyID := postTrafficPolicies()
+					reqStr = fmt.Sprintf(reqStr, nodeCfg.nodeID, trafficPolicyID, trafficPolicyID, trafficPolicyID,
+						trafficPolicyID)
+				}
 				resp, err := apiCli.Patch(
 					"http://127.0.0.1:8080/nodes",
 					"application/json",
-					strings.NewReader(fmt.Sprintf(reqStr, nodeID)))
+					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -240,14 +276,116 @@ var _ = Describe("/nodes", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
 				By("Getting the updated node")
-				updatedNode := getNode(nodeID)
+				updatedNodeResp := getNode(nodeCfg.nodeID)
 
 				By("Verifying the node was updated")
-				expectedNode.SetID(nodeID)
-				Expect(updatedNode).To(Equal(expectedNode))
+				expectedNodeResp.SetID(nodeCfg.nodeID)
+				Expect(updatedNodeResp).To(Equal(expectedNodeResp))
 			},
 			Entry(
-				"PATCH /nodes",
+				"PATCH /nodes with network interfaces",
+				`
+				[
+					{
+						"id": "%s",
+						"name": "node123456",
+						"location": "smart edge lab",
+						"serial": "abc123",
+						"network_interfaces": [
+							{
+								"id": "if0",
+								"description": "interface0",
+								"driver": "userspace",
+								"type": "upstream",
+								"mac_address": "mac0",
+								"vlan": 50,
+								"zones": null,
+								"fallback_interface": ""
+							},
+							{
+								"id": "if1",
+								"description": "interface1",
+								"driver": "kernel",
+								"type": "none",
+								"mac_address": "mac1",
+								"vlan": 1,
+								"zones": null,
+								"fallback_interface": ""
+							},
+							{
+								"id": "if2",
+								"description": "interface2",
+								"driver": "kernel",
+								"type": "none",
+								"mac_address": "mac2",
+								"vlan": 2,
+								"zones": null,
+								"fallback_interface": ""
+							},
+							{
+								"id": "if3",
+								"description": "interface3",
+								"driver": "kernel",
+								"type": "none",
+								"mac_address": "mac3",
+								"vlan": 3,
+								"zones": null,
+								"fallback_interface": ""
+							}
+						]
+					}
+				]`,
+				&cce.NodeResp{
+					Node: cce.Node{
+						Name:     "node123456",
+						Location: "smart edge lab",
+						Serial:   "abc123",
+					},
+					NetworkInterfaces: []*cce.NetworkInterface{
+						{
+							ID:                "if0",
+							Description:       "interface0",
+							Driver:            "userspace",
+							Type:              "upstream",
+							MACAddress:        "mac0",
+							VLAN:              50,
+							Zones:             nil,
+							FallbackInterface: "",
+						},
+						{
+							ID:                "if1",
+							Description:       "interface1",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac1",
+							VLAN:              1,
+							Zones:             nil,
+							FallbackInterface: "",
+						},
+						{
+							ID:                "if2",
+							Description:       "interface2",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac2",
+							VLAN:              2,
+							Zones:             nil,
+							FallbackInterface: "",
+						},
+						{
+							ID:                "if3",
+							Description:       "interface3",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac3",
+							VLAN:              3,
+							Zones:             nil,
+							FallbackInterface: "",
+						},
+					},
+				}),
+			Entry(
+				"PATCH /nodes without network interfaces",
 				`
 				[
 					{
@@ -255,12 +393,134 @@ var _ = Describe("/nodes", func() {
 						"name": "node123456",
 						"location": "smart edge lab",
 						"serial": "abc123"
-						}
+					}
 				]`,
-				&cce.Node{
-					Name:     "node123456",
-					Location: "smart edge lab",
-					Serial:   "abc123",
+				&cce.NodeResp{
+					Node: cce.Node{
+						Name:     "node123456",
+						Location: "smart edge lab",
+						Serial:   "abc123",
+					},
+					NetworkInterfaces: []*cce.NetworkInterface{
+						{
+							ID:                "if0",
+							Description:       "interface0",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac0",
+							VLAN:              0,
+							Zones:             nil,
+							FallbackInterface: "",
+						},
+						{
+							ID:                "if1",
+							Description:       "interface1",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac1",
+							VLAN:              1,
+							Zones:             nil,
+							FallbackInterface: "",
+						},
+						{
+							ID:                "if2",
+							Description:       "interface2",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac2",
+							VLAN:              2,
+							Zones:             nil,
+							FallbackInterface: "",
+						},
+						{
+							ID:                "if3",
+							Description:       "interface3",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac3",
+							VLAN:              3,
+							Zones:             nil,
+							FallbackInterface: "",
+						},
+					},
+				}),
+			Entry(
+				"PATCH /nodes with traffic policies",
+				`
+				[
+					{
+						"id": "%s",
+						"name": "node123456",
+						"location": "smart edge lab",
+						"serial": "abc123",
+						"traffic_policies": [
+							{
+								"network_interface_id": "if0",
+								"traffic_policy_id": "%s"
+							},
+							{
+								"network_interface_id": "if1",
+								"traffic_policy_id": "%s"
+							},
+							{
+								"network_interface_id": "if2",
+								"traffic_policy_id": "%s"
+							},
+							{
+								"network_interface_id": "if3",
+								"traffic_policy_id": "%s"
+							}
+						]
+					}
+				]`,
+				&cce.NodeResp{
+					Node: cce.Node{
+						Name:     "node123456",
+						Location: "smart edge lab",
+						Serial:   "abc123",
+					},
+					NetworkInterfaces: []*cce.NetworkInterface{
+						{
+							ID:                "if0",
+							Description:       "interface0",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac0",
+							VLAN:              0,
+							Zones:             nil,
+							FallbackInterface: "",
+						},
+						{
+							ID:                "if1",
+							Description:       "interface1",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac1",
+							VLAN:              1,
+							Zones:             nil,
+							FallbackInterface: "",
+						},
+						{
+							ID:                "if2",
+							Description:       "interface2",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac2",
+							VLAN:              2,
+							Zones:             nil,
+							FallbackInterface: "",
+						},
+						{
+							ID:                "if3",
+							Description:       "interface3",
+							Driver:            "kernel",
+							Type:              "none",
+							MACAddress:        "mac3",
+							VLAN:              3,
+							Zones:             nil,
+							FallbackInterface: "",
+						},
+					},
 				}),
 		)
 
@@ -268,7 +528,7 @@ var _ = Describe("/nodes", func() {
 			func(reqStr string, expectedResp string) {
 				By("Sending a PATCH /nodes request")
 				if strings.Contains(reqStr, "%s") {
-					reqStr = fmt.Sprintf(reqStr, nodeID)
+					reqStr = fmt.Sprintf(reqStr, nodeCfg.nodeID)
 				}
 				resp, err := apiCli.Patch(
 					"http://127.0.0.1:8080/nodes",
@@ -330,19 +590,153 @@ var _ = Describe("/nodes", func() {
 				]`,
 				"Validation failed: serial cannot be empty"),
 		)
+
+		DescribeTable("404 Not Found",
+			func(reqStr string, expectedResp string) {
+				By("Sending a PATCH /nodes request")
+				resp, err := apiCli.Patch(
+					"http://127.0.0.1:8080/nodes",
+					"application/json",
+					strings.NewReader(fmt.Sprintf(reqStr, nodeCfg.nodeID)))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 404 Not Found")
+				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying the response body")
+				Expect(string(body)).To(Equal(expectedResp))
+			},
+			Entry("PATCH /nodes with traffic policies and invalid traffic_policy_id",
+				`
+				[
+					{
+						"id": "%s",
+						"name": "node123",
+						"location": "smart edge lab",
+						"serial": "abc123",
+						"traffic_policies": [
+							{
+								"network_interface_id": "if0",
+								"traffic_policy_id": "2886fc50-58a0-4dad-9853-5e0a5310a294"
+							}
+						]
+					}
+				]`,
+				"traffic policy 2886fc50-58a0-4dad-9853-5e0a5310a294 not found"),
+			Entry(
+				"PATCH /nodes with network interfaces",
+				`
+				[
+					{
+						"id": "%s",
+						"name": "node123456",
+						"location": "smart edge lab",
+						"serial": "abc123",
+						"network_interfaces": [
+							{
+								"id": "if03",
+								"description": "interface0",
+								"driver": "userspace",
+								"type": "upstream",
+								"mac_address": "mac0",
+								"vlan": 50,
+								"zones": null,
+								"fallback_interface": ""
+							},
+							{
+								"id": "if1",
+								"description": "interface1",
+								"driver": "kernel",
+								"type": "none",
+								"mac_address": "mac1",
+								"vlan": 1,
+								"zones": null,
+								"fallback_interface": ""
+							},
+							{
+								"id": "if2",
+								"description": "interface2",
+								"driver": "kernel",
+								"type": "none",
+								"mac_address": "mac2",
+								"vlan": 2,
+								"zones": null,
+								"fallback_interface": ""
+							},
+							{
+								"id": "if3",
+								"description": "interface3",
+								"driver": "kernel",
+								"type": "none",
+								"mac_address": "mac3",
+								"vlan": 3,
+								"zones": null,
+								"fallback_interface": ""
+							}
+						]
+					}
+				]`,
+				"Network Interface if03 not found"),
+		)
+
+		DescribeTable("500 Internal server error",
+			func(reqStr string, expectedResp string) {
+				By("Sending a PATCH /nodes request")
+				if strings.Contains(reqStr, "%s") {
+					reqStr = fmt.Sprintf(reqStr, nodeCfg.nodeID)
+				}
+				resp, err := apiCli.Patch(
+					"http://127.0.0.1:8080/nodes",
+					"application/json",
+					strings.NewReader(reqStr))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 400 Bad Request")
+				Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying the response body")
+				Expect(string(body)).To(Equal(expectedResp))
+			},
+			Entry("PATCH /nodes without all interfaces",
+				`
+				[
+					{
+						"id": "%s",
+						"name": "node123456",
+						"location": "smart edge lab",
+						"serial": "abc123",
+						"network_interfaces": [
+							{
+								"id": "if0",
+								"description": "interface0",
+								"driver": "userspace",
+								"type": "upstream",
+								"mac_address": "mac0",
+								"vlan": 50,
+								"zones": null,
+								"fallback_interface": ""
+							}
+						]
+					}
+				]`,
+				"error bulk updating network interfaces: rpc error: code = FailedPrecondition desc = Network Interface if1 missing from request"), //nolint:lll
+		)
 	})
 
 	Describe("DELETE /nodes/{id}", func() {
-		var (
-			nodeID string
-		)
-
-		BeforeEach(func() {
-			nodeID = postNodes()
-		})
-
 		DescribeTable("200 OK",
 			func() {
+				nodeID := postNodesSerial("abc-123")
 				By("Sending a DELETE /nodes/{id} request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s",
@@ -382,6 +776,53 @@ var _ = Describe("/nodes", func() {
 			Entry(
 				"DELETE /nodes/{id} with nonexistent ID",
 				uuid.New()),
+		)
+
+		DescribeTable("422 Unprocessable Entity",
+			func(resource, expectedResp string) {
+				// we need a new nodeCfg because postNodesDNSConfigs has a duplicate check on node_id
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				switch resource {
+				case "nodes_apps":
+					postNodesApps(
+						nodeCfg.nodeID,
+						postApps("container"))
+				case "nodes_dns_configs":
+					postNodesDNSConfigs(
+						nodeCfg.nodeID,
+						postDNSConfigs())
+				}
+
+				By("Sending a DELETE /nodes/{id} request")
+				resp, err := apiCli.Delete(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s",
+						nodeCfg.nodeID))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 422 response")
+				Expect(resp.StatusCode).To(Equal(
+					http.StatusUnprocessableEntity))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying the response body")
+				Expect(string(body)).To(Equal(
+					fmt.Sprintf(expectedResp, nodeCfg.nodeID)))
+			},
+			Entry(
+				"DELETE /nodes/{id} with nodes_apps record",
+				"nodes_apps",
+				"cannot delete node_id %s: record in use in nodes_apps",
+			),
+			Entry(
+				"DELETE /nodes/{id} with nodes_dns_configs record",
+				"nodes_dns_configs",
+				"cannot delete node_id %s: record in use in nodes_dns_configs",
+			),
 		)
 	})
 })

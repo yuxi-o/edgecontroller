@@ -56,12 +56,13 @@ func NewGorilla( //nolint:gocyclo
 
 		// entity routes handlers
 		nodesHandler: &handler{
-			model: &cce.Node{},
+			model:    &cce.Node{},
+			reqModel: &cce.NodeReq{},
 
-			// TODO (nice to have) add checkDBDelete func + tests for nodes_apps, and nodes_dns_configs
-			// checkDBDelete: checkDBDeleteNodes,
+			checkDBDelete: checkDBDeleteNodes,
 
-			// TODO add any handlers necessary + tests
+			handleGet:    handleGetNodes,
+			handleUpdate: handleUpdateNodes,
 		},
 		appsHandler: &handler{
 			model:         &cce.App{},
@@ -86,8 +87,7 @@ func NewGorilla( //nolint:gocyclo
 			reqModel: &cce.NodeAppReq{},
 
 			checkDBCreate: checkDBCreateNodesApps,
-			// TODO (nice to have) add checkDBDelete func + tests for nodes_apps_traffic_policies
-			// checkDBDelete: checkDBDeleteNodesApps,
+			checkDBDelete: checkDBDeleteNodesApps,
 
 			handleCreate: handleCreateNodesApps,
 			handleGet:    handleGetNodesApps,

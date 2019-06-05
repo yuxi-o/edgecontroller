@@ -40,6 +40,10 @@ func newAppPolicyService(
 	}
 }
 
+func (s *appPolicyService) reset() {
+	s.policies = make(map[string]*pb.TrafficPolicy)
+}
+
 func (s *appPolicyService) Set(
 	ctx context.Context,
 	policy *pb.TrafficPolicy,

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.30] - 2019-06-04
+### Added
+- Node Interfaces and Interface Traffic Policies
+
 ## [0.0.29] - 2019-06-03
 ### Added
 - GetContainerByIP gRPC endpoint

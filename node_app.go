@@ -30,12 +30,14 @@ type NodeApp struct {
 }
 
 // NodeAppReq is a NodeApp request.
+// TODO add a String() method and test for this struct.
 type NodeAppReq struct {
 	NodeApp
 	Cmd string `json:"cmd,omitempty"`
 }
 
 // NodeAppResp is a NodeApp response.
+// TODO add a String() method and test for this struct.
 type NodeAppResp struct {
 	NodeApp
 	Status string `json:"status"`
@@ -77,6 +79,7 @@ func (n_a *NodeApp) Validate() error {
 }
 
 // Validate validates the request model.
+// TODO add a test for this method.
 func (n_ar *NodeAppReq) Validate() error {
 	if err := n_ar.NodeApp.Validate(); err != nil {
 		return err

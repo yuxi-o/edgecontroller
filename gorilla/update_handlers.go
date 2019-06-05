@@ -16,17 +16,61 @@ package gorilla
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 
+	"github.com/pkg/errors"
 	cce "github.com/smartedgemec/controller-ce"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-func handleUpdateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Validatable) error { // nolint: gocyclo
-	nodeCC, err := connectNode(ctx, ps, &e.(*cce.NodeAppReq).NodeApp)
+func handleUpdateNodes(
+	ctx context.Context,
+	ps cce.PersistenceService,
+	e cce.Validatable,
+) (statusCode int, err error) {
+	nodeCC, err := connectNode(ctx, ps, &e.(*cce.NodeReq).Node)
 	if err != nil {
-		return err
+		return http.StatusInternalServerError, err
 	}
 
-	log.Debug(nodeCC.Node)
+	if e.(*cce.NodeReq).NetworkInterfaces != nil {
+		if err := nodeCC.IfaceSvcCli.BulkUpdate(ctx, e.(*cce.NodeReq).NetworkInterfaces); err != nil {
+			if s, ok := status.FromError(errors.Cause(err)); ok {
+				if s.Code() == codes.NotFound {
+					return http.StatusNotFound, errors.New(s.Message())
+				}
+			}
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	for _, nitp := range e.(*cce.NodeReq).TrafficPolicies {
+		tp, err := ps.Read(ctx, nitp.TrafficPolicyID, &cce.TrafficPolicy{})
+		if err != nil {
+			return http.StatusInternalServerError, err
+		}
+		if tp == nil {
+			return http.StatusNotFound, fmt.Errorf("traffic policy %s not found", nitp.TrafficPolicyID)
+		}
+		if err := nodeCC.IfacePolicySvcCli.Set(ctx, nitp.NetworkInterfaceID, tp.(*cce.TrafficPolicy)); err != nil {
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	return 0, nil
+}
+
+func handleUpdateNodesApps( //nolint: gocyclo
+	ctx context.Context,
+	ps cce.PersistenceService,
+	e cce.Validatable,
+) (statusCode int, err error) {
+	nodeCC, err := connectNode(ctx, ps, &e.(*cce.NodeAppReq).NodeApp)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 
 	ctrl := getController(ctx)
 
@@ -41,7 +85,7 @@ func handleUpdateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 			err = nodeCC.AppLifeSvcCli.Restart(ctx, e.(*cce.NodeAppReq).AppID)
 		}
 		if err != nil {
-			return err
+			return http.StatusInternalServerError, err
 		}
 	case cce.OrchestrationModeKubernetes:
 		switch e.(*cce.NodeAppReq).Cmd {
@@ -56,8 +100,9 @@ func handleUpdateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 				e.(*cce.NodeAppReq).NodeApp.NodeID, e.(*cce.NodeAppReq).NodeApp.AppID)
 		}
 		if err != nil {
-			return err
+			return http.StatusInternalServerError, err
 		}
 	}
-	return nil
+
+	return http.StatusInternalServerError, err
 }

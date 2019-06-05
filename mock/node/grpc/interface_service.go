@@ -27,47 +27,55 @@ type interfaceService struct {
 	nis []*pb.NetworkInterface
 }
 
-func newInterfaceService() *interfaceService {
-	return &interfaceService{
-		nis: []*pb.NetworkInterface{
-			{
-				Id:          "if0",
-				Description: "interface0",
-				Driver:      pb.NetworkInterface_KERNEL,
-				Type:        pb.NetworkInterface_NONE,
-				MacAddress:  "mac0",
-				Vlan:        0,
-				Zones:       nil,
-			},
-			{
-				Id:          "if1",
-				Description: "interface1",
-				Driver:      pb.NetworkInterface_KERNEL,
-				Type:        pb.NetworkInterface_NONE,
-				MacAddress:  "mac1",
-				Vlan:        1,
-				Zones:       nil,
-			},
-			{
-				Id:          "if2",
-				Description: "interface2",
-				Driver:      pb.NetworkInterface_KERNEL,
-				Type:        pb.NetworkInterface_NONE,
-				MacAddress:  "mac2",
-				Vlan:        2,
-				Zones:       nil,
-			},
-			{
-				Id:          "if3",
-				Description: "interface3",
-				Driver:      pb.NetworkInterface_KERNEL,
-				Type:        pb.NetworkInterface_NONE,
-				MacAddress:  "mac3",
-				Vlan:        3,
-				Zones:       nil,
-			},
+func ifs() []*pb.NetworkInterface {
+	return []*pb.NetworkInterface{
+		{
+			Id:          "if0",
+			Description: "interface0",
+			Driver:      pb.NetworkInterface_KERNEL,
+			Type:        pb.NetworkInterface_NONE,
+			MacAddress:  "mac0",
+			Vlan:        0,
+			Zones:       nil,
+		},
+		{
+			Id:          "if1",
+			Description: "interface1",
+			Driver:      pb.NetworkInterface_KERNEL,
+			Type:        pb.NetworkInterface_NONE,
+			MacAddress:  "mac1",
+			Vlan:        1,
+			Zones:       nil,
+		},
+		{
+			Id:          "if2",
+			Description: "interface2",
+			Driver:      pb.NetworkInterface_KERNEL,
+			Type:        pb.NetworkInterface_NONE,
+			MacAddress:  "mac2",
+			Vlan:        2,
+			Zones:       nil,
+		},
+		{
+			Id:          "if3",
+			Description: "interface3",
+			Driver:      pb.NetworkInterface_KERNEL,
+			Type:        pb.NetworkInterface_NONE,
+			MacAddress:  "mac3",
+			Vlan:        3,
+			Zones:       nil,
 		},
 	}
+}
+
+func newInterfaceService() *interfaceService {
+	return &interfaceService{
+		nis: ifs(),
+	}
+}
+
+func (s *interfaceService) reset() {
+	s.nis = ifs()
 }
 
 func (s *interfaceService) Update(
@@ -89,11 +97,21 @@ func (s *interfaceService) BulkUpdate(
 	ctx context.Context,
 	nis *pb.NetworkInterfaces,
 ) (*empty.Empty, error) {
+	// make sure all interfaces passed in exist
 	for _, ni := range nis.NetworkInterfaces {
 		if s.find(ni.Id) == nil {
 			return nil, status.Errorf(
 				codes.NotFound,
 				"Network Interface %s not found", ni.Id)
+		}
+	}
+
+	// make sure all interfaces are passed in
+	for _, ni := range s.nis {
+		if findInPB(nis.NetworkInterfaces, ni.Id) == len(nis.NetworkInterfaces) {
+			return nil, status.Errorf(
+				codes.FailedPrecondition,
+				"Network Interface %s missing from request", ni.Id)
 		}
 	}
 
@@ -137,6 +155,16 @@ func (s *interfaceService) find(id string) *pb.NetworkInterface {
 	}
 
 	return nil
+}
+
+func findInPB(pbNIs []*pb.NetworkInterface, id string) int {
+	for i, pbNI := range pbNIs {
+		if pbNI.Id == id {
+			return i
+		}
+	}
+
+	return len(pbNIs)
 }
 
 func (s *interfaceService) findIndex(id string) int {

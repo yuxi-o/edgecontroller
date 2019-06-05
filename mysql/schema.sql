@@ -27,6 +27,18 @@ CREATE TABLE nodes (
     entity JSON
 );
 
+-- the grpc target for a node may or may not exist yet, so we specify ON DELETE CASCADE to handle deletion without
+-- requiring extra logic in the code
+CREATE TABLE node_grpc_targets (
+    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
+    node_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.node_id') STORED,
+    grpc_target VARCHAR(15) GENERATED ALWAYS AS (entity->>'$.grpc_target') STORED,
+    entity JSON,
+    FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE,
+    UNIQUE KEY (node_id),
+    UNIQUE KEY (grpc_target)
+);
+
 CREATE TABLE apps (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
     type VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.type') STORED,
@@ -87,6 +99,20 @@ CREATE TABLE nodes_dns_configs (
     FOREIGN KEY (node_id) REFERENCES nodes(id),
     FOREIGN KEY (dns_config_id) REFERENCES dns_configs(id),
     UNIQUE KEY (node_id)
+);
+
+-- nodes (network_interfaces) x traffic_policies
+CREATE TABLE nodes_network_interfaces_traffic_policies (
+    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
+    node_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.node_id') STORED,
+    network_interface_id VARCHAR(36) GENERATED ALWAYS AS
+        (entity->>'$.network_interface_id') STORED,
+    traffic_policy_id VARCHAR(36) GENERATED ALWAYS AS
+        (entity->>'$.traffic_policy_id') STORED,
+    entity JSON,
+    FOREIGN KEY (node_id) REFERENCES nodes(id),
+    FOREIGN KEY (traffic_policy_id) REFERENCES traffic_policies(id),
+    UNIQUE KEY (node_id, network_interface_id)
 );
 
 -- ---------------------

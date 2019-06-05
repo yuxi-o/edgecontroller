@@ -691,8 +691,11 @@ var _ = Describe("/apps", func() {
 						postDNSConfigs(),
 						containerAppID)
 				case "nodes_apps":
+					clearGRPCTargetsTable()
+					nodeCfg := createAndRegisterNode()
+					containerAppID = postApps("container")
 					postNodesApps(
-						postNodes(),
+						nodeCfg.nodeID,
 						containerAppID)
 				}
 

@@ -34,13 +34,16 @@ import (
 
 var _ = Describe("/nodes_apps for k8s", func() {
 	var (
-		nodeID string
-		appID  string
+		nodeCfg *nodeConfig
+		nodeID  string
+		appID   string
 	)
 
 	BeforeEach(func() {
 		// clean
-		nodeID = postNodes()
+		clearGRPCTargetsTable()
+		nodeCfg = createAndRegisterNode()
+		nodeID = nodeCfg.nodeID
 
 		// label node with correct id
 		Expect(exec.Command("kubectl",
@@ -128,12 +131,11 @@ var _ = Describe("/nodes_apps for k8s", func() {
 			func() {
 				By("Verifying the 2 created node apps were deployed")
 				count := 0
-				Eventually(func() []*cce.NodeAppResp {
+				Eventually(func() *cce.NodeAppResp {
 					count++
 					By(fmt.Sprintf("Attempt #%d: Verifying if k8s deployment status is deployed", count))
-					nodeAppsResp := getNodeApps(nodeID)
-					return nodeAppsResp
-				}, 15*time.Second, 1*time.Second).Should(ContainElement(
+					return getNodeApp(nodeAppID)
+				}, 15*time.Second, 1*time.Second).Should(Equal(
 					&cce.NodeAppResp{
 						NodeApp: cce.NodeApp{
 							ID:     nodeAppID,
@@ -145,12 +147,11 @@ var _ = Describe("/nodes_apps for k8s", func() {
 				))
 
 				count = 0
-				Eventually(func() []*cce.NodeAppResp {
+				Eventually(func() *cce.NodeAppResp {
 					count++
 					By(fmt.Sprintf("Attempt #%d: Verifying if k8s deployment status is deployed", count))
-					nodeAppsResp := getNodeApps(nodeID)
-					return nodeAppsResp
-				}, 15*time.Second, 1*time.Second).Should(ContainElement(
+					return getNodeApp(nodeApp2ID)
+				}, 15*time.Second, 1*time.Second).Should(Equal(
 					&cce.NodeAppResp{
 						NodeApp: cce.NodeApp{
 							ID:     nodeApp2ID,

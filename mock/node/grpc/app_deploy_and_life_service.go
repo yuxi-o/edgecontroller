@@ -39,6 +39,11 @@ func newAppDeployLifeService() *appDeployLifeService {
 	}
 }
 
+func (s *appDeployLifeService) reset() {
+	s.containerApps = make(map[string]*pb.Application)
+	s.vmApps = make(map[string]*pb.Application)
+}
+
 func (s *appDeployLifeService) DeployContainer(
 	ctx context.Context,
 	containerApp *pb.Application,

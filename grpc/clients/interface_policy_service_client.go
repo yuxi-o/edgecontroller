@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/grpc"
 	"github.com/smartedgemec/controller-ce/pb"
 )
@@ -39,14 +40,27 @@ func NewInterfacePolicyServiceClient(
 // Set sets the traffic policy.
 func (c *InterfacePolicyServiceClient) Set(
 	ctx context.Context,
-	interfacePolicy *pb.TrafficPolicy,
+	interfaceID string,
+	interfacePolicy *cce.TrafficPolicy,
 ) error {
 	_, err := c.PBCli.Set(
 		ctx,
-		interfacePolicy)
+		toPBTrafficPolicy(interfaceID, interfacePolicy))
 
 	if err != nil {
 		return errors.Wrap(err, "error setting interface policy")
+	}
+
+	return nil
+}
+
+// Delete deletes an interface's traffic policy. This resets it to the default policy.
+func (c *InterfacePolicyServiceClient) Delete(
+	ctx context.Context,
+	appID string,
+) error {
+	if err := c.Set(ctx, appID, nil); err != nil {
+		return errors.Wrap(err, "error deleting interface policy")
 	}
 
 	return nil

@@ -47,6 +47,10 @@ func main() {
 	defer close(sigChan)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
+	abrtChan := make(chan os.Signal, 1)
+	defer close(abrtChan)
+	signal.Notify(abrtChan, syscall.SIGABRT)
+
 	// Create the mock node
 	mockNode := nodegmock.NewMockNode()
 
@@ -63,9 +67,18 @@ func main() {
 	// Shut down the server gracefully
 	go func() {
 		<-sigChan
-		log.Infof("%s: shutting down", name)
+		log.Info(name, ": shutting down")
 
 		server.GracefulStop()
+	}()
+
+	go func() {
+		for {
+			<-abrtChan
+			log.Info(name, ": resetting")
+
+			mockNode.Reset()
+		}
 	}()
 
 	// Start the listener

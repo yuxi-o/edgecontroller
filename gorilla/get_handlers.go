@@ -20,13 +20,33 @@ import (
 	cce "github.com/smartedgemec/controller-ce"
 )
 
+func handleGetNodes(
+	ctx context.Context,
+	ps cce.PersistenceService,
+	e cce.Persistable,
+) (cce.RespEntity, error) {
+	nodeCC, err := connectNode(ctx, ps, e.(*cce.Node))
+
+	if err != nil {
+		return nil, err
+	}
+
+	nis, err := nodeCC.IfaceSvcCli.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cce.NodeResp{
+		Node:              *e.(*cce.Node),
+		NetworkInterfaces: nis,
+	}, nil
+}
+
 func handleGetNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Persistable) (cce.RespEntity, error) {
 	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
 	if err != nil {
 		return nil, err
 	}
-
-	log.Debug(nodeCC.Node)
 
 	ctrl := getController(ctx)
 

@@ -29,11 +29,10 @@ var _ = Describe("Entities: Node", func() {
 
 	BeforeEach(func() {
 		node = &cce.Node{
-			ID:         "48606c73-3905-47e0-864f-14bc7466f5bb",
-			Name:       "test-node",
-			Location:   "test-location",
-			Serial:     "test-serial",
-			GRPCTarget: "127.0.0.1:8082",
+			ID:       "48606c73-3905-47e0-864f-14bc7466f5bb",
+			Name:     "test-node",
+			Location: "test-location",
+			Serial:   "test-serial",
 		}
 	})
 
@@ -57,6 +56,13 @@ var _ = Describe("Entities: Node", func() {
 
 			By("Getting the updated ID")
 			Expect(node.ID).To(Equal("456"))
+		})
+	})
+
+	Describe("GetNodeID", func() {
+		It("Should return the node ID", func() {
+			Expect(node.GetNodeID()).To(Equal(
+				"48606c73-3905-47e0-864f-14bc7466f5bb"))
 		})
 	})
 
@@ -90,7 +96,6 @@ Node[
     Name: test-node
     Location: test-location
     Serial: test-serial
-    GRPCTarget: 127.0.0.1:8082
 ]`,
 			)))
 		})

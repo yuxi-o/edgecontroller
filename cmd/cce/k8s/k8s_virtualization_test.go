@@ -16,13 +16,8 @@ package k8s_test
 
 import (
 	"context"
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/md5"
-	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"net"
@@ -42,69 +37,20 @@ var _ = Describe("Kubernetes Read Metadata Service", func() {
 	var (
 		cvaSvcCli pb.ControllerVirtualizationAgentClient
 		nodeID    string
+		nodeCfg   *nodeConfig
 	)
 
 	BeforeEach(func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
-		defer cancel()
+		clearGRPCTargetsTable()
+		nodeCfg = createAndRegisterNode()
+		nodeID = nodeCfg.nodeID
 
-		caPool := x509.NewCertPool()
-		Expect(caPool.AppendCertsFromPEM(controllerRootPEM)).To(BeTrue(),
-			"should load Controller self-signed root into trust pool")
-		tlsCreds := credentials.NewClientTLSFromCert(caPool, cceGRPC.EnrollmentSNI)
-
-		authConn, err := grpc.DialContext(
-			ctx,
-			fmt.Sprintf("%s:%d", "127.0.0.1", 8081),
-			grpc.WithTransportCredentials(tlsCreds),
-			grpc.WithBlock())
-		Expect(err).ToNot(HaveOccurred(), "Dial failed: %v", err)
-		authSvcCli := pb.NewAuthServiceClient(authConn)
-
-		key, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-		Expect(err).ToNot(HaveOccurred())
-
-		By("Creating a certificate signing request with private key")
-		csrDER, err := x509.CreateCertificateRequest(
-			rand.Reader,
-			&x509.CertificateRequest{},
-			key,
-		)
-		Expect(err).ToNot(HaveOccurred())
-		certReq, err := x509.ParseCertificateRequest(csrDER)
-		Expect(err).ToNot(HaveOccurred())
-
-		By("Encoding certificate signing request in PEM")
-		csrPEM := pem.EncodeToMemory(
-			&pem.Block{
-				Type:  "CERTIFICATE REQUEST",
-				Bytes: csrDER,
-			})
-
-		By("Pre-approving Node by serial")
-		hash := md5.Sum(certReq.RawSubjectPublicKeyInfo)
-		serial := base64.RawURLEncoding.EncodeToString(hash[:])
-
-		approveNodeEnrollment(serial)
-
-		ctx, cancel = context.WithTimeout(context.Background(), 4*time.Second)
-		defer cancel()
-
-		By("Requesting credentials from auth service")
-		creds, err := authSvcCli.RequestCredentials(
-			ctx,
-			&pb.Identity{
-				Csr: string(csrPEM),
-			},
-		)
-		Expect(err).ToNot(HaveOccurred())
-
-		block, _ := pem.Decode([]byte(creds.Certificate))
+		block, _ := pem.Decode([]byte(nodeCfg.creds.Certificate))
 		if block == nil {
 			Fail("failed to parse certificate PEM")
 		}
 
-		certBlock, _ := pem.Decode([]byte(creds.Certificate))
+		certBlock, _ := pem.Decode([]byte(nodeCfg.creds.Certificate))
 		Expect(certBlock).NotTo(BeNil(), "error decoding certificate in enrollment response")
 
 		x509Cert, err := x509.ParseCertificate(certBlock.Bytes)
@@ -112,7 +58,11 @@ var _ = Describe("Kubernetes Read Metadata Service", func() {
 
 		nodeID = x509Cert.Subject.CommonName
 
-		cert := tls.Certificate{Certificate: [][]byte{certBlock.Bytes}, PrivateKey: key}
+		cert := tls.Certificate{Certificate: [][]byte{certBlock.Bytes}, PrivateKey: nodeCfg.key}
+
+		caPool := x509.NewCertPool()
+		Expect(caPool.AppendCertsFromPEM(controllerRootPEM)).To(BeTrue(),
+			"should load Controller self-signed root into trust pool")
 
 		t := &tls.Config{
 			RootCAs:      caPool,
@@ -120,7 +70,7 @@ var _ = Describe("Kubernetes Read Metadata Service", func() {
 			ServerName:   cceGRPC.SNI,
 		}
 
-		ctx, cancel = context.WithTimeout(context.Background(), 4*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 		defer cancel()
 
 		cvaConn, err := grpc.DialContext(
@@ -146,10 +96,13 @@ var _ = Describe("Kubernetes Read Metadata Service", func() {
 	})
 
 	Describe("Get Pod Information By IP", func() {
+		var (
+			appID = "99459845-422d-4b32-8395-e8f50fd34792"
+		)
 		Context("Success", func() {
 			It("Should return pod information", func() {
 				By("Deploying an application to Kubernetes")
-				deployApp(nodeID)
+				deployApp(nodeID, appID)
 
 				By("Generating IP address of the pod deployed")
 				var ip string

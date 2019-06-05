@@ -33,7 +33,6 @@ func handleDeleteNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 	if err != nil {
 		return err
 	}
-	log.Debug(nodeCC.Node)
 
 	// if kubernetes un-deploy application
 	ctrl := getController(ctx)
@@ -48,10 +47,7 @@ func handleDeleteNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 		}
 	}
 
-	if err = nodeCC.AppDeploySvcCli.Undeploy(ctx, app.GetID()); err != nil {
-		return err
-	}
-	return nil
+	return nodeCC.AppDeploySvcCli.Undeploy(ctx, app.GetID())
 }
 
 func handleDeleteNodesDNSConfigs(
@@ -70,19 +66,13 @@ func handleDeleteNodesDNSConfigs(
 		return err
 	}
 
-	log.Debug(nodeCC.Node)
-
 	for _, aRecord := range dnsConfig.(*cce.DNSConfig).ARecords {
 		if err := nodeCC.DNSSvcCli.DeleteA(ctx, aRecord); err != nil {
 			return err
 		}
 	}
 
-	if err := nodeCC.DNSSvcCli.DeleteForwarders(ctx, dnsConfig.(*cce.DNSConfig).Forwarders); err != nil {
-		return err
-	}
-
-	return nil
+	return nodeCC.DNSSvcCli.DeleteForwarders(ctx, dnsConfig.(*cce.DNSConfig).Forwarders)
 }
 
 func handleDeleteNodesAppsTrafficPolicies(
@@ -101,11 +91,5 @@ func handleDeleteNodesAppsTrafficPolicies(
 		return err
 	}
 
-	log.Debugf("Connection to node established: %+v", nodeCC.Node)
-
-	if err := nodeCC.AppPolicySvcCli.Delete(ctx, nodeApp.(*cce.NodeApp).AppID); err != nil {
-		return err
-	}
-
-	return nil
+	return nodeCC.AppPolicySvcCli.Delete(ctx, nodeApp.(*cce.NodeApp).AppID)
 }

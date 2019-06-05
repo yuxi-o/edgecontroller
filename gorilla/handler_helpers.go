@@ -16,6 +16,7 @@ package gorilla
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	cce "github.com/smartedgemec/controller-ce"
@@ -28,21 +29,31 @@ func connectNode(
 	ps cce.PersistenceService,
 	e cce.NodeEntity,
 ) (*node.ClientConn, error) {
-	n, err := ps.Read(
+	targets, err := ps.Filter(
 		ctx,
-		e.GetNodeID(),
-		&cce.Node{})
+		&cce.NodeGRPCTarget{},
+		[]cce.Filter{
+			{
+				Field: "node_id",
+				Value: e.GetNodeID(),
+			},
+		})
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not fetch node from DB")
+		return nil, errors.Wrapf(err, "could not fetch gRPC target from DB")
 	}
-	nodeCC := node.ClientConn{Node: n.(*cce.Node)}
+	// sanity check since we are about to access targets[0]
+	if len(targets) != 1 {
+		return nil, fmt.Errorf("filter returned %v", targets)
+	}
+
+	nodeCC := node.ClientConn{NodeGRPCTarget: targets[0].(*cce.NodeGRPCTarget)}
 	if err := nodeCC.Connect(ctx); err != nil {
 		log.Noticef("Could not connect to node: %v", err)
-		return nil, errors.Wrap(err, "could not connect to node: %v")
+		return nil, errors.Wrap(err, "could not connect to node")
 	}
 
-	log.Debugf("Connection to node %v established: %+v", nodeCC.Node.ID, nodeCC.Node)
-
+	log.Debugf("Connection to node %s established: %s",
+		e.GetNodeID(), nodeCC.NodeGRPCTarget.GRPCTarget)
 	return &nodeCC, nil
 }
 

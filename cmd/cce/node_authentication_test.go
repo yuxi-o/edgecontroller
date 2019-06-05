@@ -18,96 +18,34 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto/md5"
 	"crypto/rand"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
-	"fmt"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 
 	cce "github.com/smartedgemec/controller-ce"
-	cceGRPC "github.com/smartedgemec/controller-ce/grpc"
 	"github.com/smartedgemec/controller-ce/pb"
 )
 
 var _ = Describe("Node Auth Service", func() {
-	var authSvcCli pb.AuthServiceClient
-
-	BeforeEach(func() {
-		timeoutCtx, cancel := context.WithTimeout(
-			context.Background(), 2*time.Second)
-		defer cancel()
-
-		caPool := x509.NewCertPool()
-		Expect(caPool.AppendCertsFromPEM(controllerRootPEM)).To(BeTrue(),
-			"should load Controller self-signed root into trust pool")
-		tlsCreds := credentials.NewClientTLSFromCert(caPool, cceGRPC.EnrollmentSNI)
-
-		conn, err := grpc.DialContext(
-			timeoutCtx,
-			fmt.Sprintf("%s:%d", "127.0.0.1", 8081),
-			grpc.WithTransportCredentials(tlsCreds),
-			grpc.WithBlock())
-		Expect(err).ToNot(HaveOccurred(), "Dial failed: %v", err)
-
-		authSvcCli = pb.NewAuthServiceClient(conn)
-	})
-
 	Describe("RequestCredentials", func() {
 		Describe("Success", func() {
 			It("Should return auth credentials", func() {
-				By("Generating node private key")
-				key, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Creating a certificate signing request with private key")
-				csrDER, err := x509.CreateCertificateRequest(
-					rand.Reader,
-					&x509.CertificateRequest{},
-					key,
-				)
-				Expect(err).ToNot(HaveOccurred())
-				certReq, err := x509.ParseCertificateRequest(csrDER)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Encoding certificate signing request in PEM")
-				csrPEM := pem.EncodeToMemory(
-					&pem.Block{
-						Type:  "CERTIFICATE REQUEST",
-						Bytes: csrDER,
-					})
-
-				By("Pre-approving Node by serial")
-				hash := md5.Sum(certReq.RawSubjectPublicKeyInfo)
-				serial := base64.RawURLEncoding.EncodeToString(hash[:])
-
-				nodeRESTID := postNodesSerial(serial)
-
-				By("Requesting credentials from auth service")
-				credentials, err := authSvcCli.RequestCredentials(
-					context.TODO(),
-					&pb.Identity{
-						Csr: string(csrPEM),
-					},
-				)
-				Expect(err).ToNot(HaveOccurred())
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
 
 				By("Validating the returned credentials")
-				Expect(credentials).ToNot(BeNil())
-				Expect(credentials.Certificate).ToNot(BeNil())
-				Expect(credentials.CaChain).ToNot(BeEmpty())
+				Expect(nodeCfg.creds).ToNot(BeNil())
+				Expect(nodeCfg.creds.Certificate).ToNot(BeNil())
+				Expect(nodeCfg.creds.CaChain).ToNot(BeEmpty())
 
 				By("Decoding PEM-encoded client certificate")
-				certBlock, rest := pem.Decode([]byte(credentials.Certificate))
+				certBlock, rest := pem.Decode([]byte(nodeCfg.creds.Certificate))
 				Expect(certBlock).ToNot(BeNil())
 				Expect(rest).To(BeEmpty())
 
@@ -116,16 +54,16 @@ var _ = Describe("Node Auth Service", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying certificate was signed with the node's key")
-				pubKeyDER, err := x509.MarshalPKIXPublicKey(key.Public())
+				pubKeyDER, err := x509.MarshalPKIXPublicKey(nodeCfg.key.Public())
 				Expect(err).ToNot(HaveOccurred())
 				Expect(cert.RawSubjectPublicKeyInfo).To(Equal(pubKeyDER))
 
 				By("Verifying the CN is derived from the public key")
-				Expect(cert.Subject.CommonName).To(Equal(nodeRESTID))
+				Expect(cert.Subject.CommonName).To(Equal(nodeCfg.nodeID))
 
 				By("Decoding CA certificates chain to DER")
 				var chainDER []byte
-				for _, ca := range credentials.CaChain {
+				for _, ca := range nodeCfg.creds.CaChain {
 					block, _ := pem.Decode([]byte(ca))
 					Expect(block).ToNot(BeNil())
 					chainDER = append(chainDER, block.Bytes...)
@@ -140,7 +78,7 @@ var _ = Describe("Node Auth Service", func() {
 
 				By("Decoding CA certificates pool to DER")
 				var poolDER []byte
-				for _, ca := range credentials.CaPool {
+				for _, ca := range nodeCfg.creds.CaPool {
 					block, _ := pem.Decode([]byte(ca))
 					Expect(block).ToNot(BeNil())
 					poolDER = append(poolDER, block.Bytes...)
@@ -153,14 +91,13 @@ var _ = Describe("Node Auth Service", func() {
 				By("Verifying the CA pool contains the Controller CA")
 				Expect(poolCerts).To(ContainElement(chainCerts[0]))
 
-				By("Verifying the Node's gRPC target was set")
-				resp, err := apiCli.Get("http://127.0.0.1:8080/nodes/" + nodeRESTID)
+				By("Verifying the Node's serial was set")
+				resp, err := apiCli.Get("http://127.0.0.1:8080/nodes/" + nodeCfg.nodeID)
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 				var nodeResp cce.Node
 				Expect(json.NewDecoder(resp.Body).Decode(&nodeResp)).To(Succeed())
-				Expect(nodeResp.Serial).To(Equal(serial))
-				Expect(nodeResp.GRPCTarget).To(Equal("127.0.0.1:8081"))
+				Expect(nodeResp.Serial).To(Equal(nodeCfg.serial))
 			})
 		})
 	})

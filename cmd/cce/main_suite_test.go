@@ -16,35 +16,54 @@ package main_test
 
 import (
 	"bytes"
+	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/md5"
+	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
+	"database/sql"
+	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"syscall"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/grpclog"
 
 	cce "github.com/smartedgemec/controller-ce"
+	cceGRPC "github.com/smartedgemec/controller-ce/grpc"
+	"github.com/smartedgemec/controller-ce/pb"
 	"github.com/smartedgemec/controller-ce/pki"
 )
 
 const adminPass = "word"
 
 var (
-	ctrl     *gexec.Session
-	node     *gexec.Session
-	apiCli   *apiClient
+	cmd  *exec.Cmd
+	ctrl *gexec.Session
+	node *gexec.Session
+
+	authSvcCli pb.AuthServiceClient
+	apiCli     *apiClient
+
 	conf     *tls.Config
 	telemDir string
 
@@ -52,10 +71,10 @@ var (
 )
 
 var _ = BeforeSuite(func() {
-	logger := grpclog.NewLoggerV2(
-		GinkgoWriter, GinkgoWriter, GinkgoWriter)
+	logger := grpclog.NewLoggerV2(GinkgoWriter, GinkgoWriter, GinkgoWriter)
 	grpclog.SetLoggerV2(logger)
 	startup()
+	initAuthSvcCli()
 })
 
 var _ = AfterSuite(func() {
@@ -65,6 +84,26 @@ var _ = AfterSuite(func() {
 func TestApplicationClient(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Controller CE API Suite")
+}
+
+func initAuthSvcCli() {
+	timeoutCtx, cancel := context.WithTimeout(
+		context.Background(), 2*time.Second)
+	defer cancel()
+
+	caPool := x509.NewCertPool()
+	Expect(caPool.AppendCertsFromPEM(controllerRootPEM)).To(BeTrue(),
+		"should load Controller self-signed root into trust pool")
+	tlsCreds := credentials.NewClientTLSFromCert(caPool, cceGRPC.EnrollmentSNI)
+
+	conn, err := grpc.DialContext(
+		timeoutCtx,
+		net.JoinHostPort("127.0.0.1", "8081"),
+		grpc.WithTransportCredentials(tlsCreds),
+		grpc.WithBlock())
+	Expect(err).ToNot(HaveOccurred(), "Dial failed: %v", err)
+
+	authSvcCli = pb.NewAuthServiceClient(conn)
 }
 
 func startup() {
@@ -79,7 +118,7 @@ func startup() {
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Starting the controller")
-	cmd := exec.Command(exe,
+	cmd = exec.Command(exe,
 		"-log-level", "debug",
 		"-dsn", "root:beer@tcp(:8083)/controller_ce",
 		"-httpPort", "8080",
@@ -145,6 +184,30 @@ func shutdown() {
 		By("Cleaning up telemetry output")
 		Expect(os.RemoveAll(telemDir)).To(Succeed())
 	}
+}
+
+func clearGRPCTargetsTable() {
+	By("Connecting to the database")
+	db, err := sql.Open("mysql", "root:beer@tcp(:8083)/controller_ce?multiStatements=true")
+	Expect(err).ToNot(HaveOccurred())
+
+	defer func() {
+		Expect(db.Close()).To(Succeed())
+	}()
+
+	By("Pinging the database")
+	err = db.Ping()
+	Expect(err).ToNot(HaveOccurred())
+
+	timeoutCtx, cancel := context.WithTimeout(
+		context.Background(), 2*time.Second)
+	defer cancel()
+
+	By("Executing the delete query")
+	_, err = db.ExecContext(
+		timeoutCtx,
+		"DELETE FROM node_grpc_targets")
+	Expect(err).ToNot(HaveOccurred())
 }
 
 func authToken() string {
@@ -359,8 +422,60 @@ func getDNSConfigsAppAlias(id string) *cce.DNSConfigAppAlias {
 	return &dnsConfigAppAlias
 }
 
-func postNodes() (id string) {
-	return postNodesSerial("ABC-123")
+type nodeConfig struct {
+	nodeID string
+	serial string
+	key    *ecdsa.PrivateKey
+	creds  *pb.Credentials
+}
+
+func createAndRegisterNode() *nodeConfig {
+	By("Generating node private key")
+	key, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+	Expect(err).ToNot(HaveOccurred())
+
+	By("Creating a CSR with private key")
+	csrDER, err := x509.CreateCertificateRequest(
+		rand.Reader,
+		&x509.CertificateRequest{},
+		key,
+	)
+	Expect(err).ToNot(HaveOccurred())
+
+	By("Parsing the CSR")
+	certReq, err := x509.ParseCertificateRequest(csrDER)
+	Expect(err).ToNot(HaveOccurred())
+
+	By("Encoding the CSR in PEM")
+	csrPEM := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "CERTIFICATE REQUEST",
+			Bytes: csrDER,
+		})
+
+	By("Pre-approving Node by serial")
+	hash := md5.Sum(certReq.RawSubjectPublicKeyInfo)
+	serial := base64.RawURLEncoding.EncodeToString(hash[:])
+	nodeID := postNodesSerial(serial)
+
+	By("Resetting the node")
+	Expect(cmd.Process.Signal(syscall.SIGABRT)).To(Succeed(), "Problem resetting node")
+
+	By("Requesting credentials from auth service")
+	creds, err := authSvcCli.RequestCredentials(
+		context.TODO(),
+		&pb.Identity{
+			Csr: string(csrPEM),
+		},
+	)
+	Expect(err).ToNot(HaveOccurred())
+
+	return &nodeConfig{
+		nodeID: nodeID,
+		serial: serial,
+		key:    key,
+		creds:  creds,
+	}
 }
 
 func postNodesSerial(serial string) (id string) {
@@ -372,8 +487,7 @@ func postNodesSerial(serial string) (id string) {
 			{
 				"name": "Test Node 1",
 				"location": "Localhost port 8082",
-				"serial": "%s",
-				"grpc_target": "127.0.0.1:8082"
+				"serial": "%s"
 			}`, serial)))
 	Expect(err).ToNot(HaveOccurred())
 	defer resp.Body.Close()
@@ -393,7 +507,7 @@ func postNodesSerial(serial string) (id string) {
 	return rb.ID
 }
 
-func getNode(id string) *cce.Node {
+func getNode(id string) *cce.NodeResp {
 	By("Sending a GET /nodes/{id} request")
 	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s", id))
@@ -407,12 +521,12 @@ func getNode(id string) *cce.Node {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var node cce.Node
+	var nodeResp cce.NodeResp
 
 	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &node)).To(Succeed())
+	Expect(json.Unmarshal(body, &nodeResp)).To(Succeed())
 
-	return &node
+	return &nodeResp
 }
 
 func postNodesApps(nodeID, appID string) (id string) {
@@ -465,7 +579,7 @@ func getNodeApp(id string) *cce.NodeAppResp {
 	return &nodeAppResp
 }
 
-func getNodeApps(nodeID string) []*cce.NodeAppResp {
+func getNodeApps(nodeID string) []*cce.NodeApp {
 	By("Sending a GET /nodes_apps request")
 	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/nodes_apps?node_id=%s", nodeID))
@@ -479,12 +593,12 @@ func getNodeApps(nodeID string) []*cce.NodeAppResp {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var nodeAppsResp []*cce.NodeAppResp
+	var nodeApps []*cce.NodeApp
 
 	By("Unmarshalling the response")
-	Expect(json.Unmarshal(body, &nodeAppsResp)).To(Succeed())
+	Expect(json.Unmarshal(body, &nodeApps)).To(Succeed())
 
-	return nodeAppsResp
+	return nodeApps
 }
 
 func postNodesDNSConfigs(nodeID, dnsConfigID string) (id string) {

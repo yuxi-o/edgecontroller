@@ -57,7 +57,7 @@ type handler struct {
 		context.Context,
 		cce.PersistenceService,
 		cce.Validatable,
-	) error
+	) (statusCode int, err error)
 	handleDelete func(
 		context.Context,
 		cce.PersistenceService,
@@ -149,29 +149,11 @@ func (h *handler) filter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var res []cce.RespEntity
-	for _, p := range ps {
-		if h.handleGet != nil {
-			re, err := h.handleGet(r.Context(), ctrl.PersistenceService, p)
-			if err != nil {
-				log.Errf("Error handling get logic: %v", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				if _, err = w.Write([]byte(err.Error())); err != nil {
-					log.Errf("Error writing response: %v", err)
-					return
-				}
-			}
-			res = append(res, re)
-		} else {
-			res = append(res, p)
-		}
-	}
-
 	var bytes []byte
 	bytes = append(bytes, byte('['))
-	for _, re := range res {
+	for _, p := range ps {
 		var appBytes []byte
-		appBytes, err := json.Marshal(re)
+		appBytes, err := json.Marshal(p)
 		if err != nil {
 			log.Errf("Error marshalling json: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -290,9 +272,9 @@ func (h *handler) bulkUpdate(w http.ResponseWriter, r *http.Request) { //nolint:
 		}
 
 		if h.handleUpdate != nil {
-			if err := h.handleUpdate(r.Context(), ctrl.PersistenceService, v); err != nil {
+			if statusCode, err := h.handleUpdate(r.Context(), ctrl.PersistenceService, v); err != nil {
 				log.Errf("Error handling update logic: %v", err)
-				w.WriteHeader(http.StatusInternalServerError)
+				w.WriteHeader(statusCode)
 				_, err = w.Write([]byte(err.Error()))
 				if err != nil {
 					log.Errf("Error writing response: %v", err)

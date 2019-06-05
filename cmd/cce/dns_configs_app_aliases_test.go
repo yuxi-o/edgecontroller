@@ -173,7 +173,7 @@ var _ = Describe("/dns_configs_app_aliases", func() {
 
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(fmt.Sprintf(
-					"duplicate record detected for dns_config_id %s and "+
+					"duplicate record in dns_configs_app_aliases detected for dns_config_id %s and "+
 						"app_id %s",
 					dnsConfigID,
 					appID)))

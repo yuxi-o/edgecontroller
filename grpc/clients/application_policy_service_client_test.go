@@ -129,10 +129,7 @@ var _ = Describe("Application Policy Service Client", func() {
 		Describe("Success", func() {
 			It("Should delete the traffic policy", func() {
 				By("Deleting the traffic policy")
-				err := appPolicySvcCli.Delete(
-					ctx,
-					appID,
-				)
+				err := appPolicySvcCli.Delete(ctx, appID)
 
 				By("Verifying a success response")
 				Expect(err).ToNot(HaveOccurred())

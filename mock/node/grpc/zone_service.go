@@ -27,6 +27,10 @@ type zoneService struct {
 	zones []*pb.NetworkZone
 }
 
+func (s *zoneService) reset() {
+	s.zones = nil
+}
+
 func (s *zoneService) Create(
 	ctx context.Context,
 	zone *pb.NetworkZone,

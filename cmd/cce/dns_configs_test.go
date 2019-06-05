@@ -526,7 +526,10 @@ var _ = Describe("/dns_configs", func() {
 				case "dns_configs_app_aliases":
 					postDNSConfigsAppAliases(dnsConfigID, postApps("container"))
 				case "nodes_dns_configs":
-					postNodesDNSConfigs(postNodes(), dnsConfigID)
+					clearGRPCTargetsTable()
+					nodeCfg := createAndRegisterNode()
+					dnsConfigID = postDNSConfigs()
+					postNodesDNSConfigs(nodeCfg.nodeID, dnsConfigID)
 				}
 
 				By("Sending a DELETE /dns_configs/{id} request")

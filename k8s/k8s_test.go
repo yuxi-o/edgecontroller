@@ -36,7 +36,7 @@ var (
 	appID   = "99459845-422d-4b32-8395-e8f50fd34792"
 )
 
-// in-order-to run these tests, mini-kube and virtualization
+// In order to run these tests, mini-kube and virtualization
 // tools need to be installed to setup mini-kube on travis CI.
 var _ = BeforeSuite(func() {
 	u, err := user.Current()

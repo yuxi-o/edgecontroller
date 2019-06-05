@@ -53,3 +53,13 @@ func NewMockNode() *MockNode {
 		DNSSvc:       dnsSvc,
 	}
 }
+
+// Reset resets the state of the mock node.
+func (mn *MockNode) Reset() {
+	mn.AppDeploySvc.(*appDeployLifeService).reset()
+	mn.AppPolicySvc.(*appPolicyService).reset()
+	mn.InterfaceSvc.(*interfaceService).reset()
+	mn.IfPolicySvc.(*interfacePolicyService).reset()
+	mn.ZoneSvc.(*zoneService).reset()
+	mn.DNSSvc.(*dnsService).reset()
+}

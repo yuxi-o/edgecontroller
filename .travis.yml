@@ -45,12 +45,9 @@ before_install:
 before_script:
   # Get project dependencies
   - go mod download
-  # minikube kubectl
-  - make kubectl-install minikube-install minikube-start minikube-wait
-
 
 script:
-  - make lint test
+  - make lint kubectl-install minikube-install minikube-start minikube-wait test
 
 jobs:
   include:

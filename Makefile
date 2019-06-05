@@ -37,9 +37,11 @@ help:
 	@echo "  db-reset         to start and reset the MySQL database service"
 	@echo "  db-down          to stop the MySQL database service"
 	@echo ""
-	@echo "  minikube-install to install minikube"
 	@echo "  kubectl-install  to install kubectl"
-	@echo "  minikube-wait    to wait for nimikube installation to finish"
+	@echo "  minikube-install to install minikube"
+	@echo "  minikube-start   to start minikube"
+	@echo "  minikube-wait    to wait for minikube to be ready"
+	@echo "  minikube-stop    to stop minikube"
 	@echo ""
 	@echo "Testing:"
 	@echo "  lint             to run linters and static analysis on the code"
@@ -84,25 +86,45 @@ kubectl-install:
 		&& sudo install kubectl /usr/local/bin/
 
 minikube-install:
+ifeq ($(shell uname -s),Darwin)
+	brew cask install minikube
+else
 	curl -Lo minikube \
 		https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 \
 		&& sudo install minikube /usr/local/bin/
 	mkdir -p $(HOME)/.kube $(HOME)/.minikube
 	touch $(KUBECONFIG)
+endif
 
 minikube-start:
+ifeq ($(shell uname -s),Darwin)
+	minikube start
+else
 	sudo -E minikube start --vm-driver=none
 	sudo chown -R travis: $(HOME)/.minikube/
-	
+endif
+
 minikube-wait:
 	kubectl cluster-info
 	# kube-addon-manager is responsible for managing other kubernetes components, such as kube-dns, dashboard, storage-provisioner.
-	until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
+	until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}" 2>&1 | grep -q "Ready=True"; do \
+		sleep 1; \
+		echo "waiting for kube-addon-manager to be available"; \
+		kubectl get pods --all-namespaces; \
+	done
 	# Wait for kube-dns to be ready.
-	until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
+	until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}" 2>&1 | grep -q "Ready=True"; do \
+		sleep 1; \
+		echo "waiting for kube-dns to be available"; \
+		kubectl get pods --all-namespaces; \
+	done
 
 minikube-stop:
+ifeq ($(shell uname -s),Darwin)
+	minikube delete
+else
 	sudo -E minikube delete
+endif
 
 ui-up:
 	docker build -t cce-ui ./ui

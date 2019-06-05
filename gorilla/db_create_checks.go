@@ -48,7 +48,8 @@ func checkDBCreateNodesApps(
 
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"duplicate record detected for node_id %s and app_id %s",
+			"duplicate record in %s detected for node_id %s and app_id %s",
+			e.(*cce.NodeApp).GetTableName(),
 			e.(*cce.NodeApp).NodeID,
 			e.(*cce.NodeApp).AppID)
 	}
@@ -82,7 +83,8 @@ func checkDBCreateDNSConfigsAppAliases(
 
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"duplicate record detected for dns_config_id %s and app_id %s",
+			"duplicate record in %s detected for dns_config_id %s and app_id %s",
+			e.(*cce.DNSConfigAppAlias).GetTableName(),
 			e.(*cce.DNSConfigAppAlias).DNSConfigID,
 			e.(*cce.DNSConfigAppAlias).AppID)
 	}
@@ -113,10 +115,9 @@ func checkDBCreateNodesDNSConfigs(
 
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"duplicate record detected for node_id %s and "+
-				"dns_config_id %s",
-			e.(*cce.NodeDNSConfig).NodeID,
-			e.(*cce.NodeDNSConfig).DNSConfigID)
+			"duplicate record in %s detected for node_id %s",
+			e.(*cce.NodeDNSConfig).GetTableName(),
+			e.(*cce.NodeDNSConfig).NodeID)
 	}
 
 	return 0, nil
@@ -149,8 +150,9 @@ func checkDBCreateNodesAppsTrafficPolicies(
 
 	if len(es) != 0 {
 		return http.StatusUnprocessableEntity, fmt.Errorf(
-			"duplicate record detected for nodes_apps_id %s and "+
+			"duplicate record in %s detected for nodes_apps_id %s and "+
 				"traffic_policy_id %s",
+			e.(*cce.NodeAppTrafficPolicy).GetTableName(),
 			e.(*cce.NodeAppTrafficPolicy).NodeAppID,
 			e.(*cce.NodeAppTrafficPolicy).TrafficPolicyID)
 	}

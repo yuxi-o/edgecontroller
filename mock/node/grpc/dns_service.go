@@ -35,6 +35,11 @@ func newDNSService() *dnsService {
 	}
 }
 
+func (s *dnsService) reset() {
+	s.records = make(map[string]*pb.DNSARecordSet)
+	s.forwarders = make(map[string]string)
+}
+
 func (s *dnsService) SetA(
 	ctx context.Context,
 	record *pb.DNSARecordSet,

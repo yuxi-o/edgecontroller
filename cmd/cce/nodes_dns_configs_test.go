@@ -30,19 +30,13 @@ import (
 )
 
 var _ = Describe("/nodes_dns_configs", func() {
-	var (
-		nodeID      string
-		dnsConfigID string
-	)
-
-	BeforeEach(func() {
-		nodeID = postNodes()
-		dnsConfigID = postDNSConfigs()
-	})
-
 	Describe("POST /nodes_dns_configs", func() {
 		DescribeTable("201 Created",
 			func() {
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				dnsConfigID := postDNSConfigs()
+
 				By("Sending a POST /nodes_dns_configs request")
 				resp, err := apiCli.Post(
 					"http://127.0.0.1:8080/nodes_dns_configs",
@@ -52,7 +46,7 @@ var _ = Describe("/nodes_dns_configs", func() {
 						{
 							"node_id": "%s",
 							"dns_config_id": "%s"
-						}`, nodeID, dnsConfigID)))
+						}`, nodeCfg.nodeID, dnsConfigID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -121,8 +115,12 @@ var _ = Describe("/nodes_dns_configs", func() {
 
 		DescribeTable("422 Unprocessable Entity",
 			func() {
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				dnsConfigID := postDNSConfigs()
+
 				By("Sending a POST /nodes_dns_configs request")
-				postNodesDNSConfigs(nodeID, dnsConfigID)
+				postNodesDNSConfigs(nodeCfg.nodeID, dnsConfigID)
 
 				By("Repeating the first POST /nodes_dns_configs request")
 				resp, err := apiCli.Post(
@@ -133,7 +131,7 @@ var _ = Describe("/nodes_dns_configs", func() {
 						{
 							"node_id": "%s",
 							"dns_config_id": "%s"
-						}`, nodeID, dnsConfigID)))
+						}`, nodeCfg.nodeID, dnsConfigID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -147,32 +145,21 @@ var _ = Describe("/nodes_dns_configs", func() {
 
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(fmt.Sprintf(
-					"duplicate record detected for node_id %s and "+
-						"dns_config_id %s",
-					nodeID,
-					dnsConfigID)))
+					"duplicate record in nodes_dns_configs detected for node_id %s",
+					nodeCfg.nodeID)))
 			},
 			Entry("POST /nodes_dns_configs with duplicate node_id and dns_config_id"),
 		)
 	})
 
 	Describe("GET /nodes_dns_configs", func() {
-		var (
-			nodeDNSConfigID  string
-			node2ID          string
-			dnsConfig2ID     string
-			nodeDNSConfig2ID string
-		)
-
-		BeforeEach(func() {
-			nodeDNSConfigID = postNodesDNSConfigs(nodeID, dnsConfigID)
-			node2ID = postNodes()
-			dnsConfig2ID = postDNSConfigs()
-			nodeDNSConfig2ID = postNodesDNSConfigs(node2ID, dnsConfig2ID)
-		})
-
 		DescribeTable("200 OK",
 			func() {
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				dnsConfigID := postDNSConfigs()
+				nodeDNSConfigID := postNodesDNSConfigs(nodeCfg.nodeID, dnsConfigID)
+
 				By("Sending a GET /nodes_dns_configs request")
 				resp, err := apiCli.Get(
 					"http://127.0.0.1:8080/nodes_dns_configs")
@@ -196,14 +183,8 @@ var _ = Describe("/nodes_dns_configs", func() {
 				Expect(nodeDNSConfigs).To(ContainElement(
 					&cce.NodeDNSConfig{
 						ID:          nodeDNSConfigID,
-						NodeID:      nodeID,
+						NodeID:      nodeCfg.nodeID,
 						DNSConfigID: dnsConfigID,
-					}))
-				Expect(nodeDNSConfigs).To(ContainElement(
-					&cce.NodeDNSConfig{
-						ID:          nodeDNSConfig2ID,
-						NodeID:      node2ID,
-						DNSConfigID: dnsConfig2ID,
 					}))
 			},
 			Entry("GET /nodes_dns_configs"),
@@ -211,23 +192,20 @@ var _ = Describe("/nodes_dns_configs", func() {
 	})
 
 	Describe("GET /nodes_dns_configs/{id}", func() {
-		var (
-			nodeDNSConfigID string
-		)
-
-		BeforeEach(func() {
-			nodeDNSConfigID = postNodesDNSConfigs(nodeID, dnsConfigID)
-		})
-
 		DescribeTable("200 OK",
 			func() {
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				dnsConfigID := postDNSConfigs()
+
+				nodeDNSConfigID := postNodesDNSConfigs(nodeCfg.nodeID, dnsConfigID)
 				nodeDNSConfig := getNodeDNSConfig(nodeDNSConfigID)
 
 				By("Verifying the created node <-> DNS config was returned")
 				Expect(nodeDNSConfig).To(Equal(
 					&cce.NodeDNSConfig{
 						ID:          nodeDNSConfigID,
-						NodeID:      nodeID,
+						NodeID:      nodeCfg.nodeID,
 						DNSConfigID: dnsConfigID,
 					},
 				))
@@ -253,16 +231,14 @@ var _ = Describe("/nodes_dns_configs", func() {
 	})
 
 	Describe("DELETE /nodes_dns_configs/{id}", func() {
-		var (
-			nodeDNSConfigID string
-		)
-
-		BeforeEach(func() {
-			nodeDNSConfigID = postNodesDNSConfigs(nodeID, dnsConfigID)
-		})
-
 		DescribeTable("200 OK",
 			func() {
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				dnsConfigID := postDNSConfigs()
+
+				nodeDNSConfigID := postNodesDNSConfigs(nodeCfg.nodeID, dnsConfigID)
+
 				By("Sending a DELETE /nodes_dns_configs/{id} request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf(
@@ -291,12 +267,12 @@ var _ = Describe("/nodes_dns_configs", func() {
 		)
 
 		DescribeTable("404 Not Found",
-			func(id string) {
+			func() {
 				By("Sending a DELETE /nodes_dns_configs/{id} request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf(
 						"http://127.0.0.1:8080/nodes_dns_configs/%s",
-						id))
+						uuid.New()))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -304,8 +280,7 @@ var _ = Describe("/nodes_dns_configs", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(
-				"DELETE /nodes_dns_configs/{id} with nonexistent ID",
-				uuid.New()),
+				"DELETE /nodes_dns_configs/{id} with nonexistent ID"),
 		)
 	})
 })

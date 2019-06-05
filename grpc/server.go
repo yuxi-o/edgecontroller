@@ -34,6 +34,7 @@ import (
 
 	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/pb"
+	"github.com/smartedgemec/controller-ce/uuid"
 )
 
 const (
@@ -58,7 +59,7 @@ const (
 	// assumed to not be routable from the Controller in all cases. Instead the
 	// Appliance will be required to open two TCP streams, one for outgoing
 	// RPCs to the Controller and one for inbound.
-	nodeGRPCPort = "8081"
+	nodeGRPCPort = "8082"
 )
 
 // Server wraps grpc.Server
@@ -249,16 +250,12 @@ func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.C
 	}
 
 	// Store the Node's address
-	nodeWithTarget := &cce.Node{
-		ID:         node.ID,
-		Name:       node.Name,
-		Location:   node.Location,
-		Serial:     node.Serial,
+	nodeWithTarget := &cce.NodeGRPCTarget{
+		ID:         uuid.New(),
+		NodeID:     node.ID,
 		GRPCTarget: net.JoinHostPort(nodeIP, nodeGRPCPort),
 	}
-	if err := s.controller.PersistenceService.BulkUpdate(ctx, []cce.Persistable{
-		nodeWithTarget,
-	}); err != nil {
+	if err := s.controller.PersistenceService.Create(ctx, nodeWithTarget); err != nil {
 		log.Errf("Failed to store Node address: %v", err)
 		return nil, status.Error(codes.Internal, "unable to store node address")
 	}

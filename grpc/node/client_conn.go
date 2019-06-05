@@ -24,7 +24,7 @@ import (
 
 // ClientConn wraps a Node and provides a Connect() method to create wrapped gRPC clients.
 type ClientConn struct {
-	Node *cce.Node
+	NodeGRPCTarget *cce.NodeGRPCTarget
 
 	conn *grpc.ClientConn
 
@@ -40,7 +40,7 @@ type ClientConn struct {
 // Connect connects to a node via grpc.Dial.
 func (cc *ClientConn) Connect(ctx context.Context) error {
 	var err error
-	if cc.conn, err = grpc.Dial(ctx, cc.Node.GRPCTarget); err != nil {
+	if cc.conn, err = grpc.Dial(ctx, cc.NodeGRPCTarget.GRPCTarget); err != nil {
 		return err
 	}
 
