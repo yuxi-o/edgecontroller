@@ -16,7 +16,7 @@ package grpc
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/md5" //nolint:gosec
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -169,14 +169,23 @@ func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.C
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "error parsing CSR: %v", err)
 	}
+	// Validate cert req early. Even though signing will fail if signature is
+	// invalid, we are using the pubkey info to determine the node serial and
+	// we don't want to allow this to be arbitrarily constructed (within the
+	// confines of an ASN1 structure). There is no known attack vector, it is
+	// just extreme caution.
+	if err = certReq.CheckSignature(); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error validating CSR: %v", err)
+	}
 
 	// Node's identity is base64-encoded (w/o padding) MD5 hash of the public key data
-	hash := md5.Sum(certReq.RawSubjectPublicKeyInfo)
+	// gosec: not hashing user input/passwords
+	hash := md5.Sum(certReq.RawSubjectPublicKeyInfo) //nolint:gosec
 	serial := base64.RawURLEncoding.EncodeToString(hash[:])
 
 	// Verify the Node's pre-approval by public key data
 	entities, err := s.controller.PersistenceService.Filter(ctx, &cce.Node{}, []cce.Filter{{
-		Field: "entity->>'$.serial'",
+		Field: "serial",
 		Value: serial,
 	}})
 	if err != nil || len(entities) == 0 {

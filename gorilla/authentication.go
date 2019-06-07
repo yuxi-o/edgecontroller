@@ -37,10 +37,12 @@ func authenticate(w http.ResponseWriter, r *http.Request) {
 
 	// Verify the user name and password
 	if u.Username != ctrl.AdminCreds.Username {
+		log.Debugf("Unsuccessful login attempt for user '%s'", u.Username)
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
 	if u.Password != ctrl.AdminCreds.Password {
+		log.Debugf("Unsuccessful login attempt for user '%s'", u.Username)
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}

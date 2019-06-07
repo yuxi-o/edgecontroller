@@ -62,13 +62,18 @@ func (tp *TrafficPolicy) Validate() error {
 	return nil
 }
 
+// FilterFields returns the filterable fields for this model.
+func (*TrafficPolicy) FilterFields() []string {
+	return []string{}
+}
+
 func (tp *TrafficPolicy) String() string {
-	rules := strings.Builder{}
+	rules := ""
 
 	for i, rule := range tp.Rules {
-		rules.WriteString(rule.String())
+		rules += rule.String()
 		if i < len(tp.Rules)-1 {
-			rules.WriteString("\n        ")
+			rules += "\n        "
 		}
 	}
 
@@ -80,7 +85,7 @@ TrafficPolicy[
     ]
 ]`),
 		tp.ID,
-		rules.String())
+		rules)
 }
 
 // TrafficRule is the model for a traffic rule.
@@ -255,12 +260,12 @@ func (f *MACFilter) Validate() error {
 }
 
 func (f *MACFilter) String() string {
-	macs := strings.Builder{}
+	macs := ""
 
 	for i, mac := range f.MACAddresses {
-		macs.WriteString(mac)
+		macs += mac
 		if i < len(f.MACAddresses)-1 {
-			macs.WriteString("\n                        ")
+			macs += "\n                        "
 		}
 	}
 
@@ -270,7 +275,7 @@ func (f *MACFilter) String() string {
                         %s
                     ]
                 ]`),
-		macs.String())
+		macs)
 }
 
 // IPFilter is the model for an IP filter.
@@ -357,12 +362,12 @@ func (f *GTPFilter) Validate() error {
 }
 
 func (f *GTPFilter) String() string {
-	imsis := strings.Builder{}
+	imsis := ""
 
 	for i, imsi := range f.IMSIs {
-		imsis.WriteString(imsi)
+		imsis += imsi
 		if i < len(f.IMSIs)-1 {
-			imsis.WriteString("\n                        ")
+			imsis += "\n                        "
 		}
 	}
 
@@ -376,7 +381,7 @@ func (f *GTPFilter) String() string {
                 ]`),
 		f.Address,
 		f.Mask,
-		imsis.String())
+		imsis)
 }
 
 // MACModifier is the model for a MAC modifier.

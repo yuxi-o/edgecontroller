@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql" // provides the mysql driver
 	"github.com/pkg/errors"
@@ -29,6 +31,7 @@ func (s *PersistenceService) Create(
 
 	_, err = s.DB.ExecContext(
 		ctx,
+		// gosec: Table name is not based on user input
 		fmt.Sprintf( //nolint:gosec
 			`INSERT INTO %s (entity) VALUES (?)`, e.GetTableName()),
 		bytes)
@@ -47,6 +50,7 @@ func (s *PersistenceService) Read(
 ) (e cce.Persistable, err error) {
 	rows, err := s.DB.QueryContext(
 		ctx,
+		// gosec: Table name is not based on user input
 		fmt.Sprintf( //nolint:gosec
 			`SELECT entity
              FROM %s
@@ -71,22 +75,43 @@ func (s *PersistenceService) Read(
 // filters.
 func (s *PersistenceService) Filter(
 	ctx context.Context,
-	zv cce.Persistable,
+	zv cce.Filterable,
 	fs []cce.Filter,
 ) (es []cce.Persistable, err error) {
+	// gosec: Table name is not based on user input
 	q := fmt.Sprintf("SELECT entity FROM %s", zv.GetTableName()) //nolint:gosec
-	if len(fs) > 0 {
-		q += " WHERE "
-		for i, f := range fs {
-			q += fmt.Sprintf("%s = '%s'", f.Field, f.Value)
-			if i < len(fs)-1 {
-				q += " AND "
+
+	ffs := zv.FilterFields()
+	sort.Strings(ffs)
+
+	var (
+		fields []string
+		params []interface{}
+	)
+	for _, f := range fs {
+		// gosec: Only whitelisted filters are allowed to be injected into
+		// the SQL query
+		allowed := false
+		for _, allowedField := range ffs {
+			if f.Field == allowedField {
+				allowed = true
+			}
+			if allowedField >= f.Field {
+				break
 			}
 		}
+		if !allowed {
+			return nil, errors.Errorf("disallowed filter field %q", f.Field)
+		}
+		fields = append(fields, fmt.Sprintf("%s = ?", f.Field))
+		params = append(params, f.Value)
+	}
+	if len(params) > 0 {
+		q += " WHERE " + strings.Join(fields, " AND ") //nolint:gosec
 	}
 
 	rows, err := s.DB.QueryContext(
-		ctx, q)
+		ctx, q, params...)
 	if err != nil {
 		return nil, errors.Wrap(err, "error running query")
 	}
@@ -110,6 +135,7 @@ func (s *PersistenceService) ReadAll(
 ) (es []cce.Persistable, err error) {
 	rows, err := s.DB.QueryContext(
 		ctx,
+		// gosec: Table name is not based on user input
 		fmt.Sprintf( //nolint:gosec
 			"SELECT entity FROM %s", zv.GetTableName()))
 	if err != nil {
@@ -158,6 +184,7 @@ func (s *PersistenceService) BulkUpdate(
 
 		_, err = s.DB.ExecContext(
 			ctx,
+			// gosec: Table name is not based on user input
 			fmt.Sprintf( //nolint:gosec
 				`UPDATE %s
                  SET entity = ?
@@ -180,6 +207,7 @@ func (s *PersistenceService) Delete(
 ) (ok bool, err error) {
 	result, err := s.DB.ExecContext(
 		ctx,
+		// gosec: Table name is not based on user input
 		fmt.Sprintf( //nolint:gosec
 			`DELETE
              FROM %s

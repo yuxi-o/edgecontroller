@@ -101,6 +101,27 @@ func (n *Node) Validate() error {
 	return nil
 }
 
+// FilterFields returns the filterable fields for this model.
+func (*Node) FilterFields() []string {
+	return []string{
+		"serial",
+	}
+}
+
+func (n *Node) String() string {
+	return fmt.Sprintf(strings.TrimSpace(`
+Node[
+    ID: %s
+    Name: %s
+    Location: %s
+    Serial: %s
+]`),
+		n.ID,
+		n.Name,
+		n.Location,
+		n.Serial)
+}
+
 // Validate validates the request model.
 // TODO add a test for this method.
 func (nr *NodeReq) Validate() error {
@@ -138,18 +159,4 @@ func (nr *NodeReq) Validate() error {
 // GetTableName returns the name of the persistence table.
 func (nr *NodeReq) GetTableName() string {
 	return nr.Node.GetTableName()
-}
-
-func (n *Node) String() string {
-	return fmt.Sprintf(strings.TrimSpace(`
-Node[
-    ID: %s
-    Name: %s
-    Location: %s
-    Serial: %s
-]`),
-		n.ID,
-		n.Name,
-		n.Location,
-		n.Serial)
 }

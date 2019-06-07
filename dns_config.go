@@ -71,22 +71,27 @@ func (cfg *DNSConfig) Validate() error {
 	return nil
 }
 
+// FilterFields returns the filterable fields for this model.
+func (*DNSConfig) FilterFields() []string {
+	return []string{}
+}
+
 func (cfg *DNSConfig) String() string {
-	records := strings.Builder{}
+	records := ""
 
 	for i, record := range cfg.ARecords {
-		records.WriteString(record.String())
+		records += record.String()
 		if i < len(cfg.ARecords)-1 {
-			records.WriteString("\n        ")
+			records += "\n        "
 		}
 	}
 
-	forwarders := strings.Builder{}
+	forwarders := ""
 
 	for i, forwarder := range cfg.Forwarders {
-		forwarders.WriteString(forwarder.String())
+		forwarders += forwarder.String()
 		if i < len(cfg.Forwarders)-1 {
-			forwarders.WriteString("\n        ")
+			forwarders += "\n        "
 		}
 	}
 
@@ -103,8 +108,8 @@ DNSConfig[
 ]`),
 		cfg.ID,
 		cfg.Name,
-		records.String(),
-		forwarders.String())
+		records,
+		forwarders)
 }
 
 // DNSARecord is a DNS A record.
@@ -141,12 +146,12 @@ func (r *DNSARecord) Validate() error {
 }
 
 func (r *DNSARecord) String() string {
-	ips := strings.Builder{}
+	ips := ""
 
 	for i, ip := range r.IPs {
-		ips.WriteString(ip)
+		ips += ip
 		if i < len(r.IPs)-1 {
-			ips.WriteString("\n                ")
+			ips += "\n                "
 		}
 	}
 
@@ -160,7 +165,7 @@ func (r *DNSARecord) String() string {
         ]`),
 		r.Name,
 		r.Description,
-		ips.String())
+		ips)
 }
 
 // DNSForwarder is a DNS forwarder.

@@ -79,6 +79,15 @@ var _ = Describe("Join Entities: NodeAppTrafficPolicy", func() {
 		})
 	})
 
+	Describe("FilterFields", func() {
+		It("Should return the filterable fields", func() {
+			Expect(natp.FilterFields()).To(Equal([]string{
+				"nodes_apps_id",
+				"traffic_policy_id",
+			}))
+		})
+	})
+
 	Describe("String", func() {
 		It("Should return the string value", func() {
 			Expect(natp.String()).To(Equal(strings.TrimSpace(`

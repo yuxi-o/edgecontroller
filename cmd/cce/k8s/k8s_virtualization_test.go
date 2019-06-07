@@ -68,6 +68,8 @@ var _ = Describe("Kubernetes Read Metadata Service", func() {
 			RootCAs:      caPool,
 			Certificates: []tls.Certificate{cert},
 			ServerName:   cceGRPC.SNI,
+			MinVersion:   tls.VersionTLS12,
+			CipherSuites: []uint16{tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256},
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)

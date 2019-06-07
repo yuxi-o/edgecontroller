@@ -65,6 +65,14 @@ var _ = Describe("Entities: NodeGRPCTarget", func() {
 		})
 	})
 
+	Describe("FilterFields", func() {
+		It("Should return the filterable fields", func() {
+			Expect(target.FilterFields()).To(Equal([]string{
+				"node_id",
+			}))
+		})
+	})
+
 	Describe("String", func() {
 		It("Should return the string value", func() {
 			Expect(target.String()).To(Equal(strings.TrimSpace(`

@@ -105,6 +105,11 @@ func (app *App) Validate() error { // nolint: gocyclo
 	return nil
 }
 
+// FilterFields returns the filterable fields for this model.
+func (*App) FilterFields() []string {
+	return []string{}
+}
+
 func (app *App) String() string {
 	return fmt.Sprintf(strings.TrimSpace(`
 App[

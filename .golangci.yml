@@ -57,6 +57,6 @@ issues:
     - text: "string `*`"
       linters:
         - goconst
-    - text: "weak cryptographic primitive"
-      linters:
-        - gosec
+
+# Disable the default exclude patterns
+exclude-use-default: false

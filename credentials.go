@@ -15,7 +15,7 @@
 package cce
 
 import (
-	"crypto/md5"
+	"crypto/md5" //nolint:gosec
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
@@ -73,7 +73,8 @@ func (c *Credentials) Validate() error {
 		return errors.New("certificate public key not a valid public key")
 	}
 
-	hash := md5.Sum(pubKey)
+	// gosec: not hashing user input/passwords
+	hash := md5.Sum(pubKey) //nolint:gosec
 
 	if c.ID != base64.RawURLEncoding.EncodeToString(hash[:]) {
 		return errors.New("id not derived from certificate public key")

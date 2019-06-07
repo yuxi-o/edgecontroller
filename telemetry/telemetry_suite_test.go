@@ -47,8 +47,10 @@ func newTLSConf(sni string) *tls.Config {
 			PrivateKey:  tlsKey,
 			Leaf:        tlsCert,
 		}},
-		ClientCAs: tlsRoots,
-		RootCAs:   tlsRoots,
+		ClientCAs:    tlsRoots,
+		RootCAs:      tlsRoots,
+		MinVersion:   tls.VersionTLS12,
+		CipherSuites: []uint16{tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256},
 	}
 }
 

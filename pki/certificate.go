@@ -19,6 +19,7 @@ import (
 	"encoding/pem"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 )
@@ -62,7 +63,7 @@ func LoadCertificate(path string) (*x509.Certificate, error) {
 		block *pem.Block
 	)
 
-	if bytes, err = ioutil.ReadFile(path); err != nil {
+	if bytes, err = ioutil.ReadFile(filepath.Clean(path)); err != nil {
 		return nil, errors.Wrap(err, "unable to read certificate file")
 	}
 

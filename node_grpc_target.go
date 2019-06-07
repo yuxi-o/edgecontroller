@@ -46,6 +46,13 @@ func (t *NodeGRPCTarget) GetNodeID() string {
 	return t.NodeID
 }
 
+// FilterFields returns the filterable fields for this model.
+func (t *NodeGRPCTarget) FilterFields() []string {
+	return []string{
+		"node_id",
+	}
+}
+
 func (t *NodeGRPCTarget) String() string {
 	return fmt.Sprintf(strings.TrimSpace(`
 NodeGRPCTarget[

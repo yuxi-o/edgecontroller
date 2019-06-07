@@ -49,7 +49,7 @@ type PersistenceService interface {
 	Create(ctx context.Context, e Persistable) error
 	Read(ctx context.Context, id string, zv Persistable) (e Persistable, err error)
 	ReadAll(ctx context.Context, zv Persistable) (ps []Persistable, err error)
-	Filter(ctx context.Context, zv Persistable, fs []Filter) (ps []Persistable, err error)
+	Filter(ctx context.Context, zv Filterable, fs []Filter) (ps []Persistable, err error)
 	BulkUpdate(ctx context.Context, ps []Persistable) error
 	Delete(ctx context.Context, id string, zv Persistable) (ok bool, err error)
 }
@@ -64,6 +64,12 @@ type Persistable interface {
 	GetTableName() string
 	GetID() string
 	SetID(id string)
+}
+
+// Filterable is a Persistable that can be filtered.
+type Filterable interface {
+	Persistable
+	FilterFields() []string
 }
 
 // ReqEntity is a request entity.

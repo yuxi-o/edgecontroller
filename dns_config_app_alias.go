@@ -67,6 +67,14 @@ func (cfg_alias *DNSConfigAppAlias) Validate() error {
 	return nil
 }
 
+// FilterFields returns the filterable fields for this model.
+func (*DNSConfigAppAlias) FilterFields() []string {
+	return []string{
+		"dns_config_id",
+		"app_id",
+	}
+}
+
 func (cfg_alias *DNSConfigAppAlias) String() string {
 	return fmt.Sprintf(strings.TrimSpace(`
 DNSConfigAppAlias[

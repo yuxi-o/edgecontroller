@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/gorilla/mux"
 	uuid "github.com/satori/go.uuid"
@@ -142,8 +143,20 @@ func (h *handler) filter(w http.ResponseWriter, r *http.Request) {
 		filters = append(filters, cce.Filter{Field: k, Value: v[0]})
 	}
 
-	ps, err := ctrl.PersistenceService.Filter(r.Context(), h.model, filters)
+	var ps []cce.Persistable
+	var err error
+	if len(filters) > 0 {
+		ps, err = ctrl.PersistenceService.Filter(r.Context(), h.model.(cce.Filterable), filters)
+	} else {
+		ps, err = ctrl.PersistenceService.ReadAll(r.Context(), h.model)
+	}
 	if err != nil {
+		// TODO: refactor so that errors don't have to be checked by string
+		// comparison
+		if strings.HasPrefix(err.Error(), "disallowed filter field") {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		log.Errf("Error reading entities: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

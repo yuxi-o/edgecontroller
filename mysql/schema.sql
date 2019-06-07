@@ -24,6 +24,8 @@ USE controller_ce
 
 CREATE TABLE nodes (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
+    -- TODO add UNIQUE KEY on serial - will require refactoring the tests
+    serial VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.serial') STORED,
     entity JSON
 );
 
@@ -92,13 +94,12 @@ CREATE TABLE nodes_apps (
 -- nodes x dns_configs
 CREATE TABLE nodes_dns_configs (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
-    node_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.node_id') STORED,
+    node_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.node_id') STORED UNIQUE KEY,
     dns_config_id VARCHAR(36) GENERATED ALWAYS AS
         (entity->>'$.dns_config_id') STORED,
     entity JSON,
     FOREIGN KEY (node_id) REFERENCES nodes(id),
-    FOREIGN KEY (dns_config_id) REFERENCES dns_configs(id),
-    UNIQUE KEY (node_id)
+    FOREIGN KEY (dns_config_id) REFERENCES dns_configs(id)
 );
 
 -- nodes (network_interfaces) x traffic_policies

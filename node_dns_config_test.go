@@ -83,6 +83,15 @@ var _ = Describe("Join Entities: NodeDNSConfig", func() {
 		})
 	})
 
+	Describe("FilterFields", func() {
+		It("Should return the filterable fields", func() {
+			Expect(ncfg.FilterFields()).To(Equal([]string{
+				"node_id",
+				"dns_config_id",
+			}))
+		})
+	})
+
 	Describe("String", func() {
 		It("Should return the string value", func() {
 			Expect(ncfg.String()).To(Equal(strings.TrimSpace(`

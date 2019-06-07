@@ -20,6 +20,7 @@ import (
 	"encoding/pem"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 )
@@ -66,7 +67,7 @@ func LoadKey(path string) (crypto.PrivateKey, error) {
 		block *pem.Block
 	)
 
-	if bytes, err = ioutil.ReadFile(path); err != nil {
+	if bytes, err = ioutil.ReadFile(filepath.Clean(path)); err != nil {
 		return nil, errors.Wrap(err, "unable to read key file")
 	}
 

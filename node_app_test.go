@@ -83,6 +83,15 @@ var _ = Describe("Join Entities: NodeApp", func() {
 		})
 	})
 
+	Describe("FilterFields", func() {
+		It("Should return the filterable fields", func() {
+			Expect(na.FilterFields()).To(Equal([]string{
+				"node_id",
+				"app_id",
+			}))
+		})
+	})
+
 	Describe("String", func() {
 		It("Should return the string value", func() {
 			Expect(na.String()).To(Equal(strings.TrimSpace(`

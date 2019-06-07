@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [0.0.31] - 2019-06-06
+### Added
+- Explicitly whitelist allowed filter queries in GET /{resource} endpoints
+- Improve security of default NGINX config
+- Increase minimum TLS version to TLS1.2
+- Limit TLS to single secure cipher suite
+
 ## [0.0.30] - 2019-06-04
 ### Added
 - Node Interfaces and Interface Traffic Policies

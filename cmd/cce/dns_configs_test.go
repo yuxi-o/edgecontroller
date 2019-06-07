@@ -280,6 +280,29 @@ var _ = Describe("/dns_configs", func() {
 			},
 			Entry("GET /dns_configs"),
 		)
+
+		DescribeTable("400 Bad Request",
+			func(field, value string) {
+				By("Sending a GET /dns_configs request with a disallowed filter")
+				resp, err := apiCli.Get(fmt.Sprintf(
+					"http://127.0.0.1:8080/dns_configs?%s=%s",
+					field, value,
+				))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 400 Bad Request response")
+				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(string(body)).To(Equal(
+					fmt.Sprintf("disallowed filter field %q\n", field),
+				))
+			},
+			Entry("GET /dns_configs", "name", "hackers"),
+		)
 	})
 
 	Describe("GET /dns_configs/{id}", func() {

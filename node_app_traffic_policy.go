@@ -60,6 +60,14 @@ func (n_a_tp *NodeAppTrafficPolicy) Validate() error {
 	return nil
 }
 
+// FilterFields returns the filterable fields for this model.
+func (*NodeAppTrafficPolicy) FilterFields() []string {
+	return []string{
+		"nodes_apps_id",
+		"traffic_policy_id",
+	}
+}
+
 func (n_a_tp *NodeAppTrafficPolicy) String() string {
 	return fmt.Sprintf(strings.TrimSpace(`
 NodeAppTrafficPolicy[

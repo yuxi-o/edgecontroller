@@ -64,6 +64,14 @@ func (n_cfg *NodeDNSConfig) Validate() error {
 	return nil
 }
 
+// FilterFields returns the filterable fields for this model.
+func (*NodeDNSConfig) FilterFields() []string {
+	return []string{
+		"node_id",
+		"dns_config_id",
+	}
+}
+
 func (n_cfg *NodeDNSConfig) String() string {
 	return fmt.Sprintf(strings.TrimSpace(`
 NodeDNSConfig[

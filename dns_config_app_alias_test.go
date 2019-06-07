@@ -91,6 +91,15 @@ var _ = Describe("Entities: DNSConfigAppAlias", func() {
 		})
 	})
 
+	Describe("FilterFields", func() {
+		It("Should return the filterable fields", func() {
+			Expect(cfgAlias.FilterFields()).To(Equal([]string{
+				"dns_config_id",
+				"app_id",
+			}))
+		})
+	})
+
 	Describe("String", func() {
 		It("Should return the string value", func() {
 			Expect(cfgAlias.String()).To(Equal(strings.TrimSpace(`

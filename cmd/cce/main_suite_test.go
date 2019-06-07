@@ -19,7 +19,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto/md5"
+	"crypto/md5" //nolint:gosec
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
@@ -454,7 +454,7 @@ func createAndRegisterNode() *nodeConfig {
 		})
 
 	By("Pre-approving Node by serial")
-	hash := md5.Sum(certReq.RawSubjectPublicKeyInfo)
+	hash := md5.Sum(certReq.RawSubjectPublicKeyInfo) //nolint:gosec
 	serial := base64.RawURLEncoding.EncodeToString(hash[:])
 	nodeID := postNodesSerial(serial)
 
@@ -579,10 +579,13 @@ func getNodeApp(id string) *cce.NodeAppResp {
 	return &nodeAppResp
 }
 
-func getNodeApps(nodeID string) []*cce.NodeApp {
+func getNodeApps(nodeID, appID string) []*cce.NodeApp {
 	By("Sending a GET /nodes_apps request")
-	resp, err := apiCli.Get(
-		fmt.Sprintf("http://127.0.0.1:8080/nodes_apps?node_id=%s", nodeID))
+	url := fmt.Sprintf("http://127.0.0.1:8080/nodes_apps?node_id=%s", nodeID)
+	if appID != "" {
+		url += "&app_id=" + appID
+	}
+	resp, err := apiCli.Get(url)
 
 	By("Verifying a 200 OK response")
 	Expect(err).ToNot(HaveOccurred())
@@ -832,6 +835,8 @@ func loadTLSConfig(dir string) *tls.Config {
 			PrivateKey:  key,
 			Leaf:        cert,
 		}},
-		RootCAs: certPool,
+		RootCAs:      certPool,
+		MinVersion:   tls.VersionTLS12,
+		CipherSuites: []uint16{tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256},
 	}
 }

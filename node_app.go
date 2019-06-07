@@ -78,6 +78,14 @@ func (n_a *NodeApp) Validate() error {
 	return nil
 }
 
+// FilterFields returns the filterable fields for this model.
+func (*NodeApp) FilterFields() []string {
+	return []string{
+		"node_id",
+		"app_id",
+	}
+}
+
 // Validate validates the request model.
 // TODO add a test for this method.
 func (n_ar *NodeAppReq) Validate() error {

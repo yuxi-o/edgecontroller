@@ -88,6 +88,14 @@ var _ = Describe("Entities: Node", func() {
 		})
 	})
 
+	Describe("FilterFields", func() {
+		It("Should return the filterable fields", func() {
+			Expect(node.FilterFields()).To(Equal([]string{
+				"serial",
+			}))
+		})
+	})
+
 	Describe("String", func() {
 		It("Should return the string value", func() {
 			Expect(node.String()).To(Equal(strings.TrimSpace(`

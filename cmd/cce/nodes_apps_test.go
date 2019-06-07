@@ -175,24 +175,62 @@ var _ = Describe("/nodes_apps", func() {
 		})
 
 		DescribeTable("200 OK",
-			func() {
-				nodeApps := getNodeApps(nodeCfg.nodeID)
-
-				By("Verifying the 2 created node apps were returned")
-				Expect(nodeApps).To(ContainElement(
-					&cce.NodeApp{
+			func(appIDFilter string) {
+				apps := map[string]*cce.NodeApp{
+					nodeAppID: {
 						ID:     nodeAppID,
 						NodeID: nodeCfg.nodeID,
 						AppID:  appID,
-					}))
-				Expect(nodeApps).To(ContainElement(
-					&cce.NodeApp{
+					},
+					nodeApp2ID: {
 						ID:     nodeApp2ID,
 						NodeID: nodeCfg.nodeID,
 						AppID:  app2ID,
-					}))
+					},
+				}
+
+				nodeApps := getNodeApps(nodeCfg.nodeID, appIDFilter)
+
+				By("Verifying the created node app(s) were returned")
+				switch appIDFilter {
+				case "":
+					Expect(nodeApps).To(HaveLen(2))
+					Expect(nodeApps).To(ContainElement(apps[nodeAppID]))
+					Expect(nodeApps).To(ContainElement(apps[nodeApp2ID]))
+				case nodeAppID:
+					Expect(nodeApps).To(HaveLen(1))
+					Expect(nodeApps).To(ContainElement(apps[nodeAppID]))
+				case nodeApp2ID:
+					Expect(nodeApps).To(HaveLen(1))
+					Expect(nodeApps).To(ContainElement(apps[nodeApp2ID]))
+				}
 			},
-			Entry("GET /nodes_apps"),
+			Entry("GET /nodes_apps", ""),
+			Entry("GET /nodes_apps", nodeAppID),
+			Entry("GET /nodes_apps", nodeApp2ID),
+		)
+
+		DescribeTable("400 Bad Request",
+			func(field, value string) {
+				By("Sending a GET /nodes_apps request with a disallowed filter")
+				resp, err := apiCli.Get(fmt.Sprintf(
+					"http://127.0.0.1:8080/nodes_apps?%s=%s",
+					field, value,
+				))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 400 Bad Request response")
+				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(string(body)).To(Equal(
+					fmt.Sprintf("disallowed filter field %q\n", field),
+				))
+			},
+			Entry("GET /nodes_apps", "id", "12345"),
 		)
 	})
 
