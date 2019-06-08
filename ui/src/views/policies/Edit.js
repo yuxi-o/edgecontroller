@@ -1,39 +1,19 @@
-import React,  { Component } from 'react';
-import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import Grid from '@material-ui/core/Grid';
+import React, { Component } from 'react';
+import ApiClient from '../../api/ApiClient';
+import { SchemaForm, utils } from 'react-schema-form';
+import PolicySchema from '../../components/schema/TrafficPolicy';
 import Topbar from '../../components/Topbar';
-import SectionHeader from '../../components/typo/SectionHeader';
-import AppBar from '@material-ui/core/AppBar';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
-import Typography from '@material-ui/core/Typography';
-
-import SourceForm from './FormSource'
-import DestinationForm from './FormDestination'
-import TargetForm from './FormTarget'
-
-const backgroundShape = require('../../images/shape.svg');
-
-function TabContainer(props) {
-  return (
-    <Typography component="div" style={{ padding: 8 * 3 }}>
-      {props.children}
-    </Typography>
-  );
-}
-
-TabContainer.propTypes = {
-  children: PropTypes.node.isRequired,
-};
+import withStyles from '@material-ui/core/styles/withStyles';
+import {
+  Grid,
+  Button
+} from '@material-ui/core';
 
 const styles = theme => ({
   root: {
     flexGrow: 1,
     backgroundColor: theme.palette.grey['A500'],
     overflow: 'hidden',
-    background: `url(${backgroundShape}) no-repeat`,
     backgroundSize: 'cover',
     backgroundPosition: '0 400px',
     marginTop: 20,
@@ -41,51 +21,193 @@ const styles = theme => ({
     paddingBottom: 200
   },
   grid: {
-    width: 1000
+    paddingLeft: '20%',
+    paddingRight: '20%'
+  },
+  gridSaveButton: {
+    textAlign: 'right',
   }
-})
+});
 
-class PolicyEdit extends Component {
-  
-  state = {
-    value: 0,
-  };
+class PolicyView extends Component {
+  constructor(props) {
+    super(props);
 
-  handleChange = (event, value) => {
-    this.setState({ value });
-  };
+    this.state = {
+      loaded: false,
+      errored: false,
+      error: null,
+      showErrors: true,
+      policy: {},
+    };
+  }
+
+  // GET /policies/:policy_id
+  getPolicy = () => {
+    const { match } = this.props;
+
+    const policyID = match.params.id;
+
+    if (!policyID) {
+      this.setState({
+        loaded: true,
+      })
+      return;
+    }
+
+    ApiClient.get(`/policies/${policyID}`)
+      .then((resp) => {
+        this.setState({
+          loaded: true,
+          policy: resp.data || {},
+        })
+      })
+      .catch((err) => {
+        this.setState({
+          loaded: true,
+          errored: true,
+          error: err,
+        });
+      });
+  }
+
+  // PATCH /policies/:policy_id
+  updatePolicy = () => {
+    const { match } = this.props;
+    const { policy } = this.state;
+
+    const policyID = match.params.id;
+
+    ApiClient.patch(`/policies/${policyID}`, policy)
+      .then((resp) => {
+        this.setState({
+          loaded: true,
+        })
+      })
+      .catch((err) => {
+        this.setState({
+          loaded: true,
+          errored: true,
+          error: err,
+        });
+      });
+  }
+
+  // POST /policies
+  updatePolicy = () => {
+    const { policy } = this.state;
+
+    ApiClient.post(`/policies`, policy)
+      .then((resp) => {
+        this.setState({
+          loaded: true,
+        })
+      })
+      .catch((err) => {
+        this.setState({
+          loaded: true,
+          errored: true,
+          error: err,
+        });
+      });
+  }
+
+  // DELETE /policies/:policy_id
+  deletePolicy = () => {
+    const { match } = this.props;
+    const policyID = match.params.id;
+
+    ApiClient.delete(`/policies/${policyID}`)
+      .then((resp) => {
+        this.setState({
+          loaded: true,
+        })
+      })
+      .catch((err) => {
+        this.setState({
+          loaded: true,
+          errored: true,
+          error: err,
+        });
+      });
+  }
+
+  onModelChange = (key, val) => {
+    const { policy } = this.state;
+
+    const newPolicy = policy;
+
+    utils.selectOrSet(key, newPolicy, val);
+
+    this.setState({ policy: newPolicy });
+  }
+
+  componentDidMount() {
+    this.getPolicy();
+  }
 
   render() {
-    const { classes } = this.props;
-    const { value } = this.state;
-    const currentPath = this.props.location.pathname
+    const { match, location: { pathname: currentPath }, classes } = this.props;
+
+    const {
+      loaded,
+      // errored,
+      // error,
+      showErrors,
+      policy,
+    } = this.state;
+
+    if (!loaded) {
+      return <React.Fragment>Loading ...</React.Fragment>
+    }
 
     return (
       <React.Fragment>
-        <CssBaseline />
         <Topbar currentPath={currentPath} />
         <div className={classes.root}>
-          <Grid container justify="center"> 
-            <Grid spacing={24} alignItems="center" justify="center" container className={classes.grid}>
-              <Grid item xs={12}>
-                <SectionHeader title="Traffic Policies" subtitle="Select to View or Edit" />
-                <AppBar position="static">
-                  <Tabs value={value} onChange={this.handleChange}>
-                    <Tab label="Source" />
-                    <Tab label="Destination" />
-                    <Tab label="Target" />
-                  </Tabs>
-                </AppBar>
-                {value === 0 && <TabContainer><SourceForm title="Traffic Policies" subtitle="Select to View or Edit" /></TabContainer>}
-                {value === 1 && <TabContainer><DestinationForm title="Traffic Policies" subtitle="Select to View or Edit" /></TabContainer>}
-                {value === 2 && <TabContainer><TargetForm title="Traffic Policies" subtitle="Select to View or Edit" /></TabContainer>} 
-              </Grid>
+          <Grid
+            container
+            justify="center"
+            alignItems="flex-end"
+            spacing={24}
+            className={classes.grid}
+          >
+            <Grid item xs={12}>
+              <SchemaForm
+                schema={PolicySchema.schema}
+                form={PolicySchema.form}
+                model={policy}
+                onModelChange={this.onModelChange}
+                showErrors={showErrors}
+              />
+            </Grid>
+            {
+              match.params.id
+                ? <Grid item xs={12} className={classes.gridSaveButton}>
+                  <Button
+                    onClick={this.deletePolicy}
+                  >
+                    Delete
+                </Button>
+                </Grid>
+                : null
+            }
+
+            <Grid item xs={12} className={classes.gridSaveButton}>
+              <Button
+                onClick={this.updatePolicy}
+                variant="outlined"
+                color="primary"
+              >
+                Save
+            </Button>
             </Grid>
           </Grid>
+
         </div>
       </React.Fragment>
-    )
+    );
   }
 }
 
-export default withStyles(styles)(PolicyEdit);
+export default withStyles(styles)(PolicyView);

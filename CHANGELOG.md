@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.32] - 2019-06-07
+### Added
+- Inital Controller UI
+
 ## [0.0.31] - 2019-06-06
 ### Added
 - Explicitly whitelist allowed filter queries in GET /{resource} endpoints

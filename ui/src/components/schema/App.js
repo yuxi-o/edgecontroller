@@ -9,32 +9,37 @@ export default {
       "vendor",
       "cores",
       "memory",
-      "source",
+      "source"
     ],
     properties: {
       id: {
         type: "string",
         title: "ID",
+        readonly: true
       },
       type: {
         type: "string",
         title: "Type",
+        enum: [
+          "container",
+          "vm"
+        ]
       },
       name: {
         type: "string",
-        title: "Name",
+        title: "Name"
       },
       version: {
         type: "string",
-        title: "Version",
+        title: "Version"
       },
       vendor: {
         type: "string",
-        title: "Vendor",
+        title: "Vendor"
       },
       description: {
         type: "string",
-        title: "Description",
+        title: "Description"
       },
       cores: {
         type: "number",
@@ -66,9 +71,9 @@ export default {
         type: "string",
         title: "Source",
       }
-    },
+    }
   },
   form: [
-    "*",
-  ],
+    "*"
+  ]
 };

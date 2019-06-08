@@ -18,6 +18,7 @@
     "react-dom": "^16.8.6",
     "react-redux": "^6.0.0",
     "react-router-dom": "^5.0.0",
+    "react-schema-form": "^0.6.13",
     "react-scripts": "^3.0.0",
     "react-swipeable-views": "^0.13.1",
     "react-swipeable-views-utils": "^0.13.1",

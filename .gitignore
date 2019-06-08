@@ -35,8 +35,5 @@ certificates/
 .idea/*
 .vscode/*
 
-# StatsD log
-statsd/stats.log
-
-# Syslog logs folder
-syslog/logs
+# Log files
+*.log

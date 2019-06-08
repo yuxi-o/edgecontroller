@@ -1,4 +1,4 @@
-import React,  { Component } from 'react';
+import React, { Component } from 'react';
 import withStyles from '@material-ui/core/styles/withStyles';
 import ApiClient from '../../api/ApiClient';
 import CircularLoader from '../progressbars/FullSizeCircularLoader';
@@ -24,7 +24,7 @@ class AddNodeFormDialog extends Component {
   constructor(props) {
     super(props);
 
-    const {open, handleParentClose, handleParentRefresh} = this.props;
+    const { open, handleParentClose, handleParentRefresh } = this.props;
 
     this.state = {
       open: open,
@@ -39,9 +39,9 @@ class AddNodeFormDialog extends Component {
     this.handleParentClose = handleParentClose.bind(this);
   }
 
-  static getDerivedStateFromProps(nextProps, prevState){
-    if(nextProps.open !== prevState.open){
-      return { open: nextProps.open};
+  static getDerivedStateFromProps(nextProps, prevState) {
+    if (nextProps.open !== prevState.open) {
+      return { open: nextProps.open };
     }
 
     return null;
@@ -58,40 +58,40 @@ class AddNodeFormDialog extends Component {
   handleAddNodeSubmit = (e) => {
     e.preventDefault();
     const clearFormValues = () => {
-      this.setState({submitError: false, serial: '', location: '', name: '', helperText: ''});
+      this.setState({ submitError: false, serial: '', location: '', name: '', helperText: '' });
     };
 
     if (this.state.loading === true) {
-      return ;
+      return;
     }
 
-    this.setState({loading: true});
+    this.setState({ loading: true });
 
-    const {serial, location, name} = this.state;
+    const { serial, location, name } = this.state;
 
     if (serial === '') {
-      return this.setState({submitError: true, helperText: 'Serial cannot be empty', loading: false});
+      return this.setState({ submitError: true, helperText: 'Serial cannot be empty', loading: false });
     }
 
-    return ApiClient.post('/nodes', {serial, location, name})
+    return ApiClient.post('/nodes', { serial, location, name })
       .then((resp) => {
         clearFormValues();
-        this.setState({loading: false});
+        this.setState({ loading: false });
         this.handleDialogClose();
         this.handleParentRefresh();
       })
       .catch((err) => {
 
-        if("response" in err && "data" in err.response) {
-          return this.setState({loading: false, submitError: true, helperText: err.response.data});
+        if ("response" in err && "data" in err.response) {
+          return this.setState({ loading: false, submitError: true, helperText: err.response.data });
         }
 
-        return this.setState({loading: false, submitError: true, helperText: 'Unknown error try again later'});
+        return this.setState({ loading: false, submitError: true, helperText: 'Unknown error try again later' });
       });
   };
 
   render() {
-    const {classes} = this.props;
+    const { classes } = this.props;
     const circularLoader = () => (
       <div className={classes.circularLoaderContainer}>
         <CircularLoader />
@@ -104,7 +104,7 @@ class AddNodeFormDialog extends Component {
           Cancel
         </Button>
         <Button onClick={this.handleAddNodeSubmit} type="submit" variant="contained" color="primary">
-          Register Edge Node
+          Add Edge Node
         </Button>
       </DialogActions>
     );
@@ -154,7 +154,7 @@ class AddNodeFormDialog extends Component {
                 fullWidth
               />
 
-              { this.state.helperText !== "" ?
+              {this.state.helperText !== "" ?
                 <FormHelperText id="component-error-text">
                   {this.state.helperText}
                 </FormHelperText> : null
@@ -162,7 +162,7 @@ class AddNodeFormDialog extends Component {
             </form>
           </DialogContent>
           {dialogActions()}
-          {(this.state.loading)? circularLoader() : null}
+          {(this.state.loading) ? circularLoader() : null}
         </Dialog>
       </React.Fragment>
     )

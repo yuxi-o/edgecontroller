@@ -1,15 +1,19 @@
-import React,  { Component } from 'react';
-import withStyles from '@material-ui/core/styles/withStyles';
-import CssBaseline from '@material-ui/core/CssBaseline';
+import React, { Component } from 'react';
+import ApiClient from '../api/ApiClient';
+import { SchemaForm, utils } from 'react-schema-form';
+import AppSchema from '../components/schema/App';
 import Topbar from '../components/Topbar';
+import withStyles from '@material-ui/core/styles/withStyles';
+import {
+  Grid,
+  Button
+} from '@material-ui/core';
 
-const backgroundShape = require('../images/shape.svg');
 const styles = theme => ({
   root: {
     flexGrow: 1,
     backgroundColor: theme.palette.grey['A500'],
     overflow: 'hidden',
-    background: `url(${backgroundShape}) no-repeat`,
     backgroundSize: 'cover',
     backgroundPosition: '0 400px',
     marginTop: 20,
@@ -17,23 +21,134 @@ const styles = theme => ({
     paddingBottom: 200
   },
   grid: {
-    width: 1000
+    paddingLeft: '20%',
+    paddingRight: '20%'
+  },
+  gridSaveButton: {
+    textAlign: 'right',
   }
 });
 
 class AppView extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      loaded: false,
+      errored: false,
+      error: null,
+      showErrors: true,
+      app: {},
+    };
+  }
+
+  // GET /apps/:app_id
+  getApp = () => {
+    const { match } = this.props;
+
+    const appID = match.params.id;
+
+    ApiClient.get(`/apps/${appID}`)
+      .then((resp) => {
+        this.setState({
+          loaded: true,
+          app: resp.data || {},
+        })
+      })
+      .catch((err) => {
+        this.setState({
+          loaded: true,
+          errored: true,
+          error: err,
+        });
+      });
+  }
+
+  // PATCH /apps/:app_id
+  updateApp = () => {
+    const { match } = this.props;
+    const { app } = this.state;
+
+    const appID = match.params.id;
+
+    ApiClient.patch(`/apps/${appID}`, app)
+      .then((resp) => {
+        this.setState({
+          loaded: true,
+        })
+      })
+      .catch((err) => {
+        this.setState({
+          loaded: true,
+          errored: true,
+          error: err,
+        });
+      });
+  }
+
+  onModelChange = (key, val) => {
+    const { app } = this.state;
+
+    const newApp = app;
+
+    utils.selectOrSet(key, newApp, val);
+
+    this.setState({ app: newApp });
+  }
+
+  componentDidMount() {
+    this.getApp();
+  }
 
   render() {
-    const { location: {pathname: currentPath}, classes } = this.props;
+    const { location: { pathname: currentPath }, classes } = this.props;
+
+    const {
+      loaded,
+      // errored,
+      // error,
+      showErrors,
+      app,
+    } = this.state;
+
+    if (!loaded) {
+      return <React.Fragment>Loading ...</React.Fragment>
+    }
 
     return (
       <React.Fragment>
-        <CssBaseline />
         <Topbar currentPath={currentPath} />
         <div className={classes.root}>
+          <Grid
+            container
+            justify="center"
+            alignItems="flex-end"
+            spacing={24}
+            className={classes.grid}
+          >
+            <Grid item xs={12}>
+              <SchemaForm
+                schema={AppSchema.schema}
+                form={AppSchema.form}
+                model={app}
+                onModelChange={this.onModelChange}
+                showErrors={showErrors}
+              />
+            </Grid>
+            <Grid item xs={12} className={classes.gridSaveButton}>
+              <Button
+                onClick={this.updateApp}
+                variant="outlined"
+                color="primary"
+              >
+                Save
+            </Button>
+            </Grid>
+          </Grid>
+
         </div>
       </React.Fragment>
-    )
+    );
   }
 }
 

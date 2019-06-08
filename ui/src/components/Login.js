@@ -1,4 +1,4 @@
-import React,  { Component } from 'react';
+import React, { Component } from 'react';
 import withStyles from '@material-ui/core/styles/withStyles';
 import { withRouter } from 'react-router-dom'
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -14,8 +14,6 @@ import InputLabel from '@material-ui/core/InputLabel';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Auth from './Auth';
 
-const backgroundShape = require('../images/shape.svg');
-const logo = require('../images/logo.svg');
 const numeral = require('numeral');
 
 numeral.defaultFormat('0');
@@ -24,7 +22,6 @@ const styles = theme => ({
     flexGrow: 1,
     backgroundColor: theme.palette.secondary['A100'],
     overflow: 'hidden',
-    background: `url(${backgroundShape}) no-repeat`,
     backgroundSize: 'cover',
     backgroundPosition: '0 400px',
     marginTop: 10,
@@ -39,11 +36,6 @@ const styles = theme => ({
   },
   bigContainer: {
     width: '80%'
-  },
-  logo: {
-    marginBottom: 24,
-    display: 'flex',
-    justifyContent: 'center'
   },
   stepContainer: {
     display: 'flex',
@@ -88,16 +80,16 @@ class LoginForm extends Component {
   handleLogin = event => {
     event.preventDefault();
 
-    const {username, password} = this.state;
+    const { username, password } = this.state;
 
     Auth.login(username, password)
-      .then(({success, errorText}) => {
+      .then(({ success, errorText }) => {
         if (success) {
-          this.props.history.push('/home');
+          this.props.history.push('/');
           return;
         }
 
-        this.setState({loginError: true, helperText: errorText})
+        this.setState({ loginError: true, helperText: errorText })
       });
   };
 
@@ -128,9 +120,6 @@ class LoginForm extends Component {
           <Grid container justify="center">
             <Grid spacing={24} alignItems="center" justify="center" container className={classes.grid}>
               <Grid item xs={12}>
-                <div className={classes.logo}>
-                  <img width={100} height={100} src={logo} alt="" />
-                </div>
                 <div className={classes.stepContainer}>
                   <div className={classes.smallContainer}>
                     <main className={classes.main}>
@@ -145,13 +134,13 @@ class LoginForm extends Component {
                         <form onSubmit={this.handleLogin} className={classes.form} autoComplete="off">
                           <FormControl margin="normal" required fullWidth>
                             <InputLabel htmlFor="username">Username</InputLabel>
-                            <Input error={this.state.loginError}  id="username" name="username" autoComplete="off" onChange={this.handleInputChange} autoFocus />
+                            <Input error={this.state.loginError} id="username" name="username" autoComplete="off" onChange={this.handleInputChange} autoFocus />
                           </FormControl>
                           <FormControl className={classes.passwordBox} margin="normal" required fullWidth>
                             <InputLabel htmlFor="password">Password</InputLabel>
                             <Input error={this.state.loginError} aria-describedby="component-error-text" name="password" type="password" id="password" onChange={this.handleInputChange} autoComplete="off" />
 
-                            { this.state.helperText !== "" ?
+                            {this.state.helperText !== "" ?
                               <FormHelperText id="component-error-text">
                                 {this.state.helperText}
                               </FormHelperText> : null

@@ -7,21 +7,17 @@ import NodeCard from '../components/cards/CardItem';
 import Topbar from '../components/Topbar';
 import ApiClient from '../api/ApiClient';
 import CircularLoader from '../components/progressbars/FullSizeCircularLoader';
-import Grow from '@material-ui/core/Grow';
 import Button from '@material-ui/core/Button';
 import AddIcon from '@material-ui/icons/Add';
 import Typography from "@material-ui/core/Typography";
 import AddNodeFormDialog from '../components/forms/AddNodeFormDialog';
 import { withSnackbar } from 'notistack';
 
-const backgroundShape = require('../images/shape.svg');
-
 const styles = theme => ({
   root: {
     flexGrow: 1,
     backgroundColor: theme.palette.grey['A500'],
     overflow: 'hidden',
-    background: `url(${backgroundShape}) no-repeat`,
     backgroundSize: 'cover',
     backgroundPosition: '0 400px',
     marginTop: 20,
@@ -133,7 +129,6 @@ class NodesView extends Component {
     };
 
     const nodesGrid = () => (
-      <Grow style={{ transformOrigin: '0 0 0' }} in={this.state.loaded}>
         <Grid spacing={24} alignItems="center" justify="center" container className={classes.grid}>
           <Grid item xs={12}>
             <Grid container direction="row"
@@ -159,7 +154,6 @@ class NodesView extends Component {
             {renderNodes()}
           </Grid>
         </Grid>
-      </Grow>
     );
 
     const circularLoader = () => (

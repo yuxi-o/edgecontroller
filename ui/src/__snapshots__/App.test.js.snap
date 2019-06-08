@@ -4,52 +4,33 @@ exports[`Smoke Tests for Main App.js Validate App Screen snapshot 1`] = `
 <div>
   <div>
     <div
-      className="LoginForm-root-274"
+      className="LoginForm-root-273"
     >
       <div
-        className="MuiGrid-container-287 MuiGrid-justify-xs-center-304"
+        className="MuiGrid-container-285 MuiGrid-justify-xs-center-302"
       >
         <div
-          className="MuiGrid-container-287 MuiGrid-spacing-xs-24-311 MuiGrid-align-items-xs-center-295 MuiGrid-justify-xs-center-304 LoginForm-grid-275"
+          className="MuiGrid-container-285 MuiGrid-spacing-xs-24-309 MuiGrid-align-items-xs-center-293 MuiGrid-justify-xs-center-302 LoginForm-grid-274"
         >
           <div
-            className="MuiGrid-item-288 MuiGrid-grid-xs-12-327"
+            className="MuiGrid-item-286 MuiGrid-grid-xs-12-325"
           >
             <div
-              className="LoginForm-logo-278"
-            >
-              <img
-                alt=""
-                height={100}
-                src={
-                  Object {
-                    "ReactComponent": Object {
-                      "$$typeof": Symbol(react.forward_ref),
-                      "render": [Function],
-                    },
-                    "__esModule": true,
-                    "default": "logo.svg",
-                  }
-                }
-                width={100}
-              />
-            </div>
-            <div
-              className="LoginForm-stepContainer-279"
+              className="LoginForm-stepContainer-277"
             >
               <div
-                className="LoginForm-smallContainer-276"
+                className="LoginForm-smallContainer-275"
               >
                 <main>
                   <div
-                    className="MuiPaper-root-384 MuiPaper-elevation2-388 MuiPaper-rounded-385 LoginForm-paper-283"
+                    className="MuiPaper-root-382 MuiPaper-elevation2-386 MuiPaper-rounded-383 LoginForm-paper-281"
                   >
                     <div
-                      className="MuiAvatar-root-411 MuiAvatar-colorDefault-412"
+                      className="MuiAvatar-root-409 MuiAvatar-colorDefault-410"
                     >
                       <svg
                         aria-hidden="true"
-                        className="MuiSvgIcon-root-414"
+                        className="MuiSvgIcon-root-412"
                         focusable="false"
                         role="presentation"
                         viewBox="0 0 24 24"
@@ -71,7 +52,7 @@ exports[`Smoke Tests for Main App.js Validate App Screen snapshot 1`] = `
                       </svg>
                     </div>
                     <h1
-                      className="MuiTypography-root-423 MuiTypography-h5-439"
+                      className="MuiTypography-root-421 MuiTypography-h5-437"
                     >
                       Controller Login
                     </h1>
@@ -80,29 +61,29 @@ exports[`Smoke Tests for Main App.js Validate App Screen snapshot 1`] = `
                       onSubmit={[Function]}
                     >
                       <div
-                        className="MuiFormControl-root-459 MuiFormControl-marginNormal-460 MuiFormControl-fullWidth-462"
+                        className="MuiFormControl-root-457 MuiFormControl-marginNormal-458 MuiFormControl-fullWidth-460"
                       >
                         <label
-                          className="MuiFormLabel-root-474 MuiFormLabel-required-479 MuiInputLabel-required-467 MuiInputLabel-root-463 MuiInputLabel-formControl-468 MuiInputLabel-animated-471"
+                          className="MuiFormLabel-root-472 MuiFormLabel-required-477 MuiInputLabel-required-465 MuiInputLabel-root-461 MuiInputLabel-formControl-466 MuiInputLabel-animated-469"
                           data-shrink={false}
                           htmlFor="username"
                         >
                           Username
                           <span
-                            className="MuiFormLabel-asterisk-480"
+                            className="MuiFormLabel-asterisk-478"
                           >
                              *
                           </span>
                         </label>
                         <div
-                          className="MuiInputBase-root-494 MuiInput-root-481 MuiInput-underline-485 MuiInputBase-formControl-495 MuiInput-formControl-482"
+                          className="MuiInputBase-root-492 MuiInput-root-479 MuiInput-underline-483 MuiInputBase-formControl-493 MuiInput-formControl-480"
                           onClick={[Function]}
                         >
                           <input
                             aria-invalid={false}
                             autoComplete="off"
                             autoFocus={true}
-                            className="MuiInputBase-input-504 MuiInput-input-489"
+                            className="MuiInputBase-input-502 MuiInput-input-487"
                             disabled={false}
                             id="username"
                             name="username"
@@ -115,29 +96,29 @@ exports[`Smoke Tests for Main App.js Validate App Screen snapshot 1`] = `
                         </div>
                       </div>
                       <div
-                        className="MuiFormControl-root-459 MuiFormControl-marginNormal-460 MuiFormControl-fullWidth-462 LoginForm-passwordBox-286"
+                        className="MuiFormControl-root-457 MuiFormControl-marginNormal-458 MuiFormControl-fullWidth-460 LoginForm-passwordBox-284"
                       >
                         <label
-                          className="MuiFormLabel-root-474 MuiFormLabel-required-479 MuiInputLabel-required-467 MuiInputLabel-root-463 MuiInputLabel-formControl-468 MuiInputLabel-animated-471"
+                          className="MuiFormLabel-root-472 MuiFormLabel-required-477 MuiInputLabel-required-465 MuiInputLabel-root-461 MuiInputLabel-formControl-466 MuiInputLabel-animated-469"
                           data-shrink={false}
                           htmlFor="password"
                         >
                           Password
                           <span
-                            className="MuiFormLabel-asterisk-480"
+                            className="MuiFormLabel-asterisk-478"
                           >
                              *
                           </span>
                         </label>
                         <div
-                          className="MuiInputBase-root-494 MuiInput-root-481 MuiInput-underline-485 MuiInputBase-formControl-495 MuiInput-formControl-482"
+                          className="MuiInputBase-root-492 MuiInput-root-479 MuiInput-underline-483 MuiInputBase-formControl-493 MuiInput-formControl-480"
                           onClick={[Function]}
                         >
                           <input
                             aria-describedby="component-error-text"
                             aria-invalid={false}
                             autoComplete="off"
-                            className="MuiInputBase-input-504 MuiInput-input-489 MuiInputBase-inputType-507 MuiInput-inputType-492"
+                            className="MuiInputBase-input-502 MuiInput-input-487 MuiInputBase-inputType-505 MuiInput-inputType-490"
                             disabled={false}
                             id="password"
                             name="password"
@@ -150,7 +131,7 @@ exports[`Smoke Tests for Main App.js Validate App Screen snapshot 1`] = `
                         </div>
                       </div>
                       <button
-                        className="MuiButtonBase-root-537 MuiButton-root-511 MuiButton-contained-522 MuiButton-containedPrimary-523 MuiButton-raised-525 MuiButton-raisedPrimary-526 MuiButton-fullWidth-536 LoginForm-buttonBar-281"
+                        className="MuiButtonBase-root-535 MuiButton-root-509 MuiButton-contained-520 MuiButton-containedPrimary-521 MuiButton-raised-523 MuiButton-raisedPrimary-524 MuiButton-fullWidth-534 LoginForm-buttonBar-279"
                         disabled={false}
                         onBlur={[Function]}
                         onContextMenu={[Function]}
@@ -167,12 +148,12 @@ exports[`Smoke Tests for Main App.js Validate App Screen snapshot 1`] = `
                         type="submit"
                       >
                         <span
-                          className="MuiButton-label-512"
+                          className="MuiButton-label-510"
                         >
                           Sign in
                         </span>
                         <span
-                          className="MuiTouchRipple-root-540"
+                          className="MuiTouchRipple-root-538"
                         />
                       </button>
                     </form>

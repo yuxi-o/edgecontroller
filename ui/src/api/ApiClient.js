@@ -37,11 +37,13 @@ class ApiClient {
   }
 
   updateAxios() {
-    this.axiosConfig = {...this.axiosConfig, headers: {
+    this.axiosConfig = {
+      ...this.axiosConfig, headers: {
         contentType: 'application/json',
         accept: 'application/json',
         'Authorization': `Bearer ${this.getJWT()}`,
-      }};
+      }
+    };
 
     this.axiosInstance = axios.create(this.axiosConfig);
   }
@@ -53,7 +55,7 @@ class ApiClient {
    * @returns {Promise<AxiosResponse>}
    */
   async login(username, password) {
-    return await this.axiosInstance.post('/auth', {username, password});
+    return await this.axiosInstance.post('/auth', { username, password });
   }
 
   /**
@@ -74,6 +76,16 @@ class ApiClient {
    */
   async post(path, data = {}) {
     return await this.axiosInstance.post(path, data);
+  }
+
+  /**
+ * @async
+ * @param {string} path - The Path
+ * @param {*} data - Patch Body
+ * @returns {Promise<AxiosResponse>}
+ */
+  async patch(path, data = {}) {
+    return await this.axiosInstance.patch(path, data);
   }
 
   /**

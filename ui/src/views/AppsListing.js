@@ -1,11 +1,10 @@
-import React,  { Component } from 'react';
+import React, { Component } from 'react';
 import withStyles from '@material-ui/core/styles/withStyles';
 import { withRouter } from "react-router-dom";
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
 import CardItem from '../components/cards/CardItem';
 import Topbar from '../components/Topbar';
-import Grow from "@material-ui/core/Grow";
 import CircularLoader from "../components/progressbars/FullSizeCircularLoader";
 import ApiClient from "../api/ApiClient";
 import AddAppFormDialog from "../components/forms/AddAppFormDialog";
@@ -13,14 +12,12 @@ import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import AddIcon from '@material-ui/icons/Add';
 import { withSnackbar } from 'notistack';
-const backgroundShape = require('../images/shape.svg');
 
 const styles = theme => ({
   root: {
     flexGrow: 1,
     backgroundColor: theme.palette.grey['A500'],
     overflow: 'hidden',
-    background: `url(${backgroundShape}) no-repeat`,
     backgroundSize: 'cover',
     backgroundPosition: '0 400px',
     marginTop: 20,
@@ -62,25 +59,25 @@ class AppsView extends Component {
 
   fetchApps = () => {
     return ApiClient.get('/apps').then((resp) => {
-      this.setState({loaded: true, apps: resp.data})
+      this.setState({ loaded: true, apps: resp.data })
     }).catch((err) => {
       this.props.enqueueSnackbar(`Error loading apps. Please try again later.`, {
         variant: 'error',
       });
-      this.setState({loaded: true});
+      this.setState({ loaded: true });
     });
   };
 
   handleClickOpen = () => {
-    this.setState({showAddForm: !this.state.showAddForm});
+    this.setState({ showAddForm: !this.state.showAddForm });
   };
 
   handleParentClose = () => {
-    this.setState({showAddForm: false});
+    this.setState({ showAddForm: false });
   };
 
   handleParentRefresh = () => {
-    this.setState({loaded: false});
+    this.setState({ loaded: false });
     this.fetchApps();
   };
 
@@ -89,7 +86,7 @@ class AppsView extends Component {
   }
 
   render() {
-    const { location: {pathname: currentPath}, classes } = this.props;
+    const { location: { pathname: currentPath }, classes } = this.props;
 
     const renderAddNodeForm = () => {
       return (
@@ -102,7 +99,7 @@ class AppsView extends Component {
     };
 
     const renderApps = () => {
-      const {apps} = this.state || {};
+      const { apps } = this.state || {};
       return Object.keys(apps).map(key => {
         return (
           <CardItem
@@ -117,7 +114,6 @@ class AppsView extends Component {
     };
 
     const appsGrid = () => (
-      <Grow style={{ transformOrigin: '0 0 0' }} in={this.state.loaded}>
         <Grid spacing={24} alignItems="center" justify="center" container className={classes.grid}>
           <Grid item xs={12}>
             <Grid container direction="row"
@@ -143,7 +139,6 @@ class AppsView extends Component {
             {renderApps()}
           </Grid>
         </Grid>
-      </Grow>
     );
 
     const circularLoader = () => (

@@ -2,12 +2,12 @@ import React from "react";
 import TableRow from "@material-ui/core/TableRow";
 import TableCell from "@material-ui/core/TableCell";
 import Button from "@material-ui/core/Button";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 
 class EnhancedTableRow extends React.Component {
 
   render() {
-    const {tableData} = this.props;
+    const { tableData } = this.props;
     const isSelected = this.props.isSelected;
 
     const editLink = (props) => <Link to={tableData.editUrl} {...props} />;
@@ -34,13 +34,6 @@ class EnhancedTableRow extends React.Component {
             className={'classes.button'}
           >
             Edit
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            className={'classes.button'}
-          >
-            Delete
           </Button>
         </TableCell>
       </TableRow>

@@ -23,8 +23,6 @@ import Grow from '@material-ui/core/Grow';
 import Paper from '@material-ui/core/Paper';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 
-const logo = require('../images/logo.svg');
-
 const styles = theme => ({
   appBar: {
     position: 'relative',
@@ -123,7 +121,7 @@ class Topbar extends Component {
 
   handleLogout = event => {
     Auth.logout(() => {
-      return this.props.history.push('/home');
+      return this.props.history.push('/');
     });
 
   };
@@ -137,26 +135,15 @@ class Topbar extends Component {
       const matchRegExp = `${path}?.*`;
       return this.props.currentPath.match(matchRegExp)
     };
-
-    if (pathMatcher('/home')) {
+    if (pathMatcher('/nodes')) {
       return 0
     }
-    if (pathMatcher('/dashboard')) {
+    if (pathMatcher('/apps')) {
       return 1
     }
-    if (pathMatcher('/nodes')) {
+    if (pathMatcher('/policies')) {
       return 2
     }
-    if (pathMatcher('/apps')) {
-      return 3
-    }
-    if (pathMatcher('/policies')) {
-      return 4
-    }
-    if (pathMatcher('/dns')) {
-      return 5
-    }
-
   };
 
   render() {
@@ -172,7 +159,6 @@ class Topbar extends Component {
               <div className={classes.inline}>
                 <Typography variant="h6" color="inherit" noWrap>
                   <Link to='/' className={classes.link}>
-                    <img width={20} src={logo} alt="" />
                     <span className={classes.tagline}>Controller CE</span>
                   </Link>
                 </Typography>
@@ -231,8 +217,6 @@ class Topbar extends Component {
                     <Paper>
                       <ClickAwayListener onClickAway={this.handleClose}>
                         <MenuList>
-                          <MenuItem onClick={this.handleClose}>Profile</MenuItem>
-                          <MenuItem onClick={this.handleClose}>My account</MenuItem>
                           <MenuItem onClick={this.handleLogout}>Logout</MenuItem>
                         </MenuList>
                       </ClickAwayListener>

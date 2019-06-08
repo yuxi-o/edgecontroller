@@ -7,25 +7,29 @@ import MuiTheme from './MuiTheme';
 import '@material-ui/icons';
 import 'typeface-lato';
 import 'typeface-roboto';
-import {SnackbarProvider} from "notistack";
+import { SnackbarProvider } from "notistack";
+import CssBaseline from '@material-ui/core/CssBaseline';
 
 class App extends Component {
   render() {
     return (
-      <SnackbarProvider maxSnack={3}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'right'
-        }}
-      >
-        <div>
-          <MuiThemeProvider theme={MuiTheme}>
-            <BrowserRouter>
-              <Routes />
-            </BrowserRouter>
-          </MuiThemeProvider>
-        </div>
-      </SnackbarProvider>
+      <React.Fragment>
+        <CssBaseline />
+        <SnackbarProvider maxSnack={3}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right'
+          }}
+        >
+          <div>
+            <MuiThemeProvider theme={MuiTheme}>
+              <BrowserRouter>
+                <Routes />
+              </BrowserRouter>
+            </MuiThemeProvider>
+          </div>
+        </SnackbarProvider>
+      </React.Fragment>
     );
   }
 }
