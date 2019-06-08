@@ -81,6 +81,11 @@ The flags are:
 - <k8s_api_path>: Kubernetes api path (default: `/`)
 - <k8s_master_user>: Kubernetes default user (default: none)
 
+### Running the CCE-UI & CUPS-UI
+- You must have the corresponding .env.production environment files configured per the Readme's in the UI projects
+- Use `Make` in order to spin up the production level docker-containers via docker-compose
+- eg `make cups-ui-up && make ui-up`
+
 ## Project Layout
 
 See [this link](https://medium.com/@benbjohnson/standard-package-layout-7cdbc8391fc1)

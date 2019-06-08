@@ -50,15 +50,26 @@ script:
   - make lint kubectl-install minikube-install minikube-start minikube-wait test
 
 jobs:
-  include:
-    - stage: FrontEnd
-      language: node_js
-      node_js:
-        - "lts/*"
-      before_script:
-        - cd ui/
-        - npm install -g yarn
-      script:
-        - yarn install
-        - yarn build
-        - yarn test
+    include:
+      - stage: Controller UI
+        language: node_js
+        node_js:
+          - "lts/*"
+        before_script:
+          - cd ui/
+          - npm install -g yarn
+        script:
+          - yarn install
+          - yarn build
+          - yarn test
+      - stage: CUPs UI
+        language: node_js
+        node_js:
+          - "lts/*"
+        before_script:
+          - cd cups-ui/
+          - npm install -g yarn
+        script:
+          - yarn install
+          - yarn build
+          - yarn test

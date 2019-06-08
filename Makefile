@@ -56,6 +56,11 @@ help:
 	@echo "  ui-down          to stop the production UI container"
 	@echo "  ui-dev-up        to start local developer instance of the UI"
 	@echo "  ui-test          run the UI project tests"
+	@echo ""
+	@echo "  cups-ui-up            to start the production UI Container"
+	@echo "  cups-ui-down          to stop the production UI container"
+	@echo "  cups-ui-dev-up        to start local developer instance of the UI"
+	@echo "  cups-ui-test          run the UI project tests"
 
 clean:
 	rm -rf dist certificates
@@ -138,6 +143,19 @@ ui-dev-up:
 
 ui-test:
 	cd ui/ && yarn install && yarn build && yarn test
+
+cups-ui-up:
+	docker build -t cce-cups-ui ./cups-ui
+	docker-compose up -d cups-ui
+
+cups-ui-down:
+	docker-compose stop cups-ui
+
+cups-ui-dev-up:
+	cd cups-ui/ && yarn install && yarn start
+
+cups-ui-test:
+	cd cups-ui/ && yarn install && yarn build && yarn test
 
 test-unit:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites \

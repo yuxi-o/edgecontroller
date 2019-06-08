@@ -12,3 +12,7 @@ services:
     image: cce-ui:latest
     ports:
       - 3000:80/tcp
+  cups-ui:
+    image: cce-cups-ui:latest
+    ports:
+      - 3010:80/tcp
