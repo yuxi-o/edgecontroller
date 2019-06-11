@@ -1,4 +1,4 @@
-import React,  { Component } from 'react';
+import React, { Component } from 'react';
 import withStyles from '@material-ui/core/styles/withStyles';
 import ApiClient from '../../api/ApiClient';
 import CircularLoader from '../progressbars/FullSizeCircularLoader';
@@ -14,6 +14,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+import { withSnackbar } from 'notistack';
 
 const styles = theme => ({
   circularLoaderContainer: {
@@ -31,13 +32,13 @@ class AddAppFormDialog extends Component {
   constructor(props) {
     super(props);
 
-    const {open, handleParentClose, handleParentRefresh} = this.props;
+    const { open, handleParentClose, handleParentRefresh } = this.props;
 
     this.state = {
       open: open,
       loading: false,
       helperText: null,
-      ports: [{port: 0, protocol: ''}],
+      ports: [{ port: 0, protocol: '' }],
     };
 
     this.handleDialogClose = this.handleDialogClose.bind(this);
@@ -49,9 +50,9 @@ class AddAppFormDialog extends Component {
     this.handleParentClose = handleParentClose.bind(this);
   }
 
-  static getDerivedStateFromProps(nextProps, prevState){
-    if(nextProps.open !== prevState.open){
-      return { open: nextProps.open};
+  static getDerivedStateFromProps(nextProps, prevState) {
+    if (nextProps.open !== prevState.open) {
+      return { open: nextProps.open };
     }
 
     return null;
@@ -60,27 +61,27 @@ class AddAppFormDialog extends Component {
   handlePortInput = (e) => {
     let ports = [...this.state.ports];
     ports[e.target.dataset.id]['port'] = Math.trunc(e.target.value);
-    this.setState({ports});
+    this.setState({ ports });
   };
 
   handleProtocol = (e) => {
     const [name, id] = e.target.name.split('-');
     let ports = [...this.state.ports];
     ports[id][name] = e.target.value;
-    this.setState({ports});
+    this.setState({ ports });
   };
 
   handleInputChange = (e) => {
-    if(e.target.name === 'cores' || e.target.name === 'memory') {
-      this.setState({[e.target.name]: Math.trunc(e.target.value)});
-      return ;
+    if (e.target.name === 'cores' || e.target.name === 'memory') {
+      this.setState({ [e.target.name]: Math.trunc(e.target.value) });
+      return;
     }
-    this.setState({[e.target.name]: e.target.value});
+    this.setState({ [e.target.name]: e.target.value });
   };
 
   addPorts = (e) => {
     this.setState((prevState) => ({
-      ports: [...prevState.ports, {port: 0, protocol: ''}]
+      ports: [...prevState.ports, { port: 0, protocol: '' }]
     }));
   };
 
@@ -89,43 +90,46 @@ class AddAppFormDialog extends Component {
   };
 
   clearPortList = () => {
-    this.setState({ports: [{port: 0, protocol: ''}]});
+    this.setState({ ports: [{ port: 0, protocol: '' }] });
   };
 
   handleSubmit = (e) => {
     e.preventDefault();
 
     const getAppFormValues = () => {
-      const {name, version, type, vendor, description, cores, memory, ports, source} = this.state;
+      const { name, version, type, vendor, description, cores, memory, ports, source } = this.state;
 
-      return {name, version, type, vendor, description, cores, memory, ports, source};
+      return { name, version, type, vendor, description, cores, memory, ports, source };
     };
 
     if (this.state.loading === true) {
-      return ;
+      return;
     }
 
-    this.setState({loading: true});
+    this.setState({ loading: true });
 
     return ApiClient.post('/apps', getAppFormValues())
       .then((resp) => {
-        this.setState({loading: false});
+        this.setState({ loading: false });
         this.handleDialogClose();
         this.handleParentRefresh();
+        this.props.enqueueSnackbar(`Successfully added app.`, { variant: 'success' });
       })
       .catch((err) => {
-        console.log(err);
-
-        if("response" in err && "data" in err.response) {
-          return this.setState({loading: false, submitError: true, helperText: err.response.data});
+        if ("response" in err && "data" in err.response) {
+          this.setState({ loading: false, submitError: true, helperText: err.response.data });
+          this.props.enqueueSnackbar(`${err.response.data}.`, { variant: 'error' });
+          return;
         }
 
-        return this.setState({loading: false, submitError: true, helperText: 'Unknown error try again later'});
+        this.setState({ loading: false, submitError: true, helperText: 'Unknown error try again later' });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   };
 
   render() {
-    const {classes} = this.props;
+    const { classes } = this.props;
     const circularLoader = () => (
       <div className={classes.circularLoaderContainer}>
         <CircularLoader />
@@ -138,7 +142,7 @@ class AddAppFormDialog extends Component {
           Cancel
         </Button>
         <Button onClick={this.handleSubmit} type="submit" variant="contained" color="primary">
-         Upload Application
+          Upload Application
         </Button>
       </DialogActions>
     );
@@ -235,7 +239,7 @@ class AddAppFormDialog extends Component {
           <DialogContent>
             <DialogContentText id="add-node-dialog-description">
             </DialogContentText>
-            <form onSubmit={(e) => {e.preventDefault()}}>
+            <form onSubmit={(e) => { e.preventDefault() }}>
               {generateInputField("name", "name", "Name")}
               {generateSelectField("type", "type", ['container', 'vm'])}
               {generateInputField("version", "version", "Version")}
@@ -246,7 +250,7 @@ class AddAppFormDialog extends Component {
               {generateInputField("source", "source", "Source")}
               {renderPortsInputField()}
 
-              { this.state.helperText !== "" ?
+              {this.state.helperText !== "" ?
                 <FormHelperText id="component-error-text">
                   {this.state.helperText}
                 </FormHelperText> : null
@@ -254,11 +258,11 @@ class AddAppFormDialog extends Component {
             </form>
           </DialogContent>
           {dialogActions()}
-          {(this.state.loading)? circularLoader() : null}
+          {(this.state.loading) ? circularLoader() : null}
         </Dialog>
       </React.Fragment>
     )
   }
 }
 
-export default withStyles(styles)(AddAppFormDialog);
+export default withStyles(styles)(withSnackbar(AddAppFormDialog));

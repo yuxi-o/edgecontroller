@@ -102,7 +102,7 @@ class CardItem extends Component {
   }
 
   handleDelete = () => {
-    this.setState({dialogShown: true});
+    this.setState({ dialogShown: true });
   };
 
   handleClose = () => {
@@ -110,22 +110,22 @@ class CardItem extends Component {
   };
 
   handleDeleteReq = () => {
-    if(this.state.showLoader === true) {
+    if (this.state.showLoader === true) {
       return;
     }
 
-    this.setState({showLoader: true});
+    this.setState({ showLoader: true });
 
     ApiClient.delete(this.state.url)
       .then(() => {
-        this.setState({deleted: true});
+        this.setState({ deleted: true });
         this.handleClose();
       })
       .catch((err) => {
-        this.props.enqueueSnackbar(`Please try again later.`, {
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, {
           variant: 'error',
         });
-        this.setState({showLoader: false});
+        this.setState({ showLoader: false });
         setTimeout(this.props.closeSnackbar, 2000);
         this.handleClose();
       });
@@ -133,7 +133,7 @@ class CardItem extends Component {
 
 
   render() {
-    const {classes, CardItem, excludeKeys} = this.props;
+    const { classes, CardItem, excludeKeys } = this.props;
     const secondaryLink = (props) => <Link to={this.state.url} {...props} />;
     const filterKey = (key) => {
       return excludeKeys.includes(key) ? null : key;
@@ -141,18 +141,18 @@ class CardItem extends Component {
 
     const displayCardData = () => {
       return Object.keys(CardItem).filter(filterKey).map(key => {
-          return (
-            <Grid key={key} item className={classes.inline}>
-              <Typography style={{textTransform: 'uppercase'}} color='secondary' gutterBottom>
-                {key}
-              </Typography>
-              <Typography variant="h6" gutterBottom>
-                {CardItem[key]}
-              </Typography>
-            </Grid>
-          )
-        })
-      };
+        return (
+          <Grid key={key} item className={classes.inline}>
+            <Typography style={{ textTransform: 'uppercase' }} color='secondary' gutterBottom>
+              {key}
+            </Typography>
+            <Typography variant="h6" gutterBottom>
+              {CardItem[key]}
+            </Typography>
+          </Grid>
+        )
+      })
+    };
 
     const cardItem = () => (
       <div className={classes.root}>
@@ -161,7 +161,7 @@ class CardItem extends Component {
             <div className={classes.itemContainer}>
               <div className={classes.avatarContainer}>
                 <Avatar className={classes.avatar}>
-                  <DescriptionIcon/>
+                  <DescriptionIcon />
                 </Avatar>
               </div>
               <div className={classes.baseline}>
@@ -176,7 +176,7 @@ class CardItem extends Component {
                   primaryButtonName="Delete"
                   primaryButtonAction={this.handleDelete}
                   secondaryButtonName="Edit"
-                  secondaryLink={secondaryLink}/>
+                  secondaryLink={secondaryLink} />
               </div>
             </div>
           </Paper>

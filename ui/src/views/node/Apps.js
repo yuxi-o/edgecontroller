@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import ApiClient from "../../api/ApiClient";
 import AppView from './App';
+import { withSnackbar } from 'notistack';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -21,13 +22,12 @@ import {
   Add
 } from '@material-ui/icons';
 
-export default class AppsView extends Component {
+class AppsView extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       loaded: false,
-      errored: false,
       error: null,
       open: false,
       nodeApps: [],
@@ -56,12 +56,10 @@ export default class AppsView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
           nodeApps: [],
         });
 
-        this.getNodeAppsStatus();
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -82,13 +80,14 @@ export default class AppsView extends Component {
         })
         .catch((err) => {
           this.setState({
-            errored: true,
             error: err,
             nodeAppsStatus: {
               ...nodeAppsStatus,
               [app.id]: 'unknown',
             },
           });
+
+          this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
         });
     })
   }
@@ -100,14 +99,15 @@ export default class AppsView extends Component {
         this.setState({
           loaded: true,
           apps: resp.data || [],
-        })
+        });
       })
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
           error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -125,13 +125,14 @@ export default class AppsView extends Component {
         this.setState({
           loaded: true,
         })
+
+        this.props.enqueueSnackbar(`Successfully deployed app ${selectedAppID}.`, { variant: 'success' });
       })
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -148,9 +149,9 @@ export default class AppsView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -171,9 +172,9 @@ export default class AppsView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -189,9 +190,9 @@ export default class AppsView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -213,9 +214,9 @@ export default class AppsView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
 
     this.handleClosePolicy();
@@ -277,7 +278,7 @@ export default class AppsView extends Component {
                 onChange={this.handleChange}
               >
                 {
-                  apps.map(item => <option value={item.id}>{item.id}</option>)
+                  apps.map(item => <option key={item.id} value={item.id}>{item.id}</option>)
                 }
               </Select>
             </FormControl>
@@ -406,19 +407,12 @@ export default class AppsView extends Component {
 
   render() {
     const {
-      loaded,
-      // errored,
-      // error,
+      loaded
     } = this.state;
 
     if (!loaded) {
       return <React.Fragment>Loading ...</React.Fragment>
     }
-
-    // Temp disable error until backend supports this endpoint
-    // if (errored) {
-    //   return <React.Fragment>{error.toString()}</React.Fragment>
-    // }
 
     return (
       <React.Fragment>
@@ -444,3 +438,5 @@ export default class AppsView extends Component {
     );
   }
 };
+
+export default withSnackbar(AppsView);

@@ -13,7 +13,7 @@ exports[`Smoke Tests for Main App.js Validate App Screen snapshot 1`] = `
           className="MuiGrid-container-285 MuiGrid-spacing-xs-24-309 MuiGrid-align-items-xs-center-293 MuiGrid-justify-xs-center-302 LoginForm-grid-274"
         >
           <div
-            className="MuiGrid-item-286 MuiGrid-grid-xs-12-325"
+            className="MuiGrid-item-286 MuiGrid-grid-xs-12-325 MuiGrid-grid-lg-6-361"
           >
             <div
               className="LoginForm-stepContainer-277"

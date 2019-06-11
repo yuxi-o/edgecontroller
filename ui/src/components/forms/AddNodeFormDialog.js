@@ -10,6 +10,7 @@ import DialogContent from '@material-ui/core/DialogContent/index';
 import DialogContentText from '@material-ui/core/DialogContentText/index';
 import DialogTitle from '@material-ui/core/DialogTitle/index';
 import FormHelperText from "@material-ui/core/FormHelperText";
+import { withSnackbar } from 'notistack';
 
 const styles = theme => ({
   circularLoaderContainer: {
@@ -79,14 +80,18 @@ class AddNodeFormDialog extends Component {
         this.setState({ loading: false });
         this.handleDialogClose();
         this.handleParentRefresh();
+        this.props.enqueueSnackbar(`Successfully added edge node ${serial}.`, { variant: 'success' });
       })
       .catch((err) => {
-
         if ("response" in err && "data" in err.response) {
-          return this.setState({ loading: false, submitError: true, helperText: err.response.data });
+          this.setState({ loading: false, submitError: true, helperText: err.response.data });
+          this.props.enqueueSnackbar(`${err.response.data}.`, { variant: 'error' });
+          return;
         }
 
-        return this.setState({ loading: false, submitError: true, helperText: 'Unknown error try again later' });
+        this.setState({ loading: false, submitError: true, helperText: 'Unknown error try again later' });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   };
 
@@ -169,4 +174,4 @@ class AddNodeFormDialog extends Component {
   }
 }
 
-export default withStyles(styles)(AddNodeFormDialog);
+export default withStyles(styles)(withSnackbar(AddNodeFormDialog));

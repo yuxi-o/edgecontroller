@@ -14,18 +14,18 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import { SchemaForm, utils } from 'react-schema-form';
 import InterfaceSchema from '../../components/schema/NodeInterface';
 import Select from '@material-ui/core/Select';
+import { withSnackbar } from 'notistack';
 import {
   Grid,
   Button
 } from '@material-ui/core';
 
-export default class InterfacesView extends Component {
+class InterfacesView extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       loaded: false,
-      errored: false,
       error: null,
       showErrors: true,
       interfaces: [],
@@ -52,9 +52,9 @@ export default class InterfacesView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -67,14 +67,16 @@ export default class InterfacesView extends Component {
       .then((resp) => {
         this.setState({
           loaded: true,
-        })
+        });
+
+        this.props.enqueueSnackbar(`Successfully updated node interface ${nodeInterface.id}.`, { variant: 'success' });
       })
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -87,14 +89,14 @@ export default class InterfacesView extends Component {
         this.setState({
           loaded: true,
           nodeInterface: resp.data || {},
-        })
+        });
       })
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -112,9 +114,9 @@ export default class InterfacesView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -126,14 +128,16 @@ export default class InterfacesView extends Component {
       .then((resp) => {
         this.setState({
           loaded: true,
-        })
+        });
+
+        this.props.enqueueSnackbar(`Successfully deleted policy on interface ${interfaceID}.`, { variant: 'success' });
       })
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -254,9 +258,10 @@ export default class InterfacesView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
           error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -278,9 +283,10 @@ export default class InterfacesView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
           error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
 
     this.handleClosePolicy();
@@ -345,19 +351,12 @@ export default class InterfacesView extends Component {
 
   render() {
     const {
-      loaded,
-      // errored,
-      // error,
+      loaded
     } = this.state;
 
     if (!loaded) {
       return <React.Fragment>Loading ...</React.Fragment>
     }
-
-    // Temp disable error until backend supports this endpoint
-    // if (errored) {
-    //   return <React.Fragment>{error.toString()}</React.Fragment>
-    // }
 
     return (
       <React.Fragment>
@@ -372,3 +371,5 @@ export default class InterfacesView extends Component {
     );
   }
 };
+
+export default withSnackbar(InterfacesView);

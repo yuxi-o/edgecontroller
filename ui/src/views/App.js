@@ -4,6 +4,7 @@ import { SchemaForm, utils } from 'react-schema-form';
 import AppSchema from '../components/schema/App';
 import Topbar from '../components/Topbar';
 import withStyles from '@material-ui/core/styles/withStyles';
+import { withSnackbar } from 'notistack';
 import {
   Grid,
   Button
@@ -35,7 +36,6 @@ class AppView extends Component {
 
     this.state = {
       loaded: false,
-      errored: false,
       error: null,
       showErrors: true,
       app: {},
@@ -53,14 +53,14 @@ class AppView extends Component {
         this.setState({
           loaded: true,
           app: resp.data || {},
-        })
+        });
       })
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -75,14 +75,16 @@ class AppView extends Component {
       .then((resp) => {
         this.setState({
           loaded: true,
-        })
+        });
+
+        this.props.enqueueSnackbar(`Successfully updated application.`, { variant: 'success' });
       })
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -105,8 +107,6 @@ class AppView extends Component {
 
     const {
       loaded,
-      // errored,
-      // error,
       showErrors,
       app,
     } = this.state;
@@ -152,4 +152,4 @@ class AppView extends Component {
   }
 }
 
-export default withStyles(styles)(AppView);
+export default withStyles(styles)(withSnackbar(AppView));

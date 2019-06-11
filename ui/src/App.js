@@ -9,6 +9,7 @@ import 'typeface-lato';
 import 'typeface-roboto';
 import { SnackbarProvider } from "notistack";
 import CssBaseline from '@material-ui/core/CssBaseline';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 class App extends Component {
   render() {
@@ -22,11 +23,13 @@ class App extends Component {
           }}
         >
           <div>
-            <MuiThemeProvider theme={MuiTheme}>
-              <BrowserRouter>
-                <Routes />
-              </BrowserRouter>
-            </MuiThemeProvider>
+            <ErrorBoundary>
+              <MuiThemeProvider theme={MuiTheme}>
+                <BrowserRouter>
+                  <Routes />
+                </BrowserRouter>
+              </MuiThemeProvider>
+            </ErrorBoundary>
           </div>
         </SnackbarProvider>
       </React.Fragment>

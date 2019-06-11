@@ -4,6 +4,7 @@ import { SchemaForm, utils } from 'react-schema-form';
 import PolicySchema from '../../components/schema/TrafficPolicy';
 import Topbar from '../../components/Topbar';
 import withStyles from '@material-ui/core/styles/withStyles';
+import { withSnackbar } from 'notistack';
 import {
   Grid,
   Button
@@ -35,7 +36,6 @@ class PolicyView extends Component {
 
     this.state = {
       loaded: false,
-      errored: false,
       error: null,
       showErrors: true,
       policy: {},
@@ -65,9 +65,9 @@ class PolicyView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -82,33 +82,37 @@ class PolicyView extends Component {
       .then((resp) => {
         this.setState({
           loaded: true,
-        })
+        });
+
+        this.props.enqueueSnackbar(`Successfully updated policy.`, { variant: 'success' });
       })
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
   // POST /policies
-  updatePolicy = () => {
+  createPolicy = () => {
     const { policy } = this.state;
 
     ApiClient.post(`/policies`, policy)
       .then((resp) => {
         this.setState({
           loaded: true,
-        })
+        });
+
+        this.props.enqueueSnackbar(`Successfully created policy.`, { variant: 'success' });
       })
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -121,14 +125,16 @@ class PolicyView extends Component {
       .then((resp) => {
         this.setState({
           loaded: true,
-        })
+        });
+
+        this.props.enqueueSnackbar(`Deleted policy ${policyID}.`, { variant: 'success' });
       })
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -151,8 +157,6 @@ class PolicyView extends Component {
 
     const {
       loaded,
-      // errored,
-      // error,
       showErrors,
       policy,
     } = this.state;
@@ -194,20 +198,29 @@ class PolicyView extends Component {
             }
 
             <Grid item xs={12} className={classes.gridSaveButton}>
-              <Button
-                onClick={this.updatePolicy}
-                variant="outlined"
-                color="primary"
-              >
-                Save
-            </Button>
+              {
+                match.params.id
+                  ? <Button
+                    onClick={this.updatePolicy}
+                    variant="outlined"
+                    color="primary"
+                  >
+                    Save
+                    </Button>
+                  : <Button
+                    onClick={this.createPolicy}
+                    variant="outlined"
+                    color="primary"
+                  >
+                    Create
+                    </Button>
+              }
             </Grid>
           </Grid>
-
         </div>
       </React.Fragment>
     );
   }
 }
 
-export default withStyles(styles)(PolicyView);
+export default withStyles(styles)(withSnackbar(PolicyView));

@@ -7,7 +7,6 @@ export default class InterfaceView extends Component {
 
     this.state = {
       loaded: false,
-      errored: false,
       error: null,
       interface: {},
     };
@@ -27,7 +26,6 @@ export default class InterfaceView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
           error: err,
         });
       });
@@ -53,7 +51,6 @@ export default class InterfaceView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
           error: err,
         });
       });
@@ -66,17 +63,12 @@ export default class InterfaceView extends Component {
   render() {
     const {
       loaded,
-      errored,
       error,
       interface,
     } = this.state;
 
     if (!loaded) {
       return <React.Fragment>Loading ...</React.Fragment>
-    }
-
-    if (errored) {
-      return <React.Fragment>{error.toString()}</React.Fragment>
     }
 
     return (

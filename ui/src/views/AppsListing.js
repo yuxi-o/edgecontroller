@@ -54,6 +54,7 @@ class AppsView extends Component {
     this.state = {
       loaded: false,
       showAddForm: false,
+      apps: {}
     };
   }
 
@@ -61,10 +62,8 @@ class AppsView extends Component {
     return ApiClient.get('/apps').then((resp) => {
       this.setState({ loaded: true, apps: resp.data })
     }).catch((err) => {
-      this.props.enqueueSnackbar(`Error loading apps. Please try again later.`, {
-        variant: 'error',
-      });
       this.setState({ loaded: true });
+      this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
     });
   };
 
@@ -99,7 +98,7 @@ class AppsView extends Component {
     };
 
     const renderApps = () => {
-      const { apps } = this.state || {};
+      const { apps } = this.state;
       return Object.keys(apps).map(key => {
         return (
           <CardItem
@@ -114,31 +113,31 @@ class AppsView extends Component {
     };
 
     const appsGrid = () => (
-        <Grid spacing={24} alignItems="center" justify="center" container className={classes.grid}>
-          <Grid item xs={12}>
-            <Grid container direction="row"
-              justify="space-between"
-              alignItems="flex-start"
-              className={classes.sectionContainer}
-            >
-              <Grid item>
-                <Typography variant="subtitle1" className={classes.title}>
-                  Applications
+      <Grid spacing={24} alignItems="center" justify="center" container className={classes.grid}>
+        <Grid item xs={12}>
+          <Grid container direction="row"
+            justify="space-between"
+            alignItems="flex-start"
+            className={classes.sectionContainer}
+          >
+            <Grid item>
+              <Typography variant="subtitle1" className={classes.title}>
+                Applications
                 </Typography>
-                <Typography variant="body1" gutterBottom className={classes.subtitle}>
-                  List of Applications
+              <Typography variant="body1" gutterBottom className={classes.subtitle}>
+                List of Applications
                 </Typography>
-              </Grid>
-              <Grid item xs={3}>
-                <Button variant="contained" color="primary" className={classes.addButton} onClick={this.handleClickOpen}>
-                  Add Application
-                  <AddIcon className={classes.rightIcon} />
-                </Button>
-              </Grid>
             </Grid>
-            {renderApps()}
+            <Grid item xs={3}>
+              <Button variant="contained" color="primary" className={classes.addButton} onClick={this.handleClickOpen}>
+                Add Application
+                  <AddIcon className={classes.rightIcon} />
+              </Button>
+            </Grid>
           </Grid>
+          {renderApps()}
         </Grid>
+      </Grid>
     );
 
     const circularLoader = () => (

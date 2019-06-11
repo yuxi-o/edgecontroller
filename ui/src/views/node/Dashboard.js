@@ -2,18 +2,17 @@ import React, { Component } from 'react';
 import ApiClient from '../../api/ApiClient';
 import { SchemaForm, utils } from 'react-schema-form';
 import NodeSchema from '../../components/schema/Node';
+import { withSnackbar } from 'notistack';
 import {
   Grid,
   Button
 } from '@material-ui/core';
-
-export default class DashboardView extends Component {
+class DashboardView extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       loaded: false,
-      errored: false,
       error: null,
       showErrors: true,
       node: {},
@@ -28,15 +27,12 @@ export default class DashboardView extends Component {
       .then((resp) => {
         this.setState({
           loaded: true,
-          node: resp.data || {},
+          node: resp.data,
         })
       })
       .catch((err) => {
-        this.setState({
-          loaded: true,
-          errored: true,
-          error: err,
-        });
+        this.setState({ loaded: true });
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -47,16 +43,12 @@ export default class DashboardView extends Component {
 
     ApiClient.patch(`/nodes/${nodeID}`, node)
       .then((resp) => {
-        this.setState({
-          loaded: true,
-        })
+        this.setState({ loaded: true });
+        this.props.enqueueSnackbar(`Successfully updated node.`, { variant: 'success' });
       })
       .catch((err) => {
-        this.setState({
-          loaded: true,
-          errored: true,
-          error: err,
-        });
+        this.setState({ loaded: true });
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -77,18 +69,12 @@ export default class DashboardView extends Component {
   render() {
     const {
       loaded,
-      errored,
-      error,
       showErrors,
       node,
     } = this.state;
 
     if (!loaded) {
       return <React.Fragment>Loading ...</React.Fragment>
-    }
-
-    if (errored) {
-      return <React.Fragment>{error.toString()}</React.Fragment>
     }
 
     return (
@@ -108,7 +94,7 @@ export default class DashboardView extends Component {
               showErrors={showErrors}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid item xs={12} style={{ textAlign: 'right' }}>
             <Button
               onClick={this.updateNode}
               variant="outlined"
@@ -122,3 +108,6 @@ export default class DashboardView extends Component {
     );
   }
 };
+
+
+export default withSnackbar(DashboardView);

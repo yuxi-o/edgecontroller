@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import ApiClient from "../../api/ApiClient";
+import { withSnackbar } from 'notistack';
 
-export default class AppView extends Component {
+class AppView extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       loaded: false,
-      errored: false,
       error: null,
       app: {},
       policy: {},
@@ -28,9 +28,9 @@ export default class AppView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -48,9 +48,9 @@ export default class AppView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -68,9 +68,9 @@ export default class AppView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -88,9 +88,9 @@ export default class AppView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -107,9 +107,9 @@ export default class AppView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -120,17 +120,11 @@ export default class AppView extends Component {
   render() {
     const {
       loaded,
-      errored,
-      error,
       app,
     } = this.state;
 
     if (!loaded) {
       return <React.Fragment>Loading ...</React.Fragment>
-    }
-
-    if (errored) {
-      return <React.Fragment>{error.toString()}</React.Fragment>
     }
 
     return (
@@ -140,3 +134,5 @@ export default class AppView extends Component {
     );
   }
 };
+
+export default withSnackbar(AppView);

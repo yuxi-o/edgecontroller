@@ -2,19 +2,18 @@ import React, { Component } from 'react';
 import ApiClient from "../../api/ApiClient";
 import { SchemaForm, utils } from 'react-schema-form';
 import DNSSchema from '../../components/schema/NodeDnsConfigApply';
+import { withSnackbar } from 'notistack';
 import {
   Grid,
   Button
 } from '@material-ui/core';
 
-export default class DNSView extends Component {
+class DNSView extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       loaded: false,
-      errored: false,
-      error: null,
       dns: [],
     };
   }
@@ -33,9 +32,8 @@ export default class DNSView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -53,9 +51,8 @@ export default class DNSView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -72,9 +69,9 @@ export default class DNSView extends Component {
       .catch((err) => {
         this.setState({
           loaded: true,
-          errored: true,
-          error: err,
         });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
   }
 
@@ -95,8 +92,6 @@ export default class DNSView extends Component {
   render() {
     const {
       loaded,
-      // errored,
-      // error,
       showErrors,
       dns,
     } = this.state;
@@ -136,3 +131,5 @@ export default class DNSView extends Component {
     );
   }
 };
+
+export default withSnackbar(DNSView);
