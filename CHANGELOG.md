@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.35] - 2019-06-11
+### Fixed
+- Increased node_grpc_targets.grpc_target max length to 47 to handle IPv6 addresses
+
 ## [0.0.34] - 2019-06-11
 ### Fixed
 - Passwords in an auth request payload were not scrubbed from logs

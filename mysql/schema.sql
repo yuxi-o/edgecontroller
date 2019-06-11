@@ -34,7 +34,7 @@ CREATE TABLE nodes (
 CREATE TABLE node_grpc_targets (
     id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
     node_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.node_id') STORED,
-    grpc_target VARCHAR(15) GENERATED ALWAYS AS (entity->>'$.grpc_target') STORED,
+    grpc_target VARCHAR(47) GENERATED ALWAYS AS (entity->>'$.grpc_target') STORED,
     entity JSON,
     FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE,
     UNIQUE KEY (node_id),
