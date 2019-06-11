@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.34] - 2019-06-11
+### Fixed
+- Passwords in an auth request payload were not scrubbed from logs
+
 ## [0.0.33] - 2019-06-10
 ### Fixed
 - UI did not notify user of successful or failed operations

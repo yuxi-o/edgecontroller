@@ -218,6 +218,14 @@ func NewGorilla( //nolint:gocyclo
 				}
 
 				ctx := context.WithValue(r.Context(), contextKey("body"), body)
+
+				// Scrub for the body payload for potentially sensitive authentication data
+				// (this only affects logging, not the actual request body)
+				// TODO: Log the JSON payload here but with the password field scrubbed
+				if r.URL.Path == "/auth" {
+					body = []byte("***** REDACTED *****")
+				}
+
 				log.Debugf("Injected body: %s", string(body))
 				next.ServeHTTP(w, r.WithContext(ctx))
 			default:
