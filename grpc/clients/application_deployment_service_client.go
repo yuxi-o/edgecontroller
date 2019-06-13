@@ -20,12 +20,13 @@ import (
 	"github.com/pkg/errors"
 	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
+	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 )
 
 // ApplicationDeploymentServiceClient wraps the PB client.
 type ApplicationDeploymentServiceClient struct {
-	PBCli pb.ApplicationDeploymentServiceClient
+	PBCli evapb.ApplicationDeploymentServiceClient
 }
 
 // NewApplicationDeploymentServiceClient creates a new client.
@@ -58,13 +59,13 @@ func (c *ApplicationDeploymentServiceClient) Deploy(
 	return nil
 }
 
-func toPBApp(app *cce.App) *pb.Application {
-	var ports []*pb.PortProto
+func toPBApp(app *cce.App) *elapb.Application {
+	var ports []*elapb.PortProto
 	for _, pp := range app.Ports {
-		ports = append(ports, &pb.PortProto{Port: pp.Port, Protocol: pp.Protocol})
+		ports = append(ports, &elapb.PortProto{Port: pp.Port, Protocol: pp.Protocol})
 	}
 
-	return &pb.Application{
+	return &elapb.Application{
 		Id:          app.ID,
 		Name:        app.Name,
 		Vendor:      app.Vendor,
@@ -73,8 +74,8 @@ func toPBApp(app *cce.App) *pb.Application {
 		Cores:       int32(app.Cores),
 		Memory:      int32(app.Memory),
 		Ports:       ports,
-		Source: &pb.Application_HttpUri{
-			HttpUri: &pb.Application_HTTPSource{
+		Source: &elapb.Application_HttpUri{
+			HttpUri: &elapb.Application_HTTPSource{
 				HttpUri: app.Source,
 			},
 		},
@@ -102,7 +103,7 @@ func (c *ApplicationDeploymentServiceClient) Undeploy(
 ) error {
 	_, err := c.PBCli.Undeploy(
 		ctx,
-		&pb.ApplicationID{
+		&evapb.ApplicationID{
 			Id: id,
 		})
 

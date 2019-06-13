@@ -19,7 +19,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	gmock "github.com/smartedgemec/controller-ce/mock/node/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
+	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 	"google.golang.org/grpc"
 )
 
@@ -31,7 +32,7 @@ type MockPBApplicationDeploymentServiceClient struct {
 // DeployContainer delegates to a MockNode.
 func (c *MockPBApplicationDeploymentServiceClient) DeployContainer(
 	ctx context.Context,
-	in *pb.Application,
+	in *elapb.Application,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.AppDeploySvc.DeployContainer(ctx, in)
@@ -40,7 +41,7 @@ func (c *MockPBApplicationDeploymentServiceClient) DeployContainer(
 // DeployVM delegates to a MockNode.
 func (c *MockPBApplicationDeploymentServiceClient) DeployVM(
 	ctx context.Context,
-	in *pb.Application,
+	in *elapb.Application,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.AppDeploySvc.DeployVM(ctx, in)
@@ -49,7 +50,7 @@ func (c *MockPBApplicationDeploymentServiceClient) DeployVM(
 // Redeploy delegates to a MockNode.
 func (c *MockPBApplicationDeploymentServiceClient) Redeploy(
 	ctx context.Context,
-	in *pb.Application,
+	in *elapb.Application,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.AppDeploySvc.Redeploy(ctx, in)
@@ -58,7 +59,7 @@ func (c *MockPBApplicationDeploymentServiceClient) Redeploy(
 // Undeploy delegates to a MockNode.
 func (c *MockPBApplicationDeploymentServiceClient) Undeploy(
 	ctx context.Context,
-	in *pb.ApplicationID,
+	in *evapb.ApplicationID,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.AppDeploySvc.Undeploy(ctx, in)

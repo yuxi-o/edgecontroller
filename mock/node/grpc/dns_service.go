@@ -18,31 +18,31 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 )
 
 type dnsService struct {
 	// map of record name to records
-	records map[string]*pb.DNSARecordSet
+	records map[string]*elapb.DNSARecordSet
 	// map of ip address to ip address
 	forwarders map[string]string
 }
 
 func newDNSService() *dnsService {
 	return &dnsService{
-		records:    make(map[string]*pb.DNSARecordSet),
+		records:    make(map[string]*elapb.DNSARecordSet),
 		forwarders: make(map[string]string),
 	}
 }
 
 func (s *dnsService) reset() {
-	s.records = make(map[string]*pb.DNSARecordSet)
+	s.records = make(map[string]*elapb.DNSARecordSet)
 	s.forwarders = make(map[string]string)
 }
 
 func (s *dnsService) SetA(
 	ctx context.Context,
-	record *pb.DNSARecordSet,
+	record *elapb.DNSARecordSet,
 ) (*empty.Empty, error) {
 	s.records[record.Name] = record
 
@@ -51,7 +51,7 @@ func (s *dnsService) SetA(
 
 func (s *dnsService) DeleteA(
 	ctx context.Context,
-	record *pb.DNSARecordSet,
+	record *elapb.DNSARecordSet,
 ) (*empty.Empty, error) {
 	delete(s.records, record.Name)
 
@@ -60,7 +60,7 @@ func (s *dnsService) DeleteA(
 
 func (s *dnsService) SetForwarders(
 	ctx context.Context,
-	forwarders *pb.DNSForwarders,
+	forwarders *elapb.DNSForwarders,
 ) (*empty.Empty, error) {
 	for _, forwarder := range forwarders.IpAddresses {
 		s.forwarders[forwarder] = forwarder
@@ -71,7 +71,7 @@ func (s *dnsService) SetForwarders(
 
 func (s *dnsService) DeleteForwarders(
 	ctx context.Context,
-	forwarders *pb.DNSForwarders,
+	forwarders *elapb.DNSForwarders,
 ) (*empty.Empty, error) {
 	for _, forwarder := range forwarders.IpAddresses {
 		delete(s.forwarders, forwarder)

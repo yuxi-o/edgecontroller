@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 	"github.com/smartedgemec/controller-ce/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -38,7 +38,7 @@ var _ = Describe("Network Zone Service Client", func() {
 		zone2ID = uuid.New()
 
 		By("Creating a new zone")
-		zone := &pb.NetworkZone{
+		zone := &elapb.NetworkZone{
 			Id:          zoneID,
 			Description: "test_network_zone",
 		}
@@ -46,7 +46,7 @@ var _ = Describe("Network Zone Service Client", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		By("Creating a second zone")
-		zone2 := &pb.NetworkZone{
+		zone2 := &elapb.NetworkZone{
 			Id:          zone2ID,
 			Description: "test_network_zone_2",
 		}
@@ -72,7 +72,7 @@ var _ = Describe("Network Zone Service Client", func() {
 				By("Updating the first zone")
 				err := zoneSvcCli.Update(
 					ctx,
-					&pb.NetworkZone{
+					&elapb.NetworkZone{
 						Id:          zoneID,
 						Description: "test_updated_network_zone",
 					},
@@ -87,7 +87,7 @@ var _ = Describe("Network Zone Service Client", func() {
 				By("Verifying the response matches the updated zone")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(zone).To(Equal(
-					&pb.NetworkZone{
+					&elapb.NetworkZone{
 						Id:          zoneID,
 						Description: "test_updated_network_zone",
 					},
@@ -99,7 +99,7 @@ var _ = Describe("Network Zone Service Client", func() {
 			It("Should return an error if the ID does not exist", func() {
 				By("Passing a nonexistent ID")
 				badID := uuid.New()
-				err := zoneSvcCli.Update(ctx, &pb.NetworkZone{Id: badID})
+				err := zoneSvcCli.Update(ctx, &elapb.NetworkZone{Id: badID})
 
 				By("Verifying a NotFound response")
 				Expect(err).To(HaveOccurred())
@@ -116,8 +116,8 @@ var _ = Describe("Network Zone Service Client", func() {
 				By("Bulk updating the two zones")
 				err := zoneSvcCli.BulkUpdate(
 					ctx,
-					&pb.NetworkZones{
-						NetworkZones: []*pb.NetworkZone{
+					&elapb.NetworkZones{
+						NetworkZones: []*elapb.NetworkZone{
 							{
 								Id:          zoneID,
 								Description: "test_updated_network_zone",
@@ -139,7 +139,7 @@ var _ = Describe("Network Zone Service Client", func() {
 				By("Verifying the response matches the updated zone")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(zone).To(Equal(
-					&pb.NetworkZone{
+					&elapb.NetworkZone{
 						Id:          zoneID,
 						Description: "test_updated_network_zone",
 					},
@@ -151,7 +151,7 @@ var _ = Describe("Network Zone Service Client", func() {
 				By("Verifying the response matches the updated zone")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(zone2).To(Equal(
-					&pb.NetworkZone{
+					&elapb.NetworkZone{
 						Id:          zone2ID,
 						Description: "test_updated_network_zone_2",
 					},
@@ -165,8 +165,8 @@ var _ = Describe("Network Zone Service Client", func() {
 				badID := uuid.New()
 				err := zoneSvcCli.BulkUpdate(
 					ctx,
-					&pb.NetworkZones{
-						NetworkZones: []*pb.NetworkZone{
+					&elapb.NetworkZones{
+						NetworkZones: []*elapb.NetworkZone{
 							{Id: badID},
 						},
 					},
@@ -191,13 +191,13 @@ var _ = Describe("Network Zone Service Client", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(zones.NetworkZones)).To(BeNumerically(">=", 2))
 				Expect(zones.NetworkZones).To(ContainElement(
-					&pb.NetworkZone{
+					&elapb.NetworkZone{
 						Id:          zoneID,
 						Description: "test_network_zone",
 					},
 				))
 				Expect(zones.NetworkZones).To(ContainElement(
-					&pb.NetworkZone{
+					&elapb.NetworkZone{
 						Id:          zone2ID,
 						Description: "test_network_zone_2",
 					},
@@ -217,7 +217,7 @@ var _ = Describe("Network Zone Service Client", func() {
 				By("Verifying the response matches the first zone")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(zone).To(Equal(
-					&pb.NetworkZone{
+					&elapb.NetworkZone{
 						Id:          zoneID,
 						Description: "test_network_zone",
 					},
@@ -229,7 +229,7 @@ var _ = Describe("Network Zone Service Client", func() {
 				By("Verifying the response matches the second zone")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(zone2).To(Equal(
-					&pb.NetworkZone{
+					&elapb.NetworkZone{
 						Id:          zone2ID,
 						Description: "test_network_zone_2",
 					},

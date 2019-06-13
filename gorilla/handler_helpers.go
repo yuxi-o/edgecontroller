@@ -16,7 +16,9 @@ package gorilla
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net"
 
 	"github.com/pkg/errors"
 	cce "github.com/smartedgemec/controller-ce"
@@ -24,10 +26,17 @@ import (
 	"github.com/smartedgemec/controller-ce/k8s"
 )
 
+const (
+	defaultELAPort = "42101"
+	defaultEVAPort = "42102"
+)
+
 func connectNode(
 	ctx context.Context,
 	ps cce.PersistenceService,
 	e cce.NodeEntity,
+	port string,
+	conf *tls.Config,
 ) (*node.ClientConn, error) {
 	targets, err := ps.Filter(
 		ctx,
@@ -46,14 +55,18 @@ func connectNode(
 		return nil, fmt.Errorf("filter returned %v", targets)
 	}
 
-	nodeCC := node.ClientConn{NodeGRPCTarget: targets[0].(*cce.NodeGRPCTarget)}
+	addr := net.JoinHostPort(targets[0].(*cce.NodeGRPCTarget).GRPCTarget, port)
+	if conf != nil {
+		conf = conf.Clone()
+		conf.ServerName = e.GetNodeID()
+	}
+	nodeCC := node.ClientConn{Addr: addr, TLS: conf}
 	if err := nodeCC.Connect(ctx); err != nil {
 		log.Noticef("Could not connect to node: %v", err)
 		return nil, errors.Wrap(err, "could not connect to node")
 	}
 
-	log.Debugf("Connection to node %s established: %s",
-		e.GetNodeID(), nodeCC.NodeGRPCTarget.GRPCTarget)
+	log.Debugf("Connection to node %s established: %s", e.GetNodeID(), addr)
 	return &nodeCC, nil
 }
 

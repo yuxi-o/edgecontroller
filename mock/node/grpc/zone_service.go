@@ -18,13 +18,13 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type zoneService struct {
-	zones []*pb.NetworkZone
+	zones []*elapb.NetworkZone
 }
 
 func (s *zoneService) reset() {
@@ -33,7 +33,7 @@ func (s *zoneService) reset() {
 
 func (s *zoneService) Create(
 	ctx context.Context,
-	zone *pb.NetworkZone,
+	zone *elapb.NetworkZone,
 ) (*empty.Empty, error) {
 	s.zones = append(s.zones, zone)
 
@@ -42,7 +42,7 @@ func (s *zoneService) Create(
 
 func (s *zoneService) Update(
 	ctx context.Context,
-	zone *pb.NetworkZone,
+	zone *elapb.NetworkZone,
 ) (*empty.Empty, error) {
 	i := s.findIndex(zone.Id)
 
@@ -57,7 +57,7 @@ func (s *zoneService) Update(
 
 func (s *zoneService) BulkUpdate(
 	ctx context.Context,
-	zones *pb.NetworkZones,
+	zones *elapb.NetworkZones,
 ) (*empty.Empty, error) {
 	for _, zone := range zones.NetworkZones {
 		if s.find(zone.Id) == nil {
@@ -79,16 +79,16 @@ func (s *zoneService) BulkUpdate(
 func (s *zoneService) GetAll(
 	context.Context,
 	*empty.Empty,
-) (*pb.NetworkZones, error) {
-	return &pb.NetworkZones{
+) (*elapb.NetworkZones, error) {
+	return &elapb.NetworkZones{
 		NetworkZones: s.zones,
 	}, nil
 }
 
 func (s *zoneService) Get(
 	ctx context.Context,
-	id *pb.ZoneID,
-) (*pb.NetworkZone, error) {
+	id *elapb.ZoneID,
+) (*elapb.NetworkZone, error) {
 	zone := s.find(id.Id)
 
 	if zone != nil {
@@ -101,7 +101,7 @@ func (s *zoneService) Get(
 
 func (s *zoneService) Delete(
 	ctx context.Context,
-	id *pb.ZoneID,
+	id *elapb.ZoneID,
 ) (*empty.Empty, error) {
 	i := s.findIndex(id.Id)
 
@@ -114,7 +114,7 @@ func (s *zoneService) Delete(
 		codes.NotFound, "Network Zone %s not found", id.Id)
 }
 
-func (s *zoneService) find(id string) *pb.NetworkZone {
+func (s *zoneService) find(id string) *elapb.NetworkZone {
 	for _, zone := range s.zones {
 		if zone.Id == id {
 			return zone

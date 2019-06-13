@@ -19,7 +19,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	gmock "github.com/smartedgemec/controller-ce/mock/node/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 	"google.golang.org/grpc"
 )
 
@@ -31,7 +31,7 @@ type MockPBZoneServiceClient struct {
 // Create delegates to a MockNode.
 func (c *MockPBZoneServiceClient) Create(
 	ctx context.Context,
-	in *pb.NetworkZone,
+	in *elapb.NetworkZone,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.ZoneSvc.Create(ctx, in)
@@ -40,7 +40,7 @@ func (c *MockPBZoneServiceClient) Create(
 // Update delegates to a MockNode.
 func (c *MockPBZoneServiceClient) Update(
 	ctx context.Context,
-	in *pb.NetworkZone,
+	in *elapb.NetworkZone,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.ZoneSvc.Update(ctx, in)
@@ -49,7 +49,7 @@ func (c *MockPBZoneServiceClient) Update(
 // BulkUpdate delegates to a MockNode.
 func (c *MockPBZoneServiceClient) BulkUpdate(
 	ctx context.Context,
-	in *pb.NetworkZones,
+	in *elapb.NetworkZones,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.ZoneSvc.BulkUpdate(ctx, in)
@@ -60,23 +60,23 @@ func (c *MockPBZoneServiceClient) GetAll(
 	ctx context.Context,
 	in *empty.Empty,
 	opts ...grpc.CallOption,
-) (*pb.NetworkZones, error) {
+) (*elapb.NetworkZones, error) {
 	return c.MockNode.ZoneSvc.GetAll(ctx, in)
 }
 
 // Get delegates to a MockNode.
 func (c *MockPBZoneServiceClient) Get(
 	ctx context.Context,
-	in *pb.ZoneID,
+	in *elapb.ZoneID,
 	opts ...grpc.CallOption,
-) (*pb.NetworkZone, error) {
+) (*elapb.NetworkZone, error) {
 	return c.MockNode.ZoneSvc.Get(ctx, in)
 }
 
 // Delete delegates to a MockNode.
 func (c *MockPBZoneServiceClient) Delete(
 	ctx context.Context,
-	in *pb.ZoneID,
+	in *elapb.ZoneID,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.ZoneSvc.Delete(ctx, in)

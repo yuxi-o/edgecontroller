@@ -39,24 +39,14 @@ controlled by its API.
 
 To run the test node which simulates an appliance listening as a gRPC server:
 
-`./dist/test-node -port 8082`
-
-
-	// application orchestration mode
-	flag.StringVar(&orchMode, "orchestration-mode", "native", "Orchestration mode. options [native, kubernetes] ")
-
-	// k8s
-	flag.StringVar(&k8sClientCAPath, "k8s-client-ca-path", "", "Kubernetes root certificate path")
-	flag.StringVar(&k8sClientCertPath, "k8s-client-cert-path", "", "Kubernetes client certificate path")
-	flag.StringVar(&k8sClientKeyPath, "k8s-client-key-path", "", "Kubernetes client private key path")
-	flag.StringVar(&k8sHost, "k8s-master-host", "", "Kubernetes master host")
-	flag.StringVar(&k8sAPIPath, "k8s-api-path", "", "Kubernetes api path")
-	flag.StringVar(&k8sUser, "k8s-master-user", "", "Kubernetes default user")
+```
+./dist/test-node -ela-port 42101 -eva-port 42102
+```
 
 ### Running the Controller in Docker Native Mode
 
 ```
-./dist/cce -orchestration-mode "native" -dsn "root:<db_pass>@tcp(:8083)/controller_ce" -adminPass <admin_pass> -httpPort 8080 -grpcPort 8081`
+./dist/cce -orchestration-mode "native" -dsn "root:<db_pass>@tcp(:8083)/controller_ce" -adminPass <admin_pass> -httpPort 8080 -grpcPort 8081 -elaPort 42101 -evaPort 42102
 ```
 
 Replace the following **required** variables before executing the run command:
@@ -67,7 +57,7 @@ Replace the following **required** variables before executing the run command:
 ### Running the Controller in Kubernetes Mode
 
 ```
-./dist/cce -dsn "root:<db_pass>@tcp(:8083)/controller_ce" -adminPass <admin_pass> -httpPort 8080 -grpcPort 8081 -orchestration-mode "kubernetes" -k8s-client-ca-path <k8s_client_ca_path> -k8s-client-cert-path <k8s_client_cert_path> -k8s-client-key-path <k8s_client_key_path> -k8s-master-host <k8s_master_host> -k8s-api-path <k8s_api_path> -k8s-master-user <k8s_master_user>`
+./dist/cce -dsn "root:<db_pass>@tcp(:8083)/controller_ce" -adminPass <admin_pass> -httpPort 8080 -grpcPort 8081 -elaPort 42101 -evaPort 42102 -orchestration-mode "kubernetes" -k8s-client-ca-path <k8s_client_ca_path> -k8s-client-cert-path <k8s_client_cert_path> -k8s-client-key-path <k8s_client_key_path> -k8s-master-host <k8s_master_host> -k8s-api-path <k8s_api_path> -k8s-master-user <k8s_master_user>`
 ```
 
 The flags are:

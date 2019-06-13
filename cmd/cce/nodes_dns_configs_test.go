@@ -61,7 +61,7 @@ var _ = Describe("/nodes_dns_configs", func() {
 					ID string
 				}
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &respBody)).To(Succeed())
 
 				By("Verifying a UUID was returned")
@@ -175,7 +175,7 @@ var _ = Describe("/nodes_dns_configs", func() {
 
 				var nodeDNSConfigs []*cce.NodeDNSConfig
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &nodeDNSConfigs)).
 					To(Succeed())
 

@@ -26,7 +26,7 @@ func (s *PersistenceService) Create(
 ) error {
 	bytes, err := json.Marshal(e)
 	if err != nil {
-		return errors.Wrap(err, "error marshalling")
+		return errors.Wrap(err, "error marshaling")
 	}
 
 	_, err = s.DB.ExecContext(
@@ -165,7 +165,7 @@ func (s *PersistenceService) scan(
 
 	e := reflect.New(reflect.ValueOf(zv).Elem().Type()).Interface().(cce.Persistable)
 	if err := json.Unmarshal(bytes, e); err != nil {
-		return nil, errors.Wrap(err, "error unmarshalling")
+		return nil, errors.Wrap(err, "error unmarshaling")
 	}
 
 	return e, nil
@@ -179,7 +179,7 @@ func (s *PersistenceService) BulkUpdate(
 	for _, e := range es {
 		bytes, err := json.Marshal(e)
 		if err != nil {
-			return errors.Wrap(err, "error marshalling")
+			return errors.Wrap(err, "error marshaling")
 		}
 
 		_, err = s.DB.ExecContext(

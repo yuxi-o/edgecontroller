@@ -18,22 +18,22 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type interfaceService struct {
-	nis []*pb.NetworkInterface
+	nis []*elapb.NetworkInterface
 }
 
-func ifs() []*pb.NetworkInterface {
-	return []*pb.NetworkInterface{
+func ifs() []*elapb.NetworkInterface {
+	return []*elapb.NetworkInterface{
 		{
 			Id:          "if0",
 			Description: "interface0",
-			Driver:      pb.NetworkInterface_KERNEL,
-			Type:        pb.NetworkInterface_NONE,
+			Driver:      elapb.NetworkInterface_KERNEL,
+			Type:        elapb.NetworkInterface_NONE,
 			MacAddress:  "mac0",
 			Vlan:        0,
 			Zones:       nil,
@@ -41,8 +41,8 @@ func ifs() []*pb.NetworkInterface {
 		{
 			Id:          "if1",
 			Description: "interface1",
-			Driver:      pb.NetworkInterface_KERNEL,
-			Type:        pb.NetworkInterface_NONE,
+			Driver:      elapb.NetworkInterface_KERNEL,
+			Type:        elapb.NetworkInterface_NONE,
 			MacAddress:  "mac1",
 			Vlan:        1,
 			Zones:       nil,
@@ -50,8 +50,8 @@ func ifs() []*pb.NetworkInterface {
 		{
 			Id:          "if2",
 			Description: "interface2",
-			Driver:      pb.NetworkInterface_KERNEL,
-			Type:        pb.NetworkInterface_NONE,
+			Driver:      elapb.NetworkInterface_KERNEL,
+			Type:        elapb.NetworkInterface_NONE,
 			MacAddress:  "mac2",
 			Vlan:        2,
 			Zones:       nil,
@@ -59,8 +59,8 @@ func ifs() []*pb.NetworkInterface {
 		{
 			Id:          "if3",
 			Description: "interface3",
-			Driver:      pb.NetworkInterface_KERNEL,
-			Type:        pb.NetworkInterface_NONE,
+			Driver:      elapb.NetworkInterface_KERNEL,
+			Type:        elapb.NetworkInterface_NONE,
 			MacAddress:  "mac3",
 			Vlan:        3,
 			Zones:       nil,
@@ -80,7 +80,7 @@ func (s *interfaceService) reset() {
 
 func (s *interfaceService) Update(
 	ctx context.Context,
-	ni *pb.NetworkInterface,
+	ni *elapb.NetworkInterface,
 ) (*empty.Empty, error) {
 	i := s.findIndex(ni.Id)
 
@@ -95,7 +95,7 @@ func (s *interfaceService) Update(
 
 func (s *interfaceService) BulkUpdate(
 	ctx context.Context,
-	nis *pb.NetworkInterfaces,
+	nis *elapb.NetworkInterfaces,
 ) (*empty.Empty, error) {
 	// make sure all interfaces passed in exist
 	for _, ni := range nis.NetworkInterfaces {
@@ -127,16 +127,16 @@ func (s *interfaceService) BulkUpdate(
 func (s *interfaceService) GetAll(
 	context.Context,
 	*empty.Empty,
-) (*pb.NetworkInterfaces, error) {
-	return &pb.NetworkInterfaces{
+) (*elapb.NetworkInterfaces, error) {
+	return &elapb.NetworkInterfaces{
 		NetworkInterfaces: s.nis,
 	}, nil
 }
 
 func (s *interfaceService) Get(
 	ctx context.Context,
-	id *pb.InterfaceID,
-) (*pb.NetworkInterface, error) {
+	id *elapb.InterfaceID,
+) (*elapb.NetworkInterface, error) {
 	ni := s.find(id.Id)
 
 	if ni != nil {
@@ -147,7 +147,7 @@ func (s *interfaceService) Get(
 		codes.NotFound, "Network Interface %s not found", id.Id)
 }
 
-func (s *interfaceService) find(id string) *pb.NetworkInterface {
+func (s *interfaceService) find(id string) *elapb.NetworkInterface {
 	for _, ni := range s.nis {
 		if ni.Id == id {
 			return ni
@@ -157,7 +157,7 @@ func (s *interfaceService) find(id string) *pb.NetworkInterface {
 	return nil
 }
 
-func findInPB(pbNIs []*pb.NetworkInterface, id string) int {
+func findInPB(pbNIs []*elapb.NetworkInterface, id string) int {
 	for i, pbNI := range pbNIs {
 		if pbNI.Id == id {
 			return i

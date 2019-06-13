@@ -20,12 +20,12 @@ import (
 	"github.com/pkg/errors"
 	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 )
 
 // InterfacePolicyServiceClient wraps the PB client.
 type InterfacePolicyServiceClient struct {
-	PBCli pb.InterfacePolicyServiceClient
+	PBCli elapb.InterfacePolicyServiceClient
 }
 
 // NewInterfacePolicyServiceClient creates a new client.

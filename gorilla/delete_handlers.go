@@ -29,14 +29,17 @@ func handleDeleteNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 		return err
 	}
 
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
+	ctrl := getController(ctx)
+	nodePort := ctrl.EVAPort
+	if nodePort == "" {
+		nodePort = defaultEVAPort
+	}
+	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp), nodePort, ctrl.EdgeNodeCreds)
 	if err != nil {
 		return err
 	}
 
 	// if kubernetes un-deploy application
-	ctrl := getController(ctx)
-
 	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes {
 		if err = ctrl.KubernetesClient.Undeploy(
 			ctx,
@@ -61,7 +64,12 @@ func handleDeleteNodesDNSConfigs(
 	}
 	log.Debugf("Loaded DNS Config %s\n%+v", dnsConfig.GetID(), dnsConfig)
 
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeDNSConfig))
+	ctrl := getController(ctx)
+	nodePort := ctrl.ELAPort
+	if nodePort == "" {
+		nodePort = defaultELAPort
+	}
+	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeDNSConfig), nodePort, ctrl.EdgeNodeCreds)
 	if err != nil {
 		return err
 	}
@@ -86,7 +94,12 @@ func handleDeleteNodesAppsTrafficPolicies(
 	}
 	log.Debugf("Loaded node app %s: %+v", nodeApp.GetID(), nodeApp)
 
-	nodeCC, err := connectNode(ctx, ps, nodeApp.(*cce.NodeApp))
+	ctrl := getController(ctx)
+	nodePort := ctrl.ELAPort
+	if nodePort == "" {
+		nodePort = defaultELAPort
+	}
+	nodeCC, err := connectNode(ctx, ps, nodeApp.(*cce.NodeApp), nodePort, ctrl.EdgeNodeCreds)
 	if err != nil {
 		return err
 	}

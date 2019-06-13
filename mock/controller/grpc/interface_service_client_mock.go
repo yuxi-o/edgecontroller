@@ -19,7 +19,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	gmock "github.com/smartedgemec/controller-ce/mock/node/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 	"google.golang.org/grpc"
 )
 
@@ -31,7 +31,7 @@ type MockPBInterfaceServiceClient struct {
 // Update delegates to a MockNode.
 func (c *MockPBInterfaceServiceClient) Update(
 	ctx context.Context,
-	in *pb.NetworkInterface,
+	in *elapb.NetworkInterface,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.InterfaceSvc.Update(ctx, in)
@@ -40,7 +40,7 @@ func (c *MockPBInterfaceServiceClient) Update(
 // BulkUpdate delegates to a MockNode.
 func (c *MockPBInterfaceServiceClient) BulkUpdate(
 	ctx context.Context,
-	in *pb.NetworkInterfaces,
+	in *elapb.NetworkInterfaces,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.InterfaceSvc.BulkUpdate(ctx, in)
@@ -51,15 +51,15 @@ func (c *MockPBInterfaceServiceClient) GetAll(
 	ctx context.Context,
 	in *empty.Empty,
 	opts ...grpc.CallOption,
-) (*pb.NetworkInterfaces, error) {
+) (*elapb.NetworkInterfaces, error) {
 	return c.MockNode.InterfaceSvc.GetAll(ctx, in)
 }
 
 // Get delegates to a MockNode.
 func (c *MockPBInterfaceServiceClient) Get(
 	ctx context.Context,
-	in *pb.InterfaceID,
+	in *elapb.InterfaceID,
 	opts ...grpc.CallOption,
-) (*pb.NetworkInterface, error) {
+) (*elapb.NetworkInterface, error) {
 	return c.MockNode.InterfaceSvc.Get(ctx, in)
 }

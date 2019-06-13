@@ -128,7 +128,7 @@ var _ = Describe("/traffic_policies", func() {
 					ID string
 				}
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &respBody)).To(Succeed())
 
 				By("Verifying a UUID was returned")
@@ -622,7 +622,7 @@ var _ = Describe("/traffic_policies", func() {
 
 				var trafficPolicies []*cce.TrafficPolicy
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &trafficPolicies)).To(Succeed())
 
 				By("Verifying the 2 created traffic policies were returned")

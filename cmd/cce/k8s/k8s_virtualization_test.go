@@ -28,14 +28,14 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	cceGRPC "github.com/smartedgemec/controller-ce/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
 
 var _ = Describe("Kubernetes Read Metadata Service", func() {
 	var (
-		cvaSvcCli pb.ControllerVirtualizationAgentClient
+		cvaSvcCli evapb.ControllerVirtualizationAgentClient
 		nodeID    string
 		nodeCfg   *nodeConfig
 	)
@@ -82,7 +82,7 @@ var _ = Describe("Kubernetes Read Metadata Service", func() {
 			grpc.WithBlock())
 		Expect(err).ToNot(HaveOccurred(), "Dial failed: %v", err)
 
-		cvaSvcCli = pb.NewControllerVirtualizationAgentClient(cvaConn)
+		cvaSvcCli = evapb.NewControllerVirtualizationAgentClient(cvaConn)
 
 		// label node with correct id
 		Expect(exec.Command("kubectl",
@@ -127,7 +127,7 @@ var _ = Describe("Kubernetes Read Metadata Service", func() {
 				By(fmt.Sprintf("Requesting container info for pod with ip: %s", ip))
 				containerInfo, err := cvaSvcCli.GetContainerByIP(
 					ctx,
-					&pb.ContainerIP{
+					&evapb.ContainerIP{
 						Ip: ip,
 					},
 				)
@@ -143,7 +143,7 @@ var _ = Describe("Kubernetes Read Metadata Service", func() {
 				By("Requesting container info for pod with ip: ''")
 				_, err := cvaSvcCli.GetContainerByIP(
 					ctx,
-					&pb.ContainerIP{
+					&evapb.ContainerIP{
 						Ip: "",
 					},
 				)
@@ -158,7 +158,7 @@ var _ = Describe("Kubernetes Read Metadata Service", func() {
 				By("Requesting container info for pod with ip: 0.0.0.0")
 				_, err := cvaSvcCli.GetContainerByIP(
 					ctx,
-					&pb.ContainerIP{
+					&evapb.ContainerIP{
 						Ip: impossibleIP,
 					},
 				)

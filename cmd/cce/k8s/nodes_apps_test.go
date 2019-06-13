@@ -91,7 +91,7 @@ var _ = Describe("/nodes_apps for k8s", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				var respBody struct {
 					ID string
 				}

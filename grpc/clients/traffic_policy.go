@@ -18,11 +18,11 @@ import (
 	"fmt"
 
 	cce "github.com/smartedgemec/controller-ce"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 )
 
-func toPBTrafficPolicy(id string, tp *cce.TrafficPolicy) *pb.TrafficPolicy {
-	pbPolicy := &pb.TrafficPolicy{
+func toPBTrafficPolicy(id string, tp *cce.TrafficPolicy) *elapb.TrafficPolicy {
+	pbPolicy := &elapb.TrafficPolicy{
 		Id: id,
 	}
 
@@ -36,8 +36,8 @@ func toPBTrafficPolicy(id string, tp *cce.TrafficPolicy) *pb.TrafficPolicy {
 	return pbPolicy
 }
 
-func toPBTrafficRule(tr *cce.TrafficRule) *pb.TrafficRule {
-	return &pb.TrafficRule{
+func toPBTrafficRule(tr *cce.TrafficRule) *elapb.TrafficRule {
+	return &elapb.TrafficRule{
 		Description: tr.Description,
 		Priority:    uint32(tr.Priority),
 		Source:      toPBTrafficSelector(tr.Source),
@@ -46,12 +46,12 @@ func toPBTrafficRule(tr *cce.TrafficRule) *pb.TrafficRule {
 	}
 }
 
-func toPBTrafficSelector(ts *cce.TrafficSelector) *pb.TrafficSelector {
+func toPBTrafficSelector(ts *cce.TrafficSelector) *elapb.TrafficSelector {
 	if ts == nil {
 		return nil
 	}
 
-	return &pb.TrafficSelector{
+	return &elapb.TrafficSelector{
 		Description: ts.Description,
 		Macs:        toPBMACFilter(ts.MACs),
 		Ip:          toPBIPFilter(ts.IP),
@@ -59,22 +59,22 @@ func toPBTrafficSelector(ts *cce.TrafficSelector) *pb.TrafficSelector {
 	}
 }
 
-func toPBMACFilter(macf *cce.MACFilter) *pb.MACFilter {
+func toPBMACFilter(macf *cce.MACFilter) *elapb.MACFilter {
 	if macf == nil {
 		return nil
 	}
 
-	return &pb.MACFilter{
+	return &elapb.MACFilter{
 		MacAddresses: macf.MACAddresses,
 	}
 }
 
-func toPBIPFilter(ipf *cce.IPFilter) *pb.IPFilter {
+func toPBIPFilter(ipf *cce.IPFilter) *elapb.IPFilter {
 	if ipf == nil {
 		return nil
 	}
 
-	return &pb.IPFilter{
+	return &elapb.IPFilter{
 		Address:   ipf.Address,
 		Mask:      uint32(ipf.Mask),
 		BeginPort: uint32(ipf.BeginPort),
@@ -83,24 +83,24 @@ func toPBIPFilter(ipf *cce.IPFilter) *pb.IPFilter {
 	}
 }
 
-func toPBGTPFilter(gtpf *cce.GTPFilter) *pb.GTPFilter {
+func toPBGTPFilter(gtpf *cce.GTPFilter) *elapb.GTPFilter {
 	if gtpf == nil {
 		return nil
 	}
 
-	return &pb.GTPFilter{
+	return &elapb.GTPFilter{
 		Address: gtpf.Address,
 		Mask:    uint32(gtpf.Mask),
 		Imsis:   gtpf.IMSIs,
 	}
 }
 
-func toPBTrafficTarget(target *cce.TrafficTarget) *pb.TrafficTarget {
+func toPBTrafficTarget(target *cce.TrafficTarget) *elapb.TrafficTarget {
 	if target == nil {
 		return nil
 	}
 
-	return &pb.TrafficTarget{
+	return &elapb.TrafficTarget{
 		Description: target.Description,
 		Action:      toPBTargetAction(target.Action),
 		Mac:         toPBMACModifier(target.MAC),
@@ -108,35 +108,35 @@ func toPBTrafficTarget(target *cce.TrafficTarget) *pb.TrafficTarget {
 	}
 }
 
-func toPBTargetAction(action string) pb.TrafficTarget_TargetAction {
+func toPBTargetAction(action string) elapb.TrafficTarget_TargetAction {
 	switch action {
 	case "accept":
-		return pb.TrafficTarget_ACCEPT
+		return elapb.TrafficTarget_ACCEPT
 	case "reject":
-		return pb.TrafficTarget_REJECT
+		return elapb.TrafficTarget_REJECT
 	case "drop":
-		return pb.TrafficTarget_DROP
+		return elapb.TrafficTarget_DROP
 	default:
 		panic(fmt.Sprintf("invalid target action %s", action))
 	}
 }
 
-func toPBMACModifier(macMod *cce.MACModifier) *pb.MACModifier {
+func toPBMACModifier(macMod *cce.MACModifier) *elapb.MACModifier {
 	if macMod == nil {
 		return nil
 	}
 
-	return &pb.MACModifier{
+	return &elapb.MACModifier{
 		MacAddress: macMod.MACAddress,
 	}
 }
 
-func toPBIPModifier(ipMod *cce.IPModifier) *pb.IPModifier {
+func toPBIPModifier(ipMod *cce.IPModifier) *elapb.IPModifier {
 	if ipMod == nil {
 		return nil
 	}
 
-	return &pb.IPModifier{
+	return &elapb.IPModifier{
 		Address: ipMod.Address,
 		Port:    uint32(ipMod.Port),
 	}

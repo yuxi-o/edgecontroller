@@ -20,12 +20,12 @@ import (
 	"github.com/pkg/errors"
 	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 )
 
 // DNSServiceClient wraps the PB client.
 type DNSServiceClient struct {
-	PBCli pb.DNSServiceClient
+	PBCli elapb.DNSServiceClient
 }
 
 // NewDNSServiceClient creates a new client.
@@ -42,7 +42,7 @@ func (c *DNSServiceClient) SetA(
 ) error {
 	_, err := c.PBCli.SetA(
 		ctx,
-		&pb.DNSARecordSet{
+		&elapb.DNSARecordSet{
 			Name:   record.Name,
 			Values: record.IPs,
 		})
@@ -61,7 +61,7 @@ func (c *DNSServiceClient) DeleteA(
 ) error {
 	_, err := c.PBCli.DeleteA(
 		ctx,
-		&pb.DNSARecordSet{
+		&elapb.DNSARecordSet{
 			Name:   record.Name,
 			Values: record.IPs,
 		})
@@ -83,7 +83,7 @@ func (c *DNSServiceClient) SetForwarders(
 		ips = append(ips, forwarder.IP)
 	}
 
-	_, err := c.PBCli.SetForwarders(ctx, &pb.DNSForwarders{
+	_, err := c.PBCli.SetForwarders(ctx, &elapb.DNSForwarders{
 		IpAddresses: ips,
 	})
 
@@ -104,7 +104,7 @@ func (c *DNSServiceClient) DeleteForwarders(
 		ips = append(ips, forwarder.IP)
 	}
 
-	_, err := c.PBCli.DeleteForwarders(ctx, &pb.DNSForwarders{
+	_, err := c.PBCli.DeleteForwarders(ctx, &elapb.DNSForwarders{
 		IpAddresses: ips,
 	})
 

@@ -19,7 +19,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	gmock "github.com/smartedgemec/controller-ce/mock/node/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 	"google.golang.org/grpc"
 )
 
@@ -31,7 +31,7 @@ type MockPBDNSServiceClient struct {
 // SetA delegates to a MockNode.
 func (c *MockPBDNSServiceClient) SetA(
 	ctx context.Context,
-	in *pb.DNSARecordSet,
+	in *elapb.DNSARecordSet,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.DNSSvc.SetA(ctx, in)
@@ -40,7 +40,7 @@ func (c *MockPBDNSServiceClient) SetA(
 // DeleteA delegates to a MockNode.
 func (c *MockPBDNSServiceClient) DeleteA(
 	ctx context.Context,
-	in *pb.DNSARecordSet,
+	in *elapb.DNSARecordSet,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.DNSSvc.DeleteA(ctx, in)
@@ -49,7 +49,7 @@ func (c *MockPBDNSServiceClient) DeleteA(
 // SetForwarders delegates to a MockNode.
 func (c *MockPBDNSServiceClient) SetForwarders(
 	ctx context.Context,
-	in *pb.DNSForwarders,
+	in *elapb.DNSForwarders,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.DNSSvc.SetForwarders(ctx, in)
@@ -58,7 +58,7 @@ func (c *MockPBDNSServiceClient) SetForwarders(
 // DeleteForwarders delegates to a MockNode.
 func (c *MockPBDNSServiceClient) DeleteForwarders(
 	ctx context.Context,
-	in *pb.DNSForwarders,
+	in *elapb.DNSForwarders,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.DNSSvc.DeleteForwarders(ctx, in)

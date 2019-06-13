@@ -15,18 +15,19 @@
 package grpc
 
 import (
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
+	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 )
 
 // MockNode provides a mock node gRPC server.
 type MockNode struct {
-	AppDeploySvc pb.ApplicationDeploymentServiceServer
-	AppLifeSvc   pb.ApplicationLifecycleServiceServer
-	AppPolicySvc pb.ApplicationPolicyServiceServer
-	DNSSvc       pb.DNSServiceServer
-	InterfaceSvc pb.InterfaceServiceServer
-	IfPolicySvc  pb.InterfacePolicyServiceServer
-	ZoneSvc      pb.ZoneServiceServer
+	AppDeploySvc evapb.ApplicationDeploymentServiceServer
+	AppLifeSvc   evapb.ApplicationLifecycleServiceServer
+	AppPolicySvc elapb.ApplicationPolicyServiceServer
+	DNSSvc       elapb.DNSServiceServer
+	InterfaceSvc elapb.InterfaceServiceServer
+	IfPolicySvc  elapb.InterfacePolicyServiceServer
+	ZoneSvc      elapb.ZoneServiceServer
 }
 
 // NewMockNode creates a new MockNode with node services initialized.

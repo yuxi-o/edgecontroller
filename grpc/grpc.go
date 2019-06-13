@@ -16,12 +16,15 @@ package grpc
 
 import (
 	"context"
+	"crypto/tls"
 	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
+	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 	logger "github.com/smartedgemec/log"
 )
 
@@ -33,16 +36,18 @@ type ClientConn struct {
 }
 
 // Dial dials the remote server.
-func Dial(ctx context.Context, target string) (*ClientConn, error) {
-	timeoutCtx, cancel := context.WithTimeout(
-		ctx, 2*time.Second)
+func Dial(ctx context.Context, target string, conf *tls.Config) (*ClientConn, error) {
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
-	conn, err := grpc.DialContext(
-		timeoutCtx,
-		target,
-		grpc.WithInsecure(),
-		grpc.WithBlock())
+	opts := []grpc.DialOption{grpc.WithBlock()}
+	if conf != nil {
+		opts = append(opts, grpc.WithTransportCredentials(
+			credentials.NewTLS(conf)))
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+	}
+	conn, err := grpc.DialContext(ctx, target, opts...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "dial %s failed", target)
 	}
@@ -56,36 +61,36 @@ func (c *ClientConn) Close() error {
 }
 
 // NewApplicationDeploymentServiceClient wraps the pb function.
-func (c *ClientConn) NewApplicationDeploymentServiceClient() pb.ApplicationDeploymentServiceClient {
-	return pb.NewApplicationDeploymentServiceClient(c.conn)
+func (c *ClientConn) NewApplicationDeploymentServiceClient() evapb.ApplicationDeploymentServiceClient {
+	return evapb.NewApplicationDeploymentServiceClient(c.conn)
 }
 
 // NewApplicationLifecycleServiceClient wraps the pb function.
-func (c *ClientConn) NewApplicationLifecycleServiceClient() pb.ApplicationLifecycleServiceClient {
-	return pb.NewApplicationLifecycleServiceClient(c.conn)
+func (c *ClientConn) NewApplicationLifecycleServiceClient() evapb.ApplicationLifecycleServiceClient {
+	return evapb.NewApplicationLifecycleServiceClient(c.conn)
 }
 
 // NewApplicationPolicyServiceClient wraps the pb function.
-func (c *ClientConn) NewApplicationPolicyServiceClient() pb.ApplicationPolicyServiceClient {
-	return pb.NewApplicationPolicyServiceClient(c.conn)
+func (c *ClientConn) NewApplicationPolicyServiceClient() elapb.ApplicationPolicyServiceClient {
+	return elapb.NewApplicationPolicyServiceClient(c.conn)
 }
 
 // NewInterfaceServiceClient wraps the pb function.
-func (c *ClientConn) NewInterfaceServiceClient() pb.InterfaceServiceClient {
-	return pb.NewInterfaceServiceClient(c.conn)
+func (c *ClientConn) NewInterfaceServiceClient() elapb.InterfaceServiceClient {
+	return elapb.NewInterfaceServiceClient(c.conn)
 }
 
 // NewInterfacePolicyServiceClient wraps the pb function.
-func (c *ClientConn) NewInterfacePolicyServiceClient() pb.InterfacePolicyServiceClient {
-	return pb.NewInterfacePolicyServiceClient(c.conn)
+func (c *ClientConn) NewInterfacePolicyServiceClient() elapb.InterfacePolicyServiceClient {
+	return elapb.NewInterfacePolicyServiceClient(c.conn)
 }
 
 // NewZoneServiceClient wraps the pb function.
-func (c *ClientConn) NewZoneServiceClient() pb.ZoneServiceClient {
-	return pb.NewZoneServiceClient(c.conn)
+func (c *ClientConn) NewZoneServiceClient() elapb.ZoneServiceClient {
+	return elapb.NewZoneServiceClient(c.conn)
 }
 
 // NewDNSServiceClient wraps the pb function.
-func (c *ClientConn) NewDNSServiceClient() pb.DNSServiceClient {
-	return pb.NewDNSServiceClient(c.conn)
+func (c *ClientConn) NewDNSServiceClient() elapb.DNSServiceClient {
+	return elapb.NewDNSServiceClient(c.conn)
 }

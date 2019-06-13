@@ -28,7 +28,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/smartedgemec/controller-ce/swagger"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -51,18 +51,20 @@ import (
 
 	cce "github.com/smartedgemec/controller-ce"
 	cceGRPC "github.com/smartedgemec/controller-ce/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	authpb "github.com/smartedgemec/controller-ce/pb/auth"
 	"github.com/smartedgemec/controller-ce/pki"
+	"github.com/smartedgemec/controller-ce/swagger"
 )
 
 const adminPass = "word"
 
 var (
-	cmd  *exec.Cmd
-	ctrl *gexec.Session
-	node *gexec.Session
+	cmd    *exec.Cmd
+	ctrl   *gexec.Session
+	node   *gexec.Session
+	nodeIn io.WriteCloser
 
-	authSvcCli pb.AuthServiceClient
+	authSvcCli authpb.AuthServiceClient
 	apiCli     *apiClient
 
 	conf     *tls.Config
@@ -105,7 +107,7 @@ func initAuthSvcCli() {
 		grpc.WithBlock())
 	Expect(err).ToNot(HaveOccurred(), "Dial failed: %v", err)
 
-	authSvcCli = pb.NewAuthServiceClient(conn)
+	authSvcCli = authpb.NewAuthServiceClient(conn)
 }
 
 func startup() {
@@ -125,6 +127,8 @@ func startup() {
 		"-dsn", "root:beer@tcp(:8083)/controller_ce",
 		"-httpPort", "8080",
 		"-grpcPort", "8081",
+		"-elaPort", "42101",
+		"-evaPort", "42102",
 		"-syslogPort", "6514",
 		"-statsdPort", "8125",
 		"-syslog-path", filepath.Join(telemDir, "syslog.log"),
@@ -161,16 +165,15 @@ func startup() {
 	Expect(err).ToNot(HaveOccurred(), "Problem building node")
 
 	cmd = exec.Command(exe,
-		"-port", "8082")
+		"-ela-port", "42101",
+		"-eva-port", "42102",
+	)
+	nodeIn, err = cmd.StdinPipe()
+	Expect(err).ToNot(HaveOccurred(), "Problem creating node stdin pipe")
 
 	By("Starting the node")
 	node, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).ToNot(HaveOccurred(), "Problem starting node")
-
-	By("Verifying that the node started successfully")
-	Eventually(node.Err, 3).Should(gbytes.Say(
-		"test-node: listening on port: 8082"),
-		"Node did not start in time")
 }
 
 func shutdown() {
@@ -181,6 +184,9 @@ func shutdown() {
 	if node != nil {
 		By("Stopping the test node")
 		node.Kill()
+	}
+	if nodeIn != nil {
+		nodeIn.Close()
 	}
 	if telemDir != "" {
 		By("Cleaning up telemetry output")
@@ -275,7 +281,7 @@ func postApps(appType string) (id string) {
 
 	var rb respBody
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
 	return rb.ID
@@ -297,7 +303,7 @@ func getApp(id string) *swagger.AppDetail {
 
 	var app swagger.AppDetail
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &app)).To(Succeed())
 
 	return &app
@@ -341,7 +347,7 @@ func postDNSConfigs() (id string) {
 
 	var rb respBody
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
 	return rb.ID
@@ -363,7 +369,7 @@ func getDNSConfig(id string) *cce.DNSConfig {
 
 	var dnsConfig cce.DNSConfig
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &dnsConfig)).To(Succeed())
 
 	return &dnsConfig
@@ -396,7 +402,7 @@ func postDNSConfigsAppAliases(
 
 	var rb respBody
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
 	return rb.ID
@@ -418,7 +424,7 @@ func getDNSConfigsAppAlias(id string) *cce.DNSConfigAppAlias {
 
 	var dnsConfigAppAlias cce.DNSConfigAppAlias
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &dnsConfigAppAlias)).To(Succeed())
 
 	return &dnsConfigAppAlias
@@ -428,7 +434,7 @@ type nodeConfig struct {
 	nodeID string
 	serial string
 	key    *ecdsa.PrivateKey
-	creds  *pb.Credentials
+	creds  *authpb.Credentials
 }
 
 func createAndRegisterNode() *nodeConfig {
@@ -462,11 +468,20 @@ func createAndRegisterNode() *nodeConfig {
 
 	By("Resetting the node")
 	Expect(cmd.Process.Signal(syscall.SIGABRT)).To(Succeed(), "Problem resetting node")
+	Expect(fmt.Fprintln(nodeIn, nodeID)).To(Equal(len(nodeID) + 1))
+
+	By("Verifying that the node started successfully")
+	Eventually(node.Err, 3).Should(gbytes.Say(
+		"test-node: listening on port: 4210[12]"),
+		"Node did not start in time")
+	Eventually(node.Err, 3).Should(gbytes.Say(
+		"test-node: listening on port: 4210[12]"),
+		"Node did not start in time")
 
 	By("Requesting credentials from auth service")
 	creds, err := authSvcCli.RequestCredentials(
 		context.TODO(),
-		&pb.Identity{
+		&authpb.Identity{
 			Csr: string(csrPEM),
 		},
 	)
@@ -488,7 +503,7 @@ func postNodesSerial(serial string) (id string) {
 		strings.NewReader(fmt.Sprintf(`
 			{
 				"name": "Test Node 1",
-				"location": "Localhost port 8082",
+				"location": "Localhost port 42101",
 				"serial": "%s"
 			}`, serial)))
 	Expect(err).ToNot(HaveOccurred())
@@ -503,7 +518,7 @@ func postNodesSerial(serial string) (id string) {
 
 	var rb respBody
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
 	return rb.ID
@@ -525,7 +540,7 @@ func getNode(id string) *cce.NodeResp {
 
 	var nodeResp cce.NodeResp
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &nodeResp)).To(Succeed())
 
 	return &nodeResp
@@ -553,7 +568,7 @@ func postNodesApps(nodeID, appID string) (id string) {
 
 	var rb respBody
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
 	return rb.ID
@@ -575,7 +590,7 @@ func getNodeApp(id string) *cce.NodeAppResp {
 
 	var nodeAppResp cce.NodeAppResp
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &nodeAppResp)).To(Succeed())
 
 	return &nodeAppResp
@@ -600,7 +615,7 @@ func getNodeApps(nodeID, appID string) []*cce.NodeApp {
 
 	var nodeApps []*cce.NodeApp
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &nodeApps)).To(Succeed())
 
 	return nodeApps
@@ -628,7 +643,7 @@ func postNodesDNSConfigs(nodeID, dnsConfigID string) (id string) {
 
 	var rb respBody
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
 	return rb.ID
@@ -650,7 +665,7 @@ func getNodeDNSConfig(id string) *cce.NodeDNSConfig {
 
 	var nodeDNSConfig cce.NodeDNSConfig
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &nodeDNSConfig)).To(Succeed())
 
 	return &nodeDNSConfig
@@ -743,7 +758,7 @@ func postTrafficPolicies() (id string) {
 
 	var rb respBody
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
 	return rb.ID
@@ -765,7 +780,7 @@ func getTrafficPolicy(id string) *cce.TrafficPolicy {
 
 	var trafficPolicy cce.TrafficPolicy
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &trafficPolicy)).To(Succeed())
 
 	return &trafficPolicy
@@ -796,7 +811,7 @@ func postNodesAppsTrafficPolicies(
 
 	var rb respBody
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
 	return rb.ID
@@ -818,7 +833,7 @@ func getNodeAppTrafficPolicy(id string) *cce.NodeAppTrafficPolicy {
 
 	var nodeAppTrafficPolicy cce.NodeAppTrafficPolicy
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &nodeAppTrafficPolicy)).To(Succeed())
 
 	return &nodeAppTrafficPolicy

@@ -18,15 +18,16 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
+	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type appDeployLifeService struct {
 	// maps of application ID to application
-	containerApps map[string]*pb.Application
-	vmApps        map[string]*pb.Application
+	containerApps map[string]*elapb.Application
+	vmApps        map[string]*elapb.Application
 
 	// reference to policy server
 	appPolicyService *appPolicyService
@@ -34,48 +35,48 @@ type appDeployLifeService struct {
 
 func newAppDeployLifeService() *appDeployLifeService {
 	return &appDeployLifeService{
-		containerApps: make(map[string]*pb.Application),
-		vmApps:        make(map[string]*pb.Application),
+		containerApps: make(map[string]*elapb.Application),
+		vmApps:        make(map[string]*elapb.Application),
 	}
 }
 
 func (s *appDeployLifeService) reset() {
-	s.containerApps = make(map[string]*pb.Application)
-	s.vmApps = make(map[string]*pb.Application)
+	s.containerApps = make(map[string]*elapb.Application)
+	s.vmApps = make(map[string]*elapb.Application)
 }
 
 func (s *appDeployLifeService) DeployContainer(
 	ctx context.Context,
-	containerApp *pb.Application,
+	containerApp *elapb.Application,
 ) (*empty.Empty, error) {
 	s.containerApps[containerApp.Id] = containerApp
-	containerApp.Status = pb.LifecycleStatus_READY
+	containerApp.Status = elapb.LifecycleStatus_READY
 
 	return &empty.Empty{}, nil
 }
 
 func (s *appDeployLifeService) DeployVM(
 	ctx context.Context,
-	vmApp *pb.Application,
+	vmApp *elapb.Application,
 ) (*empty.Empty, error) {
 	s.vmApps[vmApp.Id] = vmApp
-	vmApp.Status = pb.LifecycleStatus_READY
+	vmApp.Status = elapb.LifecycleStatus_READY
 
 	return &empty.Empty{}, nil
 }
 
 func (s *appDeployLifeService) GetStatus(
 	ctx context.Context,
-	id *pb.ApplicationID,
-) (*pb.LifecycleStatus, error) {
+	id *evapb.ApplicationID,
+) (*elapb.LifecycleStatus, error) {
 	if containerApp, ok := s.containerApps[id.Id]; ok {
-		return &pb.LifecycleStatus{
+		return &elapb.LifecycleStatus{
 			Status: containerApp.Status,
 		}, nil
 	}
 
 	if vmApp, ok := s.vmApps[id.Id]; ok {
-		return &pb.LifecycleStatus{
+		return &elapb.LifecycleStatus{
 			Status: vmApp.Status,
 		}, nil
 	}
@@ -85,7 +86,7 @@ func (s *appDeployLifeService) GetStatus(
 
 func (s *appDeployLifeService) Redeploy(
 	ctx context.Context,
-	app *pb.Application,
+	app *elapb.Application,
 ) (*empty.Empty, error) {
 	if oldApp, ok := s.containerApps[app.Id]; ok {
 		app.Status = oldApp.Status
@@ -105,7 +106,7 @@ func (s *appDeployLifeService) Redeploy(
 
 func (s *appDeployLifeService) Undeploy(
 	ctx context.Context,
-	id *pb.ApplicationID,
+	id *evapb.ApplicationID,
 ) (*empty.Empty, error) {
 	var policyExists bool
 	if _, policyExists = s.appPolicyService.policies[id.Id]; policyExists {
@@ -133,21 +134,21 @@ func (s *appDeployLifeService) Undeploy(
 
 func (s *appDeployLifeService) Start(
 	ctx context.Context,
-	cmd *pb.LifecycleCommand,
+	cmd *evapb.LifecycleCommand,
 ) (*empty.Empty, error) {
 	app := s.find(cmd.Id)
 
 	if app != nil {
 		switch app.Status {
-		case pb.LifecycleStatus_READY:
-		case pb.LifecycleStatus_STOPPED:
+		case elapb.LifecycleStatus_READY:
+		case elapb.LifecycleStatus_STOPPED:
 		default:
 			return nil, status.Errorf(
 				codes.FailedPrecondition, "Application %s not stopped or ready",
 				cmd.Id)
 		}
 
-		app.Status = pb.LifecycleStatus_RUNNING
+		app.Status = elapb.LifecycleStatus_RUNNING
 		return &empty.Empty{}, nil
 	}
 
@@ -157,17 +158,17 @@ func (s *appDeployLifeService) Start(
 
 func (s *appDeployLifeService) Stop(
 	ctx context.Context,
-	cmd *pb.LifecycleCommand,
+	cmd *evapb.LifecycleCommand,
 ) (*empty.Empty, error) {
 	app := s.find(cmd.Id)
 
 	if app != nil {
-		if app.Status != pb.LifecycleStatus_RUNNING {
+		if app.Status != elapb.LifecycleStatus_RUNNING {
 			return nil, status.Errorf(
 				codes.FailedPrecondition, "Application %s not running", cmd.Id)
 		}
 
-		app.Status = pb.LifecycleStatus_STOPPED
+		app.Status = elapb.LifecycleStatus_STOPPED
 		return &empty.Empty{}, nil
 	}
 
@@ -177,12 +178,12 @@ func (s *appDeployLifeService) Stop(
 
 func (s *appDeployLifeService) Restart(
 	ctx context.Context,
-	cmd *pb.LifecycleCommand,
+	cmd *evapb.LifecycleCommand,
 ) (*empty.Empty, error) {
 	app := s.find(cmd.Id)
 
 	if app != nil {
-		if app.Status != pb.LifecycleStatus_RUNNING {
+		if app.Status != elapb.LifecycleStatus_RUNNING {
 			return nil, status.Errorf(
 				codes.FailedPrecondition, "Application %s not running", cmd.Id)
 		}
@@ -194,7 +195,7 @@ func (s *appDeployLifeService) Restart(
 		codes.NotFound, "Application %s not found", cmd.Id)
 }
 
-func (s *appDeployLifeService) find(id string) *pb.Application {
+func (s *appDeployLifeService) find(id string) *elapb.Application {
 	if containerApp, ok := s.containerApps[id]; ok {
 		return containerApp
 	}

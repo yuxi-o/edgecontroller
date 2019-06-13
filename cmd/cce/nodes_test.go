@@ -52,7 +52,7 @@ var _ = Describe("/nodes", func() {
 					ID string
 				}
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &respBody)).To(Succeed())
 
 				By("Verifying a UUID was returned")
@@ -148,7 +148,7 @@ var _ = Describe("/nodes", func() {
 
 				var nodes []*cce.Node
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &nodes)).To(Succeed())
 
 				By("Verifying the 2 created nodes were returned")
@@ -156,7 +156,7 @@ var _ = Describe("/nodes", func() {
 					&cce.Node{
 						ID:       nodeCfg.nodeID,
 						Name:     "Test Node 1",
-						Location: "Localhost port 8082",
+						Location: "Localhost port 42101",
 						Serial:   nodeCfg.serial,
 					}))
 			},
@@ -200,7 +200,7 @@ var _ = Describe("/nodes", func() {
 						Node: cce.Node{
 							ID:       nodeCfg.nodeID,
 							Name:     "Test Node 1",
-							Location: "Localhost port 8082",
+							Location: "Localhost port 42101",
 							Serial:   nodeCfg.serial,
 						},
 						NetworkInterfaces: []*cce.NetworkInterface{

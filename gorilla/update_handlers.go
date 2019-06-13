@@ -30,7 +30,12 @@ func handleUpdateNodes(
 	ps cce.PersistenceService,
 	e cce.Validatable,
 ) (statusCode int, err error) {
-	nodeCC, err := connectNode(ctx, ps, &e.(*cce.NodeReq).Node)
+	ctrl := getController(ctx)
+	nodePort := ctrl.ELAPort
+	if nodePort == "" {
+		nodePort = defaultELAPort
+	}
+	nodeCC, err := connectNode(ctx, ps, &e.(*cce.NodeReq).Node, nodePort, ctrl.EdgeNodeCreds)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
@@ -67,12 +72,15 @@ func handleUpdateNodesApps( //nolint: gocyclo
 	ps cce.PersistenceService,
 	e cce.Validatable,
 ) (statusCode int, err error) {
-	nodeCC, err := connectNode(ctx, ps, &e.(*cce.NodeAppReq).NodeApp)
+	ctrl := getController(ctx)
+	nodePort := ctrl.EVAPort
+	if nodePort == "" {
+		nodePort = defaultEVAPort
+	}
+	nodeCC, err := connectNode(ctx, ps, &e.(*cce.NodeAppReq).NodeApp, nodePort, ctrl.EdgeNodeCreds)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-
-	ctrl := getController(ctx)
 
 	switch ctrl.OrchestrationMode {
 	case cce.OrchestrationModeNative:

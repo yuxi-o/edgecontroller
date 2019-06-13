@@ -21,12 +21,12 @@ import (
 	"github.com/pkg/errors"
 	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 )
 
 // InterfaceServiceClient wraps the PB client.
 type InterfaceServiceClient struct {
-	PBCli pb.InterfaceServiceClient
+	PBCli elapb.InterfaceServiceClient
 }
 
 // NewInterfaceServiceClient creates a new client.
@@ -57,14 +57,14 @@ func (c *InterfaceServiceClient) BulkUpdate(
 	ctx context.Context,
 	nis []*cce.NetworkInterface,
 ) error {
-	var pbNIs []*pb.NetworkInterface
+	var pbNIs []*elapb.NetworkInterface
 	for _, ni := range nis {
 		pbNIs = append(pbNIs, toPBNetworkInterface(ni))
 	}
 
 	_, err := c.PBCli.BulkUpdate(
 		ctx,
-		&pb.NetworkInterfaces{
+		&elapb.NetworkInterfaces{
 			NetworkInterfaces: pbNIs,
 		})
 
@@ -100,7 +100,7 @@ func (c *InterfaceServiceClient) Get(
 ) (*cce.NetworkInterface, error) {
 	pbNI, err := c.PBCli.Get(
 		ctx,
-		&pb.InterfaceID{
+		&elapb.InterfaceID{
 			Id: id,
 		})
 
@@ -111,8 +111,8 @@ func (c *InterfaceServiceClient) Get(
 	return fromPBNetworkInterface(pbNI), nil
 }
 
-func toPBNetworkInterface(ni *cce.NetworkInterface) *pb.NetworkInterface {
-	return &pb.NetworkInterface{
+func toPBNetworkInterface(ni *cce.NetworkInterface) *elapb.NetworkInterface {
+	return &elapb.NetworkInterface{
 		Id:                ni.ID,
 		Description:       ni.Description,
 		Driver:            toPBInterfaceDriver(ni.Driver),
@@ -124,35 +124,35 @@ func toPBNetworkInterface(ni *cce.NetworkInterface) *pb.NetworkInterface {
 	}
 }
 
-func toPBInterfaceDriver(driver string) pb.NetworkInterface_InterfaceDriver {
+func toPBInterfaceDriver(driver string) elapb.NetworkInterface_InterfaceDriver {
 	switch driver {
 	case "kernel":
-		return pb.NetworkInterface_KERNEL
+		return elapb.NetworkInterface_KERNEL
 	case "userspace":
-		return pb.NetworkInterface_USERSPACE
+		return elapb.NetworkInterface_USERSPACE
 	default:
 		return 0 // this should never happen
 	}
 }
 
-func toPBInterfaceType(ifType string) pb.NetworkInterface_InterfaceType {
+func toPBInterfaceType(ifType string) elapb.NetworkInterface_InterfaceType {
 	switch ifType {
 	case "none":
-		return pb.NetworkInterface_NONE
+		return elapb.NetworkInterface_NONE
 	case "upstream":
-		return pb.NetworkInterface_UPSTREAM
+		return elapb.NetworkInterface_UPSTREAM
 	case "downstream":
-		return pb.NetworkInterface_DOWNSTREAM
+		return elapb.NetworkInterface_DOWNSTREAM
 	case "bidirectional":
-		return pb.NetworkInterface_BIDIRECTIONAL
+		return elapb.NetworkInterface_BIDIRECTIONAL
 	case "breakout":
-		return pb.NetworkInterface_BREAKOUT
+		return elapb.NetworkInterface_BREAKOUT
 	default:
 		return 0 // this should never happen
 	}
 }
 
-func fromPBNetworkInterface(pbNI *pb.NetworkInterface) *cce.NetworkInterface {
+func fromPBNetworkInterface(pbNI *elapb.NetworkInterface) *cce.NetworkInterface {
 	return &cce.NetworkInterface{
 		ID:                pbNI.Id,
 		Description:       pbNI.Description,
@@ -165,28 +165,28 @@ func fromPBNetworkInterface(pbNI *pb.NetworkInterface) *cce.NetworkInterface {
 	}
 }
 
-func fromPBInterfaceDriver(pbDriver pb.NetworkInterface_InterfaceDriver) string {
+func fromPBInterfaceDriver(pbDriver elapb.NetworkInterface_InterfaceDriver) string {
 	switch pbDriver {
-	case pb.NetworkInterface_KERNEL:
+	case elapb.NetworkInterface_KERNEL:
 		return "kernel"
-	case pb.NetworkInterface_USERSPACE:
+	case elapb.NetworkInterface_USERSPACE:
 		return "userspace"
 	default:
 		return "kernel" // this should never happen
 	}
 }
 
-func fromPBInterfaceType(pbIfType pb.NetworkInterface_InterfaceType) string {
+func fromPBInterfaceType(pbIfType elapb.NetworkInterface_InterfaceType) string {
 	switch pbIfType {
-	case pb.NetworkInterface_NONE:
+	case elapb.NetworkInterface_NONE:
 		return "none"
-	case pb.NetworkInterface_UPSTREAM:
+	case elapb.NetworkInterface_UPSTREAM:
 		return "upstream"
-	case pb.NetworkInterface_DOWNSTREAM:
+	case elapb.NetworkInterface_DOWNSTREAM:
 		return "downstream"
-	case pb.NetworkInterface_BIDIRECTIONAL:
+	case elapb.NetworkInterface_BIDIRECTIONAL:
 		return "bidirectional"
-	case pb.NetworkInterface_BREAKOUT:
+	case elapb.NetworkInterface_BREAKOUT:
 		return "breakout"
 	default:
 		return "none" // this should never happen

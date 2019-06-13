@@ -19,7 +19,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	gmock "github.com/smartedgemec/controller-ce/mock/node/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
+	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 	"google.golang.org/grpc"
 )
 
@@ -31,7 +32,7 @@ type MockPBApplicationLifecycleServiceClient struct {
 // Start delegates to a MockNode.
 func (c *MockPBApplicationLifecycleServiceClient) Start(
 	ctx context.Context,
-	in *pb.LifecycleCommand,
+	in *evapb.LifecycleCommand,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.AppLifeSvc.Start(ctx, in)
@@ -40,7 +41,7 @@ func (c *MockPBApplicationLifecycleServiceClient) Start(
 // Stop delegates to a MockNode.
 func (c *MockPBApplicationLifecycleServiceClient) Stop(
 	ctx context.Context,
-	in *pb.LifecycleCommand,
+	in *evapb.LifecycleCommand,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.AppLifeSvc.Stop(ctx, in)
@@ -49,7 +50,7 @@ func (c *MockPBApplicationLifecycleServiceClient) Stop(
 // Restart delegates to a MockNode.
 func (c *MockPBApplicationLifecycleServiceClient) Restart(
 	ctx context.Context,
-	in *pb.LifecycleCommand,
+	in *evapb.LifecycleCommand,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.AppLifeSvc.Restart(ctx, in)
@@ -58,8 +59,8 @@ func (c *MockPBApplicationLifecycleServiceClient) Restart(
 // GetStatus delegates to a MockNode.
 func (c *MockPBApplicationLifecycleServiceClient) GetStatus(
 	ctx context.Context,
-	in *pb.ApplicationID,
+	in *evapb.ApplicationID,
 	opts ...grpc.CallOption,
-) (*pb.LifecycleStatus, error) {
+) (*elapb.LifecycleStatus, error) {
 	return c.MockNode.AppLifeSvc.GetStatus(ctx, in)
 }

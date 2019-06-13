@@ -69,7 +69,7 @@ var _ = Describe("/dns_configs_app_aliases", func() {
 					ID string
 				}
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &respBody)).To(Succeed())
 
 				By("Verifying a UUID was returned")
@@ -212,7 +212,7 @@ var _ = Describe("/dns_configs_app_aliases", func() {
 
 				var dnsConfigAppAliases []*cce.DNSConfigAppAlias
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &dnsConfigAppAliases)).
 					To(Succeed())
 

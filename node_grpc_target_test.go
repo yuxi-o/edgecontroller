@@ -31,7 +31,7 @@ var _ = Describe("Entities: NodeGRPCTarget", func() {
 		target = &cce.NodeGRPCTarget{
 			ID:         "ca0fa495-1020-405b-a78c-9a1884349078",
 			NodeID:     "48606c73-3905-47e0-864f-14bc7466f5bb",
-			GRPCTarget: "127.0.0.1:8082",
+			GRPCTarget: "127.0.0.1",
 		}
 	})
 
@@ -79,7 +79,7 @@ var _ = Describe("Entities: NodeGRPCTarget", func() {
 NodeGRPCTarget[
     ID: ca0fa495-1020-405b-a78c-9a1884349078
     NodeID: 48606c73-3905-47e0-864f-14bc7466f5bb
-    GRPCTarget: 127.0.0.1:8082
+    GRPCTarget: 127.0.0.1
 ]`,
 			)))
 		})

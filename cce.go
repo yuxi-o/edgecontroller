@@ -16,6 +16,7 @@ package cce
 
 import (
 	"context"
+	"crypto/tls"
 
 	"github.com/smartedgemec/controller-ce/jose"
 	"github.com/smartedgemec/controller-ce/k8s"
@@ -41,6 +42,24 @@ type Controller struct {
 	AuthorityService   AuthorityService
 	TokenService       *jose.JWSTokenIssuer
 	AdminCreds         *AuthCreds
+
+	// The edge node's port that it listens on for gRPC connections from the
+	// Controller and serves Mm5-related endpoints for application and network
+	// policy configuration.
+	//
+	// If ELAPort is empty the default of 42101 is used.
+	ELAPort string
+
+	// The edge node's port that it listens on for gRPC connections from the
+	// Controller and serves Mm6-related endpoints for app deployment and
+	// lifecycle commands.
+	//
+	// If EVAPort is empty the default of 42102 is used.
+	EVAPort string
+
+	// EdgeNodeCreds are the transport credentials for connecting to an edge
+	// node. The server name will be overridden.
+	EdgeNodeCreds *tls.Config
 }
 
 // PersistenceService manages entity persistence. The methods with zv parameters take a zero-value Persistable for

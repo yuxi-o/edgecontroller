@@ -18,14 +18,14 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type interfacePolicyService struct {
 	// map of interface ID to traffic policy
-	policies map[string]*pb.TrafficPolicy
+	policies map[string]*elapb.TrafficPolicy
 
 	// reference to interface server
 	interfaceService *interfaceService
@@ -35,18 +35,18 @@ func newInterfacePolicyService(
 	interfaceService *interfaceService,
 ) *interfacePolicyService {
 	return &interfacePolicyService{
-		policies:         make(map[string]*pb.TrafficPolicy),
+		policies:         make(map[string]*elapb.TrafficPolicy),
 		interfaceService: interfaceService,
 	}
 }
 
 func (s *interfacePolicyService) reset() {
-	s.policies = make(map[string]*pb.TrafficPolicy)
+	s.policies = make(map[string]*elapb.TrafficPolicy)
 }
 
 func (s *interfacePolicyService) Set(
 	ctx context.Context,
-	policy *pb.TrafficPolicy,
+	policy *elapb.TrafficPolicy,
 ) (*empty.Empty, error) {
 	if s.interfaceService.find(policy.Id) == nil {
 		return nil, status.Errorf(
@@ -60,8 +60,8 @@ func (s *interfacePolicyService) Set(
 
 func (s *interfacePolicyService) Get(
 	ctx context.Context,
-	id *pb.InterfaceID,
-) (*pb.TrafficPolicy, error) {
+	id *elapb.InterfaceID,
+) (*elapb.TrafficPolicy, error) {
 	if s.policies[id.Id] == nil {
 		return nil, status.Errorf(
 			codes.NotFound, "Network Interface %s not found", id.Id)

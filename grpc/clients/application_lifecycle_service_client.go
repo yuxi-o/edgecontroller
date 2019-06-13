@@ -1,11 +1,11 @@
 // Copyright 2019 Smart-Edge.com, Inc. All rights reserved.
-
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,12 +20,12 @@ import (
 	"github.com/pkg/errors"
 	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 )
 
 // ApplicationLifecycleServiceClient wraps the PB client.
 type ApplicationLifecycleServiceClient struct {
-	PBCli pb.ApplicationLifecycleServiceClient
+	PBCli evapb.ApplicationLifecycleServiceClient
 }
 
 // NewApplicationLifecycleServiceClient creates a new client.
@@ -44,9 +44,9 @@ func (c *ApplicationLifecycleServiceClient) Start(
 ) error {
 	_, err := c.PBCli.Start(
 		ctx,
-		&pb.LifecycleCommand{
+		&evapb.LifecycleCommand{
 			Id:  id,
-			Cmd: pb.LifecycleCommand_START,
+			Cmd: evapb.LifecycleCommand_START,
 		})
 
 	if err != nil {
@@ -63,9 +63,9 @@ func (c *ApplicationLifecycleServiceClient) Stop(
 ) error {
 	_, err := c.PBCli.Stop(
 		ctx,
-		&pb.LifecycleCommand{
+		&evapb.LifecycleCommand{
 			Id:  id,
-			Cmd: pb.LifecycleCommand_STOP,
+			Cmd: evapb.LifecycleCommand_STOP,
 		})
 
 	if err != nil {
@@ -82,9 +82,9 @@ func (c *ApplicationLifecycleServiceClient) Restart(
 ) error {
 	_, err := c.PBCli.Restart(
 		ctx,
-		&pb.LifecycleCommand{
+		&evapb.LifecycleCommand{
 			Id:  id,
-			Cmd: pb.LifecycleCommand_RESTART,
+			Cmd: evapb.LifecycleCommand_RESTART,
 		})
 
 	if err != nil {
@@ -101,7 +101,7 @@ func (c *ApplicationLifecycleServiceClient) GetStatus(
 ) (cce.LifecycleStatus, error) {
 	pbStatus, err := c.PBCli.GetStatus(
 		ctx,
-		&pb.ApplicationID{Id: id})
+		&evapb.ApplicationID{Id: id})
 
 	if err != nil {
 		return cce.Unknown, errors.Wrap(err, "error retrieving application")

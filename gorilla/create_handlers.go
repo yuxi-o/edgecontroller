@@ -29,12 +29,16 @@ func handleCreateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 
 	log.Debugf("Loaded app %s\n%+v", app.GetID(), app)
 
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
+	ctrl := getController(ctx)
+	nodePort := ctrl.EVAPort
+	if nodePort == "" {
+		nodePort = defaultEVAPort
+	}
+	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp), nodePort, ctrl.EdgeNodeCreds)
 	if err != nil {
 		return fmt.Errorf("Error connecting to node: %v", err)
 	}
 
-	ctrl := getController(ctx)
 	if err := nodeCC.AppDeploySvcCli.Deploy(ctx, app.(*cce.App)); err != nil {
 		return err
 	}
@@ -65,7 +69,12 @@ func handleCreateNodesDNSConfigs(
 	}
 	log.Debugf("Loaded DNS Config %s\n%+v", dnsConfig.GetID(), dnsConfig)
 
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeDNSConfig))
+	ctrl := getController(ctx)
+	nodePort := ctrl.ELAPort
+	if nodePort == "" {
+		nodePort = defaultELAPort
+	}
+	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeDNSConfig), nodePort, ctrl.EdgeNodeCreds)
 	if err != nil {
 		return err
 	}
@@ -96,7 +105,12 @@ func handleCreateNodesAppsTrafficPolicies(
 	}
 	log.Debugf("Loaded node app %s\n%+v", nodeApp.GetID(), nodeApp)
 
-	nodeCC, err := connectNode(ctx, ps, nodeApp.(*cce.NodeApp))
+	ctrl := getController(ctx)
+	nodePort := ctrl.ELAPort
+	if nodePort == "" {
+		nodePort = defaultELAPort
+	}
+	nodeCC, err := connectNode(ctx, ps, nodeApp.(*cce.NodeApp), nodePort, ctrl.EdgeNodeCreds)
 	if err != nil {
 		return err
 	}

@@ -16,15 +16,16 @@ package node
 
 import (
 	"context"
+	"crypto/tls"
 
-	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/grpc"
 	gclients "github.com/smartedgemec/controller-ce/grpc/clients"
 )
 
 // ClientConn wraps a Node and provides a Connect() method to create wrapped gRPC clients.
 type ClientConn struct {
-	NodeGRPCTarget *cce.NodeGRPCTarget
+	Addr string
+	TLS  *tls.Config
 
 	conn *grpc.ClientConn
 
@@ -40,7 +41,7 @@ type ClientConn struct {
 // Connect connects to a node via grpc.Dial.
 func (cc *ClientConn) Connect(ctx context.Context) error {
 	var err error
-	if cc.conn, err = grpc.Dial(ctx, cc.NodeGRPCTarget.GRPCTarget); err != nil {
+	if cc.conn, err = grpc.Dial(ctx, cc.Addr, cc.TLS); err != nil {
 		return err
 	}
 

@@ -53,7 +53,7 @@ var _ = Describe("/apps", func() {
 					ID string
 				}
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &respBody)).To(Succeed())
 
 				By("Verifying a UUID was returned")
@@ -286,7 +286,7 @@ var _ = Describe("/apps", func() {
 
 				var apps swagger.AppList
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &apps)).To(Succeed())
 
 				By("Verifying the 2 created apps were returned")

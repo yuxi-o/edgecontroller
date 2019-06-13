@@ -72,7 +72,7 @@ func (h *handler) create(w http.ResponseWriter, r *http.Request) { //nolint:gocy
 
 	p := reflect.New(reflect.ValueOf(h.model).Elem().Type()).Interface().(cce.Persistable)
 	if err := json.Unmarshal(body, p); err != nil {
-		log.Errf("Error unmarshalling json: %v", err)
+		log.Errf("Error unmarshaling json: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -168,7 +168,7 @@ func (h *handler) filter(w http.ResponseWriter, r *http.Request) {
 		var appBytes []byte
 		appBytes, err := json.Marshal(p)
 		if err != nil {
-			log.Errf("Error marshalling json: %v", err)
+			log.Errf("Error marshaling json: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -229,7 +229,7 @@ func (h *handler) getByID(w http.ResponseWriter, r *http.Request) {
 
 	bytes, err := json.Marshal(re)
 	if err != nil {
-		log.Errf("Error marshalling json: %v", err)
+		log.Errf("Error marshaling json: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -247,7 +247,7 @@ func (h *handler) bulkUpdate(w http.ResponseWriter, r *http.Request) { //nolint:
 
 	var is []interface{}
 	if err := json.Unmarshal(body, &is); err != nil {
-		log.Errf("Error unmarshalling json: %v", err)
+		log.Errf("Error unmarshaling json: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -256,7 +256,7 @@ func (h *handler) bulkUpdate(w http.ResponseWriter, r *http.Request) { //nolint:
 	for _, i := range is {
 		bytes, err := json.Marshal(i)
 		if err != nil {
-			log.Errf("Error marshalling json: %v", err)
+			log.Errf("Error marshaling json: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -269,7 +269,7 @@ func (h *handler) bulkUpdate(w http.ResponseWriter, r *http.Request) { //nolint:
 		}
 
 		if err := json.Unmarshal(bytes, &v); err != nil {
-			log.Errf("Error unmarshalling json: %v", err)
+			log.Errf("Error unmarshaling json: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}

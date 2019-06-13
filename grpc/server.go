@@ -33,7 +33,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	cce "github.com/smartedgemec/controller-ce"
-	"github.com/smartedgemec/controller-ce/pb"
+	authpb "github.com/smartedgemec/controller-ce/pb/auth"
+	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 	"github.com/smartedgemec/controller-ce/uuid"
 )
 
@@ -52,14 +53,6 @@ const (
 	// receive a certificate. It is similar to how a REST app may require a
 	// session token for API paths other than /login.
 	enrollmentMethod = "/openness.auth.AuthService/RequestCredentials"
-
-	// TODO confirm this with Intel - see https://github.com/smartedgemec/controller-ce/pull/61/files#r285201296
-	// The appliance's port that it listens on for gRPC connections from the
-	// Controller. This will be removed in the future when the Appliance is
-	// assumed to not be routable from the Controller in all cases. Instead the
-	// Appliance will be required to open two TCP streams, one for outgoing
-	// RPCs to the Controller and one for inbound.
-	nodeGRPCPort = "8082"
 )
 
 // Server wraps grpc.Server
@@ -107,8 +100,8 @@ func NewServer(controller *cce.Controller, conf *tls.Config) *Server {
 		),
 	}
 
-	pb.RegisterAuthServiceServer(s.grpc, s)
-	pb.RegisterControllerVirtualizationAgentServer(s.grpc, s)
+	authpb.RegisterAuthServiceServer(s.grpc, s)
+	evapb.RegisterControllerVirtualizationAgentServer(s.grpc, s)
 
 	return s
 }
@@ -155,7 +148,10 @@ func (s *Server) Stop() {
 }
 
 // RequestCredentials requests authentication endpoint credentials.
-func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.Credentials, error) { // nolint: gocyclo
+func (s *Server) RequestCredentials(ctx context.Context, id *authpb.Identity) ( // nolint: gocyclo
+	*authpb.Credentials,
+	error,
+) {
 	// Parse and validate CSR
 	csr := id.GetCsr()
 	if csr == "" {
@@ -262,14 +258,14 @@ func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.C
 	nodeWithTarget := &cce.NodeGRPCTarget{
 		ID:         uuid.New(),
 		NodeID:     node.ID,
-		GRPCTarget: net.JoinHostPort(nodeIP, nodeGRPCPort),
+		GRPCTarget: nodeIP,
 	}
 	if err := s.controller.PersistenceService.Create(ctx, nodeWithTarget); err != nil {
 		log.Errf("Failed to store Node address: %v", err)
 		return nil, status.Error(codes.Internal, "unable to store node address")
 	}
 
-	return &pb.Credentials{
+	return &authpb.Credentials{
 		Certificate: creds.Certificate,
 		CaChain:     chainPEM,
 		CaPool:      caPoolPEM,
@@ -277,7 +273,7 @@ func (s *Server) RequestCredentials(ctx context.Context, id *pb.Identity) (*pb.C
 }
 
 // GetContainerByIP retrieves info of deployed application with IP provided
-func (s *Server) GetContainerByIP(ctx context.Context, containerIP *pb.ContainerIP) (*pb.ContainerInfo, error) {
+func (s *Server) GetContainerByIP(ctx context.Context, containerIP *evapb.ContainerIP) (*evapb.ContainerInfo, error) {
 	nodeID, err := getNodeID(ctx)
 	if err != nil {
 		return nil, err
@@ -292,7 +288,7 @@ func (s *Server) GetContainerByIP(ctx context.Context, containerIP *pb.Container
 		return nil, status.Error(codes.Internal, "unable to get pod name by ip")
 	}
 
-	return &pb.ContainerInfo{Id: id}, nil
+	return &evapb.ContainerInfo{Id: id}, nil
 }
 
 // getNodeID extracts the node info from the client TLS certificate. A context

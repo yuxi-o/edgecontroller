@@ -29,7 +29,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	cce "github.com/smartedgemec/controller-ce"
-	"github.com/smartedgemec/controller-ce/pb"
+	authpb "github.com/smartedgemec/controller-ce/pb/auth"
 )
 
 var _ = Describe("Node Auth Service", func() {
@@ -107,7 +107,7 @@ var _ = Describe("Node Auth Service", func() {
 			By("Requesting credentials from auth service")
 			credentials, err := authSvcCli.RequestCredentials(
 				context.TODO(),
-				&pb.Identity{
+				&authpb.Identity{
 					Csr: "",
 				},
 			)
@@ -119,7 +119,7 @@ var _ = Describe("Node Auth Service", func() {
 			By("Requesting credentials from auth service")
 			credentials, err := authSvcCli.RequestCredentials(
 				context.TODO(),
-				&pb.Identity{
+				&authpb.Identity{
 					Csr: "123",
 				},
 			)
@@ -150,7 +150,7 @@ var _ = Describe("Node Auth Service", func() {
 			By("Requesting credentials from auth service")
 			credentials, err := authSvcCli.RequestCredentials(
 				context.TODO(),
-				&pb.Identity{
+				&authpb.Identity{
 					Csr: string(csrPEM),
 				},
 			)

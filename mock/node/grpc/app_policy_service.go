@@ -18,14 +18,14 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type appPolicyService struct {
 	// map of application ID to traffic policy
-	policies map[string]*pb.TrafficPolicy
+	policies map[string]*elapb.TrafficPolicy
 
 	// reference to application server
 	appSvc *appDeployLifeService
@@ -35,18 +35,18 @@ func newAppPolicyService(
 	appSvc *appDeployLifeService,
 ) *appPolicyService {
 	return &appPolicyService{
-		policies: make(map[string]*pb.TrafficPolicy),
+		policies: make(map[string]*elapb.TrafficPolicy),
 		appSvc:   appSvc,
 	}
 }
 
 func (s *appPolicyService) reset() {
-	s.policies = make(map[string]*pb.TrafficPolicy)
+	s.policies = make(map[string]*elapb.TrafficPolicy)
 }
 
 func (s *appPolicyService) Set(
 	ctx context.Context,
-	policy *pb.TrafficPolicy,
+	policy *elapb.TrafficPolicy,
 ) (*empty.Empty, error) {
 	if s.appSvc.find(policy.Id) == nil {
 		return nil, status.Errorf(

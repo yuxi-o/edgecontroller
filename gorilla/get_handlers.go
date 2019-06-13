@@ -25,7 +25,12 @@ func handleGetNodes(
 	ps cce.PersistenceService,
 	e cce.Persistable,
 ) (cce.RespEntity, error) {
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.Node))
+	ctrl := getController(ctx)
+	nodePort := ctrl.ELAPort
+	if nodePort == "" {
+		nodePort = defaultELAPort
+	}
+	nodeCC, err := connectNode(ctx, ps, e.(*cce.Node), nodePort, ctrl.EdgeNodeCreds)
 
 	if err != nil {
 		return nil, err
@@ -43,12 +48,15 @@ func handleGetNodes(
 }
 
 func handleGetNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Persistable) (cce.RespEntity, error) {
-	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp))
+	ctrl := getController(ctx)
+	nodePort := ctrl.EVAPort
+	if nodePort == "" {
+		nodePort = defaultEVAPort
+	}
+	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp), nodePort, ctrl.EdgeNodeCreds)
 	if err != nil {
 		return nil, err
 	}
-
-	ctrl := getController(ctx)
 
 	var status string
 	switch ctrl.OrchestrationMode {

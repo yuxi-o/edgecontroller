@@ -27,6 +27,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"strconv"
 
 	"golang.org/x/sync/errgroup"
 
@@ -60,6 +61,8 @@ var (
 	logLevel   string
 	httpPort   int
 	grpcPort   int
+	elaPort    int
+	evaPort    int
 	syslogPort int
 	statsdPort int
 	syslogOut  string
@@ -74,6 +77,8 @@ func init() {
 	flag.StringVar(&logLevel, "log-level", "info", "Syslog level")
 	flag.IntVar(&httpPort, "httpPort", 8080, "Controller HTTP port")
 	flag.IntVar(&grpcPort, "grpcPort", 8081, "Controller gRPC port")
+	flag.IntVar(&elaPort, "elaPort", 42101, "Port to dial ELA on edge node")
+	flag.IntVar(&evaPort, "evaPort", 42102, "Port to dial EVA on edge node")
 	flag.IntVar(&syslogPort, "syslogPort", 6514, "Telemetry ingress port for syslog")
 	flag.IntVar(&statsdPort, "statsdPort", 8125, "Telemetry ingress port for statsd")
 	flag.StringVar(&syslogOut, "syslog-path", "./syslog.log", "Syslog output file path")
@@ -152,6 +157,9 @@ func main() {
 		},
 		OrchestrationMode: orchestrationMode,
 		KubernetesClient:  &k8sClient,
+		ELAPort:           strconv.Itoa(elaPort),
+		EVAPort:           strconv.Itoa(evaPort),
+		EdgeNodeCreds:     newTLSConf(rootCA, "controller.openness"),
 	}
 
 	// Create an error group to manage server goroutines
@@ -421,6 +429,7 @@ func newTLSConf(rootCA *pki.RootCA, sni string) *tls.Config {
 			Leaf:        tlsCert,
 		}},
 		ClientCAs:    tlsRoots,
+		RootCAs:      tlsRoots,
 		MinVersion:   tls.VersionTLS12,
 		CipherSuites: []uint16{tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256},
 	}

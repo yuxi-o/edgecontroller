@@ -20,12 +20,12 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/pkg/errors"
 	"github.com/smartedgemec/controller-ce/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 )
 
 // ZoneServiceClient wraps the PB client.
 type ZoneServiceClient struct {
-	PBCli pb.ZoneServiceClient
+	PBCli elapb.ZoneServiceClient
 }
 
 // NewZoneServiceClient creates a new client.
@@ -38,7 +38,7 @@ func NewZoneServiceClient(conn *grpc.ClientConn) *ZoneServiceClient {
 // Create creates a network zone.
 func (c *ZoneServiceClient) Create(
 	ctx context.Context,
-	zone *pb.NetworkZone,
+	zone *elapb.NetworkZone,
 ) error {
 	_, err := c.PBCli.Create(
 		ctx,
@@ -54,7 +54,7 @@ func (c *ZoneServiceClient) Create(
 // Update updates a network zone.
 func (c *ZoneServiceClient) Update(
 	ctx context.Context,
-	ni *pb.NetworkZone,
+	ni *elapb.NetworkZone,
 ) error {
 	_, err := c.PBCli.Update(
 		ctx,
@@ -70,7 +70,7 @@ func (c *ZoneServiceClient) Update(
 // BulkUpdate updates multiple network zones.
 func (c *ZoneServiceClient) BulkUpdate(
 	ctx context.Context,
-	nis *pb.NetworkZones,
+	nis *elapb.NetworkZones,
 ) error {
 	_, err := c.PBCli.BulkUpdate(
 		ctx,
@@ -86,7 +86,7 @@ func (c *ZoneServiceClient) BulkUpdate(
 // GetAll retrieves all network zones.
 func (c *ZoneServiceClient) GetAll(
 	ctx context.Context,
-) (*pb.NetworkZones, error) {
+) (*elapb.NetworkZones, error) {
 	nis, err := c.PBCli.GetAll(ctx, &empty.Empty{})
 
 	if err != nil {
@@ -100,10 +100,10 @@ func (c *ZoneServiceClient) GetAll(
 func (c *ZoneServiceClient) Get(
 	ctx context.Context,
 	id string,
-) (*pb.NetworkZone, error) {
+) (*elapb.NetworkZone, error) {
 	ni, err := c.PBCli.Get(
 		ctx,
-		&pb.ZoneID{
+		&elapb.ZoneID{
 			Id: id,
 		})
 
@@ -121,7 +121,7 @@ func (c *ZoneServiceClient) Delete(
 ) error {
 	_, err := c.PBCli.Delete(
 		ctx,
-		&pb.ZoneID{
+		&elapb.ZoneID{
 			Id: id,
 		})
 

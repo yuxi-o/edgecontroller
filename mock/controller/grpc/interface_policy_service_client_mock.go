@@ -19,7 +19,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	gmock "github.com/smartedgemec/controller-ce/mock/node/grpc"
-	"github.com/smartedgemec/controller-ce/pb"
+	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 	"google.golang.org/grpc"
 )
 
@@ -31,7 +31,7 @@ type MockPBInterfacePolicyServiceClient struct {
 // Set delegates to a MockNode.
 func (c *MockPBInterfacePolicyServiceClient) Set(
 	ctx context.Context,
-	in *pb.TrafficPolicy,
+	in *elapb.TrafficPolicy,
 	opts ...grpc.CallOption,
 ) (*empty.Empty, error) {
 	return c.MockNode.IfPolicySvc.Set(ctx, in)

@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [0.0.36] - 2019-06-12
+### Added
+- Dial edge node on separate ELA and EVA ports
+- Dial edge node with TLS
+- elaPort and evaPort configuration flags
+
+### Changed
+- Update protobuf for latest schemas
+
 ## [0.0.35] - 2019-06-11
 ### Fixed
 - Increased node_grpc_targets.grpc_target max length to 47 to handle IPv6 addresses
