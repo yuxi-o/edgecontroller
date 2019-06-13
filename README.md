@@ -21,7 +21,7 @@ To run only integration tests (this will call `make db-reset`):
 
 `make test-api`
 
-## Building 
+## Building
 
 To build the binaries:
 
@@ -87,12 +87,54 @@ for guidelines.
 
 ### Controller CE UI
 
+#### Development Environment
+
+For instructions on how to setup your development environment, see `ui/controller/README.md`.
+
+#### Production Deployment
+
 ##### Prerequisites
 
-- Node & NPM installed (v10.15.3, or V10 LTS)
-  - recommended to use NVM https://github.com/nvm-sh/nvm to manage your Node versions
-- Yarn installed globally `npm install -g yarn`
-- install dependencies via `yarn install` within the project
+- For production deployments, create an `.env.production` file in the
+  `ui/controller` project and define the required variables. See the
+  `ui/controller/README.md` for details.
+
+##### Running
+
+```
+make ui-up
+```
+
+##### Stopping
+
+```
+make ui-down
+```
+
+### CUPS UI
+
+#### Development Environment
+
+For instructions on how to setup your development environment, see `ui/cups/README.md`.
+
+#### Production Deployment
+
+##### Prerequisites
+- For production deployments, create an `.env.production` file in the `ui/cups`
+  project and define the required variables. See the `ui/cups/README.md` for
+  details.
+
+##### Running
+
+```
+make cups-ui-up
+```
+
+##### Stopping
+
+```
+make cups-ui-down
+```
 
 ### Log Service
 

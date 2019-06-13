@@ -14,6 +14,8 @@ import {
   Paper,
 } from '@material-ui/core';
 
+const baseURL = (process.env.NODE_ENV === 'production') ? process.env.REACT_APP_CUPS_API_BASE_PATH : '/api';
+
 const styles = theme => ({
   paper: {
     marginTop: theme.spacing.unit * 3,
@@ -48,7 +50,7 @@ class Userplanes extends Component {
 
   _getUserplanes = async () => {
     try {
-      const response = await axios.get(`/api/userplanes`);
+      const response = await axios.get(`${baseURL}/userplanes`);
 
       return response.data;
     } catch (error) {

@@ -29,6 +29,7 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/gorilla/handlers"
 	"golang.org/x/sync/errgroup"
 
 	"net"
@@ -255,9 +256,20 @@ func serveHTTP(ctx context.Context, controller *cce.Controller, addr string) fun
 		os.Exit(1)
 	}
 
+	// Define Cross-Origin Resource Sharing (CORS) policy to allow the UI to be
+	// served from a separate host. This policy restricts received API requests
+	// based on the request origin, headers, and method type. The CORS policy
+	// handler must be applied at the top-level router.
+	cors := handlers.CORS(
+		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowedHeaders([]string{"Authorization", "Content-Type", "ContentType"}),
+		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "PATCH", "DELETE"}),
+	)
+
 	// Configure http server
 	koko := gorilla.NewGorilla(controller)
-	httpServer := http.NewServer(koko)
+
+	httpServer := http.NewServer(cors(koko))
 
 	// Shutdown http server on exit signal
 	go func() {

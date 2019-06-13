@@ -132,30 +132,30 @@ else
 endif
 
 ui-up:
-	docker build -t cce-ui ./ui
+	docker build -t cce-ui ./ui/controller
 	docker-compose up -d ui
 
 ui-down:
 	docker-compose stop ui
 
 ui-dev-up:
-	cd ui/ && yarn install && yarn start
+	cd ui/controller && yarn install && yarn start
 
 ui-test:
-	cd ui/ && yarn install && yarn build && yarn test
+	cd ui/controller && yarn install && yarn build && yarn test
 
 cups-ui-up:
-	docker build -t cce-cups-ui ./cups-ui
+	docker build -t cce-cups-ui ./ui/cups
 	docker-compose up -d cups-ui
 
 cups-ui-down:
 	docker-compose stop cups-ui
 
 cups-ui-dev-up:
-	cd cups-ui/ && yarn install && yarn start
+	cd ui/cups && yarn install && yarn start
 
 cups-ui-test:
-	cd cups-ui/ && yarn install && yarn build && yarn test
+	cd ui/cups && yarn install && yarn build && yarn test
 
 test-unit:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites \

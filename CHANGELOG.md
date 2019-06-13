@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [0.0.37] - 2019-06-13
+### Fixed
+- Content Security Policy (CSP) did not whitelist the Controller and CUPS API as a `connect-src`.
+- Controller API properly handles Cross-Origin Resource Sharing (CORS).
+- CUPS UI used development CUPS API in production environments.
+
+### Removed
+- CUPS UI mock client and server due to unimplemented status.
+
+### Changed
+- Moved CUPS UI project from `cups-ui` to `ui/cups`.
+- Moved Controller UI project from `ui` to `ui/controller`.
+- Replaced UI production NGINX servers with a Node.js server with nonce injection for CSP compliance.
+- Base Docker image for CCE UI production bundle builder from `node:latest` to `node:lts-alpine`.
+- Base Docker image for CUPS UI production bundle builder from `node:latest` to `node:lts-alpine`.
+- Base Docker image for CCE UI production server from `nginx:alpine` to `node:lts-alpine`.
+- Base Docker image for CUPS UI production server from `nginx:alpine` to `node:lts-alpine`.
+
 ## [0.0.36] - 2019-06-12
 ### Added
 - Dial edge node on separate ELA and EVA ports

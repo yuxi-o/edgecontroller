@@ -6,19 +6,18 @@ class Auth {
     try {
       const authResp = await ApiClient.login(email, password);
 
-      if(!authResp.data.token) {
+      if (!authResp.data.token) {
         return false;
       }
 
       ApiClient.setJWT(authResp.data.token);
-      return {success: true};
-    } catch(err) {
-
-      if("response" in err && "data" in err.response) {
-        return {success: false, errorText: err.response.data};
+      return { success: true };
+    } catch (err) {
+      if (err.response && "data" in err.response) {
+        return { success: false, errorText: err.response.data };
       }
 
-      return {success: false, errorText: "Login Failed Try again Later"};
+      return { success: false, errorText: "Login Failed Try again Later" };
     }
   }
 

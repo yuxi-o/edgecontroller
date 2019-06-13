@@ -12,6 +12,8 @@ import {
   Snackbar,
 } from '@material-ui/core';
 
+const baseURL = (process.env.NODE_ENV === 'production') ? process.env.REACT_APP_CUPS_API_BASE_PATH : '/api';
+
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 class Userplane extends Component {
   _isMounted = false;
@@ -32,7 +34,7 @@ class Userplane extends Component {
 
   _getUserplane = async (id) => {
     try {
-      const response = await axios.get(`/api/userplanes/${id}`);
+      const response = await axios.get(`${baseURL}/userplanes/${id}`);
 
       return response.data;
     } catch (error) {
@@ -52,7 +54,7 @@ class Userplane extends Component {
     }
 
     try {
-      await axios.post(`/api/userplanes`, model);
+      await axios.post(`${baseURL}/userplanes`, model);
 
       this._cancelIfUnmounted(() => this.setState({
         snackbarOpen: true,
@@ -84,7 +86,7 @@ class Userplane extends Component {
     }
 
     try {
-      await axios.patch(`/api/userplanes/${model.id}`, model);
+      await axios.patch(`${baseURL}/userplanes/${model.id}`, model);
 
       this._cancelIfUnmounted(() => this.setState({
         snackbarOpen: true,
@@ -110,7 +112,7 @@ class Userplane extends Component {
     const { model } = this.state;
 
     try {
-      await axios.delete(`/api/userplanes/${model.id}`);
+      await axios.delete(`${baseURL}/userplanes/${model.id}`);
 
       this.setState({
         snackbarOpen: true,

@@ -37,3 +37,6 @@ certificates/
 
 # Log files
 *.log
+
+# Production environment files
+.env.production

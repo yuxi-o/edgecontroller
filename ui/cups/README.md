@@ -15,18 +15,10 @@ for the CUPs UI local development
 The local development server is proxied via create-react-app's proxy functionality.
 This is to resolve CORS local dev concerns.
 
-There is also a mock CUPS API server implementation written in Go to assist
-development. The `MockServer.go` is located at `cups-ui/src/mock/MockServer.go`.
-Assuming Go is installed and on the path, the mock server can be started with:
-
-```
-go run ./src/mock/MockServer.go
-```
-
 ### Production
 
 In order to setup a Production build, you must create a file under the `cups-ui`
-directory with the filename of `.env.production`
+directory with the filename of `.env.production`.
 
 Here are the following variables
 - `REACT_APP_CUPS_API_BASE_PATH`

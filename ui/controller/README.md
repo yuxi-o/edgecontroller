@@ -33,8 +33,6 @@ with the filename of `.env.production`
 
 Here are the following variables
 - `REACT_APP_CONTROLLER_API`
-- `REACT_APP_CUPS_API`
-- `REACT_APP_CUPS_UI_URL`
 
 ## Available Scripts
 

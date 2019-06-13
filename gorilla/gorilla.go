@@ -233,7 +233,7 @@ func NewGorilla( //nolint:gocyclo
 	// Require auth token for all endpoints except POST /auth
 	g.router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == http.MethodPost && r.RequestURI == "/auth" {
+			if r.RequestURI == "/auth" {
 				next.ServeHTTP(w, r)
 			} else {
 				requireAuthHandler(next).ServeHTTP(w, r)
