@@ -122,12 +122,6 @@ func NewGorilla( //nolint:gocyclo
 		"PATCH  /nodes":      g.nodesHandler.bulkUpdate,
 		"DELETE /nodes/{id}": g.nodesHandler.delete,
 
-		"POST   /apps":      g.appsHandler.create,
-		"GET    /apps":      g.appsHandler.filter,
-		"GET    /apps/{id}": g.appsHandler.getByID,
-		"PATCH  /apps":      g.appsHandler.bulkUpdate,
-		"DELETE /apps/{id}": g.appsHandler.delete,
-
 		"POST   /traffic_policies":      g.trafficPoliciesHandler.create,
 		"GET    /traffic_policies":      g.trafficPoliciesHandler.filter,
 		"GET    /traffic_policies/{id}": g.trafficPoliciesHandler.getByID,
@@ -162,6 +156,48 @@ func NewGorilla( //nolint:gocyclo
 		"GET    /nodes_apps_traffic_policies":      g.nodesAppsTrafficPoliciesHandler.filter,
 		"GET    /nodes_apps_traffic_policies/{id}": g.nodesAppsTrafficPoliciesHandler.getByID,
 		"DELETE /nodes_apps_traffic_policies/{id}": g.nodesAppsTrafficPoliciesHandler.delete,
+
+		// The following endpoints are compliant with the Swagger / OpenAPI 3.0 schema. All references
+		// to the `v2` prefix in code should be removed once all endpoints are implemented. In conjunction
+		// with this, the old endpoints and their tests should be dropped.
+		"GET      /v2/nodes":           nil, // TODO
+		"POST     /v2/nodes":           nil, // TODO
+		"GET      /v2/nodes/{node_id}": nil, // TODO
+		"PATCH    /v2/nodes/{node_id}": nil, // TODO
+		"DELETE   /v2/nodes/{node_id}": nil, // TODO
+
+		"GET      /apps":          g.swagGETApps,
+		"POST     /apps":          g.swagPOSTApps,
+		"GET      /apps/{app_id}": g.swagGETAppByID,
+		"PATCH    /apps/{app_id}": g.swagPATCHAppByID,
+		"DELETE   /apps/{app_id}": g.swagDELETEAppByID,
+
+		"GET      /v2/policies":             nil, // TODO
+		"POST     /v2/policies":             nil, // TODO
+		"GET      /v2/policies/{policy_id}": nil, // TODO
+		"PATCH    /v2/policies/{policy_id}": nil, // TODO
+		"DELETE   /v2/policies/{policy_id}": nil, // TODO
+
+		"GET      /v2/nodes/{node_id}/dns": nil, // TODO
+		"PATCH    /v2/nodes/{node_id}/dns": nil, // TODO
+		"DELETE   /v2/nodes/{node_id}/dns": nil, // TODO
+
+		"GET      /v2/nodes/{node_id}/interfaces":                nil, // TODO
+		"PATCH    /v2/nodes/{node_id}/interfaces":                nil, // TODO
+		"GET      /v2/nodes/{node_id}/interfaces/{interface_id}": nil, // TODO
+
+		"GET      /v2/nodes/{node_id}/interfaces/{interface_id}/policy": nil, // TODO
+		"PATCH    /v2/nodes/{node_id}/interfaces/{interface_id}/policy": nil, // TODO
+		"DELETE   /v2/nodes/{node_id}/interfaces/{interface_id}/policy": nil, // TODO
+
+		"GET      /v2/nodes/{node_id}/apps":                 nil, // TODO
+		"POST     /v2/nodes/{node_id}/apps":                 nil, // TODO
+		"GET      /v2/nodes/{node_id}/apps/{app_id}":        nil, // TODO
+		"PATCH    /v2/nodes/{node_id}/apps/{app_id}":        nil, // TODO
+		"DELETE   /v2/nodes/{node_id}/apps/{app_id}":        nil, // TODO
+		"GET      /v2/nodes/{node_id}/apps/{app_id}/policy": nil, // TODO
+		"PATCH    /v2/nodes/{node_id}/apps/{app_id}/policy": nil, // TODO
+		"DELETE   /v2/nodes/{node_id}/apps/{app_id}/policy": nil, // TODO
 	}
 
 	for endpoint, handlerFunc := range routes {

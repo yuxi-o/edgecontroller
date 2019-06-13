@@ -17,6 +17,7 @@ package main_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/smartedgemec/controller-ce/swagger"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -283,67 +284,36 @@ var _ = Describe("/apps", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var apps []*cce.App
+				var apps swagger.AppList
 
 				By("Unmarshalling the response")
 				Expect(json.Unmarshal(body, &apps)).To(Succeed())
 
 				By("Verifying the 2 created apps were returned")
-				Expect(apps).To(ContainElement(
-					&cce.App{
+				Expect(apps.Apps).To(ContainElement(
+					swagger.AppSummary{
 						ID:          containerAppID,
 						Type:        "container",
 						Name:        "container app",
 						Version:     "latest",
 						Vendor:      "smart edge",
 						Description: "my container app",
-						Cores:       4,
-						Memory:      1024,
-						Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
-						Source:      "http://www.test.com/my_container_app.tar.gz",
 					}))
-				Expect(apps).To(ContainElement(
-					&cce.App{
+				Expect(apps.Apps).To(ContainElement(
+					swagger.AppSummary{
 						ID:          vmAppID,
 						Type:        "vm",
 						Name:        "vm app",
 						Version:     "latest",
 						Vendor:      "smart edge",
 						Description: "my vm app",
-						Cores:       4,
-						Memory:      1024,
-						Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
-						Source:      "http://www.test.com/my_vm_app.tar.gz",
 					}))
 			},
 			Entry("GET /apps"),
 		)
-
-		DescribeTable("400 Bad Request",
-			func(field, value string) {
-				By("Sending a GET /apps request with a disallowed filter")
-				resp, err := apiCli.Get(fmt.Sprintf(
-					"http://127.0.0.1:8080/apps?%s=%s",
-					field, value,
-				))
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-
-				By("Verifying a 400 Bad Request response")
-				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(body)).To(Equal(
-					fmt.Sprintf("disallowed filter field %q\n", field),
-				))
-			},
-			Entry("GET /apps", "version", "1.0.0"),
-		)
 	})
 
-	Describe("GET /apps/{id}", func() {
+	Describe("GET /apps/{app_id}", func() {
 		var (
 			containerAppID string
 		)
@@ -358,26 +328,32 @@ var _ = Describe("/apps", func() {
 
 				By("Verifying the created app was returned")
 				Expect(app).To(Equal(
-					&cce.App{
-						ID:          containerAppID,
-						Type:        "container",
-						Name:        "container app",
-						Version:     "latest",
-						Vendor:      "smart edge",
-						Description: "my container app",
-						Cores:       4,
-						Memory:      1024,
-						Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
-						Source:      "http://www.test.com/my_container_app.tar.gz",
+					&swagger.AppDetail{
+						AppSummary: swagger.AppSummary{
+							ID:          containerAppID,
+							Type:        "container",
+							Name:        "container app",
+							Version:     "latest",
+							Vendor:      "smart edge",
+							Description: "my container app",
+						},
+						Cores:  4,
+						Memory: 1024,
+						Ports: []swagger.PortProto{
+							{
+								PortProto: cce.PortProto{Port: 80, Protocol: "tcp"},
+							},
+						},
+						Source: "http://www.test.com/my_container_app.tar.gz",
 					},
 				))
 			},
-			Entry("GET /apps/{id}"),
+			Entry("GET /apps/{app_id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func() {
-				By("Sending a GET /apps/{id} request")
+				By("Sending a GET /apps/{app_id} request")
 				resp, err := apiCli.Get(
 					fmt.Sprintf("http://127.0.0.1:8080/apps/%s",
 						uuid.New()))
@@ -387,7 +363,7 @@ var _ = Describe("/apps", func() {
 				By("Verifying a 404 Not Found response")
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("GET /apps/{id} with nonexistent ID"),
+			Entry("GET /apps/{app_id} with nonexistent ID"),
 		)
 	})
 
@@ -400,58 +376,58 @@ var _ = Describe("/apps", func() {
 			containerAppID = postApps("container")
 		})
 
-		DescribeTable("204 No Content",
-			func(reqStr string, expectedApp *cce.App) {
-				By("Sending a PATCH /apps request")
+		DescribeTable("200 Status OK",
+			func(reqStr string, expectedApp *swagger.AppDetail) {
+				By("Sending a PATCH /apps/{app_id} request")
 				resp, err := apiCli.Patch(
-					"http://127.0.0.1:8080/apps",
+					fmt.Sprintf("http://127.0.0.1:8080/apps/%s", containerAppID),
 					"application/json",
 					strings.NewReader(fmt.Sprintf(reqStr, containerAppID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
-				By("Verifying a 204 No Content response")
+				By("Verifying a 200 Status OK response")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Getting the updated app")
 				updatedApp := getApp(containerAppID)
 
 				By("Verifying the app was updated")
-				expectedApp.SetID(containerAppID)
+				expectedApp.ID = containerAppID
 				Expect(updatedApp).To(Equal(expectedApp))
 			},
 			Entry(
-				"PATCH /apps",
+				"PATCH /apps/{app_id}",
 				`
-				[
 					{
 						"id": "%s",
 						"type": "container",
 						"name": "container app2",
 						"version": "latest",
 						"vendor": "smart edge",
-						"description": "my container app",	
+						"description": "my container app",
 						"cores": 4,
 						"memory": 1024,
 						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
-				]`,
-				&cce.App{
-					Type:        "container",
-					Name:        "container app2",
-					Version:     "latest",
-					Vendor:      "smart edge",
-					Description: "my container app",
-					Cores:       4,
-					Memory:      1024,
-					Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
-					Source:      "http://www.test.com/my_container_app.tar.gz",
+				`,
+				&swagger.AppDetail{
+					AppSummary: swagger.AppSummary{
+						Type:        "container",
+						Name:        "container app2",
+						Version:     "latest",
+						Vendor:      "smart edge",
+						Description: "my container app",
+					},
+					Cores:  4,
+					Memory: 1024,
+					Ports:  []swagger.PortProto{{PortProto: cce.PortProto{Port: 80, Protocol: "tcp"}}},
+					Source: "http://www.test.com/my_container_app.tar.gz",
 				}),
-			Entry("PATCH /apps with no description",
+			Entry("PATCH /apps/{app_id} with no description",
 				`
-				[
 					{
 						"id": "%s",
 						"type": "container",
@@ -463,28 +439,30 @@ var _ = Describe("/apps", func() {
 						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
-				]`,
-				&cce.App{
-					Name:        "container app2",
-					Type:        "container",
-					Vendor:      "smart edge",
-					Description: "",
-					Version:     "latest",
-					Cores:       4,
-					Memory:      1024,
-					Ports:       []cce.PortProto{{Port: 80, Protocol: "tcp"}},
-					Source:      "http://www.test.com/my_container_app.tar.gz",
+				`,
+				&swagger.AppDetail{
+					AppSummary: swagger.AppSummary{
+						Name:        "container app2",
+						Type:        "container",
+						Vendor:      "smart edge",
+						Description: "",
+						Version:     "latest",
+					},
+					Cores:  4,
+					Memory: 1024,
+					Ports:  []swagger.PortProto{{PortProto: cce.PortProto{Port: 80, Protocol: "tcp"}}},
+					Source: "http://www.test.com/my_container_app.tar.gz",
 				}),
 		)
 
 		DescribeTable("400 Bad Request",
 			func(reqStr string, expectedResp string) {
-				By("Sending a PATCH /apps request")
+				By("Sending a PATCH /apps/{app_id} request")
 				if strings.Contains(reqStr, "%s") {
 					reqStr = fmt.Sprintf(reqStr, containerAppID)
 				}
 				resp, err := apiCli.Patch(
-					"http://127.0.0.1:8080/apps",
+					fmt.Sprintf("http://127.0.0.1:8080/apps/%s", containerAppID),
 					"application/json",
 					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
@@ -501,11 +479,10 @@ var _ = Describe("/apps", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
-				"PATCH /apps without id",
+				"PATCH /apps/{app_id} without type",
 				`
-				[
 					{
-						"type": "container",
+						"id": "%s",
 						"name": "container app2",
 						"version": "latest",
 						"vendor": "smart edge",
@@ -515,29 +492,11 @@ var _ = Describe("/apps", func() {
 						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
-				]`,
-				"Validation failed: id not a valid uuid"),
-			Entry(
-				"PATCH /apps without type",
-				`
-				[
-					{
-						"id": "%s",
-						"name": "container app2",
-						"version": "latest",
-						"vendor": "smart edge",
-						"description": "my container app",	
-						"cores": 4,
-						"memory": 1024,
-						"ports": [{"port": 80, "protocol": "tcp"}],
-						"source": "http://www.test.com/my_container_app.tar.gz"
-					}
-				]`,
+				`,
 				`Validation failed: type must be either "container" or "vm"`),
 			Entry(
-				"PATCH /apps without name",
+				"PATCH /apps/{app_id} without name",
 				`
-				[
 					{
 						"id": "%s",
 						"type": "container",
@@ -549,11 +508,10 @@ var _ = Describe("/apps", func() {
 						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
-				]`,
+				`,
 				"Validation failed: name cannot be empty"),
-			Entry("PATCH /apps without version",
+			Entry("PATCH /apps/{app_id} without version",
 				`
-				[
 					{
 						"id": "%s",
 						"type": "container",
@@ -565,12 +523,11 @@ var _ = Describe("/apps", func() {
 						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
-				]`,
+				`,
 				"Validation failed: version cannot be empty"),
 
-			Entry("PATCH /apps without vendor",
+			Entry("PATCH /apps/{app_id} without vendor",
 				`
-				[
 					{
 						"id": "%s",
 						"type": "container",
@@ -582,11 +539,10 @@ var _ = Describe("/apps", func() {
 						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
-				]`,
+				`,
 				"Validation failed: vendor cannot be empty"),
-			Entry("PATCH /apps with cores not in [1..8]",
+			Entry("PATCH /apps/{app_id} with cores not in [1..8]",
 				`
-				[
 					{
 						"id": "%s",
 						"type": "container",
@@ -599,11 +555,10 @@ var _ = Describe("/apps", func() {
 						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
-				]`,
+				`,
 				"Validation failed: cores must be in [1..8]"),
-			Entry("PATCH /apps with memory not in [1..16384]",
+			Entry("PATCH /apps/{app_id} with memory not in [1..16384]",
 				`
-				[
 					{
 						"id": "%s",
 						"type": "container",
@@ -616,11 +571,10 @@ var _ = Describe("/apps", func() {
 						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "http://www.test.com/my_container_app.tar.gz"
 					}
-				]`,
+				`,
 				"Validation failed: memory must be in [1..16384]"),
-			Entry("PATCH /apps without source",
+			Entry("PATCH /apps/{app_id} without source",
 				`
-				[
 					{
 						"id": "%s",
 						"type": "container",
@@ -632,11 +586,10 @@ var _ = Describe("/apps", func() {
 						"ports": [{"port": 80, "protocol": "tcp"}],
 						"memory": 1024
 					}
-				]`,
+				`,
 				"Validation failed: source cannot be empty"),
-			Entry("PATCH /apps without source",
+			Entry("PATCH /apps/{app_id} without source",
 				`
-				[
 					{
 						"id": "%s",
 						"type": "container",
@@ -649,12 +602,12 @@ var _ = Describe("/apps", func() {
 						"ports": [{"port": 80, "protocol": "tcp"}],
 						"source": "invalid.url"
 					}
-				]`,
+				`,
 				"Validation failed: source cannot be parsed as a URI"),
 		)
 	})
 
-	Describe("DELETE /apps/{id}", func() {
+	Describe("DELETE /apps/{app_id}", func() {
 		var (
 			containerAppID string
 		)
@@ -665,7 +618,7 @@ var _ = Describe("/apps", func() {
 
 		DescribeTable("200 OK",
 			func() {
-				By("Sending a DELETE /apps/{id} request")
+				By("Sending a DELETE /apps/{app_id} request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf("http://127.0.0.1:8080/apps/%s",
 						containerAppID))
@@ -677,7 +630,7 @@ var _ = Describe("/apps", func() {
 
 				By("Verifying the app was deleted")
 
-				By("Sending a GET /apps/{id} request")
+				By("Sending a GET /apps/{app_id} request")
 				resp, err = apiCli.Get(
 					fmt.Sprintf("http://127.0.0.1:8080/apps/%s",
 						containerAppID))
@@ -687,12 +640,12 @@ var _ = Describe("/apps", func() {
 				By("Verifying a 404 Not Found response")
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("DELETE /apps/{id}"),
+			Entry("DELETE /apps/{app_id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func(id string) {
-				By("Sending a DELETE /apps/{id} request")
+				By("Sending a DELETE /apps/{app_id} request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf("http://127.0.0.1:8080/apps/%s", id))
 				Expect(err).ToNot(HaveOccurred())
@@ -702,7 +655,7 @@ var _ = Describe("/apps", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(
-				"DELETE /apps/{id} with nonexistent ID",
+				"DELETE /apps/{app_id} with nonexistent ID",
 				uuid.New()),
 		)
 
@@ -722,7 +675,7 @@ var _ = Describe("/apps", func() {
 						containerAppID)
 				}
 
-				By("Sending a DELETE /apps/{id} request")
+				By("Sending a DELETE /apps/{app_id} request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf("http://127.0.0.1:8080/apps/%s",
 						containerAppID))
@@ -742,12 +695,12 @@ var _ = Describe("/apps", func() {
 					fmt.Sprintf(expectedResp, containerAppID)))
 			},
 			Entry(
-				"DELETE /apps/{id} with dns_configs_app_aliases record",
+				"DELETE /apps/{app_id} with dns_configs_app_aliases record",
 				"dns_configs_app_aliases",
 				"cannot delete app_id %s: record in use in dns_configs_app_aliases",
 			),
 			Entry(
-				"DELETE /apps/{id} with nodes_apps record",
+				"DELETE /apps/{app_id} with nodes_apps record",
 				"nodes_apps",
 				"cannot delete app_id %s: record in use in nodes_apps",
 			),

@@ -28,6 +28,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/smartedgemec/controller-ce/swagger"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -78,6 +79,7 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
+	// time.Sleep(10 * time.Minute)
 	shutdown()
 })
 
@@ -279,8 +281,8 @@ func postApps(appType string) (id string) {
 	return rb.ID
 }
 
-func getApp(id string) *cce.App {
-	By("Sending a GET /apps/{id} request")
+func getApp(id string) *swagger.AppDetail {
+	By("Sending a GET /apps/{app_id} request")
 	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/apps/%s", id))
 	Expect(err).ToNot(HaveOccurred())
@@ -293,7 +295,7 @@ func getApp(id string) *cce.App {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var app cce.App
+	var app swagger.AppDetail
 
 	By("Unmarshalling the response")
 	Expect(json.Unmarshal(body, &app)).To(Succeed())
