@@ -142,8 +142,21 @@ func (ca *RootCA) SignCSR(der []byte, template *x509.Certificate) (*x509.Certifi
 	return x509.ParseCertificate(certDER)
 }
 
+// NewTLSClientCert creates a new TLS client certificate with a given SNI.
+func (ca *RootCA) NewTLSClientCert(key crypto.PrivateKey, sni string) (*x509.Certificate, error) {
+	return ca.newTLSCert(key, sni, x509.ExtKeyUsageClientAuth)
+}
+
 // NewTLSServerCert creates a new TLS server certificate with a given SNI.
 func (ca *RootCA) NewTLSServerCert(key crypto.PrivateKey, sni string) (*x509.Certificate, error) {
+	return ca.newTLSCert(key, sni, x509.ExtKeyUsageServerAuth)
+}
+
+func (ca *RootCA) newTLSCert(
+	key crypto.PrivateKey,
+	sni string,
+	extKeyUsage ...x509.ExtKeyUsage,
+) (*x509.Certificate, error) {
 	pkey, ok := key.(crypto.Signer)
 	if !ok {
 		return nil, errors.Errorf("invalid private key type: %T", key)
@@ -158,7 +171,7 @@ func (ca *RootCA) NewTLSServerCert(key crypto.PrivateKey, sni string) (*x509.Cer
 		SerialNumber: serial,
 		Subject:      pkix.Name{CommonName: sni},
 		KeyUsage:     x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		ExtKeyUsage:  extKeyUsage,
 		NotBefore:    time.Now(),
 		NotAfter:     ca.Cert.NotAfter, // Valid until CA expires
 	}

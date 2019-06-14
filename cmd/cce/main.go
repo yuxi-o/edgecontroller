@@ -160,7 +160,7 @@ func main() {
 		KubernetesClient:  &k8sClient,
 		ELAPort:           strconv.Itoa(elaPort),
 		EVAPort:           strconv.Itoa(evaPort),
-		EdgeNodeCreds:     newTLSConf(rootCA, "controller.openness"),
+		EdgeNodeCreds:     newClientTLSConf(rootCA, "controller.openness"),
 	}
 
 	// Create an error group to manage server goroutines
@@ -441,6 +441,41 @@ func newTLSConf(rootCA *pki.RootCA, sni string) *tls.Config {
 			Leaf:        tlsCert,
 		}},
 		ClientCAs:    tlsRoots,
+		MinVersion:   tls.VersionTLS12,
+		CipherSuites: []uint16{tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256},
+	}
+}
+
+// Generate a new TLS key/cert pair from a root CA for use in a TLS server with
+// some server name.
+func newClientTLSConf(rootCA *pki.RootCA, sni string) *tls.Config {
+	tlsKey, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+	if err != nil {
+		log.Alertf("error generating TLS key for server %q: %v", sni, err)
+		os.Exit(1)
+	}
+	tlsCert, err := rootCA.NewTLSClientCert(tlsKey, sni)
+	if err != nil {
+		log.Alertf("error generating TLS cert for server %q: %v", sni, err)
+		os.Exit(1)
+	}
+	tlsCAChain, err := rootCA.CAChain()
+	if err != nil {
+		log.Alertf("error getting TLS CA chain for server %q: %v", sni, err)
+		os.Exit(1)
+	}
+	tlsChain := [][]byte{tlsCert.Raw}
+	for _, caCert := range tlsCAChain {
+		tlsChain = append(tlsChain, caCert.Raw)
+	}
+	tlsRoots := x509.NewCertPool()
+	tlsRoots.AddCert(tlsCAChain[len(tlsCAChain)-1])
+	return &tls.Config{
+		Certificates: []tls.Certificate{{
+			Certificate: tlsChain,
+			PrivateKey:  tlsKey,
+			Leaf:        tlsCert,
+		}},
 		RootCAs:      tlsRoots,
 		MinVersion:   tls.VersionTLS12,
 		CipherSuites: []uint16{tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256},

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.38] - 2019-06-14
+### Fixed
+- Edge Node gRPC credentials must have client key usage
+
 ## [0.0.37] - 2019-06-13
 ### Fixed
 - Content Security Policy (CSP) did not whitelist the Controller and CUPS API as a `connect-src`.
