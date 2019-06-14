@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.39] - 2019-06-14
+### Changed
+- Move protobuf app message types to EVA namespace
+
 ## [0.0.38] - 2019-06-14
 ### Fixed
 - Edge Node gRPC credentials must have client key usage

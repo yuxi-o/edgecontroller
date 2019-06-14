@@ -18,7 +18,6 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,8 +25,8 @@ import (
 
 type appDeployLifeService struct {
 	// maps of application ID to application
-	containerApps map[string]*elapb.Application
-	vmApps        map[string]*elapb.Application
+	containerApps map[string]*evapb.Application
+	vmApps        map[string]*evapb.Application
 
 	// reference to policy server
 	appPolicyService *appPolicyService
@@ -35,32 +34,32 @@ type appDeployLifeService struct {
 
 func newAppDeployLifeService() *appDeployLifeService {
 	return &appDeployLifeService{
-		containerApps: make(map[string]*elapb.Application),
-		vmApps:        make(map[string]*elapb.Application),
+		containerApps: make(map[string]*evapb.Application),
+		vmApps:        make(map[string]*evapb.Application),
 	}
 }
 
 func (s *appDeployLifeService) reset() {
-	s.containerApps = make(map[string]*elapb.Application)
-	s.vmApps = make(map[string]*elapb.Application)
+	s.containerApps = make(map[string]*evapb.Application)
+	s.vmApps = make(map[string]*evapb.Application)
 }
 
 func (s *appDeployLifeService) DeployContainer(
 	ctx context.Context,
-	containerApp *elapb.Application,
+	containerApp *evapb.Application,
 ) (*empty.Empty, error) {
 	s.containerApps[containerApp.Id] = containerApp
-	containerApp.Status = elapb.LifecycleStatus_READY
+	containerApp.Status = evapb.LifecycleStatus_READY
 
 	return &empty.Empty{}, nil
 }
 
 func (s *appDeployLifeService) DeployVM(
 	ctx context.Context,
-	vmApp *elapb.Application,
+	vmApp *evapb.Application,
 ) (*empty.Empty, error) {
 	s.vmApps[vmApp.Id] = vmApp
-	vmApp.Status = elapb.LifecycleStatus_READY
+	vmApp.Status = evapb.LifecycleStatus_READY
 
 	return &empty.Empty{}, nil
 }
@@ -68,15 +67,15 @@ func (s *appDeployLifeService) DeployVM(
 func (s *appDeployLifeService) GetStatus(
 	ctx context.Context,
 	id *evapb.ApplicationID,
-) (*elapb.LifecycleStatus, error) {
+) (*evapb.LifecycleStatus, error) {
 	if containerApp, ok := s.containerApps[id.Id]; ok {
-		return &elapb.LifecycleStatus{
+		return &evapb.LifecycleStatus{
 			Status: containerApp.Status,
 		}, nil
 	}
 
 	if vmApp, ok := s.vmApps[id.Id]; ok {
-		return &elapb.LifecycleStatus{
+		return &evapb.LifecycleStatus{
 			Status: vmApp.Status,
 		}, nil
 	}
@@ -86,7 +85,7 @@ func (s *appDeployLifeService) GetStatus(
 
 func (s *appDeployLifeService) Redeploy(
 	ctx context.Context,
-	app *elapb.Application,
+	app *evapb.Application,
 ) (*empty.Empty, error) {
 	if oldApp, ok := s.containerApps[app.Id]; ok {
 		app.Status = oldApp.Status
@@ -140,15 +139,15 @@ func (s *appDeployLifeService) Start(
 
 	if app != nil {
 		switch app.Status {
-		case elapb.LifecycleStatus_READY:
-		case elapb.LifecycleStatus_STOPPED:
+		case evapb.LifecycleStatus_READY:
+		case evapb.LifecycleStatus_STOPPED:
 		default:
 			return nil, status.Errorf(
 				codes.FailedPrecondition, "Application %s not stopped or ready",
 				cmd.Id)
 		}
 
-		app.Status = elapb.LifecycleStatus_RUNNING
+		app.Status = evapb.LifecycleStatus_RUNNING
 		return &empty.Empty{}, nil
 	}
 
@@ -163,12 +162,12 @@ func (s *appDeployLifeService) Stop(
 	app := s.find(cmd.Id)
 
 	if app != nil {
-		if app.Status != elapb.LifecycleStatus_RUNNING {
+		if app.Status != evapb.LifecycleStatus_RUNNING {
 			return nil, status.Errorf(
 				codes.FailedPrecondition, "Application %s not running", cmd.Id)
 		}
 
-		app.Status = elapb.LifecycleStatus_STOPPED
+		app.Status = evapb.LifecycleStatus_STOPPED
 		return &empty.Empty{}, nil
 	}
 
@@ -183,7 +182,7 @@ func (s *appDeployLifeService) Restart(
 	app := s.find(cmd.Id)
 
 	if app != nil {
-		if app.Status != elapb.LifecycleStatus_RUNNING {
+		if app.Status != evapb.LifecycleStatus_RUNNING {
 			return nil, status.Errorf(
 				codes.FailedPrecondition, "Application %s not running", cmd.Id)
 		}
@@ -195,7 +194,7 @@ func (s *appDeployLifeService) Restart(
 		codes.NotFound, "Application %s not found", cmd.Id)
 }
 
-func (s *appDeployLifeService) find(id string) *elapb.Application {
+func (s *appDeployLifeService) find(id string) *evapb.Application {
 	if containerApp, ok := s.containerApps[id]; ok {
 		return containerApp
 	}

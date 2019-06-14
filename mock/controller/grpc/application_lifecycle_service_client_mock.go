@@ -19,7 +19,6 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	gmock "github.com/smartedgemec/controller-ce/mock/node/grpc"
-	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 	"google.golang.org/grpc"
 )
@@ -61,6 +60,6 @@ func (c *MockPBApplicationLifecycleServiceClient) GetStatus(
 	ctx context.Context,
 	in *evapb.ApplicationID,
 	opts ...grpc.CallOption,
-) (*elapb.LifecycleStatus, error) {
+) (*evapb.LifecycleStatus, error) {
 	return c.MockNode.AppLifeSvc.GetStatus(ctx, in)
 }

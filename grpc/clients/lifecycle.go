@@ -2,24 +2,24 @@ package clients
 
 import (
 	cce "github.com/smartedgemec/controller-ce"
-	elapb "github.com/smartedgemec/controller-ce/pb/ela"
+	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 )
 
-func fromPBLifecycleStatus(status *elapb.LifecycleStatus) cce.LifecycleStatus {
+func fromPBLifecycleStatus(status *evapb.LifecycleStatus) cce.LifecycleStatus {
 	switch status.Status {
-	case elapb.LifecycleStatus_UNKNOWN:
+	case evapb.LifecycleStatus_UNKNOWN:
 		return cce.Unknown
-	case elapb.LifecycleStatus_READY:
+	case evapb.LifecycleStatus_READY:
 		return cce.Deployed
-	case elapb.LifecycleStatus_STARTING:
+	case evapb.LifecycleStatus_STARTING:
 		return cce.Starting
-	case elapb.LifecycleStatus_RUNNING:
+	case evapb.LifecycleStatus_RUNNING:
 		return cce.Running
-	case elapb.LifecycleStatus_STOPPING:
+	case evapb.LifecycleStatus_STOPPING:
 		return cce.Stopping
-	case elapb.LifecycleStatus_STOPPED:
+	case evapb.LifecycleStatus_STOPPED:
 		return cce.Stopped
-	case elapb.LifecycleStatus_ERROR:
+	case evapb.LifecycleStatus_ERROR:
 		return cce.Error
 	default:
 		return cce.Unknown

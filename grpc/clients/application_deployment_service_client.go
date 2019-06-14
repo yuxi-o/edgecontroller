@@ -20,7 +20,6 @@ import (
 	"github.com/pkg/errors"
 	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/grpc"
-	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 )
 
@@ -59,13 +58,13 @@ func (c *ApplicationDeploymentServiceClient) Deploy(
 	return nil
 }
 
-func toPBApp(app *cce.App) *elapb.Application {
-	var ports []*elapb.PortProto
+func toPBApp(app *cce.App) *evapb.Application {
+	var ports []*evapb.PortProto
 	for _, pp := range app.Ports {
-		ports = append(ports, &elapb.PortProto{Port: pp.Port, Protocol: pp.Protocol})
+		ports = append(ports, &evapb.PortProto{Port: pp.Port, Protocol: pp.Protocol})
 	}
 
-	return &elapb.Application{
+	return &evapb.Application{
 		Id:          app.ID,
 		Name:        app.Name,
 		Vendor:      app.Vendor,
@@ -74,8 +73,8 @@ func toPBApp(app *cce.App) *elapb.Application {
 		Cores:       int32(app.Cores),
 		Memory:      int32(app.Memory),
 		Ports:       ports,
-		Source: &elapb.Application_HttpUri{
-			HttpUri: &elapb.Application_HTTPSource{
+		Source: &evapb.Application_HttpUri{
+			HttpUri: &evapb.Application_HTTPSource{
 				HttpUri: app.Source,
 			},
 		},
