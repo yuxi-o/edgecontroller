@@ -60,7 +60,7 @@ class AppsView extends Component {
 
   fetchApps = () => {
     return ApiClient.get('/apps').then((resp) => {
-      this.setState({ loaded: true, apps: resp.data })
+      this.setState({ loaded: true, apps: resp.data.apps })
     }).catch((err) => {
       this.setState({ loaded: true });
       this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
@@ -99,6 +99,11 @@ class AppsView extends Component {
 
     const renderApps = () => {
       const { apps } = this.state;
+
+      if (!apps) {
+        return;
+      }
+
       return Object.keys(apps).map(key => {
         return (
           <CardItem
@@ -106,7 +111,7 @@ class AppsView extends Component {
             key={apps[key].id}
             CardItem={apps[key]}
             dialogText="This will permanently delete the application from the controller"
-            excludeKeys={['id', 'ports', 'source', 'version']}
+            excludeKeys={[]}
           />
         )
       })

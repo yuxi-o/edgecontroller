@@ -5,7 +5,8 @@ export default {
     properties: {
       id: {
         title: "ID",
-        type: "string"
+        type: "string",
+        readonly: true
       },
       description: {
         title: "Description",

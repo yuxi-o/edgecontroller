@@ -48,7 +48,7 @@ class AppsView extends Component {
       .then((resp) => {
         this.setState({
           loaded: true,
-          nodeApps: resp.data || []
+          nodeApps: resp.data.apps || []
         })
 
         this.getNodeAppsStatus();
@@ -98,7 +98,7 @@ class AppsView extends Component {
       .then((resp) => {
         this.setState({
           loaded: true,
-          apps: resp.data || [],
+          apps: resp.data.apps || [],
         });
       })
       .catch((err) => {
@@ -184,7 +184,7 @@ class AppsView extends Component {
       .then((resp) => {
         this.setState({
           loaded: true,
-          policies: resp.data || [],
+          policies: resp.data.policies || [],
         })
       })
       .catch((err) => {

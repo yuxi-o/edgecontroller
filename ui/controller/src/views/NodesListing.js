@@ -1,4 +1,4 @@
-import React,  { Component } from 'react';
+import React, { Component } from 'react';
 import withStyles from '@material-ui/core/styles/withStyles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
@@ -66,15 +66,15 @@ class NodesView extends Component {
   };
 
   handleClickOpen = () => {
-    this.setState({showAddNodeForm: !this.state.showAddNodeForm});
+    this.setState({ showAddNodeForm: !this.state.showAddNodeForm });
   };
 
   handleParentClose = () => {
-    this.setState({showAddNodeForm: false});
+    this.setState({ showAddNodeForm: false });
   };
 
   handleParentRefresh = () => {
-    this.setState({loaded: false});
+    this.setState({ loaded: false });
     this.fetchNodes();
   };
 
@@ -86,22 +86,22 @@ class NodesView extends Component {
     return this.getNodes().then((resp) => {
       // Do Something
       if (resp.data) {
-        this.setState({loaded: true, nodes: resp.data})
+        this.setState({ loaded: true, nodes: resp.data.nodes })
       }
     }).catch((err) => {
       this.props.enqueueSnackbar(`Error loading edge nodes. Please try again later.`, {
         variant: 'error',
       });
-      this.setState({loaded: true});
+      this.setState({ loaded: true });
     });
   };
 
   render() {
-    const { location: {pathname: currentPath}, classes } = this.props;
+    const { location: { pathname: currentPath }, classes } = this.props;
 
     const renderNodes = () => {
-      const {nodes} = this.state || {};
-      if(nodes) {
+      const { nodes } = this.state || {};
+      if (nodes) {
         const nodeDialog = "You are about to delete a Edge Node. In order to re-enroll the deleted node, you may have to re-image it.";
 
         return Object.keys(nodes).map(key => {
@@ -111,7 +111,7 @@ class NodesView extends Component {
               key={nodes[key].id}
               CardItem={nodes[key]}
               dialogText={nodeDialog}
-              excludeKeys={['id', 'grpc_target']}
+              excludeKeys={[]}
             />
           )
         })
@@ -129,31 +129,31 @@ class NodesView extends Component {
     };
 
     const nodesGrid = () => (
-        <Grid spacing={24} alignItems="center" justify="center" container className={classes.grid}>
-          <Grid item xs={12}>
-            <Grid container direction="row"
-              justify="space-between"
-              alignItems="flex-start"
-              className={classes.sectionContainer}
-            >
-              <Grid item>
-                <Typography variant="subtitle1" className={classes.title}>
-                  Edge Nodes
+      <Grid spacing={24} alignItems="center" justify="center" container className={classes.grid}>
+        <Grid item xs={12}>
+          <Grid container direction="row"
+            justify="space-between"
+            alignItems="flex-start"
+            className={classes.sectionContainer}
+          >
+            <Grid item>
+              <Typography variant="subtitle1" className={classes.title}>
+                Edge Nodes
                 </Typography>
-                <Typography variant="body1" gutterBottom className={classes.subtitle}>
-                  List of Edge Nodes
+              <Typography variant="body1" gutterBottom className={classes.subtitle}>
+                List of Edge Nodes
                 </Typography>
-              </Grid>
-              <Grid item xs={3}>
-                <Button variant="contained" color="primary" className={classes.addButton} onClick={this.handleClickOpen}>
-                  Add Edge Node
-                  <AddIcon className={classes.rightIcon} />
-                </Button>
-              </Grid>
             </Grid>
-            {renderNodes()}
+            <Grid item xs={3}>
+              <Button variant="contained" color="primary" className={classes.addButton} onClick={this.handleClickOpen}>
+                Add Edge Node
+                  <AddIcon className={classes.rightIcon} />
+              </Button>
+            </Grid>
           </Grid>
+          {renderNodes()}
         </Grid>
+      </Grid>
     );
 
     const circularLoader = () => (

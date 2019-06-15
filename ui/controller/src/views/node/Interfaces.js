@@ -28,11 +28,11 @@ class InterfacesView extends Component {
       loaded: false,
       error: null,
       showErrors: true,
-      interfaces: [],
       open: false,
-      interfaceID: '',
-      nodeInterface: {},
       openPolicyDialog: false,
+      nodeInterfaces: [],
+      nodeInterface: {},
+      interfaceID: '',
       policies: [],
       selectedTrafficPolicyID: '',
       selectedInterfaceID: ''
@@ -46,7 +46,7 @@ class InterfacesView extends Component {
       .then((resp) => {
         this.setState({
           loaded: true,
-          interfaces: resp.data.interfaces || [],
+          nodeInterfaces: resp.data.interfaces || [],
         })
       })
       .catch((err) => {
@@ -61,12 +61,23 @@ class InterfacesView extends Component {
   // PATCH /nodes/:node_id/interfaces/:interface_id
   updateNodeInterface = () => {
     const { nodeID } = this.props;
-    const { nodeInterface } = this.state;
+    const { nodeInterface, nodeInterfaces } = this.state;
 
-    ApiClient.patch(`/nodes/${nodeID}/interfaces/${nodeInterface.id}`, nodeInterface)
+    // Construct payload by merging edited interface into existing list of node interfaces
+    const data = {
+      interfaces: nodeInterfaces.map(i => {
+        if (i.id === nodeInterface.id) {
+          return { ...i, ...nodeInterface };
+        }
+        return i;
+      })
+    };
+
+    ApiClient.patch(`/nodes/${nodeID}/interfaces/${nodeInterface.id}`, data)
       .then((resp) => {
         this.setState({
           loaded: true,
+          nodeInterfaces: data.interfaces
         });
 
         this.props.enqueueSnackbar(`Successfully updated node interface ${nodeInterface.id}.`, { variant: 'success' });
@@ -202,7 +213,7 @@ class InterfacesView extends Component {
   }
 
   renderTable = () => {
-    const { interfaces } = this.state;
+    const { nodeInterfaces } = this.state;
 
     return (
       <React.Fragment>
@@ -218,7 +229,7 @@ class InterfacesView extends Component {
             </TableRow>
           </TableHead>
           <TableBody>
-            {interfaces.map(row => (
+            {nodeInterfaces.map(row => (
               <TableRow key={row.id}>
                 <TableCell component="th" scope="row">
                   {row.id}
@@ -252,7 +263,7 @@ class InterfacesView extends Component {
       .then((resp) => {
         this.setState({
           loaded: true,
-          policies: resp.data || [],
+          policies: resp.data.policies || [],
         })
       })
       .catch((err) => {

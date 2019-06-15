@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [0.0.40] - 2019-06-14
+### Fixed
+- Missing .env.development file in `ui/controller` which caused running the CCE
+  UI in development mode to fail.
+- Apps view improperly handling fatal errors when an empty response is
+  received from API.
+
+#### Changed
+- Updated nodes, apps, policies, node apps, and node interfaces view to expect
+  an object wrapped array from CCE API calls to resource collections for schema
+  compliance.
+
+#### Added
+- Traffic policies view fetches traffic policies from API.
+
 ## [0.0.39] - 2019-06-14
 ### Changed
 - Move protobuf app message types to EVA namespace

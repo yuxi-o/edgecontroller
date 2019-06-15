@@ -5,32 +5,32 @@ import { MemoryRouter } from 'react-router-dom';
 import { mount } from 'enzyme';
 import AppsView from './AppsListing';
 import CardItem from '../components/cards/CardItem';
-import {SnackbarProvider} from "notistack";
+import { SnackbarProvider } from "notistack";
 
 describe('AppsListing', () => {
   it('Renders a single app', (done) => {
     const axiosMock = new MockAdapter(ApiClient.axiosInstance);
-    axiosMock.onGet('/apps').reply(200, [{
-      'id': 'app-id-1',
-      'type': 'vm',
-      'name': 'vm app',
-      'version': '1.2.3',
-      'vendor': 'smartedge',
-      'description': 'VM Application',
-      'cores': 4,
-      'memory': 4096,
-      'source': 'http://super-cool-cdn.com'
-    }]);
+    axiosMock.onGet('/apps').reply(200, {
+      apps:
+        [{
+          "id": "CB0D7DA8-0B97-4668-9024-81415063A5C9",
+          "type": "container",
+          "name": "Sample App",
+          "version": "1.2.3",
+          "vendor": "Sample Vendor",
+          "description": "Sample description goes here."
+        }]
+    });
 
     const spyScrollTo = jest.fn();
-    Object.defineProperty(global.window, 'scrollTo', {value: spyScrollTo});
+    Object.defineProperty(global.window, 'scrollTo', { value: spyScrollTo });
     spyScrollTo.mockClear();
     sessionStorage.__STORE__['JWT'] = "FAKEJWTTOKEN";
 
     const wrapper = mount(
       <SnackbarProvider maxSnack={3}>
         <MemoryRouter initialEntries={['/apps']}>
-          <AppsView/>
+          <AppsView />
         </MemoryRouter>
       </SnackbarProvider>
     );
@@ -48,37 +48,33 @@ describe('AppsListing', () => {
 
   it('Renders multiple apps', (done) => {
     const axiosMock = new MockAdapter(ApiClient.axiosInstance);
-    axiosMock.onGet('/apps').reply(200, [{
-      'id': 'app-id-1',
-      'type': 'vm',
-      'name': 'vm app',
-      'version': '1.2.3',
-      'vendor': 'smartedge',
-      'description': 'VM Application',
-      'cores': 4,
-      'memory': 4096,
-      'source': 'http://super-cool-cdn.com'
-    }, {
-      'id': 'app-id-2',
-      'type': 'container',
-      'name': 'container app',
-      'version': '1.2.3',
-      'vendor': 'smartedge',
-      'description': 'Container Application',
-      'cores': 4,
-      'memory': 4096,
-      'source': 'http://super-cool-cdn.com'
-    }]);
+    axiosMock.onGet('/apps').reply(200, {
+      apps: [{
+        "id": "CB0D7DA8-0B97-4668-9024-81415063A5C9",
+        "type": "container",
+        "name": "Sample App 1",
+        "version": "1.2.3",
+        "vendor": "Sample Vendor",
+        "description": "Sample description goes here."
+      }, {
+        "id": "75a34d77-3de8-4d94-95ce-66d91e5c2815",
+        "type": "container",
+        "name": "Sample App 2",
+        "version": "1.2.3",
+        "vendor": "Sample Vendor",
+        "description": "Sample description goes here."
+      }]
+    });
 
     const spyScrollTo = jest.fn();
-    Object.defineProperty(global.window, 'scrollTo', {value: spyScrollTo});
+    Object.defineProperty(global.window, 'scrollTo', { value: spyScrollTo });
     spyScrollTo.mockClear();
     sessionStorage.__STORE__['JWT'] = "FAKEJWTTOKEN";
 
     const wrapper = mount(
       <SnackbarProvider maxSnack={3}>
         <MemoryRouter initialEntries={['/apps']}>
-          <AppsView/>
+          <AppsView />
         </MemoryRouter>
       </SnackbarProvider>
     );

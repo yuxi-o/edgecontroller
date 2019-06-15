@@ -22,7 +22,7 @@ class AppView extends Component {
       .then((resp) => {
         this.setState({
           loaded: true,
-          app: resp.data || [],
+          app: resp.data.apps || [],
         })
       })
       .catch((err) => {

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
+import ApiClient from "../../api/ApiClient";
+
 import withStyles from '@material-ui/core/styles/withStyles';
-import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
 import Topbar from '../../components/Topbar';
 import Table from '../../components/tables/EnhancedTable';
@@ -29,46 +30,67 @@ const styles = theme => ({
   },
 })
 
-function createData(id, name) {
-  return { id, name, editUrl: `/policies/${id}/edit` };
-}
-
-const tableHeaders = [
-  { id: 'id', numeric: true, disablePadding: false, label: 'Id' },
-  { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
-  { id: 'action', numeric: false, disablePadding: false, label: 'Action' }
-];
-
-const tableData = {
-  order: 'asc',
-  orderBy: 'id',
-  selected: [],
-  data: [
-    createData('1', 'Policy 1'),
-    createData('2', 'Policy 2'),
-    createData('3', 'Policy 3'),
-    createData('4', 'Policy 4'),
-    createData('5', 'Policy 5'),
-    createData('6', 'Policy 6')
-  ],
-  page: 0,
-  rowsPerPage: 5,
-};
-
 class PoliciesView extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       loaded: false,
+      policies: [],
     };
   }
+
+  // GET /policies
+  getPolicies = () => {
+    ApiClient.get(`/policies`)
+      .then((resp) => {
+        this.setState({
+          loaded: true,
+          policies: resp.data.policies || []
+        })
+      })
+      .catch((err) => {
+        this.setState({
+          loaded: true,
+        });
+
+        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+      });
+  };
 
   handleOnClickAddPolicy = () => {
     const { history } = this.props;
 
     // Redirect user to add policies view
     history.push('/policies/add');
+  };
+
+  renderTable = () => {
+    const { policies } = this.state;
+
+    const tableHeaders = [
+      { id: 'id', numeric: true, disablePadding: false, label: 'ID' },
+      { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
+      { id: 'action', numeric: false, disablePadding: false, label: 'Action' }
+    ];
+
+    let data = [];
+
+    // Append the edit view url to each policy
+    policies.forEach(item => data.push({ ...item, editUrl: `/policies/${item.id}/edit` }));
+
+    const tableData = {
+      order: 'asc',
+      orderBy: 'id',
+      selected: [],
+      data: data,
+      page: 0,
+      rowsPerPage: 10,
+    };
+
+    return (
+      <Table rows={tableHeaders} tableState={tableData} />
+    );
   };
 
   render() {
@@ -86,10 +108,7 @@ class PoliciesView extends Component {
             <Grid item>
               <Typography variant="subtitle1" className={classes.title}>
                 Traffic Policies
-                </Typography>
-              <Typography variant="body1" gutterBottom className={classes.subtitle}>
-                List of Traffic Policies
-                </Typography>
+              </Typography>
             </Grid>
             <Grid item xs={3}>
               <Button variant="contained" color="primary" className={classes.addButton} onClick={this.handleOnClickAddPolicy}>
@@ -98,14 +117,13 @@ class PoliciesView extends Component {
               </Button>
             </Grid>
           </Grid>
-          <Table rows={tableHeaders} tableState={tableData} />
+          {this.renderTable()}
         </Grid>
       </Grid>
     );
 
     return (
       <React.Fragment>
-        <CssBaseline />
         <Topbar currentPath={currentPath} />
         <div className={classes.root}>
           <Grid container justify="center">
