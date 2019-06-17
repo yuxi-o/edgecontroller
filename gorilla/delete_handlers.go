@@ -82,27 +82,3 @@ func handleDeleteNodesDNSConfigs(
 
 	return nodeCC.DNSSvcCli.DeleteForwarders(ctx, dnsConfig.(*cce.DNSConfig).Forwarders)
 }
-
-func handleDeleteNodesAppsTrafficPolicies(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) error {
-	nodeApp, err := ps.Read(ctx, e.(*cce.NodeAppTrafficPolicy).NodeAppID, &cce.NodeApp{})
-	if err != nil {
-		return err
-	}
-	log.Debugf("Loaded node app %s: %+v", nodeApp.GetID(), nodeApp)
-
-	ctrl := getController(ctx)
-	nodePort := ctrl.ELAPort
-	if nodePort == "" {
-		nodePort = defaultELAPort
-	}
-	nodeCC, err := connectNode(ctx, ps, nodeApp.(*cce.NodeApp), nodePort, ctrl.EdgeNodeCreds)
-	if err != nil {
-		return err
-	}
-
-	return nodeCC.AppPolicySvcCli.Delete(ctx, nodeApp.(*cce.NodeApp).AppID)
-}

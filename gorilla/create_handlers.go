@@ -88,6 +88,7 @@ func handleCreateNodesDNSConfigs(
 	return nodeCC.DNSSvcCli.SetForwarders(ctx, dnsConfig.(*cce.DNSConfig).Forwarders)
 }
 
+// TODO remove once nodesAppsTrafficPoliciesHandler in gorilla.go is removed
 func handleCreateNodesAppsTrafficPolicies(
 	ctx context.Context,
 	ps cce.PersistenceService,

@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.0.43] - 2019-06-17
+### Fixed
+- The following endpoints are now Swagger schema compliant:
+    - GET, PATCH, DELETE /nodes/{node_id}/apps/{app_id}/policy
+
 ## [0.0.42] - 2019-06-17
 ### Fixed
 - The following endpoints are now Swagger schema compliant:

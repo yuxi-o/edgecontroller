@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"strings"
 
-	cce "github.com/smartedgemec/controller-ce"
+	"github.com/smartedgemec/controller-ce/swagger"
 	"github.com/smartedgemec/controller-ce/uuid"
 
 	. "github.com/onsi/ginkgo"
@@ -30,53 +30,57 @@ import (
 )
 
 var _ = Describe("/nodes_apps_traffic_policies", func() {
-	Describe("POST /nodes_apps_traffic_policies", func() {
-		DescribeTable("201 Created",
+	Describe("PATCH /nodes/{node_id}/apps/{app_id}/policy", func() {
+		DescribeTable("200 OK",
 			func() {
 				clearGRPCTargetsTable()
 				nodeCfg := createAndRegisterNode()
-				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
-				trafficPolicyID := postPolicies()
+				appID := postApps("container")
+				_ = postNodesApps(nodeCfg.nodeID, appID)
+				policyID := postPolicies()
 
-				By("Sending a POST /nodes_apps_traffic_policies request")
-				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/nodes_apps_traffic_policies",
+				By("Sending a PATCH /nodes/{node_id}/apps/{app_id}/policy request")
+				resp, err := apiCli.Patch(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s/policy", nodeCfg.nodeID, appID),
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
 						`
 						{
-							"nodes_apps_id": "%s",
-							"traffic_policy_id": "%s"
-						}`, nodeAppID, trafficPolicyID)))
+							"id": "%s"
+						}`, policyID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
-				By("Verifying a 201 response")
-				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+				By("Verifying a 200 response")
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
+				By("Creating a new policy")
+				policy2ID := postPolicies()
+
+				By("Sending a second PATCH /nodes/{node_id}/apps/{app_id}/policy request")
+				resp2, err := apiCli.Patch(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s/policy", nodeCfg.nodeID, appID),
+					"application/json",
+					strings.NewReader(fmt.Sprintf(
+						`
+						{
+							"id": "%s"
+						}`, policy2ID)))
 				Expect(err).ToNot(HaveOccurred())
+				defer resp2.Body.Close()
 
-				var respBody struct {
-					ID string
-				}
-
-				By("Unmarshaling the response")
-				Expect(json.Unmarshal(body, &respBody)).To(Succeed())
-
-				By("Verifying a UUID was returned")
-				Expect(uuid.IsValid(respBody.ID)).To(BeTrue())
+				By("Verifying a 200 response")
+				Expect(resp2.StatusCode).To(Equal(http.StatusOK))
 			},
 			Entry(
-				"POST /nodes_apps_traffic_policies"),
+				"PATCH /nodes/{node_id}/apps/{app_id}/policy"),
 		)
 
 		DescribeTable("400 Bad Request",
-			func(req, expectedResp string) {
-				By("Sending a POST /nodes_apps_traffic_policies request")
-				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/nodes_apps_traffic_policies",
+			func(req string) {
+				By("Sending a PATCH /nodes/{node_id}/apps/{app_id}/policy")
+				resp, err := apiCli.Patch(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s/policy", uuid.New(), uuid.New()),
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
@@ -84,245 +88,202 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 
 				By("Verifying a 400 Bad Request response")
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Verifying the response body")
-				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
-				"POST /nodes_apps_traffic_policies with id",
-				`
-				{
-					"id": "123"
-				}`,
-				"Validation failed: id cannot be specified in POST request"),
-			Entry(
-				"POST /nodes_apps_traffic_policies without nodes_apps_id",
-				`
-				{
-				}`,
-				"Validation failed: nodes_apps_id not a valid uuid"),
-			Entry(
-				"POST /nodes_apps_traffic_policies without traffic_policy_id",
-				fmt.Sprintf(`
-				{
-					"nodes_apps_id": "%s"
-				}`, uuid.New()),
-				"Validation failed: traffic_policy_id not a valid uuid"),
+				"PATCH /nodes/{node_id}/apps/{app_id}/policy with invalid payload",
+				`"id": "123"`),
 		)
 
-		DescribeTable("422 Unprocessable Entity",
-			func() {
-				clearGRPCTargetsTable()
-				nodeCfg := createAndRegisterNode()
-				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
-				trafficPolicyID := postPolicies()
+		DescribeTable("404 Not Found",
+			func(reqType string) {
+				By("Sending a PATCH /nodes/{node_id}/apps/{app_id}/policy")
+				var nodeID, appID, policyID string
+				switch reqType {
+				case "nodeID":
+					nodeID = uuid.New()
+					appID = uuid.New()
+					policyID = uuid.New()
+				case "appID":
+					clearGRPCTargetsTable()
+					nodeCfg := createAndRegisterNode()
+					nodeID = nodeCfg.nodeID
+					appID = uuid.New()
+					policyID = uuid.New()
+				case "policyID":
+					clearGRPCTargetsTable()
+					nodeCfg := createAndRegisterNode()
+					nodeID = nodeCfg.nodeID
+					appID = postApps("container")
+					policyID = uuid.New()
+				}
 
-				By("Sending a POST /nodes_apps_traffic_policies request")
-				postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
-
-				By("Repeating the first POST /nodes_apps_traffic_policies request")
-				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/nodes_apps_traffic_policies",
+				resp, err := apiCli.Patch(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s/policy", nodeID, appID),
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
 						`
 						{
-							"nodes_apps_id": "%s",
-							"traffic_policy_id": "%s"
-						}`, nodeAppID, trafficPolicyID)))
+							"id": "%s"
+						}`, policyID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
-
-				By("Verifying a 422 response")
-				Expect(resp.StatusCode).To(Equal(
-					http.StatusUnprocessableEntity))
-
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Verifying the response body")
-				Expect(string(body)).To(Equal(fmt.Sprintf(
-					"duplicate record in nodes_apps_traffic_policies detected for nodes_apps_id %s and "+
-						"traffic_policy_id %s",
-					nodeAppID,
-					trafficPolicyID)))
-			},
-			Entry("POST /nodes_apps_traffic_policies with duplicate nodes_apps_id and traffic_policy_id"),
-		)
-	})
-
-	Describe("GET /nodes_apps_traffic_policies", func() {
-		DescribeTable("200 OK",
-			func() {
-				clearGRPCTargetsTable()
-				nodeCfg := createAndRegisterNode()
-
-				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
-				trafficPolicyID := postPolicies()
-				nodeAppTrafficPolicyID := postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
-
-				nodeApp2ID := postNodesApps(nodeCfg.nodeID, postApps("container"))
-				trafficPolicy2ID := postPolicies()
-				nodeAppTrafficPolicy2ID := postNodesAppsTrafficPolicies(nodeApp2ID, trafficPolicy2ID)
-
-				By("Sending a GET /nodes_apps_traffic_policies request")
-				resp, err := apiCli.Get("http://127.0.0.1:8080/nodes_apps_traffic_policies")
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-
-				By("Verifying a 200 OK response")
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-
-				var nodeAppTrafficPolicies []*cce.NodeAppTrafficPolicy
-
-				By("Unmarshaling the response")
-				Expect(json.Unmarshal(body, &nodeAppTrafficPolicies)).To(Succeed())
-
-				By("Verifying the 2 created node app traffic policies were returned")
-				Expect(nodeAppTrafficPolicies).To(ContainElement(
-					&cce.NodeAppTrafficPolicy{
-						ID:              nodeAppTrafficPolicyID,
-						NodeAppID:       nodeAppID,
-						TrafficPolicyID: trafficPolicyID,
-					}))
-				Expect(nodeAppTrafficPolicies).To(ContainElement(
-					&cce.NodeAppTrafficPolicy{
-						ID:              nodeAppTrafficPolicy2ID,
-						NodeAppID:       nodeApp2ID,
-						TrafficPolicyID: trafficPolicy2ID,
-					}))
-			},
-			Entry("GET /nodes_apps_traffic_policies"),
-		)
-
-		DescribeTable("400 Bad Request",
-			func(field, value string) {
-				By("Sending a GET /nodes_apps_traffic_policies request with a disallowed filter")
-				resp, err := apiCli.Get(fmt.Sprintf(
-					"http://127.0.0.1:8080/nodes_apps_traffic_policies?%s=%s",
-					field, value,
-				))
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-
-				By("Verifying a 400 Bad Request response")
-				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(body)).To(Equal(
-					fmt.Sprintf("disallowed filter field %q\n", field),
-				))
-			},
-			Entry("GET /nodes_apps_traffic_policies", "id", "12345"),
-		)
-	})
-
-	Describe("GET /nodes_apps_traffic_policies/{id}", func() {
-		DescribeTable("200 OK",
-			func() {
-				clearGRPCTargetsTable()
-				nodeCfg := createAndRegisterNode()
-
-				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
-				trafficPolicyID := postPolicies()
-				nodeAppTrafficPolicyID := postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
-
-				nodeAppTrafficPolicy := getNodeAppTrafficPolicy(nodeAppTrafficPolicyID)
-
-				By("Verifying the created node app traffic policy was returned")
-				Expect(nodeAppTrafficPolicy).To(Equal(
-					&cce.NodeAppTrafficPolicy{
-						ID:              nodeAppTrafficPolicyID,
-						NodeAppID:       nodeAppID,
-						TrafficPolicyID: trafficPolicyID,
-					},
-				))
-			},
-			Entry("GET /nodes_apps_traffic_policies/{id}"),
-		)
-
-		DescribeTable("404 Not Found",
-			func() {
-				By("Sending a GET /nodes_apps_traffic_policies/{id} request")
-				resp, err := apiCli.Get(
-					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps_traffic_policies/%s",
-						uuid.New()))
 
 				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
-			},
-			Entry("GET /nodes_apps_traffic_policies/{id} with nonexistent ID"),
-		)
-	})
-
-	Describe("DELETE /nodes_apps_traffic_policies/{id}", func() {
-		DescribeTable("200 OK",
-			func() {
-				clearGRPCTargetsTable()
-				nodeCfg := createAndRegisterNode()
-
-				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
-				trafficPolicyID := postPolicies()
-
-				nodeAppTrafficPolicyID := postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
-
-				By("Sending a DELETE /nodes_apps_traffic_policies/{id} request")
-				resp, err := apiCli.Delete(
-					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps_traffic_policies/%s",
-						nodeAppTrafficPolicyID))
-
-				By("Verifying a 200 OK response")
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-				By("Verifying the node app traffic policy was deleted")
-
-				By("Sending a GET /nodes_apps_traffic_policies/{id} request")
-				resp2, err := apiCli.Get(
-					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps_traffic_policies/%s",
-						nodeAppTrafficPolicyID))
-
-				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
-				defer resp2.Body.Close()
-				Expect(resp2.StatusCode).To(Equal(http.StatusNotFound))
-			},
-			Entry("DELETE /nodes_apps_traffic_policies/{id}"),
-		)
-
-		DescribeTable("404 Not Found",
-			func(id string) {
-				By("Sending a DELETE /nodes_apps_traffic_policies/{id} request")
-				resp, err := apiCli.Delete(
-					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps_traffic_policies/%s",
-						id))
-
-				By("Verifying a 404 Not Found response")
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(
-				"DELETE /nodes_apps_traffic_policies/{id} with nonexistent ID",
-				uuid.New()),
+				"PATCH /nodes/{node_id}/apps/{app_id}/policy with nonexistent node ID",
+				"nodeID"),
+			Entry(
+				"PATCH /nodes/{node_id}/apps/{app_id}/policy with nonexistent app ID",
+				"appID"),
+			Entry(
+				"PATCH /nodes/{node_id}/apps/{app_id}/policy with nonexistent policy ID",
+				"policyID"),
+		)
+	})
+
+	Describe("GET /nodes/{node_id}/apps/{app_id}/policy", func() {
+		DescribeTable("200 OK",
+			func() {
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				appID := postApps("container")
+				_ = postNodesApps(nodeCfg.nodeID, appID)
+				policyID := postPolicies()
+				patchNodesAppsPolicy(nodeCfg.nodeID, appID, policyID)
+
+				By("Sending a GET /nodes/{node_id}/apps/{app_id}/policy request")
+				resp, err := apiCli.Get(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s/policy", nodeCfg.nodeID, appID))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 200 OK response")
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+
+				var baseResource swagger.BaseResource
+
+				By("Unmarshaling the response")
+				Expect(json.Unmarshal(body, &baseResource)).To(Succeed())
+
+				By("Verifying the created node app traffic policy was returned")
+				Expect(baseResource).To(Equal(
+					swagger.BaseResource{
+						ID: policyID,
+					},
+				))
+			},
+			Entry(
+				"GET /nodes/{node_id}/apps/{app_id}/policy"),
+		)
+
+		DescribeTable("200 OK",
+			func(reqType string) {
+				var nodeID, appID string
+				switch reqType {
+				case "nodeID":
+					nodeID = uuid.New()
+					appID = uuid.New()
+				case "appID":
+					clearGRPCTargetsTable()
+					nodeCfg := createAndRegisterNode()
+					nodeID = nodeCfg.nodeID
+					appID = uuid.New()
+				}
+
+				By("Sending a GET /nodes/{node_id}/apps/{app_id}/policy request")
+				resp, err := apiCli.Get(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s/policy", nodeID, appID))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 404 Not Found response")
+				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
+			},
+			Entry(
+				"GET /nodes/{node_id}/apps/{app_id}/policy with nonexistent node ID",
+				"nodeID"),
+			Entry(
+				"GET /nodes/{node_id}/apps/{app_id}/policy with nonexistent app ID",
+				"appID"),
+		)
+	})
+
+	Describe("DELETE /nodes/{node_id}/apps/{app_id}/policy", func() {
+		DescribeTable("204 No Content",
+			func() {
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				appID := postApps("container")
+				_ = postNodesApps(nodeCfg.nodeID, appID)
+				policyID := postPolicies()
+				patchNodesAppsPolicy(nodeCfg.nodeID, appID, policyID)
+
+				By("Sending a DELETE /nodes/{node_id}/apps/{app_id}/policy request")
+				resp, err := apiCli.Delete(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s/policy", nodeCfg.nodeID, appID))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 204 No Content response")
+				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
+
+				By("Verifying the node app traffic policy was deleted")
+
+				By("Sending a GET /nodes/{node_id}/apps/{app_id}/policy request")
+				resp2, err := apiCli.Get(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s/policy", nodeCfg.nodeID, appID))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp2.Body.Close()
+
+				By("Verifying a 404 Not Found response")
+				Expect(resp2.StatusCode).To(Equal(http.StatusNotFound))
+			},
+			Entry("DELETE /nodes/{node_id}/apps/{app_id}/policy"),
+		)
+
+		DescribeTable("404 Not Found",
+			func(reqType string) {
+				var nodeID, appID string
+				switch reqType {
+				case "nodeID":
+					nodeID = uuid.New()
+					appID = uuid.New()
+				case "appID":
+					clearGRPCTargetsTable()
+					nodeCfg := createAndRegisterNode()
+					nodeID = nodeCfg.nodeID
+					appID = uuid.New()
+				case "policy":
+					clearGRPCTargetsTable()
+					nodeCfg := createAndRegisterNode()
+					nodeID = nodeCfg.nodeID
+					appID = postApps("container")
+				}
+
+				By("Sending a DELETE /nodes/{node_id}/apps/{app_id}/policy request")
+				resp, err := apiCli.Delete(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s/policy", nodeID, appID))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 404 Not Found response")
+				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
+			},
+			Entry(
+				"DELETE /nodes/{node_id}/apps/{app_id}/policy with nonexistent node ID",
+				"nodeID"),
+			Entry(
+				"DELETE /nodes/{node_id}/apps/{app_id}/policy with nonexistent app ID",
+				"appID"),
+			Entry(
+				"DELETE /nodes/{node_id}/apps/{app_id}/policy without policy",
+				"policy"),
 		)
 	})
 })

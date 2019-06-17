@@ -823,6 +823,27 @@ func postNodesAppsTrafficPolicies(
 	return rb.ID
 }
 
+func patchNodesAppsPolicy(
+	nodeID string,
+	appID string,
+	policyID string,
+) {
+	By("Sending a PATCH /nodes/{node_id}/apps/{app_id}/policy request")
+	resp, err := apiCli.Patch(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s/policy", nodeID, appID),
+		"application/json",
+		strings.NewReader(fmt.Sprintf(
+			`
+			{
+				"id": "%s"
+			}`, policyID)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+
+	By("Verifying a 200 response")
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+}
+
 func getNodeAppTrafficPolicy(id string) *cce.NodeAppTrafficPolicy {
 	By("Sending a GET /nodes_apps_traffic_policies/{id} request")
 	resp, err := apiCli.Get(

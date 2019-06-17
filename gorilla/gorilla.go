@@ -43,7 +43,7 @@ type Gorilla struct {
 	dnsConfigsAppAliasesHandler     *handler
 	nodesDNSConfigsHandler          *handler
 	nodesAppsHandler                *handler
-	nodesAppsTrafficPoliciesHandler *handler
+	nodesAppsTrafficPoliciesHandler *handler // TODO remove once POST /nodes_apps_traffic_policies is removed
 }
 
 // NewGorilla creates a new Gorilla.
@@ -108,7 +108,6 @@ func NewGorilla( //nolint:gocyclo
 			checkDBCreate: checkDBCreateNodesAppsTrafficPolicies,
 
 			handleCreate: handleCreateNodesAppsTrafficPolicies,
-			handleDelete: handleDeleteNodesAppsTrafficPolicies,
 		},
 	}
 
@@ -152,10 +151,10 @@ func NewGorilla( //nolint:gocyclo
 		"GET    /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.getByID,
 		"DELETE /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.delete,
 
-		"POST   /nodes_apps_traffic_policies":      g.nodesAppsTrafficPoliciesHandler.create,
-		"GET    /nodes_apps_traffic_policies":      g.nodesAppsTrafficPoliciesHandler.filter,
-		"GET    /nodes_apps_traffic_policies/{id}": g.nodesAppsTrafficPoliciesHandler.getByID,
-		"DELETE /nodes_apps_traffic_policies/{id}": g.nodesAppsTrafficPoliciesHandler.delete,
+		// TODO this is still used by the tests for `DELETE /nodes_apps/{id} with nodes_apps_traffic_policies record`
+		// and `DELETE /traffic_policies/{id} with nodes_apps_traffic_policies record` so it needs to be kept until
+		// those tests/endpoints are updated to the new schema as well
+		"POST   /nodes_apps_traffic_policies": g.nodesAppsTrafficPoliciesHandler.create,
 
 		// The following endpoints are compliant with the Swagger / OpenAPI 3.0 schema. All references
 		// to the `v2` prefix in code should be removed once all endpoints are implemented. In conjunction
@@ -190,14 +189,14 @@ func NewGorilla( //nolint:gocyclo
 		"PATCH    /v2/nodes/{node_id}/interfaces/{interface_id}/policy": nil, // TODO
 		"DELETE   /v2/nodes/{node_id}/interfaces/{interface_id}/policy": nil, // TODO
 
-		"GET      /v2/nodes/{node_id}/apps":                 nil, // TODO
-		"POST     /v2/nodes/{node_id}/apps":                 nil, // TODO
-		"GET      /v2/nodes/{node_id}/apps/{app_id}":        nil, // TODO
-		"PATCH    /v2/nodes/{node_id}/apps/{app_id}":        nil, // TODO
-		"DELETE   /v2/nodes/{node_id}/apps/{app_id}":        nil, // TODO
-		"GET      /v2/nodes/{node_id}/apps/{app_id}/policy": nil, // TODO
-		"PATCH    /v2/nodes/{node_id}/apps/{app_id}/policy": nil, // TODO
-		"DELETE   /v2/nodes/{node_id}/apps/{app_id}/policy": nil, // TODO
+		"GET      /v2/nodes/{node_id}/apps":              nil, // TODO
+		"POST     /v2/nodes/{node_id}/apps":              nil, // TODO
+		"GET      /v2/nodes/{node_id}/apps/{app_id}":     nil, // TODO
+		"PATCH    /v2/nodes/{node_id}/apps/{app_id}":     nil, // TODO
+		"DELETE   /v2/nodes/{node_id}/apps/{app_id}":     nil, // TODO
+		"GET      /nodes/{node_id}/apps/{app_id}/policy": g.swagGETNodeAppPolicy,
+		"PATCH    /nodes/{node_id}/apps/{app_id}/policy": g.swagPATCHNodeAppPolicy,
+		"DELETE   /nodes/{node_id}/apps/{app_id}/policy": g.swagDELETENodeAppPolicy,
 	}
 
 	for endpoint, handlerFunc := range routes {
