@@ -959,7 +959,7 @@ var _ = Describe("/nodes", func() {
 				case 1:
 					reqStr = fmt.Sprintf(reqStr, nodeCfg.nodeID)
 				case 5:
-					trafficPolicyID := postTrafficPolicies()
+					trafficPolicyID := postPolicies()
 					reqStr = fmt.Sprintf(reqStr, nodeCfg.nodeID, trafficPolicyID, trafficPolicyID, trafficPolicyID,
 						trafficPolicyID)
 				}
