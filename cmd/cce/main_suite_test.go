@@ -81,7 +81,6 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	// time.Sleep(10 * time.Minute)
 	shutdown()
 })
 

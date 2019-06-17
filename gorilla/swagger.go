@@ -151,7 +151,7 @@ func (g *Gorilla) swagPATCHAppByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Used for DELETE /apps/{app_id}
+// Used for DELETE /apps/{app_id} endpoint
 func (g *Gorilla) swagDELETEAppByID(w http.ResponseWriter, r *http.Request) {
 	// Load the controller to access the persistence and the payload
 	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
@@ -194,5 +194,192 @@ func (g *Gorilla) swagDELETEAppByID(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+}
+
+// Used for GET /nodes/{node_id}/interfaces endpoint
+func (g *Gorilla) swagGETInterfaces(w http.ResponseWriter, r *http.Request) {
+	// Load the controller to access the persistence
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
+
+	// Fetch the entity from persistence and check if it's there
+	persisted, err := ctrl.PersistenceService.Read(r.Context(), mux.Vars(r)["node_id"], &cce.Node{})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if persisted == nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// Get the data from the remote entity
+	response, err := handleGetNodes(r.Context(), ctrl.PersistenceService, persisted)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Construct the response object
+	ifaces := swagger.InterfaceList{Interfaces: []swagger.InterfaceSummary{}}
+	for _, res := range response.(*cce.NodeResp).NetworkInterfaces {
+		iface := swagger.InterfaceSummary{
+			ID:                res.ID,
+			Description:       res.Description,
+			Driver:            res.Driver,
+			Type:              res.Type,
+			MACAddress:        res.MACAddress,
+			VLAN:              res.VLAN,
+			Zones:             res.Zones,
+			FallbackInterface: res.FallbackInterface,
+		}
+		ifaces.Interfaces = append(ifaces.Interfaces, iface)
+	}
+
+	// Marshal the response object to JSON
+	ifacesJSON, err := json.Marshal(ifaces)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if _, err = w.Write(ifacesJSON); err != nil {
+		log.Errf("Error writing response: %v", err)
+	}
+}
+
+// Used for PATCH /nodes/{node_id}/interfaces endpoint
+func (g *Gorilla) swagPATCHInterfaces(w http.ResponseWriter, r *http.Request) {
+	// Load the controller to access the persistence and the payload
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
+	body := r.Context().Value(contextKey("body")).([]byte)
+
+	// Unmarshal the payload
+	ifaces := swagger.InterfaceList{}
+	if err := json.Unmarshal(body, &ifaces); err != nil {
+		log.Errf("Error unmarshalling json: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Fetch the entity from persistence and check if it's there
+	persisted, err := ctrl.PersistenceService.Read(r.Context(), mux.Vars(r)["node_id"], &cce.Node{})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if persisted == nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// Convert it to a persistable object
+	requested := cce.NodeReq{
+		Node:              *persisted.(*cce.Node),
+		NetworkInterfaces: []*cce.NetworkInterface{},
+	}
+
+	for _, iface := range ifaces.Interfaces {
+		p := &cce.NetworkInterface{
+			ID:                iface.ID,
+			Description:       iface.Description,
+			Driver:            iface.Driver,
+			Type:              iface.Type,
+			MACAddress:        iface.MACAddress,
+			VLAN:              iface.VLAN,
+			Zones:             iface.Zones,
+			FallbackInterface: iface.FallbackInterface,
+		}
+		requested.NetworkInterfaces = append(requested.NetworkInterfaces, p)
+	}
+
+	// Validate the object
+	if err = requested.Validate(); err != nil {
+		log.Debugf("Validation failed for %#v: %v", requested, err)
+		w.WriteHeader(http.StatusBadRequest)
+		_, err = w.Write([]byte(fmt.Sprintf("Validation failed: %v", err)))
+		if err != nil {
+			log.Errf("Error writing response: %v", err)
+		}
+		return
+	}
+
+	code, err := handleUpdateNodes(r.Context(), ctrl.PersistenceService, &requested)
+	switch {
+	case code != 0:
+		log.Errf("Error updating remote entities: %v", err)
+		w.WriteHeader(code)
+		_, err = w.Write([]byte(err.Error()))
+		if err != nil {
+			log.Errf("Error writing response: %v", err)
+		}
+		return
+	}
+
+	// Persist the object
+	if err := ctrl.PersistenceService.BulkUpdate(r.Context(), []cce.Persistable{&requested}); err != nil {
+		log.Errf("Error updating entities: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+// Used for GET /nodes/{node_id}/interfaces/{interface_id} endpoint
+func (g *Gorilla) swagGETInterfaceByID(w http.ResponseWriter, r *http.Request) {
+	// Load the controller to access the persistence
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
+
+	// Fetch the entity from persistence and check if it's there
+	persisted, err := ctrl.PersistenceService.Read(r.Context(), mux.Vars(r)["node_id"], &cce.Node{})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if persisted == nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// Get the data from the remote entity
+	response, err := handleGetNodes(r.Context(), ctrl.PersistenceService, persisted)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Construct the response object
+	iface := swagger.InterfaceDetail{}
+	for _, res := range response.(*cce.NodeResp).NetworkInterfaces {
+		if res.ID == mux.Vars(r)["interface_id"] {
+			iface = swagger.InterfaceDetail{
+				InterfaceSummary: swagger.InterfaceSummary{
+					ID:                res.ID,
+					Description:       res.Description,
+					Driver:            res.Driver,
+					Type:              res.Type,
+					MACAddress:        res.MACAddress,
+					VLAN:              res.VLAN,
+					Zones:             res.Zones,
+					FallbackInterface: res.FallbackInterface,
+				},
+			}
+		}
+	}
+
+	// If its not set, then it's not found
+	if iface.ID == "" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// Marshal the response object to JSON
+	ifaceJSON, err := json.Marshal(iface)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if _, err = w.Write(ifaceJSON); err != nil {
+		log.Errf("Error writing response: %v", err)
 	}
 }

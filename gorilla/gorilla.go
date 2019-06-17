@@ -182,9 +182,9 @@ func NewGorilla( //nolint:gocyclo
 		"PATCH    /v2/nodes/{node_id}/dns": nil, // TODO
 		"DELETE   /v2/nodes/{node_id}/dns": nil, // TODO
 
-		"GET      /v2/nodes/{node_id}/interfaces":                nil, // TODO
-		"PATCH    /v2/nodes/{node_id}/interfaces":                nil, // TODO
-		"GET      /v2/nodes/{node_id}/interfaces/{interface_id}": nil, // TODO
+		"GET      /nodes/{node_id}/interfaces":                g.swagGETInterfaces,
+		"PATCH    /nodes/{node_id}/interfaces":                g.swagPATCHInterfaces,
+		"GET      /nodes/{node_id}/interfaces/{interface_id}": g.swagGETInterfaceByID,
 
 		"GET      /v2/nodes/{node_id}/interfaces/{interface_id}/policy": nil, // TODO
 		"PATCH    /v2/nodes/{node_id}/interfaces/{interface_id}/policy": nil, // TODO

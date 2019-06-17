@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [0.0.41] - 2019-06-14
+### Fixed
+- The following endpoints are now Swagger schema compliant:
+    - GET, POST /apps
+    - GET, PATCH, DELETE /apps/{app_id}
+    - GET, PATCH /nodes/{node_id}/interfaces
+    - GET /nodes/{node_id}/interfaces/{interface_id}
+
 ## [0.0.40] - 2019-06-14
 ### Fixed
 - Missing .env.development file in `ui/controller` which caused running the CCE
