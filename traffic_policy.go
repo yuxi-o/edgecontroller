@@ -27,7 +27,8 @@ import (
 // TrafficPolicy is an application or interface traffic policy.
 type TrafficPolicy struct {
 	ID    string         `json:"id"`
-	Rules []*TrafficRule `json:"rules"`
+	Name  string         `json:"name"`
+	Rules []*TrafficRule `json:"traffic_rules"`
 }
 
 // GetTableName returns the name of the persistence table.
@@ -49,6 +50,9 @@ func (tp *TrafficPolicy) SetID(id string) {
 func (tp *TrafficPolicy) Validate() error {
 	if !uuid.IsValid(tp.ID) {
 		return errors.New("id not a valid uuid")
+	}
+	if tp.Name == "" {
+		return errors.New("name cannot be empty")
 	}
 	if len(tp.Rules) == 0 {
 		return errors.New("rules cannot be empty")
@@ -79,12 +83,14 @@ func (tp *TrafficPolicy) String() string {
 
 	return fmt.Sprintf(strings.TrimSpace(`
 TrafficPolicy[
-    ID: %s,
+	ID: %s,
+	Name: %s,
     Rules: [
         %s
     ]
 ]`),
 		tp.ID,
+		tp.Name,
 		rules)
 }
 
@@ -146,9 +152,9 @@ func (tr *TrafficRule) String() string {
 // TrafficSelector is the model for a traffic selector.
 type TrafficSelector struct {
 	Description string     `json:"description"`
-	MACs        *MACFilter `json:"macs"`
-	IP          *IPFilter  `json:"ip"`
-	GTP         *GTPFilter `json:"gtp"`
+	MACs        *MACFilter `json:"mac_filter"`
+	IP          *IPFilter  `json:"ip_filter"`
+	GTP         *GTPFilter `json:"gtp_filter"`
 }
 
 // Validate validates the model.
@@ -157,21 +163,21 @@ func (ts *TrafficSelector) Validate() error {
 		return errors.New("description cannot be empty")
 	}
 	if ts.MACs == nil && ts.IP == nil && ts.GTP == nil {
-		return errors.New("macs|ip|gtp cannot all be nil")
+		return errors.New("mac_filter|ip_filter|gtp_filter cannot all be nil")
 	}
 	if ts.MACs != nil {
 		if err := ts.MACs.Validate(); err != nil {
-			return fmt.Errorf("macs.%s", err.Error())
+			return fmt.Errorf("mac_filter.%s", err.Error())
 		}
 	}
 	if ts.IP != nil {
 		if err := ts.IP.Validate(); err != nil {
-			return fmt.Errorf("ip.%s", err.Error())
+			return fmt.Errorf("ip_filter.%s", err.Error())
 		}
 	}
 	if ts.GTP != nil {
 		if err := ts.GTP.Validate(); err != nil {
-			return fmt.Errorf("gtp.%s", err.Error())
+			return fmt.Errorf("gtp_filter.%s", err.Error())
 		}
 	}
 
@@ -196,8 +202,8 @@ func (ts *TrafficSelector) String() string {
 type TrafficTarget struct {
 	Description string       `json:"description"`
 	Action      string       `json:"action"`
-	MAC         *MACModifier `json:"mac"`
-	IP          *IPModifier  `json:"ip"`
+	MAC         *MACModifier `json:"mac_modifier"`
+	IP          *IPModifier  `json:"ip_modifier"`
 }
 
 // Validate validates the model.
@@ -212,16 +218,16 @@ func (tt *TrafficTarget) Validate() error {
 	}
 
 	if tt.MAC == nil && tt.IP == nil {
-		return errors.New("mac|ip cannot both be nil")
+		return errors.New("mac_modifier|ip_modifier cannot both be nil")
 	}
 	if tt.MAC != nil {
 		if err := tt.MAC.Validate(); err != nil {
-			return fmt.Errorf("mac.%s", err.Error())
+			return fmt.Errorf("mac_modifier.%s", err.Error())
 		}
 	}
 	if tt.IP != nil {
 		if err := tt.IP.Validate(); err != nil {
-			return fmt.Errorf("ip.%s", err.Error())
+			return fmt.Errorf("ip_modifier.%s", err.Error())
 		}
 	}
 

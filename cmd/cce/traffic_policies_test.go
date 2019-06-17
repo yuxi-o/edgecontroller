@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	cce "github.com/smartedgemec/controller-ce"
+	"github.com/smartedgemec/controller-ce/swagger"
 	"github.com/smartedgemec/controller-ce/uuid"
 
 	. "github.com/onsi/ginkgo"
@@ -29,89 +30,13 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("/traffic_policies", func() {
-	var trafficPolicy *cce.TrafficPolicy
-
-	BeforeEach(func() {
-		trafficPolicy = &cce.TrafficPolicy{
-			Rules: []*cce.TrafficRule{
-				{
-					Description: "test-rule-1",
-					Priority:    1,
-					Source: &cce.TrafficSelector{
-						Description: "test-source-1",
-						MACs: &cce.MACFilter{
-							MACAddresses: []string{
-								"F0-59-8E-7B-36-8A",
-								"23-20-8E-15-89-D1",
-								"35-A4-38-73-35-45",
-							},
-						},
-						IP: &cce.IPFilter{
-							Address:   "223.1.1.0",
-							Mask:      16,
-							BeginPort: 2000,
-							EndPort:   2012,
-							Protocol:  "tcp",
-						},
-						GTP: &cce.GTPFilter{
-							Address: "10.6.7.2",
-							Mask:    12,
-							IMSIs: []string{
-								"310150123456789",
-								"310150123456790",
-								"310150123456791",
-							},
-						},
-					},
-					Destination: &cce.TrafficSelector{
-						Description: "test-destination-1",
-						MACs: &cce.MACFilter{
-							MACAddresses: []string{
-								"7D-C2-3A-1C-63-D9",
-								"E9-6B-D1-D2-1A-6B",
-								"C8-32-A9-43-85-55",
-							},
-						},
-						IP: &cce.IPFilter{
-							Address:   "64.1.1.0",
-							Mask:      16,
-							BeginPort: 1000,
-							EndPort:   1012,
-							Protocol:  "tcp",
-						},
-						GTP: &cce.GTPFilter{
-							Address: "108.6.7.2",
-							Mask:    4,
-							IMSIs: []string{
-								"310150123456792",
-								"310150123456793",
-								"310150123456794",
-							},
-						},
-					},
-					Target: &cce.TrafficTarget{
-						Description: "test-target-1",
-						Action:      "accept",
-						MAC: &cce.MACModifier{
-							MACAddress: "C7-5A-E7-98-1B-A3",
-						},
-						IP: &cce.IPModifier{
-							Address: "123.2.3.4",
-							Port:    1600,
-						},
-					},
-				},
-			},
-		}
-	})
-
-	Describe("POST /traffic_policies", func() {
+var _ = Describe("/policies", func() {
+	Describe("PATCH /policies", func() {
 		DescribeTable("201 Created",
 			func(req string) {
-				By("Sending a POST /traffic_policies request")
+				By("Sending a PATCH /policies request")
 				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/traffic_policies",
+					"http://127.0.0.1:8080/policies",
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
@@ -128,36 +53,37 @@ var _ = Describe("/traffic_policies", func() {
 					ID string
 				}
 
-				By("Unmarshaling the response")
+				By("Unmarshalling the response")
 				Expect(json.Unmarshal(body, &respBody)).To(Succeed())
 
 				By("Verifying a UUID was returned")
 				Expect(uuid.IsValid(respBody.ID)).To(BeTrue())
 			},
 			Entry(
-				"POST /traffic_policies",
+				"PATCH /policies",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": [
 									"F0-59-8E-7B-36-8A",
 									"23-20-8E-15-89-D1",
 									"35-A4-38-73-35-45"
 								]
 							},
-							"ip": {
+							"ip_filter": {
 								"address": "223.1.1.0",
 								"mask": 16,
 								"begin_port": 2000,
 								"end_port": 2012,
 								"protocol": "tcp"
 							},
-							"gtp": {
+							"gtp_filter": {
 								"address": "10.6.7.2",
 								"mask": 12,
 								"imsis": [
@@ -169,21 +95,21 @@ var _ = Describe("/traffic_policies", func() {
 						},
 						"destination": {
 							"description": "destination1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": [
 									"7D-C2-3A-1C-63-D9",
 									"E9-6B-D1-D2-1A-6B",
 									"C8-32-A9-43-85-55"
 								]
 							},
-							"ip": {
+							"ip_filter": {
 								"address": "64.1.1.0",
 								"mask": 16,
 								"begin_port": 1000,
 								"end_port": 1012,
 								"protocol": "tcp"
 							},
-							"gtp": {
+							"gtp_filter": {
 								"address": "108.6.7.2",
 								"mask": 4,
 								"imsis": [
@@ -196,10 +122,10 @@ var _ = Describe("/traffic_policies", func() {
 						"target": {
 							"description": "target1",
 							"action": "accept",
-							"mac": {
+							"mac_modifier": {
 								"mac_address": "C7-5A-E7-98-1B-A3"
 							},
-							"ip": {
+							"ip_modifier": {
 								"address": "123.2.3.4",
 								"port": 1600
 							}
@@ -210,9 +136,9 @@ var _ = Describe("/traffic_policies", func() {
 
 		DescribeTable("400 Bad Request",
 			func(req, expectedResp string) {
-				By("Sending a POST /traffic_policies request")
+				By("Sending a PATCH /policies request")
 				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/traffic_policies",
+					"http://127.0.0.1:8080/policies",
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
@@ -228,100 +154,104 @@ var _ = Describe("/traffic_policies", func() {
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(expectedResp))
 			},
-			Entry(
-				"POST /traffic_policies with id",
+			Entry("PATCH /policies without a name",
 				`
 				{
-					"id": "123"
+					"name": ""
 				}`,
-				"Validation failed: id cannot be specified in POST request"),
-			Entry(
-				"POST /traffic_policies without rules",
+				"Validation failed: name cannot be empty"),
+			Entry("PATCH /policies without rules",
 				`
 				{
-					"rules": []
+					"name": "policy-1",
+					"traffic_rules": []
 				}`,
 				"Validation failed: rules cannot be empty"),
-			Entry(
-				"POST /traffic_policies without rules[0].description",
+			Entry("PATCH /policies without rules[0].description",
 				`
 				{
-					"rules": [{}]
+					"name": "policy-1",
+					"traffic_rules": [{}]
 				}`,
 				"Validation failed: rules[0].description cannot be empty"),
-			Entry(
-				"POST /traffic_policies with rules[0].priority not in [1..65536]",
+			Entry("PATCH /policies with rules[0].priority not in [1..65536]",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 65537
 					}]
 				}`,
 				"Validation failed: rules[0].priority must be in [1..65536]"),
-			Entry("POST /traffic_policies without rules[0].source",
+			Entry("PATCH /policies without rules[0].source",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1
 					}]
 				}`,
 				"Validation failed: rules[0].source cannot be empty"),
-			Entry("POST /traffic_policies without rules[0].destination",
+			Entry("PATCH /policies without rules[0].destination",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						}
 					}]
 				}`,
 				"Validation failed: rules[0].destination cannot be empty"),
-			Entry("POST /traffic_policies without rules[0].target",
+			Entry("PATCH /policies without rules[0].target",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						},
 						"destination": {
 							"description": "destination1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						}
 					}]
 				}`,
 				"Validation failed: rules[0].target cannot be empty"),
-			Entry("POST /traffic_policies without rules[0].source.description",
+			Entry("PATCH /policies without rules[0].source.description",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						}
 					}]
 				}`,
 				"Validation failed: rules[0].source.description cannot be empty"),
-			Entry("POST /traffic_policies without rules[0].source.macs|ip|gtp",
+			Entry("PATCH /policies without rules[0].source.mac_filter|ip_filter|gtp_filter",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
@@ -329,16 +259,17 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.macs|ip|gtp cannot all be nil"),
-			Entry("POST /traffic_policies with invalid rules[0].source.macs.mac_addresses[0]",
+				"Validation failed: rules[0].source.mac_filter|ip_filter|gtp_filter cannot all be nil"),
+			Entry("PATCH /policies with invalid rules[0].source.mac_filter.mac_addresses[0]",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": [
 									"abc-def"
 								]
@@ -346,47 +277,50 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.macs.mac_addresses[0] could not be parsed (address abc-def: invalid MAC address)"), //nolint:lll
-			Entry("POST /traffic_policies with invalid rules[0].source.ip.address",
+				"Validation failed: rules[0].source.mac_filter.mac_addresses[0] could not be parsed (address abc-def: invalid MAC address)"), //nolint:lll
+			Entry("PATCH /policies with invalid rules[0].source.ip_filter.address",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"ip": {
+							"ip_filter": {
 								"address": "2234.1.1.0"
 							}
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip.address could not be parsed"),
-			Entry("POST /traffic_policies with rules[0].source.ip.mask not in [0..128]",
+				"Validation failed: rules[0].source.ip_filter.address could not be parsed"),
+			Entry("PATCH /policies with rules[0].source.ip_filter.mask not in [0..128]",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"ip": {
+							"ip_filter": {
 								"address": "223.1.1.0",
 								"mask": 129
 							}
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip.mask must be in [0..128]"),
-			Entry("POST /traffic_policies with rules[0].source.ip.begin_port not in [1..65536]",
+				"Validation failed: rules[0].source.ip_filter.mask must be in [0..128]"),
+			Entry("PATCH /policies with rules[0].source.ip_filter.begin_port not in [1..65536]",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"ip": {
+							"ip_filter": {
 								"address": "223.1.1.0",
 								"mask": 128,
 								"begin_port": 65537
@@ -394,16 +328,17 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip.begin_port must be in [1..65536]"),
-			Entry("POST /traffic_policies with rules[0].source.ip.end_port not in [1..65536]",
+				"Validation failed: rules[0].source.ip_filter.begin_port must be in [1..65536]"),
+			Entry("PATCH /policies with rules[0].source.ip_filter.end_port not in [1..65536]",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"ip": {
+							"ip_filter": {
 								"address": "223.1.1.0",
 								"mask": 128,
 								"begin_port": 65,
@@ -412,16 +347,17 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip.end_port must be in [1..65536]"),
-			Entry("POST /traffic_policies with invalid rules[0].source.ip.protocol",
+				"Validation failed: rules[0].source.ip_filter.end_port must be in [1..65536]"),
+			Entry("PATCH /policies with invalid rules[0].source.ip_filter.protocol",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"ip": {
+							"ip_filter": {
 								"address": "223.1.1.0",
 								"mask": 128,
 								"begin_port": 65,
@@ -431,22 +367,23 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip.protocol must be one of [tcp, udp, icmp, sctp]"),
-			Entry("POST /traffic_policies without rules[0].target.description",
+				"Validation failed: rules[0].source.ip_filter.protocol must be one of [tcp, udp, icmp, sctp]"),
+			Entry("PATCH /policies without rules[0].target.description",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						},
 						"destination": {
 							"description": "destination1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						},
@@ -456,21 +393,22 @@ var _ = Describe("/traffic_policies", func() {
 					}]
 				}`,
 				"Validation failed: rules[0].target.description cannot be empty"),
-			Entry("POST /traffic_policies with invalid rules[0].target.action",
+			Entry("PATCH /policies with invalid rules[0].target.action",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						},
 						"destination": {
 							"description": "destination1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						},
@@ -481,21 +419,22 @@ var _ = Describe("/traffic_policies", func() {
 					}]
 				}`,
 				"Validation failed: rules[0].target.action must be one of [accept, reject, drop]"),
-			Entry("POST /traffic_policies without rules[0].target.mac|ip",
+			Entry("PATCH /policies without rules[0].target.mac_modifier|ip_modifier",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						},
 						"destination": {
 							"description": "destination1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						},
@@ -505,111 +444,114 @@ var _ = Describe("/traffic_policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].target.mac|ip cannot both be nil"),
-			Entry("POST /traffic_policies with invalid rules[0].target.mac",
+				"Validation failed: rules[0].target.mac_modifier|ip_modifier cannot both be nil"),
+			Entry("PATCH /policies with invalid rules[0].target.mac_modifier.mac_address",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						},
 						"destination": {
 							"description": "destination1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						},
 						"target": {
 							"description": "target1",
 							"action": "accept",
-							"mac": {
+							"mac_modifier": {
 								"mac_address": "abc-123"
 							}
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].target.mac.mac_address could not be parsed (address abc-123: invalid MAC address)"), //nolint:lll
-			Entry("POST /traffic_policies with invalid rules[0].target.ip.address",
+				"Validation failed: rules[0].target.mac_modifier.mac_address could not be parsed (address abc-123: invalid MAC address)"), //nolint:lll
+			Entry("PATCH /policies with invalid rules[0].target.ip_modifier.address",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						},
 						"destination": {
 							"description": "destination1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						},
 						"target": {
 							"description": "target1",
 							"action": "accept",
-							"ip": {
+							"ip_modifier": {
 								"address": "424.2.2.93"
 							}
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].target.ip.address could not be parsed"),
-			Entry("POST /traffic_policies with rules[0].target.ip.port not in [1..65536]",
+				"Validation failed: rules[0].target.ip_modifier.address could not be parsed"),
+			Entry("PATCH /policies with rules[0].target.ip_modifier.port not in [1..65536]",
 				`
 				{
-					"rules": [{
+					"name": "policy-1",
+					"traffic_rules": [{
 						"description": "rule1",
 						"priority": 1,
 						"source": {
 							"description": "source1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						},
 						"destination": {
 							"description": "destination1",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": []
 							}
 						},
 						"target": {
 							"description": "target1",
 							"action": "accept",
-							"ip": {
+							"ip_modifier": {
 								"address": "123.2.3.4",
 								"port": 65537
 							}
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].target.ip.port must be in [1..65536]"),
+				"Validation failed: rules[0].target.ip_modifier.port must be in [1..65536]"),
 		)
 	})
 
-	Describe("GET /traffic_policies", func() {
+	Describe("GET /policies", func() {
 		var (
-			trafficPolicyID  string
-			trafficPolicy2ID string
+			policyID  string
+			policyID2 string
 		)
 
 		BeforeEach(func() {
-			trafficPolicyID = postTrafficPolicies()
-			trafficPolicy2ID = postTrafficPolicies()
+			policyID = postPolicies("policy-1")
+			policyID2 = postPolicies("policy-2")
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				By("Sending a GET /traffic_policies request")
+				By("Sending a GET /policies request")
 				resp, err := apiCli.Get(
-					"http://127.0.0.1:8080/traffic_policies")
+					"http://127.0.0.1:8080/policies")
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -620,68 +562,127 @@ var _ = Describe("/traffic_policies", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var trafficPolicies []*cce.TrafficPolicy
+				var policies swagger.PolicyList
 
-				By("Unmarshaling the response")
-				Expect(json.Unmarshal(body, &trafficPolicies)).To(Succeed())
+				By("Unmarshalling the response")
+				Expect(json.Unmarshal(body, &policies)).To(Succeed())
 
-				By("Verifying the 2 created traffic policies were returned")
-				trafficPolicy.SetID(trafficPolicyID)
-				Expect(trafficPolicies).To(ContainElement(trafficPolicy))
-				tp2 := trafficPolicy
-				tp2.SetID(trafficPolicy2ID)
-				Expect(trafficPolicies).To(ContainElement(tp2))
+				By("Verifying the 2 created policies were returned")
+				Expect(policies.Policies).To(ContainElement(
+					swagger.PolicySummary{
+						ID:   policyID,
+						Name: "policy-1",
+					}))
+				Expect(policies.Policies).To(ContainElement(
+					swagger.PolicySummary{
+						ID:   policyID2,
+						Name: "policy-2",
+					}))
 			},
-			Entry("GET /traffic_policies"),
-		)
-
-		DescribeTable("400 Bad Request",
-			func(field, value string) {
-				By("Sending a GET /traffic_policies request with a disallowed filter")
-				resp, err := apiCli.Get(fmt.Sprintf(
-					"http://127.0.0.1:8080/traffic_policies?%s=%s",
-					field, value,
-				))
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-
-				By("Verifying a 400 Bad Request response")
-				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(body)).To(Equal(
-					fmt.Sprintf("disallowed filter field %q\n", field),
-				))
-			},
-			Entry("GET /traffic_policies", "name", "hackers"),
+			Entry("GET /policies"),
 		)
 	})
 
-	Describe("GET /traffic_policies/{id}", func() {
+	Describe("GET /policies/{id}", func() {
 		var (
-			trafficPolicyID string
+			policyID string
 		)
 
 		BeforeEach(func() {
-			trafficPolicyID = postTrafficPolicies()
+			policyID = postPolicies()
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				By("Verifying the created traffic policy was returned")
-				trafficPolicy.SetID(trafficPolicyID)
-				Expect(trafficPolicy).To(Equal(trafficPolicy))
+				policy := getPolicy(policyID)
+
+				By("Verifying the created policy was returned")
+				Expect(policy).To(Equal(
+					&swagger.PolicyDetail{
+						PolicySummary: swagger.PolicySummary{
+							ID:   policyID,
+							Name: "policy-1",
+						},
+						Rules: []*cce.TrafficRule{
+							{
+								Description: "test-rule-1",
+								Priority:    1,
+								Source: &cce.TrafficSelector{
+									Description: "test-source-1",
+									MACs: &cce.MACFilter{
+										MACAddresses: []string{
+											"F0-59-8E-7B-36-8A",
+											"23-20-8E-15-89-D1",
+											"35-A4-38-73-35-45",
+										},
+									},
+									IP: &cce.IPFilter{
+										Address:   "223.1.1.0",
+										Mask:      16,
+										BeginPort: 2000,
+										EndPort:   2012,
+										Protocol:  "tcp",
+									},
+									GTP: &cce.GTPFilter{
+										Address: "10.6.7.2",
+										Mask:    12,
+										IMSIs: []string{
+											"310150123456789",
+											"310150123456790",
+											"310150123456791",
+										},
+									},
+								},
+								Destination: &cce.TrafficSelector{
+									Description: "test-destination-1",
+									MACs: &cce.MACFilter{
+										MACAddresses: []string{
+											"7D-C2-3A-1C-63-D9",
+											"E9-6B-D1-D2-1A-6B",
+											"C8-32-A9-43-85-55",
+										},
+									},
+									IP: &cce.IPFilter{
+										Address:   "64.1.1.0",
+										Mask:      16,
+										BeginPort: 1000,
+										EndPort:   1012,
+										Protocol:  "tcp",
+									},
+									GTP: &cce.GTPFilter{
+										Address: "108.6.7.2",
+										Mask:    4,
+										IMSIs: []string{
+											"310150123456792",
+											"310150123456793",
+											"310150123456794",
+										},
+									},
+								},
+								Target: &cce.TrafficTarget{
+									Description: "test-target-1",
+									Action:      "accept",
+									MAC: &cce.MACModifier{
+										MACAddress: "C7-5A-E7-98-1B-A3",
+									},
+									IP: &cce.IPModifier{
+										Address: "123.2.3.4",
+										Port:    1600,
+									},
+								},
+							},
+						},
+					},
+				))
 			},
-			Entry("GET /traffic_policies/{id}"),
+			Entry("GET /policies/{id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func() {
-				By("Sending a GET /traffic_policies/{id} request")
+				By("Sending a GET /policies/{id} request")
 				resp, err := apiCli.Get(
-					fmt.Sprintf("http://127.0.0.1:8080/traffic_policies/%s",
+					fmt.Sprintf("http://127.0.0.1:8080/policies/%s",
 						uuid.New()))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
@@ -689,72 +690,66 @@ var _ = Describe("/traffic_policies", func() {
 				By("Verifying a 404 Not Found response")
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("GET /traffic_policies/{id} with nonexistent ID"),
+			Entry("GET /policies/{id} with nonexistent ID"),
 		)
 	})
 
-	Describe("PATCH /traffic_policies", func() {
+	Describe("PATCH /policies", func() {
 		var (
-			trafficPolicyID string
+			policyID string
 		)
 
 		BeforeEach(func() {
-			trafficPolicyID = postTrafficPolicies()
+			policyID = postPolicies()
 		})
 
-		DescribeTable("204 No Content",
-			func(reqStr string) {
-				By("Sending a PATCH /traffic_policies request")
+		DescribeTable("200 Status OK",
+			func(reqStr string, expectedPolicy *swagger.PolicyDetail) {
+				By("Sending a PATCH /policies/{policy_id} request")
 				resp, err := apiCli.Patch(
-					"http://127.0.0.1:8080/traffic_policies",
+					fmt.Sprintf("http://127.0.0.1:8080/policies/%s", policyID),
 					"application/json",
-					strings.NewReader(fmt.Sprintf(reqStr, trafficPolicyID)))
+					strings.NewReader(fmt.Sprintf(reqStr, policyID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
-				By("Verifying a 204 No Content response")
-				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
+				By("Verifying a 200 Status OK response")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-				By("Getting the updated traffic policy")
-				updatedPolicy := getTrafficPolicy(trafficPolicyID)
+				By("Getting the updated policy")
+				updatedPolicy := getPolicy(policyID)
 
-				By("Verifying the traffic policy was updated")
-				expectedPolicy := trafficPolicy
-				expectedPolicy.SetID(trafficPolicyID)
-				expectedPolicy.Rules[0].Description = "test-rule-2"
-				expectedPolicy.Rules[0].Priority = 2
-				expectedPolicy.Rules[0].Source.Description = "test-source-2"
-				expectedPolicy.Rules[0].Destination.Description =
-					"test-destination-2"
-				expectedPolicy.Rules[0].Target.Description =
-					"test-target-2"
+				By("Verifying the policy was updated")
+				expectedPolicy.ID = policyID
 				Expect(updatedPolicy).To(Equal(expectedPolicy))
 			},
 			Entry(
-				"PATCH /traffic_policies",
+				"PATCH /policies",
 				`
-				[{
+				{
 					"id": "%s",
-					"rules": [{
+					"name": "policy-2",
+					"traffic_rules": [{
 						"description": "test-rule-2",
 						"priority": 2,
 						"source": {
 							"description": "test-source-2",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": [
 									"F0-59-8E-7B-36-8A",
 									"23-20-8E-15-89-D1",
 									"35-A4-38-73-35-45"
 								]
 							},
-							"ip": {
+							"ip_filter": {
 								"address": "223.1.1.0",
 								"mask": 16,
 								"begin_port": 2000,
 								"end_port": 2012,
 								"protocol": "tcp"
 							},
-							"gtp": {
+							"gtp_filter": {
 								"address": "10.6.7.2",
 								"mask": 12,
 								"imsis": [
@@ -766,21 +761,21 @@ var _ = Describe("/traffic_policies", func() {
 						},
 						"destination": {
 							"description": "test-destination-2",
-							"macs": {
+							"mac_filter": {
 								"mac_addresses": [
 									"7D-C2-3A-1C-63-D9",
 									"E9-6B-D1-D2-1A-6B",
 									"C8-32-A9-43-85-55"
 								]
 							},
-							"ip": {
+							"ip_filter": {
 								"address": "64.1.1.0",
 								"mask": 16,
 								"begin_port": 1000,
 								"end_port": 1012,
 								"protocol": "tcp"
 							},
-							"gtp": {
+							"gtp_filter": {
 								"address": "108.6.7.2",
 								"mask": 4,
 								"imsis": [
@@ -793,26 +788,100 @@ var _ = Describe("/traffic_policies", func() {
 						"target": {
 							"description": "test-target-2",
 							"action": "accept",
-							"mac": {
+							"mac_modifier": {
 								"mac_address": "C7-5A-E7-98-1B-A3"
 							},
-							"ip": {
+							"ip_modifier": {
 								"address": "123.2.3.4",
 								"port": 1600
 							}
 						}
 					}]
-				}]`),
+				}`,
+				&swagger.PolicyDetail{
+					PolicySummary: swagger.PolicySummary{
+						Name: "policy-2",
+					},
+					Rules: []*cce.TrafficRule{
+						{
+							Description: "test-rule-2",
+							Priority:    2,
+							Source: &cce.TrafficSelector{
+								Description: "test-source-2",
+								MACs: &cce.MACFilter{
+									MACAddresses: []string{
+										"F0-59-8E-7B-36-8A",
+										"23-20-8E-15-89-D1",
+										"35-A4-38-73-35-45",
+									},
+								},
+								IP: &cce.IPFilter{
+									Address:   "223.1.1.0",
+									Mask:      16,
+									BeginPort: 2000,
+									EndPort:   2012,
+									Protocol:  "tcp",
+								},
+								GTP: &cce.GTPFilter{
+									Address: "10.6.7.2",
+									Mask:    12,
+									IMSIs: []string{
+										"310150123456789",
+										"310150123456790",
+										"310150123456791",
+									},
+								},
+							},
+							Destination: &cce.TrafficSelector{
+								Description: "test-destination-2",
+								MACs: &cce.MACFilter{
+									MACAddresses: []string{
+										"7D-C2-3A-1C-63-D9",
+										"E9-6B-D1-D2-1A-6B",
+										"C8-32-A9-43-85-55",
+									},
+								},
+								IP: &cce.IPFilter{
+									Address:   "64.1.1.0",
+									Mask:      16,
+									BeginPort: 1000,
+									EndPort:   1012,
+									Protocol:  "tcp",
+								},
+								GTP: &cce.GTPFilter{
+									Address: "108.6.7.2",
+									Mask:    4,
+									IMSIs: []string{
+										"310150123456792",
+										"310150123456793",
+										"310150123456794",
+									},
+								},
+							},
+							Target: &cce.TrafficTarget{
+								Description: "test-target-2",
+								Action:      "accept",
+								MAC: &cce.MACModifier{
+									MACAddress: "C7-5A-E7-98-1B-A3",
+								},
+								IP: &cce.IPModifier{
+									Address: "123.2.3.4",
+									Port:    1600,
+								},
+							},
+						},
+					},
+				}),
 		)
 
 		DescribeTable("400 Bad Request",
 			func(reqStr string, expectedResp string) {
-				By("Sending a PATCH /traffic_policies request")
+				By("Sending a PATCH /policies/{policy_id} request")
 				if strings.Contains(reqStr, "%s") {
-					reqStr = fmt.Sprintf(reqStr, trafficPolicyID)
+					reqStr = fmt.Sprintf(reqStr, policyID)
 				}
 				resp, err := apiCli.Patch(
-					"http://127.0.0.1:8080/traffic_policies",
+					fmt.Sprintf("http://127.0.0.1:8080/policies/%s", policyID),
 					"application/json",
 					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
@@ -828,39 +897,431 @@ var _ = Describe("/traffic_policies", func() {
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(expectedResp))
 			},
-			// Don't repeat all the validation testing we did in POST, just
-			// one for ID and another one as a sanity check.
-			Entry(
-				"PATCH /nodes without id",
+			Entry("PATCH /policies/{policy_id} without name",
 				`
-				[{}]`,
-				"Validation failed: id not a valid uuid"),
-			Entry(
-				"PATCH /traffic_policies without rules[0].description",
+					{
+						"id": "%s"
+					}
+				`,
+				"Validation failed: name cannot be empty"),
+			Entry("PATCH /policies without a name",
 				`
-				[{
+				{
 					"id": "%s",
-					"rules": [{}]
-				}]`,
+					"name": ""
+				}`,
+				"Validation failed: name cannot be empty"),
+			Entry("PATCH /policies without rules",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": []
+				}`,
+				"Validation failed: rules cannot be empty"),
+			Entry("PATCH /policies without rules[0].description",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{}]
+				}`,
 				"Validation failed: rules[0].description cannot be empty"),
+			Entry("PATCH /policies with rules[0].priority not in [1..65536]",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 65537
+					}]
+				}`,
+				"Validation failed: rules[0].priority must be in [1..65536]"),
+			Entry("PATCH /policies without rules[0].source",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1
+					}]
+				}`,
+				"Validation failed: rules[0].source cannot be empty"),
+			Entry("PATCH /policies without rules[0].destination",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].destination cannot be empty"),
+			Entry("PATCH /policies without rules[0].target",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].target cannot be empty"),
+			Entry("PATCH /policies without rules[0].source.description",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].source.description cannot be empty"),
+			Entry("PATCH /policies without rules[0].source.mac_filter|ip_filter|gtp_filter",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1"
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].source.mac_filter|ip_filter|gtp_filter cannot all be nil"),
+			Entry("PATCH /policies with invalid rules[0].source.mac_filter.mac_addresses[0]",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"mac_filter": {
+								"mac_addresses": [
+									"abc-def"
+								]
+							}
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].source.mac_filter.mac_addresses[0] could not be parsed (address abc-def: invalid MAC address)"), //nolint:lll
+			Entry("PATCH /policies with invalid rules[0].source.ip_filter.address",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"ip_filter": {
+								"address": "2234.1.1.0"
+							}
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].source.ip_filter.address could not be parsed"),
+			Entry("PATCH /policies with rules[0].source.ip_filter.mask not in [0..128]",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"ip_filter": {
+								"address": "223.1.1.0",
+								"mask": 129
+							}
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].source.ip_filter.mask must be in [0..128]"),
+			Entry("PATCH /policies with rules[0].source.ip_filter.begin_port not in [1..65536]",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"ip_filter": {
+								"address": "223.1.1.0",
+								"mask": 128,
+								"begin_port": 65537
+							}
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].source.ip_filter.begin_port must be in [1..65536]"),
+			Entry("PATCH /policies with rules[0].source.ip_filter.end_port not in [1..65536]",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"ip_filter": {
+								"address": "223.1.1.0",
+								"mask": 128,
+								"begin_port": 65,
+								"end_port": 65537
+							}
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].source.ip_filter.end_port must be in [1..65536]"),
+			Entry("PATCH /policies with invalid rules[0].source.ip_filter.protocol",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"ip_filter": {
+								"address": "223.1.1.0",
+								"mask": 128,
+								"begin_port": 65,
+								"end_port": 65536,
+								"protocol": "udtcp"
+							}
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].source.ip_filter.protocol must be one of [tcp, udp, icmp, sctp]"),
+			Entry("PATCH /policies without rules[0].target.description",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						},
+						"target": {
+							"action": "accept"
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].target.description cannot be empty"),
+			Entry("PATCH /policies with invalid rules[0].target.action",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						},
+						"target": {
+							"description": "target1",
+							"action": "forward"
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].target.action must be one of [accept, reject, drop]"),
+			Entry("PATCH /policies without rules[0].target.mac_modifier|ip_modifier",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						},
+						"target": {
+							"description": "target1",
+							"action": "accept"
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].target.mac_modifier|ip_modifier cannot both be nil"),
+			Entry("PATCH /policies with invalid rules[0].target.mac_modifier.mac_address",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						},
+						"target": {
+							"description": "target1",
+							"action": "accept",
+							"mac_modifier": {
+								"mac_address": "abc-123"
+							}
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].target.mac_modifier.mac_address could not be parsed (address abc-123: invalid MAC address)"), //nolint:lll
+			Entry("PATCH /policies with invalid rules[0].target.ip_modifier.address",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						},
+						"target": {
+							"description": "target1",
+							"action": "accept",
+							"ip_modifier": {
+								"address": "424.2.2.93"
+							}
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].target.ip_modifier.address could not be parsed"),
+			Entry("PATCH /policies with rules[0].target.ip_modifier.port not in [1..65536]",
+				`
+				{
+					"id": "%s",
+					"name": "policy-1",
+					"traffic_rules": [{
+						"description": "rule1",
+						"priority": 1,
+						"source": {
+							"description": "source1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						},
+						"destination": {
+							"description": "destination1",
+							"mac_filter": {
+								"mac_addresses": []
+							}
+						},
+						"target": {
+							"description": "target1",
+							"action": "accept",
+							"ip_modifier": {
+								"address": "123.2.3.4",
+								"port": 65537
+							}
+						}
+					}]
+				}`,
+				"Validation failed: rules[0].target.ip_modifier.port must be in [1..65536]"),
 		)
 	})
 
-	Describe("DELETE /traffic_policies/{id}", func() {
+	Describe("DELETE /policies/{id}", func() {
 		var (
-			trafficPolicyID string
+			policyID string
 		)
 
 		BeforeEach(func() {
-			trafficPolicyID = postTrafficPolicies()
+			policyID = postPolicies()
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				By("Sending a DELETE /traffic_policies/{id} request")
+				By("Sending a DELETE /policies/{id} request")
 				resp, err := apiCli.Delete(
-					fmt.Sprintf("http://127.0.0.1:8080/traffic_policies/%s",
-						trafficPolicyID))
+					fmt.Sprintf("http://127.0.0.1:8080/policies/%s",
+						policyID))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -869,24 +1330,24 @@ var _ = Describe("/traffic_policies", func() {
 
 				By("Verifying the traffic policy was deleted")
 
-				By("Sending a GET /traffic_policies/{id} request")
+				By("Sending a GET /policies/{id} request")
 				resp, err = apiCli.Get(
-					fmt.Sprintf("http://127.0.0.1:8080/traffic_policies/%s",
-						trafficPolicyID))
+					fmt.Sprintf("http://127.0.0.1:8080/policies/%s",
+						policyID))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
 				By("Verifying a 404 Not Found response")
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("DELETE /traffic_policies/{id}"),
+			Entry("DELETE /policies/{id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func(id string) {
-				By("Sending a DELETE /traffic_policies/{id} request")
+				By("Sending a DELETE /policies/{id} request")
 				resp, err := apiCli.Delete(
-					fmt.Sprintf("http://127.0.0.1:8080/traffic_policies/%s",
+					fmt.Sprintf("http://127.0.0.1:8080/policies/%s",
 						id))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
@@ -895,7 +1356,7 @@ var _ = Describe("/traffic_policies", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(
-				"DELETE /traffic_policies/{id} with nonexistent ID",
+				"DELETE /policies/{id} with nonexistent ID",
 				uuid.New()),
 		)
 
@@ -905,18 +1366,18 @@ var _ = Describe("/traffic_policies", func() {
 				case "nodes_apps_traffic_policies":
 					clearGRPCTargetsTable()
 					nodeCfg := createAndRegisterNode()
-					trafficPolicyID = postTrafficPolicies()
+					policyID = postPolicies()
 					postNodesAppsTrafficPolicies(
 						postNodesApps(
 							nodeCfg.nodeID,
 							postApps("container")),
-						trafficPolicyID)
+						policyID)
 				}
 
-				By("Sending a DELETE /traffic_policies/{id} request")
+				By("Sending a DELETE /policies/{id} request")
 				resp, err := apiCli.Delete(
-					fmt.Sprintf("http://127.0.0.1:8080/traffic_policies/%s",
-						trafficPolicyID))
+					fmt.Sprintf("http://127.0.0.1:8080/policies/%s",
+						policyID))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -930,10 +1391,10 @@ var _ = Describe("/traffic_policies", func() {
 
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(
-					fmt.Sprintf(expectedResp, trafficPolicyID)))
+					fmt.Sprintf(expectedResp, policyID)))
 			},
 			Entry(
-				"DELETE /traffic_policies/{id} with nodes_apps_traffic_policies record",
+				"DELETE /policies/{id} with nodes_apps_traffic_policies record",
 				"nodes_apps_traffic_policies",
 				"cannot delete traffic_policy_id %s: record in use in nodes_apps_traffic_policies",
 			),

@@ -670,33 +670,40 @@ func getNodeDNSConfig(id string) *cce.NodeDNSConfig {
 	return &nodeDNSConfig
 }
 
-func postTrafficPolicies() (id string) {
-	By("Sending a POST /traffic_policies request")
+func postPolicies(policyNames ...string) (id string) {
+	var policyName string
+	if len(policyNames) == 0 {
+		policyName = "policy-1"
+	} else {
+		policyName = policyNames[0]
+	}
+	By("Sending a POST /policies request")
 	resp, err := apiCli.Post(
-		"http://127.0.0.1:8080/traffic_policies",
+		"http://127.0.0.1:8080/policies",
 		"application/json",
-		strings.NewReader(`
+		strings.NewReader(fmt.Sprintf(`
 		{
-			"rules": [{
+			"name": "%s",
+			"traffic_rules": [{
 				"description": "test-rule-1",
 				"priority": 1,
 				"source": {
 					"description": "test-source-1",
-					"macs": {
+					"mac_filter": {
 						"mac_addresses": [
 							"F0-59-8E-7B-36-8A",
 							"23-20-8E-15-89-D1",
 							"35-A4-38-73-35-45"
 						]
 					},
-					"ip": {
+					"ip_filter": {
 						"address": "223.1.1.0",
 						"mask": 16,
 						"begin_port": 2000,
 						"end_port": 2012,
 						"protocol": "tcp"
 					},
-					"gtp": {
+					"gtp_filter": {
 						"address": "10.6.7.2",
 						"mask": 12,
 						"imsis": [
@@ -708,21 +715,21 @@ func postTrafficPolicies() (id string) {
 				},
 				"destination": {
 					"description": "test-destination-1",
-					"macs": {
+					"mac_filter": {
 						"mac_addresses": [
 							"7D-C2-3A-1C-63-D9",
 							"E9-6B-D1-D2-1A-6B",
 							"C8-32-A9-43-85-55"
 						]
 					},
-					"ip": {
+					"ip_filter": {
 						"address": "64.1.1.0",
 						"mask": 16,
 						"begin_port": 1000,
 						"end_port": 1012,
 						"protocol": "tcp"
 					},
-					"gtp": {
+					"gtp_filter": {
 						"address": "108.6.7.2",
 						"mask": 4,
 						"imsis": [
@@ -735,16 +742,16 @@ func postTrafficPolicies() (id string) {
 				"target": {
 					"description": "test-target-1",
 					"action": "accept",
-					"mac": {
+					"mac_modifier": {
 						"mac_address": "C7-5A-E7-98-1B-A3"
 					},
-					"ip": {
+					"ip_modifier": {
 						"address": "123.2.3.4",
 						"port": 1600
 					}
 				}
 			}]
-		}`))
+		}`, policyName)))
 	Expect(err).ToNot(HaveOccurred())
 	defer resp.Body.Close()
 
@@ -757,16 +764,16 @@ func postTrafficPolicies() (id string) {
 
 	var rb respBody
 
-	By("Unmarshaling the response")
+	By("Unmarshalling the response")
 	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
 	return rb.ID
 }
 
-func getTrafficPolicy(id string) *cce.TrafficPolicy {
-	By("Sending a GET /traffic_policies/{id} request")
+func getPolicy(id string) *swagger.PolicyDetail {
+	By("Sending a GET /policies/{id} request")
 	resp, err := apiCli.Get(
-		fmt.Sprintf("http://127.0.0.1:8080/traffic_policies/%s", id))
+		fmt.Sprintf("http://127.0.0.1:8080/policies/%s", id))
 	Expect(err).ToNot(HaveOccurred())
 	defer resp.Body.Close()
 
@@ -777,12 +784,12 @@ func getTrafficPolicy(id string) *cce.TrafficPolicy {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var trafficPolicy cce.TrafficPolicy
+	var policy swagger.PolicyDetail
 
-	By("Unmarshaling the response")
-	Expect(json.Unmarshal(body, &trafficPolicy)).To(Succeed())
+	By("Unmarshalling the response")
+	Expect(json.Unmarshal(body, &policy)).To(Succeed())
 
-	return &trafficPolicy
+	return &policy
 }
 
 func postNodesAppsTrafficPolicies(

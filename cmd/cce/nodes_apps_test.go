@@ -462,7 +462,7 @@ var _ = Describe("/nodes_apps", func() {
 				case "nodes_apps_traffic_policies":
 					postNodesAppsTrafficPolicies(
 						nodeAppID,
-						postTrafficPolicies())
+						postPolicies())
 				}
 
 				By("Sending a DELETE /nodes_apps/{id} request")

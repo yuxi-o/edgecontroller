@@ -36,7 +36,7 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 				clearGRPCTargetsTable()
 				nodeCfg := createAndRegisterNode()
 				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
-				trafficPolicyID := postTrafficPolicies()
+				trafficPolicyID := postPolicies()
 
 				By("Sending a POST /nodes_apps_traffic_policies request")
 				resp, err := apiCli.Post(
@@ -119,7 +119,7 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 				clearGRPCTargetsTable()
 				nodeCfg := createAndRegisterNode()
 				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
-				trafficPolicyID := postTrafficPolicies()
+				trafficPolicyID := postPolicies()
 
 				By("Sending a POST /nodes_apps_traffic_policies request")
 				postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
@@ -163,11 +163,11 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 				nodeCfg := createAndRegisterNode()
 
 				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
-				trafficPolicyID := postTrafficPolicies()
+				trafficPolicyID := postPolicies()
 				nodeAppTrafficPolicyID := postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
 
 				nodeApp2ID := postNodesApps(nodeCfg.nodeID, postApps("container"))
-				trafficPolicy2ID := postTrafficPolicies()
+				trafficPolicy2ID := postPolicies()
 				nodeAppTrafficPolicy2ID := postNodesAppsTrafficPolicies(nodeApp2ID, trafficPolicy2ID)
 
 				By("Sending a GET /nodes_apps_traffic_policies request")
@@ -235,7 +235,7 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 				nodeCfg := createAndRegisterNode()
 
 				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
-				trafficPolicyID := postTrafficPolicies()
+				trafficPolicyID := postPolicies()
 				nodeAppTrafficPolicyID := postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
 
 				nodeAppTrafficPolicy := getNodeAppTrafficPolicy(nodeAppTrafficPolicyID)
@@ -276,7 +276,7 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 				nodeCfg := createAndRegisterNode()
 
 				nodeAppID := postNodesApps(nodeCfg.nodeID, postApps("container"))
-				trafficPolicyID := postTrafficPolicies()
+				trafficPolicyID := postPolicies()
 
 				nodeAppTrafficPolicyID := postNodesAppsTrafficPolicies(nodeAppID, trafficPolicyID)
 

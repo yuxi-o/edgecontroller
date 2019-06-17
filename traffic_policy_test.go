@@ -29,7 +29,8 @@ var _ = Describe("Entities: TrafficPolicy", func() {
 
 	BeforeEach(func() {
 		tp = &cce.TrafficPolicy{
-			ID: "9d740cee-035f-4076-847c-d1c80cdf19db",
+			ID:   "9d740cee-035f-4076-847c-d1c80cdf19db",
+			Name: "policy-1",
 			Rules: []*cce.TrafficRule{
 				{
 					Description: "test-rule-1",
@@ -251,14 +252,14 @@ var _ = Describe("Entities: TrafficPolicy", func() {
 			tp.Rules[0].Source.IP = nil
 			tp.Rules[0].Source.GTP = nil
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.macs|ip|gtp cannot all be nil"))
+				"rules[0].source.mac_filter|ip_filter|gtp_filter cannot all be nil"))
 		})
 
 		It("Should return an error if Rules.Source.MACs.MACAddresses "+
 			"contains an invalid MAC address", func() {
 			tp.Rules[0].Source.MACs.MACAddresses[0] = "abc-def"
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.macs.mac_addresses[0] could not be parsed " +
+				"rules[0].source.mac_filter.mac_addresses[0] could not be parsed " +
 					"(address abc-def: invalid MAC address)"))
 		})
 
@@ -266,46 +267,46 @@ var _ = Describe("Entities: TrafficPolicy", func() {
 			"invalid", func() {
 			tp.Rules[0].Source.IP.Address = "987.0.3.4"
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.ip.address could not be parsed"))
+				"rules[0].source.ip_filter.address could not be parsed"))
 		})
 
 		It("Should return an error if Rules.Source.IP.Mask is < 0", func() {
 			tp.Rules[0].Source.IP.Mask = -1
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.ip.mask must be in [0..128]"))
+				"rules[0].source.ip_filter.mask must be in [0..128]"))
 		})
 
 		It("Should return an error if Rules.Source.IP.Mask is > 128", func() {
 			tp.Rules[0].Source.IP.Mask = 129
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.ip.mask must be in [0..128]"))
+				"rules[0].source.ip_filter.mask must be in [0..128]"))
 		})
 
 		It("Should return an error if Rules.Source.IP.BeginPort "+
 			"is < 1", func() {
 			tp.Rules[0].Source.IP.BeginPort = 0
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.ip.begin_port must be in [1..65536]"))
+				"rules[0].source.ip_filter.begin_port must be in [1..65536]"))
 		})
 
 		It("Should return an error if Rules.Source.IP.BeginPort "+
 			"is > 65536", func() {
 			tp.Rules[0].Source.IP.BeginPort = 65537
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.ip.begin_port must be in [1..65536]"))
+				"rules[0].source.ip_filter.begin_port must be in [1..65536]"))
 		})
 
 		It("Should return an error if Rules.Source.IP.EndPort is < 1", func() {
 			tp.Rules[0].Source.IP.EndPort = 0
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.ip.end_port must be in [1..65536]"))
+				"rules[0].source.ip_filter.end_port must be in [1..65536]"))
 		})
 
 		It("Should return an error if Rules.Source.IP.EndPort "+
 			"is > 65536", func() {
 			tp.Rules[0].Source.IP.EndPort = 65537
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.ip.end_port must be in [1..65536]"))
+				"rules[0].source.ip_filter.end_port must be in [1..65536]"))
 		})
 
 		It("Should return an error if Rules.Source.IP.BeginPort "+
@@ -313,14 +314,14 @@ var _ = Describe("Entities: TrafficPolicy", func() {
 			tp.Rules[0].Source.IP.BeginPort = 1024
 			tp.Rules[0].Source.IP.EndPort = 1023
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.ip.begin_port must be <= end_port"))
+				"rules[0].source.ip_filter.begin_port must be <= end_port"))
 		})
 
 		It("Should return an error if Rules.Source.IP.Protocol is not one of"+
 			"[tcp, udp, icmp, sctp]", func() {
 			tp.Rules[0].Source.IP.Protocol = "abc"
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.ip.protocol must be one of " +
+				"rules[0].source.ip_filter.protocol must be one of " +
 					"[tcp, udp, icmp, sctp]"))
 		})
 
@@ -328,47 +329,47 @@ var _ = Describe("Entities: TrafficPolicy", func() {
 			"empty", func() {
 			tp.Rules[0].Source.GTP.Address = ""
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.gtp.address cannot be empty"))
+				"rules[0].source.gtp_filter.address cannot be empty"))
 		})
 
 		It("Should return an error if Rules.Source.GTP.Address is "+
 			"invalid", func() {
 			tp.Rules[0].Source.GTP.Address = "555.3.2.9"
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.gtp.address could not be parsed"))
+				"rules[0].source.gtp_filter.address could not be parsed"))
 		})
 
 		It("Should return an error if Rules.Source.GTP.Mask is < 0", func() {
 			tp.Rules[0].Source.GTP.Mask = -1
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.gtp.mask must be in [0..128]"))
+				"rules[0].source.gtp_filter.mask must be in [0..128]"))
 		})
 
 		It("Should return an error if Rules.Source.GTP.Mask is > 128", func() {
 			tp.Rules[0].Source.GTP.Mask = 129
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.gtp.mask must be in [0..128]"))
+				"rules[0].source.gtp_filter.mask must be in [0..128]"))
 		})
 
 		It("Should return an error if Rules.Source.GTP.IMSIs contains a value "+
 			"that is not numeric", func() {
 			tp.Rules[0].Source.GTP.IMSIs[0] = "abcdef"
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.gtp.imsis[0] must be 14 or 15 digits"))
+				"rules[0].source.gtp_filter.imsis[0] must be 14 or 15 digits"))
 		})
 
 		It("Should return an error if Rules.Source.GTP.IMSIs contains a value "+
 			"that is < 14 digits", func() {
 			tp.Rules[0].Source.GTP.IMSIs[0] = "1234567890123"
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.gtp.imsis[0] must be 14 or 15 digits"))
+				"rules[0].source.gtp_filter.imsis[0] must be 14 or 15 digits"))
 		})
 
 		It("Should return an error if Rules.Source.GTP.IMSIs contains a value "+
 			"that is > 15 digits", func() {
 			tp.Rules[0].Source.GTP.IMSIs[0] = "1234567890123456"
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].source.gtp.imsis[0] must be 14 or 15 digits"))
+				"rules[0].source.gtp_filter.imsis[0] must be 14 or 15 digits"))
 		})
 
 		It("Should return an error if Rules.Target.Description is "+
@@ -389,7 +390,7 @@ var _ = Describe("Entities: TrafficPolicy", func() {
 			"invalid", func() {
 			tp.Rules[0].Target.MAC.MACAddress = "abc-98-deg"
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].target.mac.mac_address could not be parsed " +
+				"rules[0].target.mac_modifier.mac_address could not be parsed " +
 					"(address abc-98-deg: invalid MAC address)"))
 		})
 
@@ -397,19 +398,19 @@ var _ = Describe("Entities: TrafficPolicy", func() {
 			"invalid", func() {
 			tp.Rules[0].Target.IP.Address = "123"
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].target.ip.address could not be parsed"))
+				"rules[0].target.ip_modifier.address could not be parsed"))
 		})
 
 		It("Should return an error if Rules.Target.IP.Port is < 1", func() {
 			tp.Rules[0].Target.IP.Port = 0
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].target.ip.port must be in [1..65536]"))
+				"rules[0].target.ip_modifier.port must be in [1..65536]"))
 		})
 
 		It("Should return an error if Rules.Target.IP.Port is > 65536", func() {
 			tp.Rules[0].Target.IP.Port = 65537
 			Expect(tp.Validate()).To(MatchError(
-				"rules[0].target.ip.port must be in [1..65536]"))
+				"rules[0].target.ip_modifier.port must be in [1..65536]"))
 		})
 	})
 
@@ -417,7 +418,8 @@ var _ = Describe("Entities: TrafficPolicy", func() {
 		It("Should return the string value", func() {
 			Expect(tp.String()).To(Equal(strings.TrimSpace(`
 TrafficPolicy[
-    ID: 9d740cee-035f-4076-847c-d1c80cdf19db,
+	ID: 9d740cee-035f-4076-847c-d1c80cdf19db,
+	Name: policy-1,
     Rules: [
         TrafficRule[
             Description: test-rule-1

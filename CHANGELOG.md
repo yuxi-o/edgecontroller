@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.0.42] - 2019-06-17
+### Fixed
+- The following endpoints are now Swagger schema compliant:
+    - GET, PATCH /nodes/{node_id}/interfaces
+    - GET /nodes/{node_id}/interfaces/{interface_id}
+
 ## [0.0.41] - 2019-06-14
 ### Fixed
 - The following endpoints are now Swagger schema compliant:

@@ -172,11 +172,11 @@ func NewGorilla( //nolint:gocyclo
 		"PATCH    /apps/{app_id}": g.swagPATCHAppByID,
 		"DELETE   /apps/{app_id}": g.swagDELETEAppByID,
 
-		"GET      /v2/policies":             nil, // TODO
-		"POST     /v2/policies":             nil, // TODO
-		"GET      /v2/policies/{policy_id}": nil, // TODO
-		"PATCH    /v2/policies/{policy_id}": nil, // TODO
-		"DELETE   /v2/policies/{policy_id}": nil, // TODO
+		"GET      /policies":             g.swagGETPolicies,
+		"POST     /policies":             g.swagPOSTPolicies,
+		"GET      /policies/{policy_id}": g.swagGETPolicyByID,
+		"PATCH    /policies/{policy_id}": g.swagPATCHPolicyByID,
+		"DELETE   /policies/{policy_id}": g.swagDELETEPolicyByID,
 
 		"GET      /v2/nodes/{node_id}/dns": nil, // TODO
 		"PATCH    /v2/nodes/{node_id}/dns": nil, // TODO
