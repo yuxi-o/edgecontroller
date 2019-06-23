@@ -112,6 +112,7 @@ func main() {
 		log.Alert("Bad log level %q: %v", logLevel, err)
 		os.Exit(1)
 	}
+	log.Infof("Setting log level to: %s", logLevel)
 	logger.SetLevel(lvl)
 
 	log.Info("Controller CE starting")

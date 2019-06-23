@@ -53,7 +53,7 @@ var _ = Describe("/policies", func() {
 					ID string
 				}
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &respBody)).To(Succeed())
 
 				By("Verifying a UUID was returned")
@@ -564,7 +564,7 @@ var _ = Describe("/policies", func() {
 
 				var policies swagger.PolicyList
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &policies)).To(Succeed())
 
 				By("Verifying the 2 created policies were returned")

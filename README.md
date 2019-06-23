@@ -4,6 +4,10 @@ This is the project for the Controller Community Edition.
 
 ## Overview
 
+To start the whole controller stack with default settings:
+
+`make all-up`
+
 This project uses a MySQL database running inside a Docker container. Please
 make sure you have Docker installed locally. To start/reset the database, run:
 
@@ -45,14 +49,18 @@ To run the test node which simulates an appliance listening as a gRPC server:
 
 ### Running the Controller in Docker Native Mode
 
-```
-./dist/cce -orchestration-mode "native" -dsn "root:<db_pass>@tcp(:8083)/controller_ce" -adminPass <admin_pass> -httpPort 8080 -grpcPort 8081 -elaPort 42101 -evaPort 42102
-```
+Configure the needed environment variables
 
-Replace the following **required** variables before executing the run command:
+- MYSQL_ROOT_PASSWORD: The password for database user `root`.
+- CCE_ADMIN_PASSWORD: The password for the controller UI user `admin`.
 
-- <db_pass>: The password for database user `root`.
-- <admin_pass>: The password for the API user `admin`.
+These can be exported to the system evironment variables, or defined in the `./.env` file.
+
+To start only the controller backend API:
+
+```
+make cce-up
+```
 
 ### Running the Controller in Kubernetes Mode
 

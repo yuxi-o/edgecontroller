@@ -128,7 +128,7 @@ func startup() {
 	Expect(err).ToNot(HaveOccurred())
 
 	cmd = exec.Command(exe,
-		"-dsn", "root:beer@tcp(:8083)/controller_ce",
+		"-dsn", "root:changeme@tcp(:8083)/controller_ce",
 		"-httpPort", "8080",
 		"-grpcPort", "8081",
 		"-elaPort", "42101",
@@ -204,7 +204,7 @@ func shutdown() {
 
 func clearGRPCTargetsTable() {
 	By("Connecting to the database")
-	db, err := sql.Open("mysql", "root:beer@tcp(:8083)/controller_ce?multiStatements=true")
+	db, err := sql.Open("mysql", "root:changeme@tcp(:8083)/controller_ce?multiStatements=true")
 	Expect(err).ToNot(HaveOccurred())
 
 	defer func() {

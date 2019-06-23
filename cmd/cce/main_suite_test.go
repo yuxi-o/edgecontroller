@@ -123,7 +123,7 @@ func startup() {
 	By("Starting the controller")
 	cmd = exec.Command(exe,
 		"-log-level", "debug",
-		"-dsn", "root:beer@tcp(:8083)/controller_ce",
+		"-dsn", "root:changeme@tcp(:8083)/controller_ce",
 		"-httpPort", "8080",
 		"-grpcPort", "8081",
 		"-elaPort", "42101",
@@ -195,7 +195,7 @@ func shutdown() {
 
 func clearGRPCTargetsTable() {
 	By("Connecting to the database")
-	db, err := sql.Open("mysql", "root:beer@tcp(:8083)/controller_ce?multiStatements=true")
+	db, err := sql.Open("mysql", "root:changeme@tcp(:8083)/controller_ce?multiStatements=true")
 	Expect(err).ToNot(HaveOccurred())
 
 	defer func() {
@@ -764,7 +764,7 @@ func postPolicies(policyNames ...string) (id string) {
 
 	var rb respBody
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &rb)).To(Succeed())
 
 	return rb.ID
@@ -786,7 +786,7 @@ func getPolicy(id string) *swagger.PolicyDetail {
 
 	var policy swagger.PolicyDetail
 
-	By("Unmarshalling the response")
+	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &policy)).To(Succeed())
 
 	return &policy
@@ -842,28 +842,6 @@ func patchNodesAppsPolicy(
 
 	By("Verifying a 200 response")
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
-}
-
-func getNodeAppTrafficPolicy(id string) *cce.NodeAppTrafficPolicy {
-	By("Sending a GET /nodes_apps_traffic_policies/{id} request")
-	resp, err := apiCli.Get(
-		fmt.Sprintf("http://127.0.0.1:8080/nodes_apps_traffic_policies/%s", id))
-	Expect(err).ToNot(HaveOccurred())
-	defer resp.Body.Close()
-
-	By("Verifying a 200 OK response")
-	Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-	By("Reading the response body")
-	body, err := ioutil.ReadAll(resp.Body)
-	Expect(err).ToNot(HaveOccurred())
-
-	var nodeAppTrafficPolicy cce.NodeAppTrafficPolicy
-
-	By("Unmarshaling the response")
-	Expect(json.Unmarshal(body, &nodeAppTrafficPolicy)).To(Succeed())
-
-	return &nodeAppTrafficPolicy
 }
 
 func loadTLSConfig(dir string) *tls.Config {

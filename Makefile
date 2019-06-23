@@ -19,7 +19,7 @@ export MINIKUBE_HOME=$(HOME)
 export CHANGE_MINIKUBE_NONE_USER=true
 export KUBECONFIG=$(HOME)/.kube/config
 
-.PHONY: help clean build lint test \
+.PHONY: help all-up clean build lint test \
 	db-up db-reset db-down \
 	minikube-install kubectl-install minikube-wait \
 	ui-up ui-down ui-test \
@@ -33,9 +33,21 @@ help:
 	@echo "  build            to build the project to the ./dist/ folder"
 	@echo ""
 	@echo "Services:"
+	@echo "  all-up           to start the full controller stack"
+	@echo ""
 	@echo "  db-up            to start the MySQL database service"
 	@echo "  db-reset         to start and reset the MySQL database service"
 	@echo "  db-down          to stop the MySQL database service"
+	@echo ""
+	@echo "  ui-up            to start the production UI Container"
+	@echo "  ui-down          to stop the production UI container"
+	@echo "  ui-dev-up        to start local developer instance of the UI"
+	@echo "  ui-test          run the UI project tests"
+	@echo ""
+	@echo "  cups-ui-up       to start the production UI Container"
+	@echo "  cups-ui-down     to stop the production UI container"
+	@echo "  cups-ui-dev-up   to start local developer instance of the UI"
+	@echo "  cups-ui-test     run the UI project tests"
 	@echo ""
 	@echo "  kubectl-install  to install kubectl"
 	@echo "  minikube-install to install minikube"
@@ -51,22 +63,21 @@ help:
 	@echo "  test-api-k8s     to run k8s app deployment api tests"
 	@echo "  test-k8s         to run kubernetes orchestration tests"
 	@echo "  test             to run unit followed by api tests"
-	@echo ""
-	@echo "  ui-up            to start the production UI Container"
-	@echo "  ui-down          to stop the production UI container"
-	@echo "  ui-dev-up        to start local developer instance of the UI"
-	@echo "  ui-test          run the UI project tests"
-	@echo ""
-	@echo "  cups-ui-up            to start the production UI Container"
-	@echo "  cups-ui-down          to stop the production UI container"
-	@echo "  cups-ui-dev-up        to start local developer instance of the UI"
-	@echo "  cups-ui-test          run the UI project tests"
 
 clean:
 	rm -rf dist certificates
 
+all-up: db-up db-reset cce-up ui-up
+
 build:
-	go build -o dist/cce ./cmd/cce
+	touch $(HOME)/.ssh/id_rsa
+	docker build -t cce-build -f ./docker/build/Dockerfile .
+	# multi-stage build won't work here; since pre-release commits are made to a private repo, we volume the id_rsa
+	docker run --name cce-build -v $(HOME)/.ssh/id_rsa:/root/.ssh/id_rsa cce-build
+	mkdir -p dist
+	docker cp cce-build:/go/src/github.com/smartedgemec/controller-ce/dist/cce ./dist/cce
+	docker rm cce-build
+	docker-compose build cce
 	go build -o dist/test-node ./test/node/grpc
 
 lint:
@@ -74,13 +85,13 @@ lint:
 
 db-up:
 	docker-compose up -d mysql
-	until mysql -P 8083 --protocol tcp -uroot -pbeer -e '' 2>/dev/null; do \
+	until mysql -P 8083 --protocol tcp -uroot -pchangeme -e '' 2>/dev/null; do \
 		echo "Waiting for DB..."; \
 		sleep 1; \
 		done
 
 db-reset: db-up
-	mysql -P 8083 --protocol tcp -u root -pbeer < mysql/schema.sql
+	mysql -P 8083 --protocol tcp -u root -pchangeme < mysql/schema.sql
 
 db-down:
 	docker-compose stop mysql
@@ -130,6 +141,12 @@ ifeq ($(shell uname -s),Darwin)
 else
 	sudo -E minikube delete
 endif
+
+cce-up: build
+	docker-compose up -d cce
+
+cce-down:
+	docker-compose stop cce
 
 ui-up:
 	docker build -t cce-ui ./ui/controller

@@ -16,5 +16,5 @@ package swagger
 
 // BaseResource is a representation of a base resource.
 type BaseResource struct {
-    ID          string `json:"id"`
+	ID string `json:"id"`
 }

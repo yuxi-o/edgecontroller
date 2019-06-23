@@ -7,7 +7,17 @@ services:
     ports:
       - 8083:3306
     environment:
-      MYSQL_ROOT_PASSWORD: beer
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+  cce:
+    build:
+      context: .
+      dockerfile: docker/run/Dockerfile
+    depends_on:
+      - mysql
+    command: -orchestration-mode "native" -dsn "root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/controller_ce" -adminPass "${CCE_ADMIN_PASSWORD}" -httpPort 8080 -grpcPort 8081 -elaPort 42101 -evaPort 42102 -log-level "${CCE_LOG_LEVEL}"
+    ports:
+      - 8080:8080
+      - 8081:8081
   ui:
     image: cce-ui:latest
     ports:

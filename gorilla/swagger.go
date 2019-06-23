@@ -126,7 +126,7 @@ func (g *Gorilla) swagPATCHAppByID(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal the payload
 	app := swagger.AppDetail{}
 	if err := json.Unmarshal(body, &app); err != nil {
-		log.Errf("Error unmarshalling json: %v", err)
+		log.Errf("Error unmarshaling json: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -298,7 +298,7 @@ func (g *Gorilla) swagPATCHPolicyByID(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal the payload
 	policy := swagger.PolicyDetail{}
 	if err := json.Unmarshal(body, &policy); err != nil {
-		log.Errf("Error unmarshalling json: %v", err)
+		log.Errf("Error unmarshaling json: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -335,7 +335,9 @@ func (g *Gorilla) swagDELETEPolicyByID(w http.ResponseWriter, r *http.Request) {
 	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
 
 	// Check that we can delete the entity
-	if statusCode, err := checkDBDeleteTrafficPolicies(r.Context(), ctrl.PersistenceService, mux.Vars(r)["policy_id"]); err != nil {
+	if statusCode, err := checkDBDeleteTrafficPolicies(
+		r.Context(), ctrl.PersistenceService, mux.Vars(r)["policy_id"],
+	); err != nil {
 		log.Errf("Error running DB logic: %v", err)
 		w.WriteHeader(statusCode)
 		_, err = w.Write([]byte(err.Error()))
@@ -435,7 +437,7 @@ func (g *Gorilla) swagPATCHInterfaces(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal the payload
 	ifaces := swagger.InterfaceList{}
 	if err := json.Unmarshal(body, &ifaces); err != nil {
-		log.Errf("Error unmarshalling json: %v", err)
+		log.Errf("Error unmarshaling json: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -629,7 +631,7 @@ func (g *Gorilla) swagGETNodeAppPolicy(w http.ResponseWriter, r *http.Request) {
 	// Marshal the response object to JSON
 	baseResourceJSON, err := json.Marshal(baseResource)
 	if err != nil {
-		log.Errf("Error marshalling response: %v", err)
+		log.Errf("Error marshaling response: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -640,7 +642,7 @@ func (g *Gorilla) swagGETNodeAppPolicy(w http.ResponseWriter, r *http.Request) {
 }
 
 // Used for PATCH /nodes/{node_id}/apps/{app_id}/policy endpoint
-func (g *Gorilla) swagPATCHNodeAppPolicy(w http.ResponseWriter, r *http.Request) {
+func (g *Gorilla) swagPATCHNodeAppPolicy(w http.ResponseWriter, r *http.Request) { //nolint:gocyclo
 	// Load the controller to access the persistence and the payload
 	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
 	body := r.Context().Value(contextKey("body")).([]byte)
@@ -648,7 +650,7 @@ func (g *Gorilla) swagPATCHNodeAppPolicy(w http.ResponseWriter, r *http.Request)
 	// Unmarshal the payload
 	var baseResource swagger.BaseResource
 	if err := json.Unmarshal(body, &baseResource); err != nil {
-		log.Errf("Error unmarshalling json: %v", err)
+		log.Errf("Error unmarshaling json: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -712,7 +714,7 @@ func (g *Gorilla) swagPATCHNodeAppPolicy(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Make gRPC call to node to set the policy
-	if err := nodeCC.AppPolicySvcCli.Set(
+	if err = nodeCC.AppPolicySvcCli.Set(
 		r.Context(),
 		nodeApps[0].(*cce.NodeApp).AppID,
 		policy.(*cce.TrafficPolicy),
@@ -836,7 +838,7 @@ func (g *Gorilla) swagDELETENodeAppPolicy(w http.ResponseWriter, r *http.Request
 	}
 
 	// Make gRPC call to node to delete the policy
-	if err := nodeCC.AppPolicySvcCli.Delete(
+	if err = nodeCC.AppPolicySvcCli.Delete(
 		r.Context(),
 		nodeApps[0].(*cce.NodeApp).AppID,
 	); err != nil {

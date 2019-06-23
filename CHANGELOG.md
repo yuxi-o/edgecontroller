@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.44] - 2019-06-19
+### Added
+- Controller API now builds and runs in a container
+
 ## [0.0.43] - 2019-06-17
 ### Fixed
 - The following endpoints are now Swagger schema compliant:

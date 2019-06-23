@@ -28,6 +28,9 @@
 # Distributables folder
 dist/
 
+# Container build binary artifact
+./cce
+
 # Certificates folder
 certificates/
 

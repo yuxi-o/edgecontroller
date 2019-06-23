@@ -869,7 +869,7 @@ var _ = Describe("/nodes", func() {
 
 				var ifaces swagger.InterfaceList
 
-				By("Unmarshalling the response")
+				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &ifaces)).To(Succeed())
 
 				By("Verifying the created node was returned")
