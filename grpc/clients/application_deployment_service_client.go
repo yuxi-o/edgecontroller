@@ -61,7 +61,17 @@ func (c *ApplicationDeploymentServiceClient) Deploy(
 func toPBApp(app *cce.App) *evapb.Application {
 	var ports []*evapb.PortProto
 	for _, pp := range app.Ports {
-		ports = append(ports, &evapb.PortProto{Port: pp.Port, Protocol: pp.Protocol})
+		// If the protocol is "all", make it empty in the protobuf
+		// since there's currently no support for this on the other
+		// end
+		// TODO: remove this logic when other end supports the "all"
+		// protocol value.
+		protocol := ""
+		switch {
+		case pp.Protocol != "all":
+			protocol = pp.Protocol
+		}
+		ports = append(ports, &evapb.PortProto{Port: pp.Port, Protocol: protocol})
 	}
 
 	return &evapb.Application{

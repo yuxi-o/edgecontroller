@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [0.0.45] - 2019-06-23
+### Fixed
+- The following endpoints are now Swagger schema compliant:
+    - GET, POST /nodes
+    - GET, PATCH, DELETE /nodes/{node_id}
+    - GET, PATCH, DELETE /nodes/{node_id}/interfaces/{interface_id}/policy
+    - GET, PATCH, DELETE /nodes/{node_id}/dns
+    - GET, POST /nodes/{node_id}/apps
+    - GET, PATCH, DELETE /nodes/{node_id}/apps/{app_id}
+- User interface is compliant to the Swagger schema
+
 ## [0.0.44] - 2019-06-19
 ### Added
 - Controller API now builds and runs in a container

@@ -97,9 +97,13 @@ db-down:
 	docker-compose stop mysql
 
 kubectl-install:
+ifeq ($(shell uname -s),Darwin)
+	brew install kubernetes-cli
+else
 	curl -Lo kubectl \
 		https://storage.googleapis.com/kubernetes-release/release/v1.14.2/bin/linux/amd64/kubectl \
 		&& sudo install kubectl /usr/local/bin/
+endif
 
 minikube-install:
 ifeq ($(shell uname -s),Darwin)

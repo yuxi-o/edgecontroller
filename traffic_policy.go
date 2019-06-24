@@ -105,23 +105,21 @@ type TrafficRule struct {
 
 // Validate validates the model.
 func (tr *TrafficRule) Validate() error {
-	if tr.Description == "" {
-		return errors.New("description cannot be empty")
+	if tr.Priority < 1 || tr.Priority > 65535 {
+		return errors.New("priority must be in [1..65535]")
 	}
-	if tr.Priority < 1 || tr.Priority > 65536 {
-		return errors.New("priority must be in [1..65536]")
+	if tr.Source == nil && tr.Destination == nil {
+		return errors.New("source & destination cannot both be empty")
 	}
-	if tr.Source == nil {
-		return errors.New("source cannot be empty")
+	if tr.Source != nil {
+		if err := tr.Source.Validate(); err != nil {
+			return fmt.Errorf("source.%s", err.Error())
+		}
 	}
-	if err := tr.Source.Validate(); err != nil {
-		return fmt.Errorf("source.%s", err.Error())
-	}
-	if tr.Destination == nil {
-		return errors.New("destination cannot be empty")
-	}
-	if err := tr.Destination.Validate(); err != nil {
-		return fmt.Errorf("destination.%s", err.Error())
+	if tr.Destination != nil {
+		if err := tr.Destination.Validate(); err != nil {
+			return fmt.Errorf("destination.%s", err.Error())
+		}
 	}
 	if tr.Target == nil {
 		return errors.New("target cannot be empty")
@@ -159,9 +157,6 @@ type TrafficSelector struct {
 
 // Validate validates the model.
 func (ts *TrafficSelector) Validate() error {
-	if ts.Description == "" {
-		return errors.New("description cannot be empty")
-	}
 	if ts.MACs == nil && ts.IP == nil && ts.GTP == nil {
 		return errors.New("mac_filter|ip_filter|gtp_filter cannot all be nil")
 	}
@@ -208,17 +203,10 @@ type TrafficTarget struct {
 
 // Validate validates the model.
 func (tt *TrafficTarget) Validate() error {
-	if tt.Description == "" {
-		return errors.New("description cannot be empty")
-	}
 	switch tt.Action {
 	case "accept", "reject", "drop":
 	default:
 		return errors.New("action must be one of [accept, reject, drop]")
-	}
-
-	if tt.MAC == nil && tt.IP == nil {
-		return errors.New("mac_modifier|ip_modifier cannot both be nil")
 	}
 	if tt.MAC != nil {
 		if err := tt.MAC.Validate(); err != nil {
@@ -301,19 +289,19 @@ func (f *IPFilter) Validate() error {
 	if f.Mask < 0 || f.Mask > 128 {
 		return errors.New("mask must be in [0..128]")
 	}
-	if f.BeginPort < 1 || f.BeginPort > 65536 {
-		return errors.New("begin_port must be in [1..65536]")
+	if f.BeginPort < 0 || f.BeginPort > 65535 {
+		return errors.New("begin_port must be in [0..65535]")
 	}
-	if f.EndPort < 1 || f.EndPort > 65536 {
-		return errors.New("end_port must be in [1..65536]")
+	if f.EndPort < 0 || f.EndPort > 65535 {
+		return errors.New("end_port must be in [0..65535]")
 	}
 	if f.BeginPort > f.EndPort {
 		return errors.New("begin_port must be <= end_port")
 	}
 	switch f.Protocol {
-	case "tcp", "udp", "icmp", "sctp":
+	case "tcp", "udp", "icmp", "sctp", "all":
 	default:
-		return errors.New("protocol must be one of [tcp, udp, icmp, sctp]")
+		return errors.New("protocol must be one of [tcp, udp, icmp, sctp, all]")
 	}
 
 	return nil
@@ -423,8 +411,8 @@ func (m *IPModifier) Validate() error {
 	if net.ParseIP(m.Address) == nil {
 		return errors.New("address could not be parsed")
 	}
-	if m.Port < 1 || m.Port > 65536 {
-		return errors.New("port must be in [1..65536]")
+	if m.Port < 1 || m.Port > 65535 {
+		return errors.New("port must be in [1..65535]")
 	}
 
 	return nil

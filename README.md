@@ -101,6 +101,9 @@ For instructions on how to setup your development environment, see `ui/controlle
 
 #### Production Deployment
 
+**Any client web browser using the Controller CE web user interface must have network access
+to the listening address and port of the Controller CE REST API.**
+
 ##### Prerequisites
 
 - For production deployments, create an `.env.production` file in the

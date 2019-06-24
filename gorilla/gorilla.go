@@ -33,6 +33,7 @@ type Gorilla struct {
 	// router
 	router *mux.Router
 
+	// TODO: Check if these handlers are still necessary
 	// entity routes handlers
 	nodesHandler           *handler
 	appsHandler            *handler
@@ -112,58 +113,13 @@ func NewGorilla( //nolint:gocyclo
 	}
 
 	routes := map[string]http.HandlerFunc{
-		"POST /auth": authenticate,
+		"POST     /auth": authenticate,
 
-		// entity routes
-		"POST   /nodes":      g.nodesHandler.create,
-		"GET    /nodes":      g.nodesHandler.filter,
-		"GET    /nodes/{id}": g.nodesHandler.getByID,
-		"PATCH  /nodes":      g.nodesHandler.bulkUpdate,
-		"DELETE /nodes/{id}": g.nodesHandler.delete,
-
-		"POST   /traffic_policies":      g.trafficPoliciesHandler.create,
-		"GET    /traffic_policies":      g.trafficPoliciesHandler.filter,
-		"GET    /traffic_policies/{id}": g.trafficPoliciesHandler.getByID,
-		"PATCH  /traffic_policies":      g.trafficPoliciesHandler.bulkUpdate,
-		"DELETE /traffic_policies/{id}": g.trafficPoliciesHandler.delete,
-
-		"POST   /dns_configs":      g.dnsConfigsHandler.create,
-		"GET    /dns_configs":      g.dnsConfigsHandler.filter,
-		"GET    /dns_configs/{id}": g.dnsConfigsHandler.getByID,
-		"PATCH  /dns_configs":      g.dnsConfigsHandler.bulkUpdate,
-		"DELETE /dns_configs/{id}": g.dnsConfigsHandler.delete,
-
-		// non-node join routes
-		"POST   /dns_configs_app_aliases":      g.dnsConfigsAppAliasesHandler.create,
-		"GET    /dns_configs_app_aliases":      g.dnsConfigsAppAliasesHandler.filter,
-		"GET    /dns_configs_app_aliases/{id}": g.dnsConfigsAppAliasesHandler.getByID,
-		"DELETE /dns_configs_app_aliases/{id}": g.dnsConfigsAppAliasesHandler.delete,
-
-		// node join routes
-		"POST   /nodes_apps":      g.nodesAppsHandler.create,
-		"GET    /nodes_apps":      g.nodesAppsHandler.filter,
-		"GET    /nodes_apps/{id}": g.nodesAppsHandler.getByID,
-		"PATCH  /nodes_apps":      g.nodesAppsHandler.bulkUpdate,
-		"DELETE /nodes_apps/{id}": g.nodesAppsHandler.delete,
-
-		"POST   /nodes_dns_configs":      g.nodesDNSConfigsHandler.create,
-		"GET    /nodes_dns_configs":      g.nodesDNSConfigsHandler.filter,
-		"GET    /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.getByID,
-		"DELETE /nodes_dns_configs/{id}": g.nodesDNSConfigsHandler.delete,
-
-		// TODO this is still used by the tests for `DELETE /nodes_apps/{id} with nodes_apps_traffic_policies record`
-		// and `DELETE /traffic_policies/{id} with nodes_apps_traffic_policies record` so it needs to be kept until
-		// those tests/endpoints are updated to the new schema as well
-		"POST   /nodes_apps_traffic_policies": g.nodesAppsTrafficPoliciesHandler.create,
-
-		// The following endpoints are compliant with the Swagger / OpenAPI 3.0 schema. All references
-		// to the `v2` prefix in code should be removed once all endpoints are implemented. In conjunction
-		// with this, the old endpoints and their tests should be dropped.
-		"GET      /v2/nodes":           nil, // TODO
-		"POST     /v2/nodes":           nil, // TODO
-		"GET      /v2/nodes/{node_id}": nil, // TODO
-		"PATCH    /v2/nodes/{node_id}": nil, // TODO
-		"DELETE   /v2/nodes/{node_id}": nil, // TODO
+		"GET      /nodes":           g.swagGETNodes,
+		"POST     /nodes":           g.swagPOSTNodes,
+		"GET      /nodes/{node_id}": g.swagGETNodeByID,
+		"PATCH    /nodes/{node_id}": g.swagPATCHNodeByID,
+		"DELETE   /nodes/{node_id}": g.swagDELETENodeByID,
 
 		"GET      /apps":          g.swagGETApps,
 		"POST     /apps":          g.swagPOSTApps,
@@ -177,23 +133,23 @@ func NewGorilla( //nolint:gocyclo
 		"PATCH    /policies/{policy_id}": g.swagPATCHPolicyByID,
 		"DELETE   /policies/{policy_id}": g.swagDELETEPolicyByID,
 
-		"GET      /v2/nodes/{node_id}/dns": nil, // TODO
-		"PATCH    /v2/nodes/{node_id}/dns": nil, // TODO
-		"DELETE   /v2/nodes/{node_id}/dns": nil, // TODO
+		"GET      /nodes/{node_id}/dns": g.swagGETNodeDNS,
+		"PATCH    /nodes/{node_id}/dns": g.swagPATCHNodeDNS,
+		"DELETE   /nodes/{node_id}/dns": g.swagDELETENodeDNS,
 
 		"GET      /nodes/{node_id}/interfaces":                g.swagGETInterfaces,
 		"PATCH    /nodes/{node_id}/interfaces":                g.swagPATCHInterfaces,
 		"GET      /nodes/{node_id}/interfaces/{interface_id}": g.swagGETInterfaceByID,
 
-		"GET      /v2/nodes/{node_id}/interfaces/{interface_id}/policy": nil, // TODO
-		"PATCH    /v2/nodes/{node_id}/interfaces/{interface_id}/policy": nil, // TODO
-		"DELETE   /v2/nodes/{node_id}/interfaces/{interface_id}/policy": nil, // TODO
+		"GET      /nodes/{node_id}/interfaces/{interface_id}/policy": g.swagGETNodeInterfacePolicy,
+		"PATCH    /nodes/{node_id}/interfaces/{interface_id}/policy": g.swagPATCHNodeInterfacePolicy,
+		"DELETE   /nodes/{node_id}/interfaces/{interface_id}/policy": g.swagDELETENodeInterfacePolicy,
 
-		"GET      /v2/nodes/{node_id}/apps":              nil, // TODO
-		"POST     /v2/nodes/{node_id}/apps":              nil, // TODO
-		"GET      /v2/nodes/{node_id}/apps/{app_id}":     nil, // TODO
-		"PATCH    /v2/nodes/{node_id}/apps/{app_id}":     nil, // TODO
-		"DELETE   /v2/nodes/{node_id}/apps/{app_id}":     nil, // TODO
+		"GET      /nodes/{node_id}/apps":                 g.swagGETNodeApps,
+		"POST     /nodes/{node_id}/apps":                 g.swagPOSTNodeApp,
+		"GET      /nodes/{node_id}/apps/{app_id}":        g.swagGETNodeAppsByID,
+		"PATCH    /nodes/{node_id}/apps/{app_id}":        g.swagPATCHNodeAppsByID,
+		"DELETE   /nodes/{node_id}/apps/{app_id}":        g.swagDELETENodeAppByID,
 		"GET      /nodes/{node_id}/apps/{app_id}/policy": g.swagGETNodeAppPolicy,
 		"PATCH    /nodes/{node_id}/apps/{app_id}/policy": g.swagPATCHNodeAppPolicy,
 		"DELETE   /nodes/{node_id}/apps/{app_id}/policy": g.swagDELETENodeAppPolicy,

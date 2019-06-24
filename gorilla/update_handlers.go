@@ -16,7 +16,6 @@ package gorilla
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -57,7 +56,8 @@ func handleUpdateNodes(
 			return http.StatusInternalServerError, err
 		}
 		if tp == nil {
-			return http.StatusNotFound, fmt.Errorf("traffic policy %s not found", nitp.TrafficPolicyID)
+			// If nil, set an empty policy
+			tp = &cce.TrafficPolicy{}
 		}
 		if err := nodeCC.IfacePolicySvcCli.Set(ctx, nitp.NetworkInterfaceID, tp.(*cce.TrafficPolicy)); err != nil {
 			return http.StatusInternalServerError, err
@@ -112,5 +112,5 @@ func handleUpdateNodesApps( //nolint: gocyclo
 		}
 	}
 
-	return http.StatusInternalServerError, err
+	return 0, nil
 }

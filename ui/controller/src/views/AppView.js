@@ -9,6 +9,8 @@ import {
   Grid,
   Button
 } from '@material-ui/core';
+import CssBaseline from "@material-ui/core/CssBaseline";
+import CircularLoader from "../components/progressbars/FullSizeCircularLoader";
 
 const styles = theme => ({
   root: {
@@ -106,44 +108,49 @@ class AppView extends Component {
     const { location: { pathname: currentPath }, classes } = this.props;
 
     const {
-      loaded,
       showErrors,
       app,
     } = this.state;
 
-    if (!loaded) {
-      return <React.Fragment>Loading ...</React.Fragment>
-    }
+    const renderAppEditView = () => (
+      <React.Fragment>
+        <Grid item xs={12}>
+          <SchemaForm
+            schema={AppSchema.schema}
+            form={AppSchema.form}
+            model={app}
+            onModelChange={this.onModelChange}
+            showErrors={showErrors}
+          />
+        </Grid>
+        <Grid item xs={12} className={classes.gridSaveButton}>
+          <Button
+            onClick={this.updateApp}
+            variant="outlined"
+            color="primary"
+          >
+            Save
+          </Button>
+        </Grid>
+      </React.Fragment>
+    );
+
+    const circularLoader = () => (
+      <CircularLoader />
+    );
 
     return (
       <React.Fragment>
+        <CssBaseline />
         <Topbar currentPath={currentPath} />
         <div className={classes.root}>
           <Grid
             container
             justify="center"
-            alignItems="flex-end"
             spacing={24}
             className={classes.grid}
           >
-            <Grid item xs={12}>
-              <SchemaForm
-                schema={AppSchema.schema}
-                form={AppSchema.form}
-                model={app}
-                onModelChange={this.onModelChange}
-                showErrors={showErrors}
-              />
-            </Grid>
-            <Grid item xs={12} className={classes.gridSaveButton}>
-              <Button
-                onClick={this.updateApp}
-                variant="outlined"
-                color="primary"
-              >
-                Save
-            </Button>
-            </Grid>
+            {this.state.loaded ? renderAppEditView() : circularLoader()}
           </Grid>
 
         </div>

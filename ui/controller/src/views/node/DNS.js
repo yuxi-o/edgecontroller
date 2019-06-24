@@ -5,8 +5,15 @@ import DNSSchema from '../../components/schema/NodeDnsConfigApply';
 import { withSnackbar } from 'notistack';
 import {
   Grid,
-  Button
+  Button,
+  Typography
 } from '@material-ui/core';
+import DialogTitle from "@material-ui/core/DialogTitle";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogContentText from "@material-ui/core/DialogContentText";
+import DialogActions from "@material-ui/core/DialogActions";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import Dialog from "@material-ui/core/Dialog";
 
 class DNSView extends Component {
   constructor(props) {
@@ -14,7 +21,9 @@ class DNSView extends Component {
 
     this.state = {
       loaded: false,
-      dns: [],
+      dns: {},
+      dialogShown: false,
+      showDialogLoader: false,
     };
   }
 
@@ -33,9 +42,15 @@ class DNSView extends Component {
         this.setState({
           loaded: true,
         });
+
+        if (err.response.status === 404) {
+          this.setState({dns: {}});
+          return;
+        }
+
         this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
-  }
+  };
 
   // PATCH /nodes/:node_id/dns
   applyDNSConfig = () => {
@@ -46,25 +61,56 @@ class DNSView extends Component {
       .then((resp) => {
         this.setState({
           loaded: true,
-        })
+        });
+
+        this.getNodeDNSConfig();
+        this.props.enqueueSnackbar('Successfully applied DNS Config to node', { variant: 'success' })
       })
       .catch((err) => {
         this.setState({
           loaded: true,
         });
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        if (err.response && err.response.status === 400 && err.response.data !== '') {
+          this.props.enqueueSnackbar(`${err.response.data}`, { variant: 'error' });
+        } else {
+          this.props.enqueueSnackbar(`${err.toString()}`, { variant: 'error' });
+        }
       });
-  }
+  };
+
+  showDeleteDialog = () => {
+    this.setState({dialogShown: true});
+  };
+
+  closeDeleteDialog = () => {
+    this.setState({ dialogShown: false });
+  };
 
   // DELETE /nodes/:node_id/dns/:dns_id
-  deleteDNSConfig = (dnsID) => {
+  deleteDNSConfig = () => {
     const { nodeID } = this.props;
+    const { dns } = this.state;
+    this.setState({ showDialogLoader: true });
 
-    ApiClient.delete(`/nodes/${nodeID}/dns/${dnsID}`)
+    if(!dns.hasOwnProperty('id')) {
+      this.setState({dialogShown: false, showDialogLoader: false});
+      return;
+    }
+
+    if (this.state.showDialogLoader === true) {
+      return;
+    }
+
+    ApiClient.delete(`/nodes/${nodeID}/dns`)
       .then((resp) => {
         this.setState({
           loaded: true,
-        })
+          dialogShown: false,
+          showDialogLoader: false,
+        });
+
+        this.getNodeDNSConfig();
+        this.props.enqueueSnackbar('Successfully deleted DNS Config on node', { variant: 'success' })
       })
       .catch((err) => {
         this.setState({
@@ -73,7 +119,7 @@ class DNSView extends Component {
 
         this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
-  }
+  };
 
   onModelChange = (key, val) => {
     const { dns } = this.state;
@@ -83,7 +129,7 @@ class DNSView extends Component {
     utils.selectOrSet(key, newDNS, val);
 
     this.setState({ dns: newDNS });
-  }
+  };
 
   componentDidMount() {
     this.getNodeDNSConfig();
@@ -116,8 +162,18 @@ class DNSView extends Component {
               onModelChange={this.onModelChange}
               showErrors={showErrors}
             />
+            <Typography style={{marginTop: '10px'}}>
+              Custom DNS forwarder configuration is not currently supported. The DNS forwarder on the Edge Node defaults to 8.8.8.8.
+            </Typography>
           </Grid>
-          <Grid item xs={12}>
+          <Grid item xs={12} style={{ textAlign: 'right' }}>
+            {
+              this.state.dns.id ? (
+                <Button onClick={this.showDeleteDialog}>
+                  Delete
+                </Button>
+              ) : null
+            }
             <Button
               onClick={this.applyDNSConfig}
               variant="outlined"
@@ -127,6 +183,28 @@ class DNSView extends Component {
             </Button>
           </Grid>
         </Grid>
+        <Dialog
+          open={this.state.dialogShown}
+          onClose={this.closeDeleteDialog}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">Delete DNS Configuration?</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              Doing so will delete ALL DNS configurations on this particular Edge Node
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            {this.state.showDialogLoader ? (<CircularProgress />) : ""}
+            <Button onClick={this.closeDeleteDialog} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={this.deleteDNSConfig} color="primary" autoFocus>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
       </React.Fragment>
     );
   }

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Smoke Tests for Main App.js Validate App Screen snapshot 1`] = `
+exports[`Smoke Tests for Main AppView.js Validate App Screen snapshot 1`] = `
 <div>
   <div>
     <div
@@ -96,7 +96,7 @@ exports[`Smoke Tests for Main App.js Validate App Screen snapshot 1`] = `
                         </div>
                       </div>
                       <div
-                        className="MuiFormControl-root-457 MuiFormControl-marginNormal-458 MuiFormControl-fullWidth-460 LoginForm-passwordBox-284"
+                        className="MuiFormControl-root-457 MuiFormControl-marginNormal-458 MuiFormControl-fullWidth-460 LoginForm-loginBox-284"
                       >
                         <label
                           className="MuiFormLabel-root-472 MuiFormLabel-required-477 MuiInputLabel-required-465 MuiInputLabel-root-461 MuiInputLabel-formControl-466 MuiInputLabel-animated-469"

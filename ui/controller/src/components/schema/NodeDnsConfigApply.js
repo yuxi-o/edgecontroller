@@ -6,11 +6,6 @@ export default {
       "name"
     ],
     properties: {
-      id: {
-        title: "ID",
-        type: "string",
-        readonly: true
-      },
       name: {
         title: "Name",
         type: "string"
@@ -50,14 +45,28 @@ export default {
           }
         }
       },
-      dns_forwarders: {
-        type: "array",
-        title: "DNS Forwarders",
-        items: {
-          title: "DNS Forwarder",
-          type: "string"
-        }
-      }
+      // configurations: {
+      //   type: "object",
+      //   properties: {
+      //     forwarders: {
+      //       type: "array",
+      //       items: {
+      //         type: "object",
+      //         properties: {
+      //           name: {
+      //             type: "string",
+      //           },
+      //           description: {
+      //             type: "string",
+      //           },
+      //           value: {
+      //             type: "string",
+      //           },
+      //         },
+      //       },
+      //     },
+      //   },
+      // },
     }
   },
   form: [

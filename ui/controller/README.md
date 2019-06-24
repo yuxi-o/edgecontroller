@@ -28,6 +28,9 @@ This is to resolve CORS local dev concerns.
 
 ### Production
 
+**Any client web browser using the Controller CE web user interface must have network access 
+to the listening address and port of the Controller CE REST API.**
+
 In order to setup a Production build, you must create a file under the project root
 with the filename of `.env.production`
 

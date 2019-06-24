@@ -142,7 +142,7 @@ class NodesView extends Component {
                 </Typography>
               <Typography variant="body1" gutterBottom className={classes.subtitle}>
                 List of Edge Nodes
-                </Typography>
+              </Typography>
             </Grid>
             <Grid item xs={3}>
               <Button variant="contained" color="primary" className={classes.addButton} onClick={this.handleClickOpen}>

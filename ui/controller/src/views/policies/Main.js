@@ -6,6 +6,10 @@ import Grid from '@material-ui/core/Grid';
 import Topbar from '../../components/Topbar';
 import Table from '../../components/tables/EnhancedTable';
 import AddIcon from '@material-ui/icons/Add';
+import {withSnackbar} from "notistack";
+import CircularLoader from "../../components/progressbars/FullSizeCircularLoader";
+import CssBaseline from "@material-ui/core/CssBaseline";
+
 import {
   Typography,
   Button,
@@ -28,7 +32,7 @@ const styles = theme => ({
   addButton: {
     float: 'right',
   },
-})
+});
 
 class PoliciesView extends Component {
   constructor(props) {
@@ -39,6 +43,10 @@ class PoliciesView extends Component {
       policies: [],
     };
   }
+
+  componentDidMount = () => {
+    return this.getPolicies();
+  };
 
   // GET /policies
   getPolicies = () => {
@@ -67,14 +75,13 @@ class PoliciesView extends Component {
 
   renderTable = () => {
     const { policies } = this.state;
+    const data = [];
 
     const tableHeaders = [
       { id: 'id', numeric: true, disablePadding: false, label: 'ID' },
       { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
       { id: 'action', numeric: false, disablePadding: false, label: 'Action' }
     ];
-
-    let data = [];
 
     // Append the edit view url to each policy
     policies.forEach(item => data.push({ ...item, editUrl: `/policies/${item.id}/edit` }));
@@ -95,7 +102,11 @@ class PoliciesView extends Component {
 
   render() {
     const { classes } = this.props;
-    const currentPath = this.props.location.pathname
+    const currentPath = this.props.location.pathname;
+
+    const circularLoader = () => (
+      <CircularLoader />
+    );
 
     const policiesGrid = () => (
       <Grid spacing={24} alignItems="center" justify="center" container className={classes.grid}>
@@ -108,6 +119,9 @@ class PoliciesView extends Component {
             <Grid item>
               <Typography variant="subtitle1" className={classes.title}>
                 Traffic Policies
+              </Typography>
+              <Typography variant="body1" gutterBottom className={classes.subtitle}>
+                List of Traffic Policies
               </Typography>
             </Grid>
             <Grid item xs={3}>
@@ -124,10 +138,11 @@ class PoliciesView extends Component {
 
     return (
       <React.Fragment>
+        <CssBaseline />
         <Topbar currentPath={currentPath} />
         <div className={classes.root}>
           <Grid container justify="center">
-            {policiesGrid()}
+            {this.state.loaded ? policiesGrid() : circularLoader()}
           </Grid>
         </div>
       </React.Fragment>
@@ -135,4 +150,4 @@ class PoliciesView extends Component {
   }
 }
 
-export default withStyles(styles)(PoliciesView);
+export default withSnackbar(withStyles(styles)(PoliciesView));

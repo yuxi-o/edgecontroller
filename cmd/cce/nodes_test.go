@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"strings"
 
-	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/swagger"
 	"github.com/smartedgemec/controller-ce/uuid"
 
@@ -147,14 +146,14 @@ var _ = Describe("/nodes", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var nodes []*cce.Node
+				var nodes swagger.NodeList
 
 				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &nodes)).To(Succeed())
 
 				By("Verifying the 2 created nodes were returned")
-				Expect(nodes).To(ContainElement(
-					&cce.Node{
+				Expect(nodes.Nodes).To(ContainElement(
+					swagger.NodeSummary{
 						ID:       nodeCfg.nodeID,
 						Name:     "Test Node 1",
 						Location: "Localhost port 42101",
@@ -162,29 +161,6 @@ var _ = Describe("/nodes", func() {
 					}))
 			},
 			Entry("GET /nodes"),
-		)
-
-		DescribeTable("400 Bad Request",
-			func(field, value string) {
-				By("Sending a GET /nodes request with a disallowed filter")
-				resp, err := apiCli.Get(fmt.Sprintf(
-					"http://127.0.0.1:8080/nodes?%s=%s",
-					field, value,
-				))
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-
-				By("Verifying a 400 Bad Request response")
-				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(body)).To(Equal(
-					fmt.Sprintf("disallowed filter field %q\n", field),
-				))
-			},
-			Entry("GET /nodes", "location", "usa"),
 		)
 	})
 
@@ -197,54 +173,12 @@ var _ = Describe("/nodes", func() {
 
 				By("Verifying the created node was returned")
 				Expect(node).To(Equal(
-					&cce.NodeResp{
-						Node: cce.Node{
+					&swagger.NodeDetail{
+						NodeSummary: swagger.NodeSummary{
 							ID:       nodeCfg.nodeID,
 							Name:     "Test Node 1",
 							Location: "Localhost port 42101",
 							Serial:   nodeCfg.serial,
-						},
-						NetworkInterfaces: []*cce.NetworkInterface{
-							{
-								ID:                "if0",
-								Description:       "interface0",
-								Driver:            "kernel",
-								Type:              "none",
-								MACAddress:        "mac0",
-								VLAN:              0,
-								Zones:             nil,
-								FallbackInterface: "",
-							},
-							{
-								ID:                "if1",
-								Description:       "interface1",
-								Driver:            "kernel",
-								Type:              "none",
-								MACAddress:        "mac1",
-								VLAN:              1,
-								Zones:             nil,
-								FallbackInterface: "",
-							},
-							{
-								ID:                "if2",
-								Description:       "interface2",
-								Driver:            "kernel",
-								Type:              "none",
-								MACAddress:        "mac2",
-								VLAN:              2,
-								Zones:             nil,
-								FallbackInterface: "",
-							},
-							{
-								ID:                "if3",
-								Description:       "interface3",
-								Driver:            "kernel",
-								Type:              "none",
-								MACAddress:        "mac3",
-								VLAN:              3,
-								Zones:             nil,
-								FallbackInterface: "",
-							},
 						},
 					},
 				))
@@ -278,284 +212,48 @@ var _ = Describe("/nodes", func() {
 			nodeCfg = createAndRegisterNode()
 		})
 
-		DescribeTable("204 No Content",
-			func(reqStr string, expectedNodeResp *cce.NodeResp) {
-				By("Sending a PATCH /nodes request")
-				switch strings.Count(reqStr, "%s") {
-				case 1:
-					reqStr = fmt.Sprintf(reqStr, nodeCfg.nodeID)
-				case 5:
-					trafficPolicyID := postPolicies()
-					reqStr = fmt.Sprintf(reqStr, nodeCfg.nodeID, trafficPolicyID, trafficPolicyID, trafficPolicyID,
-						trafficPolicyID)
-				}
+		DescribeTable("200 OK",
+			func(reqStr string, expectedNodeResp *swagger.BaseResource) {
+				By("Sending a PATCH /nodes/{node_id}/interfaces/{interface_id}/policy request")
+				trafficPolicyID := postPolicies()
+				reqStr = fmt.Sprintf(reqStr, trafficPolicyID)
+				expectedNodeResp.ID = trafficPolicyID
+
 				resp, err := apiCli.Patch(
-					"http://127.0.0.1:8080/nodes",
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/interfaces/%s/policy", nodeCfg.nodeID, "if0"),
 					"application/json",
 					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
-				By("Verifying a 204 No Content response")
-				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
+				By("Verifying a 200 OK response")
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Getting the updated node")
-				updatedNodeResp := getNode(nodeCfg.nodeID)
+				updatedNodeResp := getNodeInterfacePolicy(nodeCfg.nodeID, "if0")
 
 				By("Verifying the node was updated")
-				expectedNodeResp.SetID(nodeCfg.nodeID)
 				Expect(updatedNodeResp).To(Equal(expectedNodeResp))
 			},
 			Entry(
-				"PATCH /nodes with network interfaces",
+				"PATCH /nodes/{node_id}/interfaces/{interface_id}/policy with traffic policy",
 				`
-				[
-					{
-						"id": "%s",
-						"name": "node123456",
-						"location": "smart edge lab",
-						"serial": "abc123",
-						"network_interfaces": [
-							{
-								"id": "if0",
-								"description": "interface0",
-								"driver": "userspace",
-								"type": "upstream",
-								"mac_address": "mac0",
-								"vlan": 50,
-								"zones": null,
-								"fallback_interface": ""
-							},
-							{
-								"id": "if1",
-								"description": "interface1",
-								"driver": "kernel",
-								"type": "none",
-								"mac_address": "mac1",
-								"vlan": 1,
-								"zones": null,
-								"fallback_interface": ""
-							},
-							{
-								"id": "if2",
-								"description": "interface2",
-								"driver": "kernel",
-								"type": "none",
-								"mac_address": "mac2",
-								"vlan": 2,
-								"zones": null,
-								"fallback_interface": ""
-							},
-							{
-								"id": "if3",
-								"description": "interface3",
-								"driver": "kernel",
-								"type": "none",
-								"mac_address": "mac3",
-								"vlan": 3,
-								"zones": null,
-								"fallback_interface": ""
-							}
-						]
-					}
-				]`,
-				&cce.NodeResp{
-					Node: cce.Node{
-						Name:     "node123456",
-						Location: "smart edge lab",
-						Serial:   "abc123",
-					},
-					NetworkInterfaces: []*cce.NetworkInterface{
-						{
-							ID:                "if0",
-							Description:       "interface0",
-							Driver:            "userspace",
-							Type:              "upstream",
-							MACAddress:        "mac0",
-							VLAN:              50,
-							Zones:             nil,
-							FallbackInterface: "",
-						},
-						{
-							ID:                "if1",
-							Description:       "interface1",
-							Driver:            "kernel",
-							Type:              "none",
-							MACAddress:        "mac1",
-							VLAN:              1,
-							Zones:             nil,
-							FallbackInterface: "",
-						},
-						{
-							ID:                "if2",
-							Description:       "interface2",
-							Driver:            "kernel",
-							Type:              "none",
-							MACAddress:        "mac2",
-							VLAN:              2,
-							Zones:             nil,
-							FallbackInterface: "",
-						},
-						{
-							ID:                "if3",
-							Description:       "interface3",
-							Driver:            "kernel",
-							Type:              "none",
-							MACAddress:        "mac3",
-							VLAN:              3,
-							Zones:             nil,
-							FallbackInterface: "",
-						},
-					},
-				}),
-			Entry(
-				"PATCH /nodes without network interfaces",
-				`
-				[
-					{
-						"id": "%s",
-						"name": "node123456",
-						"location": "smart edge lab",
-						"serial": "abc123"
-					}
-				]`,
-				&cce.NodeResp{
-					Node: cce.Node{
-						Name:     "node123456",
-						Location: "smart edge lab",
-						Serial:   "abc123",
-					},
-					NetworkInterfaces: []*cce.NetworkInterface{
-						{
-							ID:                "if0",
-							Description:       "interface0",
-							Driver:            "kernel",
-							Type:              "none",
-							MACAddress:        "mac0",
-							VLAN:              0,
-							Zones:             nil,
-							FallbackInterface: "",
-						},
-						{
-							ID:                "if1",
-							Description:       "interface1",
-							Driver:            "kernel",
-							Type:              "none",
-							MACAddress:        "mac1",
-							VLAN:              1,
-							Zones:             nil,
-							FallbackInterface: "",
-						},
-						{
-							ID:                "if2",
-							Description:       "interface2",
-							Driver:            "kernel",
-							Type:              "none",
-							MACAddress:        "mac2",
-							VLAN:              2,
-							Zones:             nil,
-							FallbackInterface: "",
-						},
-						{
-							ID:                "if3",
-							Description:       "interface3",
-							Driver:            "kernel",
-							Type:              "none",
-							MACAddress:        "mac3",
-							VLAN:              3,
-							Zones:             nil,
-							FallbackInterface: "",
-						},
-					},
-				}),
-			Entry(
-				"PATCH /nodes with traffic policies",
-				`
-				[
-					{
-						"id": "%s",
-						"name": "node123456",
-						"location": "smart edge lab",
-						"serial": "abc123",
-						"traffic_policies": [
-							{
-								"network_interface_id": "if0",
-								"traffic_policy_id": "%s"
-							},
-							{
-								"network_interface_id": "if1",
-								"traffic_policy_id": "%s"
-							},
-							{
-								"network_interface_id": "if2",
-								"traffic_policy_id": "%s"
-							},
-							{
-								"network_interface_id": "if3",
-								"traffic_policy_id": "%s"
-							}
-						]
-					}
-				]`,
-				&cce.NodeResp{
-					Node: cce.Node{
-						Name:     "node123456",
-						Location: "smart edge lab",
-						Serial:   "abc123",
-					},
-					NetworkInterfaces: []*cce.NetworkInterface{
-						{
-							ID:                "if0",
-							Description:       "interface0",
-							Driver:            "kernel",
-							Type:              "none",
-							MACAddress:        "mac0",
-							VLAN:              0,
-							Zones:             nil,
-							FallbackInterface: "",
-						},
-						{
-							ID:                "if1",
-							Description:       "interface1",
-							Driver:            "kernel",
-							Type:              "none",
-							MACAddress:        "mac1",
-							VLAN:              1,
-							Zones:             nil,
-							FallbackInterface: "",
-						},
-						{
-							ID:                "if2",
-							Description:       "interface2",
-							Driver:            "kernel",
-							Type:              "none",
-							MACAddress:        "mac2",
-							VLAN:              2,
-							Zones:             nil,
-							FallbackInterface: "",
-						},
-						{
-							ID:                "if3",
-							Description:       "interface3",
-							Driver:            "kernel",
-							Type:              "none",
-							MACAddress:        "mac3",
-							VLAN:              3,
-							Zones:             nil,
-							FallbackInterface: "",
-						},
-					},
-				}),
+				{
+					"id": "%s"
+				}
+				`,
+				&swagger.BaseResource{},
+			),
 		)
 
 		DescribeTable("400 Bad Request",
 			func(reqStr string, expectedResp string) {
-				By("Sending a PATCH /nodes request")
+				By("Sending a PATCH /nodes/{node_id} request")
 				if strings.Contains(reqStr, "%s") {
 					reqStr = fmt.Sprintf(reqStr, nodeCfg.nodeID)
 				}
 				resp, err := apiCli.Patch(
-					"http://127.0.0.1:8080/nodes",
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s", nodeCfg.nodeID),
 					"application/json",
 					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
@@ -572,56 +270,42 @@ var _ = Describe("/nodes", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
-				"PATCH /nodes without id",
+				"PATCH /nodes/{node_id} without name",
 				`
-				[
-					{
-						"name": "node123",
-						"location": "smart edge lab",
-						"serial": "abc123"
-					}
-				]`,
-				"Validation failed: id not a valid uuid"),
-			Entry(
-				"PATCH /nodes without name",
-				`
-				[
-					{
-						"id": "%s",
-						"location": "smart edge lab",
-						"serial": "abc123"
-					}
-				]`,
+				{
+					"id": "%s",
+					"location": "smart edge lab",
+					"serial": "abc123"
+				}
+				`,
 				"Validation failed: name cannot be empty"),
-			Entry("PATCH /nodes without location",
+			Entry("PATCH /nodes/{node_id} without location",
 				`
-				[
-					{
-						"id": "%s",
-						"name": "node123",
-						"serial": "abc123"
-					}
-				]`,
+				{
+					"id": "%s",
+					"name": "node123",
+					"serial": "abc123"
+				}
+				`,
 				"Validation failed: location cannot be empty"),
-			Entry("PATCH /nodes without serial",
+			Entry("PATCH /nodes/{node_id} without serial",
 				`
-				[
-					{
-						"id": "%s",
-						"name": "node123",
-						"location": "smart edge lab"
-					}
-				]`,
+				{
+					"id": "%s",
+					"name": "node123",
+					"location": "smart edge lab"
+				}
+				`,
 				"Validation failed: serial cannot be empty"),
 		)
 
 		DescribeTable("404 Not Found",
 			func(reqStr string, expectedResp string) {
-				By("Sending a PATCH /nodes request")
+				By("Sending a PATCH /nodes/{node_id}/interfaces/{interface_id}/policy request")
 				resp, err := apiCli.Patch(
-					"http://127.0.0.1:8080/nodes",
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/interfaces/%s/policy", nodeCfg.nodeID, "if0"),
 					"application/json",
-					strings.NewReader(fmt.Sprintf(reqStr, nodeCfg.nodeID)))
+					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -635,87 +319,23 @@ var _ = Describe("/nodes", func() {
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(expectedResp))
 			},
-			Entry("PATCH /nodes with traffic policies and invalid traffic_policy_id",
+			Entry("PATCH /nodes/{node_id}/interfaces/{interface_id}/policy with invalid id",
 				`
-				[
-					{
-						"id": "%s",
-						"name": "node123",
-						"location": "smart edge lab",
-						"serial": "abc123",
-						"traffic_policies": [
-							{
-								"network_interface_id": "if0",
-								"traffic_policy_id": "2886fc50-58a0-4dad-9853-5e0a5310a294"
-							}
-						]
-					}
-				]`,
+				{
+					"id": "2886fc50-58a0-4dad-9853-5e0a5310a294"
+				}
+				`,
 				"traffic policy 2886fc50-58a0-4dad-9853-5e0a5310a294 not found"),
-			Entry(
-				"PATCH /nodes with network interfaces",
-				`
-				[
-					{
-						"id": "%s",
-						"name": "node123456",
-						"location": "smart edge lab",
-						"serial": "abc123",
-						"network_interfaces": [
-							{
-								"id": "if03",
-								"description": "interface0",
-								"driver": "userspace",
-								"type": "upstream",
-								"mac_address": "mac0",
-								"vlan": 50,
-								"zones": null,
-								"fallback_interface": ""
-							},
-							{
-								"id": "if1",
-								"description": "interface1",
-								"driver": "kernel",
-								"type": "none",
-								"mac_address": "mac1",
-								"vlan": 1,
-								"zones": null,
-								"fallback_interface": ""
-							},
-							{
-								"id": "if2",
-								"description": "interface2",
-								"driver": "kernel",
-								"type": "none",
-								"mac_address": "mac2",
-								"vlan": 2,
-								"zones": null,
-								"fallback_interface": ""
-							},
-							{
-								"id": "if3",
-								"description": "interface3",
-								"driver": "kernel",
-								"type": "none",
-								"mac_address": "mac3",
-								"vlan": 3,
-								"zones": null,
-								"fallback_interface": ""
-							}
-						]
-					}
-				]`,
-				"Network Interface if03 not found"),
 		)
 
 		DescribeTable("500 Internal server error",
 			func(reqStr string, expectedResp string) {
-				By("Sending a PATCH /nodes request")
+				By("Sending a PATCH /nodes/{node_id}/interfaces request")
 				if strings.Contains(reqStr, "%s") {
 					reqStr = fmt.Sprintf(reqStr, nodeCfg.nodeID)
 				}
 				resp, err := apiCli.Patch(
-					"http://127.0.0.1:8080/nodes",
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/interfaces", nodeCfg.nodeID),
 					"application/json",
 					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
@@ -731,28 +351,23 @@ var _ = Describe("/nodes", func() {
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(expectedResp))
 			},
-			Entry("PATCH /nodes without all interfaces",
+			Entry("PATCH /nodes/{node_id}/interfaces without all interfaces",
 				`
-				[
-					{
-						"id": "%s",
-						"name": "node123456",
-						"location": "smart edge lab",
-						"serial": "abc123",
-						"network_interfaces": [
-							{
-								"id": "if0",
-								"description": "interface0",
-								"driver": "userspace",
-								"type": "upstream",
-								"mac_address": "mac0",
-								"vlan": 50,
-								"zones": null,
-								"fallback_interface": ""
-							}
-						]
-					}
-				]`,
+				{
+					"interfaces": [
+						{
+							"id": "if0",
+							"description": "interface0",
+							"driver": "userspace",
+							"type": "upstream",
+							"mac_address": "mac0",
+							"vlan": 50,
+							"zones": null,
+							"fallback_interface": ""
+						}
+					]
+				}
+				`,
 				"error bulk updating network interfaces: rpc error: code = FailedPrecondition desc = Network Interface if1 missing from request"), //nolint:lll
 		)
 	})
@@ -804,18 +419,13 @@ var _ = Describe("/nodes", func() {
 
 		DescribeTable("422 Unprocessable Entity",
 			func(resource, expectedResp string) {
-				// we need a new nodeCfg because postNodesDNSConfigs has a duplicate check on node_id
 				clearGRPCTargetsTable()
 				nodeCfg := createAndRegisterNode()
 				switch resource {
 				case "nodes_apps":
-					postNodesApps(
+					patchNodeDNSwithApp(
 						nodeCfg.nodeID,
 						postApps("container"))
-				case "nodes_dns_configs":
-					postNodesDNSConfigs(
-						nodeCfg.nodeID,
-						postDNSConfigs())
 				}
 
 				By("Sending a DELETE /nodes/{id} request")
@@ -840,11 +450,6 @@ var _ = Describe("/nodes", func() {
 			Entry(
 				"DELETE /nodes/{id} with nodes_apps record",
 				"nodes_apps",
-				"cannot delete node_id %s: record in use in nodes_apps",
-			),
-			Entry(
-				"DELETE /nodes/{id} with nodes_dns_configs record",
-				"nodes_dns_configs",
 				"cannot delete node_id %s: record in use in nodes_dns_configs",
 			),
 		)
@@ -953,7 +558,7 @@ var _ = Describe("/nodes", func() {
 		})
 
 		DescribeTable("200 OK",
-			func(reqStr string, expectedNodeResp *cce.NodeResp) {
+			func(reqStr string, expectedNodeResp *swagger.InterfaceList) {
 				By("Sending a PATCH /nodes/{node_id}/interfaces request")
 				switch strings.Count(reqStr, "%s") {
 				case 1:
@@ -974,11 +579,10 @@ var _ = Describe("/nodes", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Getting the updated node")
-				updatedNodeResp := getNode(nodeCfg.nodeID)
+				updatedNodeResp := getNodeInterfaces(nodeCfg.nodeID)
 
 				By("Verifying the node was updated")
-				expectedNodeResp.SetID(nodeCfg.nodeID)
-				Expect(updatedNodeResp.NetworkInterfaces).To(Equal(expectedNodeResp.NetworkInterfaces))
+				Expect(updatedNodeResp).To(Equal(expectedNodeResp))
 			},
 			Entry(
 				"PATCH /nodes/{node_id}/interfaces with network interfaces",
@@ -1028,8 +632,8 @@ var _ = Describe("/nodes", func() {
 						]
 					}
 				`,
-				&cce.NodeResp{
-					NetworkInterfaces: []*cce.NetworkInterface{
+				&swagger.InterfaceList{
+					Interfaces: []swagger.InterfaceSummary{
 						{
 							ID:                "if0",
 							Description:       "CHANGED IN PATCH",

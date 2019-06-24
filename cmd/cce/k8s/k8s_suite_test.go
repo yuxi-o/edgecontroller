@@ -55,10 +55,10 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	_ "github.com/go-sql-driver/mysql" // provides the mysql driver
-	cce "github.com/smartedgemec/controller-ce"
 	cceGRPC "github.com/smartedgemec/controller-ce/grpc"
 	"github.com/smartedgemec/controller-ce/k8s"
 	authpb "github.com/smartedgemec/controller-ce/pb/auth"
+	"github.com/smartedgemec/controller-ce/swagger"
 )
 
 const (
@@ -391,48 +391,35 @@ func postNodesSerial(serial string) (id string) {
 	return rb.ID
 }
 
-func postNodesApps(nodeID, appID string) (id string) {
-	By("Sending a POST /nodes_apps request")
+func postNodeApps(nodeID, appID string) {
+	By("Sending a POST /nodes/{node_id}/apps request")
 	resp, err := apiCli.Post(
-		"http://127.0.0.1:8080/nodes_apps",
+		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps", nodeID),
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
 			{
-				"node_id": "%s",
-				"app_id": "%s"
-			}`, nodeID, appID)))
+				"id": "%s"
+			}`, appID)))
 	Expect(err).ToNot(HaveOccurred())
 	defer resp.Body.Close()
 
-	By("Verifying a 201 Created response")
-	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-	By("Reading the response body")
-	body, err := ioutil.ReadAll(resp.Body)
-	Expect(err).ToNot(HaveOccurred())
-
-	By("Unmarshaling the response")
-	var rb respBody
-	Expect(json.Unmarshal(body, &rb)).To(Succeed())
+	By("Verifying a 200 OK response")
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Verifying app deployment success")
 	count := 0
-	Eventually(func() *cce.NodeAppResp {
+	Eventually(func() *swagger.NodeAppDetail {
 		count++
 		By(fmt.Sprintf("Attempt #%d: Verifying if k8s deployment status is deployed", count))
-		return getNodeApp(rb.ID)
+		return getNodeApp(nodeID, appID)
 	}, 30*time.Second, 1*time.Second).Should(Equal(
-		&cce.NodeAppResp{
-			NodeApp: cce.NodeApp{
-				ID:     rb.ID,
-				NodeID: nodeID,
-				AppID:  appID,
+		&swagger.NodeAppDetail{
+			NodeAppSummary: swagger.NodeAppSummary{
+				ID: appID,
 			},
 			Status: "deployed",
 		},
 	))
-
-	return rb.ID
 }
 
 func deployApp(nodeID, appID string) {
@@ -496,10 +483,10 @@ func deployApp(nodeID, appID string) {
 	}, 60*time.Second, 1*time.Second).Should(Equal(k8s.Deployed))
 }
 
-func getNodeApp(id string) *cce.NodeAppResp {
-	By("Sending a GET /nodes_apps/{id} request")
+func getNodeApp(nodeID, appID string) *swagger.NodeAppDetail {
+	By("Sending a GET /nodes/{node_id}/apps/{app_id} request")
 	resp, err := apiCli.Get(
-		fmt.Sprintf("http://127.0.0.1:8080/nodes_apps/%s", id))
+		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s", nodeID, appID))
 
 	By("Verifying a 200 OK response")
 	Expect(err).ToNot(HaveOccurred())
@@ -510,7 +497,7 @@ func getNodeApp(id string) *cce.NodeAppResp {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var nodeAppResp cce.NodeAppResp
+	var nodeAppResp swagger.NodeAppDetail
 
 	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &nodeAppResp)).To(Succeed())

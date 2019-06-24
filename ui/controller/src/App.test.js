@@ -9,7 +9,7 @@ import MuiTheme from "./MuiTheme";
 import Login from "./components/Login";
 import renderer from 'react-test-renderer';
 
-describe('Smoke Tests for Main App.js', () => {
+describe('Smoke Tests for Main AppView.js', () => {
   beforeEach(() => {
     // values stored in tests will also be available in other tests unless you run
     sessionStorage.clear();

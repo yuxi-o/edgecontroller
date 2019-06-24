@@ -167,14 +167,7 @@ var _ = Describe("/policies", func() {
 					"traffic_rules": []
 				}`,
 				"Validation failed: rules cannot be empty"),
-			Entry("PATCH /policies without rules[0].description",
-				`
-				{
-					"name": "policy-1",
-					"traffic_rules": [{}]
-				}`,
-				"Validation failed: rules[0].description cannot be empty"),
-			Entry("PATCH /policies with rules[0].priority not in [1..65536]",
+			Entry("PATCH /policies with rules[0].priority not in [1..65535]",
 				`
 				{
 					"name": "policy-1",
@@ -183,8 +176,8 @@ var _ = Describe("/policies", func() {
 						"priority": 65537
 					}]
 				}`,
-				"Validation failed: rules[0].priority must be in [1..65536]"),
-			Entry("PATCH /policies without rules[0].source",
+				"Validation failed: rules[0].priority must be in [1..65535]"),
+			Entry("PATCH /policies without rules[0].source & destination",
 				`
 				{
 					"name": "policy-1",
@@ -193,23 +186,7 @@ var _ = Describe("/policies", func() {
 						"priority": 1
 					}]
 				}`,
-				"Validation failed: rules[0].source cannot be empty"),
-			Entry("PATCH /policies without rules[0].destination",
-				`
-				{
-					"name": "policy-1",
-					"traffic_rules": [{
-						"description": "rule1",
-						"priority": 1,
-						"source": {
-							"description": "source1",
-							"mac_filter": {
-								"mac_addresses": []
-							}
-						}
-					}]
-				}`,
-				"Validation failed: rules[0].destination cannot be empty"),
+				"Validation failed: rules[0].source & destination cannot both be empty"),
 			Entry("PATCH /policies without rules[0].target",
 				`
 				{
@@ -232,21 +209,6 @@ var _ = Describe("/policies", func() {
 					}]
 				}`,
 				"Validation failed: rules[0].target cannot be empty"),
-			Entry("PATCH /policies without rules[0].source.description",
-				`
-				{
-					"name": "policy-1",
-					"traffic_rules": [{
-						"description": "rule1",
-						"priority": 1,
-						"source": {
-							"mac_filter": {
-								"mac_addresses": []
-							}
-						}
-					}]
-				}`,
-				"Validation failed: rules[0].source.description cannot be empty"),
 			Entry("PATCH /policies without rules[0].source.mac_filter|ip_filter|gtp_filter",
 				`
 				{
@@ -311,7 +273,7 @@ var _ = Describe("/policies", func() {
 					}]
 				}`,
 				"Validation failed: rules[0].source.ip_filter.mask must be in [0..128]"),
-			Entry("PATCH /policies with rules[0].source.ip_filter.begin_port not in [1..65536]",
+			Entry("PATCH /policies with rules[0].source.ip_filter.begin_port not in [0..65535]",
 				`
 				{
 					"name": "policy-1",
@@ -323,13 +285,13 @@ var _ = Describe("/policies", func() {
 							"ip_filter": {
 								"address": "223.1.1.0",
 								"mask": 128,
-								"begin_port": 65537
+								"begin_port": 65536
 							}
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip_filter.begin_port must be in [1..65536]"),
-			Entry("PATCH /policies with rules[0].source.ip_filter.end_port not in [1..65536]",
+				"Validation failed: rules[0].source.ip_filter.begin_port must be in [0..65535]"),
+			Entry("PATCH /policies with rules[0].source.ip_filter.end_port not in [0..65535]",
 				`
 				{
 					"name": "policy-1",
@@ -342,12 +304,12 @@ var _ = Describe("/policies", func() {
 								"address": "223.1.1.0",
 								"mask": 128,
 								"begin_port": 65,
-								"end_port": 65537
+								"end_port": 65536
 							}
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip_filter.end_port must be in [1..65536]"),
+				"Validation failed: rules[0].source.ip_filter.end_port must be in [0..65535]"),
 			Entry("PATCH /policies with invalid rules[0].source.ip_filter.protocol",
 				`
 				{
@@ -361,38 +323,13 @@ var _ = Describe("/policies", func() {
 								"address": "223.1.1.0",
 								"mask": 128,
 								"begin_port": 65,
-								"end_port": 65536,
+								"end_port": 65535,
 								"protocol": "udtcp"
 							}
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip_filter.protocol must be one of [tcp, udp, icmp, sctp]"),
-			Entry("PATCH /policies without rules[0].target.description",
-				`
-				{
-					"name": "policy-1",
-					"traffic_rules": [{
-						"description": "rule1",
-						"priority": 1,
-						"source": {
-							"description": "source1",
-							"mac_filter": {
-								"mac_addresses": []
-							}
-						},
-						"destination": {
-							"description": "destination1",
-							"mac_filter": {
-								"mac_addresses": []
-							}
-						},
-						"target": {
-							"action": "accept"
-						}
-					}]
-				}`,
-				"Validation failed: rules[0].target.description cannot be empty"),
+				"Validation failed: rules[0].source.ip_filter.protocol must be one of [tcp, udp, icmp, sctp, all]"),
 			Entry("PATCH /policies with invalid rules[0].target.action",
 				`
 				{
@@ -419,32 +356,6 @@ var _ = Describe("/policies", func() {
 					}]
 				}`,
 				"Validation failed: rules[0].target.action must be one of [accept, reject, drop]"),
-			Entry("PATCH /policies without rules[0].target.mac_modifier|ip_modifier",
-				`
-				{
-					"name": "policy-1",
-					"traffic_rules": [{
-						"description": "rule1",
-						"priority": 1,
-						"source": {
-							"description": "source1",
-							"mac_filter": {
-								"mac_addresses": []
-							}
-						},
-						"destination": {
-							"description": "destination1",
-							"mac_filter": {
-								"mac_addresses": []
-							}
-						},
-						"target": {
-							"description": "target1",
-							"action": "accept"
-						}
-					}]
-				}`,
-				"Validation failed: rules[0].target.mac_modifier|ip_modifier cannot both be nil"),
 			Entry("PATCH /policies with invalid rules[0].target.mac_modifier.mac_address",
 				`
 				{
@@ -503,7 +414,7 @@ var _ = Describe("/policies", func() {
 					}]
 				}`,
 				"Validation failed: rules[0].target.ip_modifier.address could not be parsed"),
-			Entry("PATCH /policies with rules[0].target.ip_modifier.port not in [1..65536]",
+			Entry("PATCH /policies with rules[0].target.ip_modifier.port not in [1..65535]",
 				`
 				{
 					"name": "policy-1",
@@ -527,12 +438,12 @@ var _ = Describe("/policies", func() {
 							"action": "accept",
 							"ip_modifier": {
 								"address": "123.2.3.4",
-								"port": 65537
+								"port": 65536
 							}
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].target.ip_modifier.port must be in [1..65536]"),
+				"Validation failed: rules[0].target.ip_modifier.port must be in [1..65535]"),
 		)
 	})
 
@@ -919,26 +830,18 @@ var _ = Describe("/policies", func() {
 					"traffic_rules": []
 				}`,
 				"Validation failed: rules cannot be empty"),
-			Entry("PATCH /policies without rules[0].description",
-				`
-				{
-					"id": "%s",
-					"name": "policy-1",
-					"traffic_rules": [{}]
-				}`,
-				"Validation failed: rules[0].description cannot be empty"),
-			Entry("PATCH /policies with rules[0].priority not in [1..65536]",
+			Entry("PATCH /policies with rules[0].priority not in [1..65535]",
 				`
 				{
 					"id": "%s",
 					"name": "policy-1",
 					"traffic_rules": [{
 						"description": "rule1",
-						"priority": 65537
+						"priority": 65536
 					}]
 				}`,
-				"Validation failed: rules[0].priority must be in [1..65536]"),
-			Entry("PATCH /policies without rules[0].source",
+				"Validation failed: rules[0].priority must be in [1..65535]"),
+			Entry("PATCH /policies without rules[0].source & destination",
 				`
 				{
 					"id": "%s",
@@ -948,24 +851,7 @@ var _ = Describe("/policies", func() {
 						"priority": 1
 					}]
 				}`,
-				"Validation failed: rules[0].source cannot be empty"),
-			Entry("PATCH /policies without rules[0].destination",
-				`
-				{
-					"id": "%s",
-					"name": "policy-1",
-					"traffic_rules": [{
-						"description": "rule1",
-						"priority": 1,
-						"source": {
-							"description": "source1",
-							"mac_filter": {
-								"mac_addresses": []
-							}
-						}
-					}]
-				}`,
-				"Validation failed: rules[0].destination cannot be empty"),
+				"Validation failed: rules[0].source & destination cannot both be empty"),
 			Entry("PATCH /policies without rules[0].target",
 				`
 				{
@@ -989,22 +875,6 @@ var _ = Describe("/policies", func() {
 					}]
 				}`,
 				"Validation failed: rules[0].target cannot be empty"),
-			Entry("PATCH /policies without rules[0].source.description",
-				`
-				{
-					"id": "%s",
-					"name": "policy-1",
-					"traffic_rules": [{
-						"description": "rule1",
-						"priority": 1,
-						"source": {
-							"mac_filter": {
-								"mac_addresses": []
-							}
-						}
-					}]
-				}`,
-				"Validation failed: rules[0].source.description cannot be empty"),
 			Entry("PATCH /policies without rules[0].source.mac_filter|ip_filter|gtp_filter",
 				`
 				{
@@ -1073,7 +943,7 @@ var _ = Describe("/policies", func() {
 					}]
 				}`,
 				"Validation failed: rules[0].source.ip_filter.mask must be in [0..128]"),
-			Entry("PATCH /policies with rules[0].source.ip_filter.begin_port not in [1..65536]",
+			Entry("PATCH /policies with rules[0].source.ip_filter.begin_port not in [0..65535]",
 				`
 				{
 					"id": "%s",
@@ -1086,13 +956,13 @@ var _ = Describe("/policies", func() {
 							"ip_filter": {
 								"address": "223.1.1.0",
 								"mask": 128,
-								"begin_port": 65537
+								"begin_port": 65536
 							}
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip_filter.begin_port must be in [1..65536]"),
-			Entry("PATCH /policies with rules[0].source.ip_filter.end_port not in [1..65536]",
+				"Validation failed: rules[0].source.ip_filter.begin_port must be in [0..65535]"),
+			Entry("PATCH /policies with rules[0].source.ip_filter.end_port not in [0..65535]",
 				`
 				{
 					"id": "%s",
@@ -1111,7 +981,7 @@ var _ = Describe("/policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip_filter.end_port must be in [1..65536]"),
+				"Validation failed: rules[0].source.ip_filter.end_port must be in [0..65535]"),
 			Entry("PATCH /policies with invalid rules[0].source.ip_filter.protocol",
 				`
 				{
@@ -1126,39 +996,13 @@ var _ = Describe("/policies", func() {
 								"address": "223.1.1.0",
 								"mask": 128,
 								"begin_port": 65,
-								"end_port": 65536,
+								"end_port": 65535,
 								"protocol": "udtcp"
 							}
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].source.ip_filter.protocol must be one of [tcp, udp, icmp, sctp]"),
-			Entry("PATCH /policies without rules[0].target.description",
-				`
-				{
-					"id": "%s",
-					"name": "policy-1",
-					"traffic_rules": [{
-						"description": "rule1",
-						"priority": 1,
-						"source": {
-							"description": "source1",
-							"mac_filter": {
-								"mac_addresses": []
-							}
-						},
-						"destination": {
-							"description": "destination1",
-							"mac_filter": {
-								"mac_addresses": []
-							}
-						},
-						"target": {
-							"action": "accept"
-						}
-					}]
-				}`,
-				"Validation failed: rules[0].target.description cannot be empty"),
+				"Validation failed: rules[0].source.ip_filter.protocol must be one of [tcp, udp, icmp, sctp, all]"),
 			Entry("PATCH /policies with invalid rules[0].target.action",
 				`
 				{
@@ -1186,33 +1030,6 @@ var _ = Describe("/policies", func() {
 					}]
 				}`,
 				"Validation failed: rules[0].target.action must be one of [accept, reject, drop]"),
-			Entry("PATCH /policies without rules[0].target.mac_modifier|ip_modifier",
-				`
-				{
-					"id": "%s",
-					"name": "policy-1",
-					"traffic_rules": [{
-						"description": "rule1",
-						"priority": 1,
-						"source": {
-							"description": "source1",
-							"mac_filter": {
-								"mac_addresses": []
-							}
-						},
-						"destination": {
-							"description": "destination1",
-							"mac_filter": {
-								"mac_addresses": []
-							}
-						},
-						"target": {
-							"description": "target1",
-							"action": "accept"
-						}
-					}]
-				}`,
-				"Validation failed: rules[0].target.mac_modifier|ip_modifier cannot both be nil"),
 			Entry("PATCH /policies with invalid rules[0].target.mac_modifier.mac_address",
 				`
 				{
@@ -1273,7 +1090,7 @@ var _ = Describe("/policies", func() {
 					}]
 				}`,
 				"Validation failed: rules[0].target.ip_modifier.address could not be parsed"),
-			Entry("PATCH /policies with rules[0].target.ip_modifier.port not in [1..65536]",
+			Entry("PATCH /policies with rules[0].target.ip_modifier.port not in [1..65535]",
 				`
 				{
 					"id": "%s",
@@ -1303,7 +1120,7 @@ var _ = Describe("/policies", func() {
 						}
 					}]
 				}`,
-				"Validation failed: rules[0].target.ip_modifier.port must be in [1..65536]"),
+				"Validation failed: rules[0].target.ip_modifier.port must be in [1..65535]"),
 		)
 	})
 
@@ -1366,12 +1183,10 @@ var _ = Describe("/policies", func() {
 				case "nodes_apps_traffic_policies":
 					clearGRPCTargetsTable()
 					nodeCfg := createAndRegisterNode()
+					appID := postApps("container")
+					postNodeApps(nodeCfg.nodeID, appID)
 					policyID = postPolicies()
-					postNodesAppsTrafficPolicies(
-						postNodesApps(
-							nodeCfg.nodeID,
-							postApps("container")),
-						policyID)
+					patchNodesAppsPolicy(nodeCfg.nodeID, appID, policyID)
 				}
 
 				By("Sending a DELETE /policies/{id} request")

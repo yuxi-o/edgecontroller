@@ -1,3 +1,89 @@
+const IPFilter = {
+  ip_filter: {
+    title: "IP Filter",
+    type: "object",
+    properties: {
+      address: {
+        title: "IP Address",
+        type: "string"
+      },
+      mask: {
+        title: "Mask",
+        type: "number",
+        minimum: 0,
+        maximum: 128,
+      },
+      begin_port: {
+        title: "Begin Port",
+        type: "number",
+        minimum: 0,
+        maximum: 65535,
+      },
+      end_port: {
+        title: "End Port",
+        type: "number",
+        minimum: 0,
+        maximum: 65535,
+      },
+      protocol: {
+        title: "Protocol",
+        type: "string",
+        enum: [
+          "all",
+          "tcp",
+          "udp",
+          "icmp",
+          "sctp"
+        ]
+      },
+    },
+  },
+};
+
+const MACFilter = {
+  mac_filter: {
+    title: "MAC Filter",
+    type: "object",
+    properties: {
+      mac_addresses: {
+        title: "MAC Addresses",
+        type: "array",
+        items: {
+          title: "MAC Address",
+          type: "string"
+        }
+      }
+    }
+  },
+};
+
+const GTPFilter = {
+  gtp_filter: {
+    title: "GTP Filter",
+    type: "object",
+    properties: {
+      address: {
+        title: "Address",
+        type: "string"
+      },
+      mask: {
+        title: "Mask",
+        type: "number",
+        minimum: 0,
+        maximum: 128,
+      },
+      imsis: {
+        title: "IMSIs",
+        type: "array",
+        items: {
+          title: "IMSI",
+          type: "number"
+        }
+      }
+    }
+  }
+};
+
 export default {
   schema: {
     type: "object",
@@ -14,7 +100,8 @@ export default {
       },
       name: {
         title: "Name",
-        type: "string"
+        type: "string",
+        required: true
       },
       traffic_rules: {
         type: "array",
@@ -25,11 +112,14 @@ export default {
           properties: {
             description: {
               title: "Description",
-              type: "string"
+              type: "string",
             },
             priority: {
               title: "Priority",
-              type: "number"
+              type: "number",
+              min: 0,
+              max: 65535,
+              required: true,
             },
             source: {
               title: "Source",
@@ -39,64 +129,9 @@ export default {
                   title: "Description",
                   type: "string"
                 },
-                mac_filter: {
-                  type: "object",
-                  title: "MAC Filter",
-                  properties: {
-                    mac_addresses: {
-                      title: "MAC Addresses",
-                      type: "array",
-                      items: {
-                        title: "MAC Address",
-                        type: "string"
-                      }
-                    }
-                  }
-                },
-                ip_filter: {
-                  title: "IP Filter",
-                  type: "object",
-                  properties: {
-                    mask: {
-                      title: "Mask",
-                      type: "number"
-                    },
-                    begin_port: {
-                      title: "Begin Port",
-                      type: "number"
-                    },
-                    end_port: {
-                      title: "End Port",
-                      type: "number"
-                    },
-                    protocol: {
-                      title: "Protocol",
-                      type: "string"
-                    },
-                  },
-                },
-                gtp_filter: {
-                  title: "GTP Filter",
-                  type: "object",
-                  properties: {
-                    address: {
-                      title: "Address",
-                      type: "string"
-                    },
-                    mask: {
-                      title: "Mask",
-                      type: "number"
-                    },
-                    imsis: {
-                      title: "IMSIs",
-                      type: "array",
-                      items: {
-                        title: "IMSI",
-                        type: "number"
-                      }
-                    }
-                  }
-                }
+                ...MACFilter,
+                ...IPFilter,
+                ...GTPFilter,
               }
             },
             destination: {
@@ -107,60 +142,9 @@ export default {
                   title: "Description",
                   type: "string"
                 },
-                mac_filter: {
-                  title: "MAC Filter",
-                  type: "object",
-                  properties: {
-                    mac_addresses: {
-                      title: "MAC Addresses",
-                      type: "array",
-                      items: {
-                        title: "MAC Address",
-                        type: "string"
-                      }
-                    }
-                  }
-                },
-                ip_filter: {
-                  title: "IP Filter",
-                  type: "object",
-                  properties: {
-                    mask: {
-                      title: "Mask",
-                      type: "number"
-                    },
-                    begin_port: {
-                      title: "Begin Port",
-                      type: "number"
-                    },
-                    end_port: {
-                      title: "End Port",
-                      type: "number"
-                    },
-                    protocol: {
-                      title: "Protocol",
-                      type: "string"
-                    },
-                  },
-                },
-                gtp_filter: {
-                  title: "GTP Filter",
-                  type: "object",
-                  properties: {
-                    mask: {
-                      title: "Mask",
-                      type: "number"
-                    },
-                    imsis: {
-                      title: "IMSIs",
-                      type: "array",
-                      items: {
-                        title: "IMSI",
-                        type: "number"
-                      }
-                    }
-                  }
-                }
+                ...MACFilter,
+                ...IPFilter,
+                ...GTPFilter,
               }
             },
             target: {
@@ -169,11 +153,12 @@ export default {
               properties: {
                 description: {
                   title: "Description",
-                  type: "string"
+                  type: "string",
                 },
                 action: {
                   title: "Action",
                   type: "string",
+                  default: "accept",
                   enum: [
                     "accept",
                     "reject",
@@ -183,7 +168,21 @@ export default {
                 mac_modifier: {
                   title: "MAC Modifier",
                   type: "string"
-                }
+                },
+                ip_modifier: {
+                  title: "IP Modifier",
+                  type: "object",
+                  properties: {
+                    address: {
+                      title: "IP Address",
+                      type: "string"
+                    },
+                    port: {
+                      title: "Port",
+                      type: "number"
+                    },
+                  },
+                },
               }
             }
           }

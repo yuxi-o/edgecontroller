@@ -2,12 +2,8 @@ import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { mount } from 'enzyme';
 import Routes from "./routes";
-import Login from './components/Login'
-import Home from './components/Main';
 import NodesView from './views/NodesListing';
 import AppsView from './views/AppsListing';
-import PoliciesView from './views/policies/Main';
-import DnsConfigs from './views/dns/Main';
 import { SnackbarProvider } from "notistack";
 
 describe('Route tests', () => {

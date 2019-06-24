@@ -9,7 +9,7 @@ import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import DashboardView from './node/Dashboard';
-import AppsView from './node/Apps';
+import AppsView from './node/NodeApps';
 import InterfacesView from './node/Interfaces';
 import DNSView from './node/DNS';
 

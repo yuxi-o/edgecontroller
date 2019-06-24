@@ -67,7 +67,7 @@ const styles = theme => ({
   formControl: {
     width: '100%'
   },
-  passwordBox: {
+  loginBox: {
     minHeight: "5rem",
   },
 });
@@ -132,7 +132,7 @@ class LoginForm extends Component {
                             <InputLabel htmlFor="username">Username</InputLabel>
                             <Input error={this.state.loginError} id="username" name="username" autoComplete="off" onChange={this.handleInputChange} autoFocus />
                           </FormControl>
-                          <FormControl className={classes.passwordBox} margin="normal" required fullWidth>
+                          <FormControl className={classes.loginBox} margin="normal" required fullWidth>
                             <InputLabel htmlFor="password">Password</InputLabel>
                             <Input error={this.state.loginError} aria-describedby="component-error-text" name="password" type="password" id="password" onChange={this.handleInputChange} autoComplete="off" />
 

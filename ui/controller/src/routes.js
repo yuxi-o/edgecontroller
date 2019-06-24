@@ -3,7 +3,7 @@ import { Switch, Route, Redirect } from 'react-router-dom'
 import NodesView from './views/NodesListing'
 import NodeView from './views/Node'
 import AppsView from './views/AppsListing'
-import AppView from './views/App'
+import AppView from './views/AppView'
 import LoginForm from './components/Login'
 
 // import Dns from './views/dns/Main'

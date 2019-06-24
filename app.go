@@ -90,9 +90,10 @@ func (app *App) Validate() error { // nolint: gocyclo
 		if pp.Port < 1 || pp.Port > MaxPort {
 			return fmt.Errorf("port must be in [1..%d]", MaxPort)
 		}
-		protos := map[string]struct{}{"tcp": {}, "udp": {}, "icmp": {}, "sctp": {}}
-		if _, ok := protos[pp.Protocol]; !ok {
-			return fmt.Errorf("protocol must be tcp, udp, sctp or icmp")
+		switch pp.Protocol {
+		case "tcp", "udp", "icmp", "sctp", "all":
+		default:
+			return fmt.Errorf("protocol must be tcp, udp, sctp, icmp or all")
 		}
 	}
 	if app.Source == "" {

@@ -17,10 +17,11 @@ package main_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/smartedgemec/controller-ce/swagger"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/smartedgemec/controller-ce/swagger"
 
 	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/uuid"
@@ -80,7 +81,7 @@ var _ = Describe("/apps", func() {
 					"name": "container app",
 					"version": "latest",
 					"type": "container",
-					"vendor": "smart edge",		
+					"vendor": "smart edge",
 					"cores": 4,
 					"memory": 1024,
 					"ports": [{"port": 80, "protocol": "tcp"}],
@@ -213,7 +214,7 @@ var _ = Describe("/apps", func() {
 					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`,
 				"Validation failed: port must be in [1..65535]"),
-			Entry("POST /apps with protocol not tcp, udp, sctp or icmp",
+			Entry("POST /apps with protocol not tcp, udp, sctp, icmp or all",
 				`
 				{
 					"type": "container",
@@ -226,7 +227,7 @@ var _ = Describe("/apps", func() {
 					"ports": [{"port": 80, "protocol": "thisisnotaprotocol"}],
 					"source": "http://www.test.com/my_container_app.tar.gz"
 				}`,
-				"Validation failed: protocol must be tcp, udp, sctp or icmp"),
+				"Validation failed: protocol must be tcp, udp, sctp, icmp or all"),
 			Entry(
 				"POST /apps without source",
 				`
@@ -663,14 +664,21 @@ var _ = Describe("/apps", func() {
 			func(resource, expectedResp string) {
 				switch resource {
 				case "dns_configs_app_aliases":
-					postDNSConfigsAppAliases(
-						postDNSConfigs(),
+					clearGRPCTargetsTable()
+					nodeCfg := createAndRegisterNode()
+					containerAppID = postApps("container")
+					postNodeApps(
+						nodeCfg.nodeID,
 						containerAppID)
+					patchNodeDNSwithApp(
+						nodeCfg.nodeID,
+						containerAppID,
+					)
 				case "nodes_apps":
 					clearGRPCTargetsTable()
 					nodeCfg := createAndRegisterNode()
 					containerAppID = postApps("container")
-					postNodesApps(
+					postNodeApps(
 						nodeCfg.nodeID,
 						containerAppID)
 				}

@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"strings"
 
-	cce "github.com/smartedgemec/controller-ce"
+	"github.com/smartedgemec/controller-ce/swagger"
 	"github.com/smartedgemec/controller-ce/uuid"
 
 	. "github.com/onsi/ginkgo"
@@ -29,53 +29,28 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("/nodes_dns_configs", func() {
-	Describe("POST /nodes_dns_configs", func() {
-		DescribeTable("201 Created",
+var _ = Describe("/nodes/{node_id}/dns", func() {
+	Describe("PATCH /nodes/{node_id}/dns", func() {
+		DescribeTable("200 OK",
 			func() {
 				clearGRPCTargetsTable()
 				nodeCfg := createAndRegisterNode()
-				dnsConfigID := postDNSConfigs()
-
-				By("Sending a POST /nodes_dns_configs request")
-				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/nodes_dns_configs",
-					"application/json",
-					strings.NewReader(fmt.Sprintf(
-						`
-						{
-							"node_id": "%s",
-							"dns_config_id": "%s"
-						}`, nodeCfg.nodeID, dnsConfigID)))
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-
-				By("Verifying a 201 response")
-				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-
-				var respBody struct {
-					ID string
-				}
-
-				By("Unmarshaling the response")
-				Expect(json.Unmarshal(body, &respBody)).To(Succeed())
-
-				By("Verifying a UUID was returned")
-				Expect(uuid.IsValid(respBody.ID)).To(BeTrue())
+				patchNodeDNS(nodeCfg.nodeID)
+				appID := postApps("container")
+				postNodeApps(nodeCfg.nodeID, appID)
+				patchNodeDNSwithApp(nodeCfg.nodeID, appID)
 			},
 			Entry(
-				"POST /nodes_dns_configs"),
+				"PATCH /nodes/{node_id}/dns"),
 		)
 
 		DescribeTable("400 Bad Request",
 			func(req, expectedResp string) {
-				By("Sending a POST /nodes_dns_configs request")
-				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/nodes_dns_configs",
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				By("Sending a PATCH /nodes/{node_id}/dns request")
+				resp, err := apiCli.Patch(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/dns", nodeCfg.nodeID),
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
@@ -92,77 +67,36 @@ var _ = Describe("/nodes_dns_configs", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
-				"POST /nodes_dns_configs with id",
-				`
-				{
-					"id": "123"
-				}`,
-				"Validation failed: id cannot be specified in POST request"),
-			Entry(
-				"POST /nodes_dns_configs without node_id",
-				`
-				{
-				}`,
-				"Validation failed: node_id not a valid uuid"),
-			Entry(
-				"POST /nodes_dns_configs without dns_config_id",
+				"PATCH /nodes/{node_id}/dns without description of a record",
 				fmt.Sprintf(`
 				{
-					"node_id": "%s"
+					"records": {
+						"a": [{"name": "foobar.com", "values": ["%s"]}]
+					}
 				}`, uuid.New()),
-				"Validation failed: dns_config_id not a valid uuid"),
-		)
-
-		DescribeTable("422 Unprocessable Entity",
-			func() {
-				clearGRPCTargetsTable()
-				nodeCfg := createAndRegisterNode()
-				dnsConfigID := postDNSConfigs()
-
-				By("Sending a POST /nodes_dns_configs request")
-				postNodesDNSConfigs(nodeCfg.nodeID, dnsConfigID)
-
-				By("Repeating the first POST /nodes_dns_configs request")
-				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/nodes_dns_configs",
-					"application/json",
-					strings.NewReader(fmt.Sprintf(
-						`
-						{
-							"node_id": "%s",
-							"dns_config_id": "%s"
-						}`, nodeCfg.nodeID, dnsConfigID)))
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-
-				By("Verifying a 422 response")
-				Expect(resp.StatusCode).To(Equal(
-					http.StatusUnprocessableEntity))
-
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Verifying the response body")
-				Expect(string(body)).To(Equal(fmt.Sprintf(
-					"duplicate record in nodes_dns_configs detected for node_id %s",
-					nodeCfg.nodeID)))
-			},
-			Entry("POST /nodes_dns_configs with duplicate node_id and dns_config_id"),
+				"DNS call failed mid operation: description cannot be empty"),
+			Entry(
+				"PATCH /nodes/{node_id}/dns with invalid value for a non-alias record",
+				fmt.Sprintf(`
+					{
+						"records": {
+							"a": [{"name": "foobar.com", "description": "foobar", "values": ["%s"]}]
+						}
+					}`, uuid.New()),
+				"DNS call failed mid operation: ips[0] could not be parsed"),
 		)
 	})
 
-	Describe("GET /nodes_dns_configs", func() {
+	Describe("GET /nodes/{node_id}/dns", func() {
 		DescribeTable("200 OK",
 			func() {
 				clearGRPCTargetsTable()
 				nodeCfg := createAndRegisterNode()
-				dnsConfigID := postDNSConfigs()
-				nodeDNSConfigID := postNodesDNSConfigs(nodeCfg.nodeID, dnsConfigID)
+				patchNodeDNS(nodeCfg.nodeID)
 
-				By("Sending a GET /nodes_dns_configs request")
+				By("Sending a GET /nodes/{node_id}/dns request")
 				resp, err := apiCli.Get(
-					"http://127.0.0.1:8080/nodes_dns_configs")
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/dns", nodeCfg.nodeID))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -173,128 +107,95 @@ var _ = Describe("/nodes_dns_configs", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
-				var nodeDNSConfigs []*cce.NodeDNSConfig
+				var nodeDNSConfigs swagger.DNSDetail
 
 				By("Unmarshaling the response")
 				Expect(json.Unmarshal(body, &nodeDNSConfigs)).
 					To(Succeed())
 
-				By("Verifying the 2 created node <-> DNS configs were returned")
-				Expect(nodeDNSConfigs).To(ContainElement(
-					&cce.NodeDNSConfig{
-						ID:          nodeDNSConfigID,
-						NodeID:      nodeCfg.nodeID,
-						DNSConfigID: dnsConfigID,
+				By("Verifying the created node <-> DNS configs were returned")
+				Expect(nodeDNSConfigs.Records.A).To(ContainElement(
+					swagger.DNSARecord{
+						Name:        "sample-app1.demosite.com",
+						Description: "The domain for my sample app 1",
+						Alias:       false,
+						Values:      []string{"192.168.1.5"},
 					}))
 			},
-			Entry("GET /nodes_dns_configs"),
+			Entry("GET /nodes/{node_id}/dns"),
 		)
-
-		DescribeTable("400 Bad Request",
-			func(field, value string) {
-				By("Sending a GET /nodes_dns_configs request with a disallowed filter")
-				resp, err := apiCli.Get(fmt.Sprintf(
-					"http://127.0.0.1:8080/nodes_dns_configs?%s=%s",
-					field, value,
-				))
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-
-				By("Verifying a 400 Bad Request response")
-				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(body)).To(Equal(
-					fmt.Sprintf("disallowed filter field %q\n", field),
-				))
-			},
-			Entry("GET /nodes_dns_configs", "id", "12345"),
-		)
-	})
-
-	Describe("GET /nodes_dns_configs/{id}", func() {
 		DescribeTable("200 OK",
 			func() {
 				clearGRPCTargetsTable()
 				nodeCfg := createAndRegisterNode()
-				dnsConfigID := postDNSConfigs()
 
-				nodeDNSConfigID := postNodesDNSConfigs(nodeCfg.nodeID, dnsConfigID)
-				nodeDNSConfig := getNodeDNSConfig(nodeDNSConfigID)
-
-				By("Verifying the created node <-> DNS config was returned")
-				Expect(nodeDNSConfig).To(Equal(
-					&cce.NodeDNSConfig{
-						ID:          nodeDNSConfigID,
-						NodeID:      nodeCfg.nodeID,
-						DNSConfigID: dnsConfigID,
-					},
-				))
-			},
-			Entry("GET /nodes_dns_configs/{id}"),
-		)
-
-		DescribeTable("404 Not Found",
-			func() {
-				By("Sending a GET /nodes_dns_configs/{id} request")
+				By("Sending a GET /nodes/{node_id}/dns request")
 				resp, err := apiCli.Get(
-					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_dns_configs/%s",
-						uuid.New()))
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-
-				By("Verifying a 404 Not Found response")
-				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
-			},
-			Entry("GET /nodes_dns_configs/{id} with nonexistent ID"),
-		)
-	})
-
-	Describe("DELETE /nodes_dns_configs/{id}", func() {
-		DescribeTable("200 OK",
-			func() {
-				clearGRPCTargetsTable()
-				nodeCfg := createAndRegisterNode()
-				dnsConfigID := postDNSConfigs()
-
-				nodeDNSConfigID := postNodesDNSConfigs(nodeCfg.nodeID, dnsConfigID)
-
-				By("Sending a DELETE /nodes_dns_configs/{id} request")
-				resp, err := apiCli.Delete(
-					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_dns_configs/%s",
-						nodeDNSConfigID))
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/dns", nodeCfg.nodeID))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
 				By("Verifying a 200 OK response")
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-				By("Verifying the node <-> DNS config was deleted")
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
 
-				By("Sending a GET /nodes_dns_configs/{id} request")
-				resp, err = apiCli.Get(
+				var nodeDNSConfigs swagger.DNSDetail
+
+				By("Unmarshaling the response")
+				Expect(json.Unmarshal(body, &nodeDNSConfigs)).
+					To(Succeed())
+
+				By("Verifying the created node <-> DNS configs were returned")
+				Expect(nodeDNSConfigs).To(Equal(swagger.DNSDetail{
+					Records:        swagger.DNSRecords{A: []swagger.DNSARecord{}},
+					Configurations: swagger.DNSConfigurations{Forwarders: []swagger.DNSForwarder{}},
+				}))
+			},
+			Entry("GET /nodes/{node_id}/dns"),
+		)
+	})
+
+	Describe("DELETE /nodes/dns_configs/{id}", func() {
+		DescribeTable("204 No Content",
+			func() {
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				patchNodeDNS(nodeCfg.nodeID)
+
+				By("Sending a DELETE /nodes/{node_id}/dns request")
+				resp, err := apiCli.Delete(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_dns_configs/%s",
-						nodeDNSConfigID))
+						"http://127.0.0.1:8080/nodes/%s/dns",
+						nodeCfg.nodeID))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
-				By("Verifying a 404 Not Found response")
-				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
+				By("Verifying a 204 No Content response")
+				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
+
+				By("Verifying the node <-> DNS config was deleted")
+
+				By("Sending a GET /nodes/{node_id}/dns request")
+				nodeDNS := getNodeDNS(nodeCfg.nodeID)
+
+				By("Verifying that the response is empty")
+				Expect(nodeDNS).To(Equal(&swagger.DNSDetail{
+					Records:        swagger.DNSRecords{A: []swagger.DNSARecord{}},
+					Configurations: swagger.DNSConfigurations{Forwarders: []swagger.DNSForwarder{}},
+				}))
 			},
-			Entry("DELETE /nodes_dns_configs/{id}"),
+			Entry("DELETE /nodes/{node_id}/dns"),
 		)
 
 		DescribeTable("404 Not Found",
 			func() {
-				By("Sending a DELETE /nodes_dns_configs/{id} request")
+				By("Sending a DELETE /nodes/{node_id}/dns request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_dns_configs/%s",
+						"http://127.0.0.1:8080/nodes/%s/dns",
 						uuid.New()))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
@@ -303,7 +204,7 @@ var _ = Describe("/nodes_dns_configs", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(
-				"DELETE /nodes_dns_configs/{id} with nonexistent ID"),
+				"DELETE /nodes/{node_id}/dns with nonexistent ID"),
 		)
 	})
 })

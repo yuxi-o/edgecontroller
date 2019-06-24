@@ -69,7 +69,7 @@ class PolicyView extends Component {
 
         this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
-  }
+  };
 
   // PATCH /policies/:policy_id
   updatePolicy = () => {
@@ -91,12 +91,17 @@ class PolicyView extends Component {
           loaded: true,
         });
 
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        if (err.response.status === 400) {
+          this.props.enqueueSnackbar(`${err.response.data}`, { variant: 'error' });
+        } else {
+          this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        }
       });
-  }
+  };
 
   // POST /policies
   createPolicy = () => {
+    const { history } = this.props;
     const { policy } = this.state;
 
     ApiClient.post(`/policies`, policy)
@@ -106,19 +111,28 @@ class PolicyView extends Component {
         });
 
         this.props.enqueueSnackbar(`Successfully created policy.`, { variant: 'success' });
+
+        // Delay the redirect so the user has a moment to breath
+        setTimeout(() => {
+          history.push('/policies');
+        }, 250)
       })
       .catch((err) => {
         this.setState({
           loaded: true,
         });
 
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        if (err.response.status === 400 && err.response.data !== '') {
+          this.props.enqueueSnackbar(`${err.response.data}`, { variant: 'error' });
+        } else {
+          this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        }
       });
-  }
+  };
 
   // DELETE /policies/:policy_id
   deletePolicy = () => {
-    const { match } = this.props;
+    const { history, match } = this.props;
     const policyID = match.params.id;
 
     ApiClient.delete(`/policies/${policyID}`)
@@ -128,6 +142,8 @@ class PolicyView extends Component {
         });
 
         this.props.enqueueSnackbar(`Deleted policy ${policyID}.`, { variant: 'success' });
+
+        history.push('/policies')
       })
       .catch((err) => {
         this.setState({
@@ -136,7 +152,7 @@ class PolicyView extends Component {
 
         this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
       });
-  }
+  };
 
   onModelChange = (key, val) => {
     const { policy } = this.state;

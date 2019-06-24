@@ -29,14 +29,14 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("/nodes_apps_traffic_policies", func() {
+var _ = Describe("/nodes/{node_id}/apps/{app_id}/policy", func() {
 	Describe("PATCH /nodes/{node_id}/apps/{app_id}/policy", func() {
 		DescribeTable("200 OK",
 			func() {
 				clearGRPCTargetsTable()
 				nodeCfg := createAndRegisterNode()
 				appID := postApps("container")
-				_ = postNodesApps(nodeCfg.nodeID, appID)
+				postNodeApps(nodeCfg.nodeID, appID)
 				policyID := postPolicies()
 
 				By("Sending a PATCH /nodes/{node_id}/apps/{app_id}/policy request")
@@ -149,7 +149,7 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 				clearGRPCTargetsTable()
 				nodeCfg := createAndRegisterNode()
 				appID := postApps("container")
-				_ = postNodesApps(nodeCfg.nodeID, appID)
+				postNodeApps(nodeCfg.nodeID, appID)
 				policyID := postPolicies()
 				patchNodesAppsPolicy(nodeCfg.nodeID, appID, policyID)
 
@@ -182,7 +182,7 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 				"GET /nodes/{node_id}/apps/{app_id}/policy"),
 		)
 
-		DescribeTable("200 OK",
+		DescribeTable("404 Not Found",
 			func(reqType string) {
 				var nodeID, appID string
 				switch reqType {
@@ -220,7 +220,7 @@ var _ = Describe("/nodes_apps_traffic_policies", func() {
 				clearGRPCTargetsTable()
 				nodeCfg := createAndRegisterNode()
 				appID := postApps("container")
-				_ = postNodesApps(nodeCfg.nodeID, appID)
+				postNodeApps(nodeCfg.nodeID, appID)
 				policyID := postPolicies()
 				patchNodesAppsPolicy(nodeCfg.nodeID, appID, policyID)
 

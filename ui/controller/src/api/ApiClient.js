@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Auth from '../components/Auth';
 
 class ApiClient {
   _CONTROLLER_API_ = process.env.REACT_APP_CONTROLLER_API;
@@ -15,8 +16,38 @@ class ApiClient {
     }
   };
 
+  interceptorEnabled = false;
   axiosInstance = axios.create(this.axiosConfig);
 
+  setupInterceptor() {
+    // Response Interceptor
+    if(this.interceptorEnabled === true) {
+      return true;
+    }
+    this.axiosInstance.interceptors.response.use(function (response) {
+      // Do something with response data
+      return response;
+    }, function (err) {
+
+      if(!err || !err.hasOwnProperty('response')) {
+        return Promise.reject(err);
+      }
+
+      if(err.response.status === 401) {
+        Auth.logout(() => {
+          window.location.href = "/login";
+        });
+      }
+
+      if(err.response.data && err.response.data !== '') {
+        return Promise.reject(err.response.data)
+      }
+      // Do something with response error
+      return Promise.reject(err);
+    });
+
+    this.interceptorEnabled = true;
+  }
   /**
    *
    * @returns string - The AuthToken if present
@@ -46,6 +77,7 @@ class ApiClient {
     };
 
     this.axiosInstance = axios.create(this.axiosConfig);
+    this.setupInterceptor();
   }
 
   /**
@@ -65,6 +97,7 @@ class ApiClient {
    * @returns {Promise<AxiosResponse>}
    */
   async get(path, options = {}) {
+    if(this.interceptorEnabled === false) {this.setupInterceptor()};
     return await this.axiosInstance.get(path, options);
   }
 

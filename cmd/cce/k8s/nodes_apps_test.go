@@ -15,8 +15,8 @@
 package k8s_test
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/smartedgemec/controller-ce/swagger"
 	"io/ioutil"
 	"net/http"
 	"os/exec"
@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	cce "github.com/smartedgemec/controller-ce"
 	"github.com/smartedgemec/controller-ce/uuid"
 
 	. "github.com/onsi/ginkgo"
@@ -32,7 +31,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("/nodes_apps for k8s", func() {
+var _ = Describe("/nodes/{node_id}/apps for k8s", func() {
 	var (
 		nodeCfg *nodeConfig
 		nodeID  string
@@ -68,58 +67,46 @@ var _ = Describe("/nodes_apps for k8s", func() {
 		Expect(cmd.Run()).To(Succeed())
 	})
 
-	Describe("POST /nodes_apps", func() {
-		DescribeTable("201 Created",
+	Describe("POST /nodes/{node_id}/apps", func() {
+		DescribeTable("200 OK",
 			func() {
-				By("Sending a POST /nodes_apps request")
+				By("Sending a POST /nodes/{node_id}/apps request")
 				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/nodes_apps",
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps", nodeID),
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
 						`
 						{
-							"node_id": "%s",
-							"app_id": "%s"
-						}`, nodeID, appID)))
+							"id": "%s"
+						}`, appID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
-				By("Verifying a 201 response")
-				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+				By("Verifying a 200 response")
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
+				_, err = ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
-
-				By("Unmarshaling the response")
-				var respBody struct {
-					ID string
-				}
-				Expect(json.Unmarshal(body, &respBody)).To(Succeed())
-
-				By("Verifying a UUID was returned")
-				Expect(uuid.IsValid(respBody.ID)).To(BeTrue())
 			},
-			Entry("POST /nodes_apps"),
+			Entry("POST /nodes/{node_id}/apps"),
 		)
 	})
 
-	Describe("GET /nodes_apps", func() {
+	Describe("GET /nodes/{node_id}/apps", func() {
 		var (
-			nodeAppID  string
-			app2ID     string
-			nodeApp2ID string
+			app2ID string
 		)
 
 		BeforeEach(func() {
-			nodeAppID = postNodesApps(nodeID, appID)
+			postNodeApps(nodeID, appID)
 
 			app2ID = postApps("container")
 
 			cmd := exec.Command("docker", "tag", "nginx:1.12", fmt.Sprintf("%s:%s", app2ID, "latest"))
 			Expect(cmd.Run()).To(Succeed())
 
-			nodeApp2ID = postNodesApps(nodeID, app2ID)
+			postNodeApps(nodeID, app2ID)
 		})
 
 		AfterEach(func() {
@@ -131,66 +118,56 @@ var _ = Describe("/nodes_apps for k8s", func() {
 			func() {
 				By("Verifying the 2 created node apps were deployed")
 				count := 0
-				Eventually(func() *cce.NodeAppResp {
+				Eventually(func() *swagger.NodeAppDetail {
 					count++
 					By(fmt.Sprintf("Attempt #%d: Verifying if k8s deployment status is deployed", count))
-					return getNodeApp(nodeAppID)
+					return getNodeApp(nodeID, appID)
 				}, 15*time.Second, 1*time.Second).Should(Equal(
-					&cce.NodeAppResp{
-						NodeApp: cce.NodeApp{
-							ID:     nodeAppID,
-							NodeID: nodeID,
-							AppID:  appID,
+					&swagger.NodeAppDetail{
+						NodeAppSummary: swagger.NodeAppSummary{
+							ID: appID,
 						},
 						Status: "deployed",
 					},
 				))
 
 				count = 0
-				Eventually(func() *cce.NodeAppResp {
+				Eventually(func() *swagger.NodeAppDetail {
 					count++
 					By(fmt.Sprintf("Attempt #%d: Verifying if k8s deployment status is deployed", count))
-					return getNodeApp(nodeApp2ID)
+					return getNodeApp(nodeID, app2ID)
 				}, 15*time.Second, 1*time.Second).Should(Equal(
-					&cce.NodeAppResp{
-						NodeApp: cce.NodeApp{
-							ID:     nodeApp2ID,
-							NodeID: nodeID,
-							AppID:  app2ID,
+					&swagger.NodeAppDetail{
+						NodeAppSummary: swagger.NodeAppSummary{
+							ID: app2ID,
 						},
 						Status: "deployed",
 					},
 				))
 			},
-			Entry("GET /nodes_apps"),
+			Entry("GET /nodes/{node_id}/apps/{app_id}"),
 		)
 	})
 
-	Describe("GET /nodes_apps/{id}", func() {
-		var (
-			nodeAppID string
-		)
-
+	Describe("GET /nodes/{node_id}/apps/{app_id}", func() {
 		BeforeEach(func() {
-			nodeAppID = postNodesApps(nodeID, appID)
+			postNodeApps(nodeID, appID)
 		})
 
 		DescribeTable("200 OK",
 			func() {
-				nodeAppResp := getNodeApp(nodeAppID)
+				nodeAppResp := getNodeApp(nodeID, appID)
 				By("Verifying the created node app was deployed")
 				Expect(nodeAppResp).To(Equal(
-					&cce.NodeAppResp{
-						NodeApp: cce.NodeApp{
-							ID:     nodeAppID,
-							NodeID: nodeID,
-							AppID:  appID,
+					&swagger.NodeAppDetail{
+						NodeAppSummary: swagger.NodeAppSummary{
+							ID: appID,
 						},
 						Status: "deployed",
 					},
 				))
 			},
-			Entry("GET /nodes_apps/{id}"),
+			Entry("GET /nodes/{node_id}/apps/{app_id}"),
 		)
 
 		DescribeTable("404 Not Found",
@@ -198,7 +175,8 @@ var _ = Describe("/nodes_apps for k8s", func() {
 				By("Sending a GET /nodes_apps/{id} request")
 				resp, err := apiCli.Get(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps/%s",
+						"http://127.0.0.1:8080/nodes/%s/apps/%s",
+						nodeID,
 						uuid.New()))
 
 				By("Verifying a 404 Not Found response")
@@ -206,91 +184,77 @@ var _ = Describe("/nodes_apps for k8s", func() {
 				defer resp.Body.Close()
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("GET /nodes_apps/{id} with nonexistent ID"),
+			Entry("GET /nodes/{node_id}/apps/{app_id} with nonexistent ID"),
 		)
 	})
 
-	Describe("PATCH /nodes_apps", func() {
-		var (
-			nodeAppID string
-		)
-
+	Describe("PATCH /nodes/{node_id}/apps/{app_id}", func() {
 		BeforeEach(func() {
-			nodeAppID = postNodesApps(nodeID, appID)
+			postNodeApps(nodeID, appID)
 		})
 
-		DescribeTable("204 No Content",
-			func(reqStr string, expectedNodeAppFull *cce.NodeAppResp) {
-				By("Sending a PATCH /nodes_apps request")
+		DescribeTable("200 OK",
+			func(reqStr string, expectedNodeAppFull *swagger.NodeAppDetail) {
+				By("Sending a PATCH /nodes/{node_id}/apps/{app_id} request")
 				resp, err := apiCli.Patch(
-					"http://127.0.0.1:8080/nodes_apps",
+					fmt.Sprintf(
+						"http://127.0.0.1:8080/nodes/%s/apps/%s",
+						nodeID,
+						appID,
+					),
 					"application/json",
-					strings.NewReader(
-						fmt.Sprintf(reqStr, nodeAppID, nodeID, appID)))
+					strings.NewReader(reqStr),
+				)
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
-				By("Verifying a 204 No Content response")
+				By("Verifying a 200 OK response")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Verifying the node was updated")
-				expectedNodeAppFull.NodeApp = cce.NodeApp{
-					ID:     nodeAppID,
-					NodeID: nodeID,
-					AppID:  appID,
+				expectedNodeAppFull.NodeAppSummary = swagger.NodeAppSummary{
+					ID: appID,
 				}
 				count := 0
-				Eventually(func() *cce.NodeAppResp {
+				Eventually(func() *swagger.NodeAppDetail {
 					count++
 					By(fmt.Sprintf("Attempt #%d: Verifying if k8s deployment status is %s",
 						count, expectedNodeAppFull.Status))
-					return getNodeApp(nodeAppID)
+					return getNodeApp(nodeID, appID)
 				}, 30*time.Second, 1*time.Second).Should(Equal(expectedNodeAppFull))
 			},
 			Entry(
-				"PATCH /nodes_apps (cmd='start')",
+				"PATCH /nodes/{node_id}/apps/{app_id} (command='start')",
 				`
-				[
-					{
-						"id": "%s",
-						"node_id": "%s",
-						"app_id": "%s",
-						"cmd": "start"
-					}
-				]`,
-				&cce.NodeAppResp{
+				{
+					"command": "start"
+				}
+				`,
+				&swagger.NodeAppDetail{
 					// due to limitations of minikube support other than linux
 					Status: status(),
 				},
 			),
 			Entry(
-				"PATCH /nodes_apps (cmd='stop')",
+				"PATCH /nodes/{node_id}/apps/{app_id} (command='stop')",
 				`
-					[
-						{
-							"id": "%s",
-							"node_id": "%s",
-							"app_id": "%s",
-							"cmd": "stop"
-						}
-					]`,
-				&cce.NodeAppResp{
+				{
+					"command": "stop"
+				}
+				`,
+				&swagger.NodeAppDetail{
 					Status: "deployed",
 				},
 			),
 			Entry(
-				"PATCH /nodes_apps (cmd='restart')",
+				"PATCH /nodes/{node_id}/apps/{app_id} (command='restart')",
 				`
-					[
-						{
-							"id": "%s",
-							"node_id": "%s",
-							"app_id": "%s",
-							"cmd": "restart"
-						}
-					]`,
-				&cce.NodeAppResp{
+				{
+					"command": "restart"
+				}
+				`,
+				&swagger.NodeAppDetail{
 					// due to limitations of minikube support other than linux
 					Status: status(),
 				},
@@ -298,50 +262,49 @@ var _ = Describe("/nodes_apps for k8s", func() {
 		)
 	})
 
-	Describe("DELETE /nodes_apps/{id}", func() {
-		var (
-			nodeAppID string
-		)
-
+	Describe("DELETE /nodes/{node_id}/apps/{app_id}", func() {
 		BeforeEach(func() {
-			nodeAppID = postNodesApps(nodeID, appID)
+			postNodeApps(nodeID, appID)
 		})
 
-		DescribeTable("200 OK",
+		DescribeTable("204 No Content",
 			func() {
-				By("Sending a DELETE /nodes_apps/{id} request")
+				By("Sending a DELETE /nodes/{node_id}/apps/{app_id} request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps/%s",
-						nodeAppID))
+						"http://127.0.0.1:8080/nodes/%s/apps/%s",
+						nodeID,
+						appID))
 
 				By("Verifying a 200 OK response")
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
 				By("Verifying the node app was deleted")
 
-				By("Sending a GET /nodes_apps/{id} request")
+				By("Sending a GET /nodes/{node_id}/apps/{app_id} request")
 				resp2, err := apiCli.Get(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps/%s",
-						nodeAppID))
+						"http://127.0.0.1:8080/nodes/%s/apps/%s",
+						nodeID,
+						appID))
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())
 				defer resp2.Body.Close()
 				Expect(resp2.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("DELETE /nodes_apps/{id}"),
+			Entry("DELETE /nodes/{node_id}/apps/{app_id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func(id string) {
-				By("Sending a DELETE /nodes_apps/{id} request")
+				By("Sending a DELETE /nodes/{node_id}/apps/{app_id} request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps/%s",
+						"http://127.0.0.1:8080/nodes/%s/apps/%s",
+						nodeID,
 						id))
 
 				By("Verifying a 404 Not Found response")
@@ -350,7 +313,7 @@ var _ = Describe("/nodes_apps for k8s", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(
-				"DELETE /nodes_apps/{id} with nonexistent ID",
+				"DELETE /nodes/{node_id}/apps/{app_id} with nonexistent ID",
 				uuid.New()),
 		)
 	})

@@ -126,7 +126,7 @@ var _ = Describe("Entities: App", func() {
 		It("Should return an error if Ports (protocol) is invalid", func() {
 			app.Ports[0].Protocol = "protocolthatdoesnotexist"
 			Expect(app.Validate()).To(MatchError(
-				"protocol must be tcp, udp, sctp or icmp"))
+				"protocol must be tcp, udp, sctp, icmp or all"))
 		})
 
 		It("Should return an error if Source is empty", func() {

@@ -15,13 +15,12 @@
 package main_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
-	cce "github.com/smartedgemec/controller-ce"
+	"github.com/smartedgemec/controller-ce/swagger"
 	"github.com/smartedgemec/controller-ce/uuid"
 
 	. "github.com/onsi/ginkgo"
@@ -29,7 +28,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("/nodes_apps", func() {
+var _ = Describe("/nodes/{node_id}/apps", func() {
 	var (
 		appID string
 	)
@@ -39,50 +38,38 @@ var _ = Describe("/nodes_apps", func() {
 		appID = postApps("container")
 	})
 
-	Describe("POST /nodes_apps", func() {
-		DescribeTable("201 Created",
+	Describe("POST /nodes/{node_id}/apps", func() {
+		DescribeTable("200 OK",
 			func() {
 				nodeCfg := createAndRegisterNode()
 
-				By("Sending a POST /nodes_apps request")
+				By("Sending a POST /nodes/{node_id}/apps request")
 				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/nodes_apps",
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps", nodeCfg.nodeID),
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
 						`
 						{
-							"node_id": "%s",
-							"app_id": "%s"
-						}`, nodeCfg.nodeID, appID)))
+							"id": "%s"
+						}
+						`, appID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
-				By("Verifying a 201 response")
-				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-
-				var respBody struct {
-					ID string
-				}
-
-				By("Unmarshaling the response")
-				Expect(json.Unmarshal(body, &respBody)).To(Succeed())
-
-				By("Verifying a UUID was returned")
-				Expect(uuid.IsValid(respBody.ID)).To(BeTrue())
+				By("Verifying a 200 response")
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			},
 			Entry(
-				"POST /nodes_apps"),
+				"POST /nodes/{node_id}/apps"),
 		)
 
 		DescribeTable("400 Bad Request",
 			func(req, expectedResp string) {
-				By("Sending a POST /nodes_apps request")
+				nodeCfg := createAndRegisterNode()
+
+				By("Sending a POST /nodes/{node_id}/apps request")
 				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/nodes_apps",
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps", nodeCfg.nodeID),
 					"application/json",
 					strings.NewReader(req))
 				Expect(err).ToNot(HaveOccurred())
@@ -99,23 +86,21 @@ var _ = Describe("/nodes_apps", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
-				"POST /nodes_apps with id",
+				"POST /nodes/{node_id}/apps with no request body",
 				`
-				{
-					"id": "123"
-				}`,
-				"Validation failed: id cannot be specified in POST request"),
+				`,
+				"Error unmarshaling json: unexpected end of JSON input"),
 			Entry(
-				"POST /nodes_apps without node_id",
+				"POST /nodes/{node_id}/apps with invalid JSON",
 				`
-				{
-				}`,
-				"Validation failed: node_id not a valid uuid"),
+				id: %s
+				`,
+				"Error unmarshaling json: invalid character 'i' looking for beginning of value"),
 			Entry(
-				"POST /nodes_apps without app_id",
+				"POST /nodes/{node_id}/apps without id field",
 				fmt.Sprintf(`
 				{
-					"node_id": "%s"
+					"foobar": "%s"
 				}`, uuid.New()),
 				"Validation failed: app_id not a valid uuid"),
 		)
@@ -124,19 +109,18 @@ var _ = Describe("/nodes_apps", func() {
 			func() {
 				nodeCfg := createAndRegisterNode()
 
-				By("Sending a POST /nodes_apps request")
-				postNodesApps(nodeCfg.nodeID, appID)
+				By("Sending a POST /nodes/{node_id}/apps request")
+				postNodeApps(nodeCfg.nodeID, appID)
 
-				By("Repeating the first POST /nodes_apps request")
+				By("Repeating the first POST /nodes/{node_id}/apps request")
 				resp, err := apiCli.Post(
-					"http://127.0.0.1:8080/nodes_apps",
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps", nodeCfg.nodeID),
 					"application/json",
 					strings.NewReader(fmt.Sprintf(
 						`
 						{
-							"node_id": "%s",
-							"app_id": "%s"
-						}`, nodeCfg.nodeID, appID)))
+							"id": "%s"
+						}`, appID)))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -155,113 +139,71 @@ var _ = Describe("/nodes_apps", func() {
 					nodeCfg.nodeID,
 					appID)))
 			},
-			Entry("POST /nodes_apps with duplicate node_id and app_id"),
+			Entry("POST /nodes/{node_id}/apps with duplicate node_id and app_id"),
 		)
 	})
 
-	Describe("GET /nodes_apps", func() {
+	Describe("GET /nodes/{node_id}/apps", func() {
 		var (
-			nodeCfg    *nodeConfig
-			nodeAppID  string
-			app2ID     string
-			nodeApp2ID string
+			nodeCfg *nodeConfig
+			app2ID  string
 		)
 
 		BeforeEach(func() {
 			nodeCfg = createAndRegisterNode()
-			nodeAppID = postNodesApps(nodeCfg.nodeID, appID)
+			postNodeApps(nodeCfg.nodeID, appID)
 			app2ID = postApps("container")
-			nodeApp2ID = postNodesApps(nodeCfg.nodeID, app2ID)
+			postNodeApps(nodeCfg.nodeID, app2ID)
 		})
 
 		DescribeTable("200 OK",
 			func(appIDFilter string) {
-				apps := map[string]*cce.NodeApp{
-					nodeAppID: {
-						ID:     nodeAppID,
-						NodeID: nodeCfg.nodeID,
-						AppID:  appID,
-					},
-					nodeApp2ID: {
-						ID:     nodeApp2ID,
-						NodeID: nodeCfg.nodeID,
-						AppID:  app2ID,
+				expectedApps := swagger.NodeAppList{
+					NodeApps: []swagger.NodeAppSummary{
+						{ID: appID},
+						{ID: app2ID},
 					},
 				}
 
-				nodeApps := getNodeApps(nodeCfg.nodeID, appIDFilter)
+				nodeApps := getNodeApps(nodeCfg.nodeID)
 
 				By("Verifying the created node app(s) were returned")
-				switch appIDFilter {
-				case "":
-					Expect(nodeApps).To(HaveLen(2))
-					Expect(nodeApps).To(ContainElement(apps[nodeAppID]))
-					Expect(nodeApps).To(ContainElement(apps[nodeApp2ID]))
-				case nodeAppID:
-					Expect(nodeApps).To(HaveLen(1))
-					Expect(nodeApps).To(ContainElement(apps[nodeAppID]))
-				case nodeApp2ID:
-					Expect(nodeApps).To(HaveLen(1))
-					Expect(nodeApps).To(ContainElement(apps[nodeApp2ID]))
-				}
+				Expect(nodeApps.NodeApps).To(HaveLen(2))
+				Expect(nodeApps.NodeApps).To(ContainElement(expectedApps.NodeApps[0]))
+				Expect(nodeApps.NodeApps).To(ContainElement(expectedApps.NodeApps[1]))
 			},
-			Entry("GET /nodes_apps", ""),
-			Entry("GET /nodes_apps", nodeAppID),
-			Entry("GET /nodes_apps", nodeApp2ID),
-		)
-
-		DescribeTable("400 Bad Request",
-			func(field, value string) {
-				By("Sending a GET /nodes_apps request with a disallowed filter")
-				resp, err := apiCli.Get(fmt.Sprintf(
-					"http://127.0.0.1:8080/nodes_apps?%s=%s",
-					field, value,
-				))
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-
-				By("Verifying a 400 Bad Request response")
-				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-
-				By("Reading the response body")
-				body, err := ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(body)).To(Equal(
-					fmt.Sprintf("disallowed filter field %q\n", field),
-				))
-			},
-			Entry("GET /nodes_apps", "id", "12345"),
+			Entry("GET /nodes/{node_id}/apps", ""),
 		)
 	})
 
-	Describe("GET /nodes_apps/{id}", func() {
+	Describe("GET /nodes/{node_id}/apps/{id}", func() {
 		DescribeTable("200 OK",
 			func() {
 				nodeCfg := createAndRegisterNode()
-				nodeAppID := postNodesApps(nodeCfg.nodeID, appID)
-				nodeAppResp := getNodeApp(nodeAppID)
+				postNodeApps(nodeCfg.nodeID, appID)
+				nodeAppResp := getNodeAppByID(nodeCfg.nodeID, appID)
 
 				By("Verifying the created node app was returned")
 				Expect(nodeAppResp).To(Equal(
-					&cce.NodeAppResp{
-						NodeApp: cce.NodeApp{
-							ID:     nodeAppID,
-							NodeID: nodeCfg.nodeID,
-							AppID:  appID,
+					swagger.NodeAppDetail{
+						NodeAppSummary: swagger.NodeAppSummary{
+							ID: appID,
 						},
 						Status: "deployed",
 					},
 				))
 			},
-			Entry("GET /nodes_apps/{id}"),
+			Entry("GET /nodes/{node_id}/apps/{app_id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func() {
-				By("Sending a GET /nodes_apps/{id} request")
+				nodeCfg := createAndRegisterNode()
+				By("Sending a GET /nodes/{node_id}/apps/{app_id} request")
 				resp, err := apiCli.Get(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps/%s",
+						"http://127.0.0.1:8080/nodes/%s/apps/%s",
+						nodeCfg.nodeID,
 						uuid.New()))
 
 				By("Verifying a 404 Not Found response")
@@ -269,52 +211,43 @@ var _ = Describe("/nodes_apps", func() {
 				defer resp.Body.Close()
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("GET /nodes_apps/{id} with nonexistent ID"),
+			Entry("GET /nodes/{node_id}/apps/{app_id} with nonexistent ID"),
 		)
 	})
 
-	Describe("PATCH /nodes_apps", func() {
-		DescribeTable("204 No Content",
-			func(reqStr string, expectedNodeAppResp *cce.NodeAppResp) {
+	Describe("PATCH /nodes/{node_id}/apps/{app_id}", func() {
+		DescribeTable("200 OK",
+			func(reqStr string, expectedNodeAppResp *swagger.NodeAppDetail) {
 				nodeCfg := createAndRegisterNode()
-				nodeAppID := postNodesApps(nodeCfg.nodeID, appID)
+				postNodeApps(nodeCfg.nodeID, appID)
 
-				By("Sending a PATCH /nodes_apps request")
+				By("Sending a PATCH /nodes/{node_id}/apps/{app_id} request")
 				resp, err := apiCli.Patch(
-					"http://127.0.0.1:8080/nodes_apps",
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s", nodeCfg.nodeID, appID),
 					"application/json",
-					strings.NewReader(
-						fmt.Sprintf(reqStr, nodeAppID, nodeCfg.nodeID, appID)))
+					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
-				By("Verifying a 204 No Content response")
+				By("Verifying a 200 OK response")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				By("Getting the updated node")
-				updatedNodeAppResp := getNodeApp(nodeAppID)
+				updatedNodeAppResp := getNodeApp(nodeCfg.nodeID, appID)
 
 				By("Verifying the node was updated")
-				expectedNodeAppResp.NodeApp = cce.NodeApp{
-					ID:     nodeAppID,
-					NodeID: nodeCfg.nodeID,
-					AppID:  appID,
-				}
+				expectedNodeAppResp.ID = appID
 				Expect(updatedNodeAppResp).To(Equal(expectedNodeAppResp))
 			},
 			Entry(
-				"PATCH /nodes_apps",
+				"PATCH /nodes/{node_id}/apps/{app_id}",
 				`
-				[
-					{
-						"id": "%s",
-						"node_id": "%s",
-						"app_id": "%s",
-						"cmd": "start"
-					}
-				]`,
-				&cce.NodeAppResp{
+				{
+					"command": "start"
+				}
+				`,
+				&swagger.NodeAppDetail{
 					Status: "running",
 				}),
 		)
@@ -322,17 +255,11 @@ var _ = Describe("/nodes_apps", func() {
 		DescribeTable("400 Bad Request",
 			func(reqStr string, expectedResp string) {
 				nodeCfg := createAndRegisterNode()
-				nodeAppID := postNodesApps(nodeCfg.nodeID, appID)
+				postNodeApps(nodeCfg.nodeID, appID)
 
-				By("Sending a PATCH /nodes_apps request")
-				switch strings.Count(reqStr, "%s") {
-				case 2:
-					reqStr = fmt.Sprintf(reqStr, nodeAppID, nodeCfg.nodeID)
-				case 3:
-					reqStr = fmt.Sprintf(reqStr, nodeAppID, nodeCfg.nodeID, appID)
-				}
+				By("Sending a PATCH /nodes/{node_id}/apps/{app_id} request")
 				resp, err := apiCli.Patch(
-					"http://127.0.0.1:8080/nodes_apps",
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s", nodeCfg.nodeID, appID),
 					"application/json",
 					strings.NewReader(reqStr))
 				Expect(err).ToNot(HaveOccurred())
@@ -350,98 +277,60 @@ var _ = Describe("/nodes_apps", func() {
 				Expect(string(body)).To(Equal(expectedResp))
 			},
 			Entry(
-				"PATCH /nodes_apps without id",
+				"PATCH /nodes/{node_id}/apps/{app_id} without command",
 				`
-				[
-					{
-						"node_id": "123",
-						"app_id": "456"
-					}
-				]`,
-				"Validation failed: id not a valid uuid"),
+				`,
+				"Error unmarshaling json: unexpected end of JSON input"),
 			Entry(
-				"PATCH /nodes_apps without node_id",
+				"PATCH /nodes/{node_id}/apps/{app_id} with invalid input",
 				`
-				[
-					{
-						"id": "%s",
-						"app_id": "%s"
-					}
-				]`,
-				"Validation failed: node_id not a valid uuid"),
-			Entry("PATCH /nodes_apps without app_id",
-				`
-				[
-					{
-						"id": "%s",
-						"node_id": "%s"
-					}
-				]`,
-				"Validation failed: app_id not a valid uuid"),
-			Entry("PATCH /nodes_apps without cmd",
-				`
-				[
-					{
-						"id": "%s",
-						"node_id": "%s",
-						"app_id": "%s"
-					}
-				]`,
-				"Validation failed: cmd missing"),
-			Entry("PATCH /nodes_apps with invalid cmd",
-				`
-				[
-					{
-						"id": "%s",
-						"node_id": "%s",
-						"app_id": "%s",
-						"cmd": "abc"
-					}
-				]`,
-				`Validation failed: cmd "abc" is invalid`),
+				command: start
+				`,
+				"Error unmarshaling json: invalid character 'c' looking for beginning of value"),
 		)
 	})
 
-	Describe("DELETE /nodes_apps/{id}", func() {
-		DescribeTable("200 OK",
+	Describe("DELETE /nodes/{node_id}/apps/{app_id}", func() {
+		DescribeTable("204 No Content",
 			func() {
 				nodeCfg := createAndRegisterNode()
-				nodeAppID := postNodesApps(nodeCfg.nodeID, appID)
+				postNodeApps(nodeCfg.nodeID, appID)
 
-				By("Sending a DELETE /nodes_apps/{id} request")
+				By("Sending a DELETE /nodes/{node_id}/apps/{app_id} request")
 				resp, err := apiCli.Delete(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps/%s",
-						nodeAppID))
+						"http://127.0.0.1:8080/nodes/%s/apps/%s",
+						nodeCfg.nodeID, appID))
 
-				By("Verifying a 200 OK response")
+				By("Verifying a 204 No Content response")
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 
 				By("Verifying the node app was deleted")
 
-				By("Sending a GET /nodes_apps/{id} request")
+				By("Sending a GET /nodes/{node_id}/apps/{app_id} request")
 				resp2, err := apiCli.Get(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps/%s",
-						nodeAppID))
+						"http://127.0.0.1:8080/nodes/%s/apps/%s",
+						nodeCfg.nodeID, appID))
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())
 				defer resp2.Body.Close()
 				Expect(resp2.StatusCode).To(Equal(http.StatusNotFound))
 			},
-			Entry("DELETE /nodes_apps/{id}"),
+			Entry("DELETE /nodes/{node_id}/apps/{app_id}"),
 		)
 
 		DescribeTable("404 Not Found",
 			func(id string) {
-				By("Sending a DELETE /nodes_apps/{id} request")
+				By("Sending a DELETE /nodes/{node_id}/apps/{app_id} request")
+				nodeCfg := createAndRegisterNode()
 				resp, err := apiCli.Delete(
 					fmt.Sprintf(
-						"http://127.0.0.1:8080/nodes_apps/%s",
-						id))
+						"http://127.0.0.1:8080/nodes/%s/apps/%s",
+						nodeCfg.nodeID, id))
 
 				By("Verifying a 404 Not Found response")
 				Expect(err).ToNot(HaveOccurred())
@@ -449,26 +338,28 @@ var _ = Describe("/nodes_apps", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
 			},
 			Entry(
-				"DELETE /nodes_apps/{id} with nonexistent ID",
+				"DELETE /nodes/{node_id}/apps/{app_id} with nonexistent ID",
 				uuid.New()),
 		)
 
 		DescribeTable("422 Unprocessable Entity",
 			func(resource, expectedResp string) {
 				nodeCfg := createAndRegisterNode()
-				nodeAppID := postNodesApps(nodeCfg.nodeID, appID)
+				postNodeApps(nodeCfg.nodeID, appID)
 
 				switch resource {
 				case "nodes_apps_traffic_policies":
-					postNodesAppsTrafficPolicies(
-						nodeAppID,
+					patchNodesAppsPolicy(
+						nodeCfg.nodeID,
+						appID,
 						postPolicies())
 				}
 
-				By("Sending a DELETE /nodes_apps/{id} request")
+				By("Sending a DELETE /nodes/{node_id}/apps/{app_id} request")
 				resp, err := apiCli.Delete(
-					fmt.Sprintf("http://127.0.0.1:8080/nodes_apps/%s",
-						nodeAppID))
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s",
+						nodeCfg.nodeID,
+						appID))
 				Expect(err).ToNot(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -482,12 +373,12 @@ var _ = Describe("/nodes_apps", func() {
 
 				By("Verifying the response body")
 				Expect(string(body)).To(Equal(
-					fmt.Sprintf(expectedResp, nodeAppID)))
+					fmt.Sprintf(expectedResp, appID)))
 			},
 			Entry(
-				"DELETE /nodes_apps/{id} with nodes_apps_traffic_policies record",
+				"DELETE /nodes/{node_id}/apps/{app_id} with nodes_apps_traffic_policies record",
 				"nodes_apps_traffic_policies",
-				"cannot delete node_app_id %s: record in use in nodes_apps_traffic_policies",
+				"cannot delete app %s: record in use in nodes_apps_traffic_policies",
 			),
 		)
 	})

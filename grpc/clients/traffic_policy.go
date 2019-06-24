@@ -74,12 +74,23 @@ func toPBIPFilter(ipf *cce.IPFilter) *elapb.IPFilter {
 		return nil
 	}
 
+	// If the protocol is "all", make it empty in the protobuf
+	// since there's currently no support for this on the other
+	// end
+	// TODO: remove this logic when other end supports the "all"
+	// protocol value.
+	protocol := ""
+	switch {
+	case ipf.Protocol != "all":
+		protocol = ipf.Protocol
+	}
+
 	return &elapb.IPFilter{
 		Address:   ipf.Address,
 		Mask:      uint32(ipf.Mask),
 		BeginPort: uint32(ipf.BeginPort),
 		EndPort:   uint32(ipf.EndPort),
-		Protocol:  ipf.Protocol,
+		Protocol:  protocol,
 	}
 }
 

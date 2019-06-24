@@ -88,6 +88,50 @@ func handleCreateNodesDNSConfigs(
 	return nodeCC.DNSSvcCli.SetForwarders(ctx, dnsConfig.(*cce.DNSConfig).Forwarders)
 }
 
+func handleCreateNodesDNSConfigsWithAliases(
+	ctx context.Context,
+	ps cce.PersistenceService,
+	nodeDNS cce.Persistable,
+	dnsConfig cce.Persistable,
+	dnsAliases []cce.Persistable,
+) error {
+	ctrl := getController(ctx)
+	nodePort := ctrl.ELAPort
+	if nodePort == "" {
+		nodePort = defaultELAPort
+	}
+	nodeCC, err := connectNode(ctx, ps, nodeDNS.(*cce.NodeDNSConfig), nodePort, ctrl.EdgeNodeCreds)
+	if err != nil {
+		return err
+	}
+
+	for _, alias := range dnsAliases {
+		record := &cce.DNSARecord{
+			Name:        alias.(*cce.DNSConfigAppAlias).AppID,
+			Description: alias.(*cce.DNSConfigAppAlias).Description,
+			IPs:         []string{alias.(*cce.DNSConfigAppAlias).AppID},
+		}
+
+		if err := nodeCC.DNSSvcCli.SetA(ctx, record); err != nil {
+			return err
+		}
+	}
+
+	for _, aRecord := range dnsConfig.(*cce.DNSConfig).ARecords {
+		if err := nodeCC.DNSSvcCli.SetA(ctx, aRecord); err != nil {
+			return err
+		}
+	}
+
+	if len(dnsConfig.(*cce.DNSConfig).Forwarders) != 0 {
+		if err := nodeCC.DNSSvcCli.SetForwarders(ctx, dnsConfig.(*cce.DNSConfig).Forwarders); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // TODO remove once nodesAppsTrafficPoliciesHandler in gorilla.go is removed
 func handleCreateNodesAppsTrafficPolicies(
 	ctx context.Context,

@@ -49,7 +49,6 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/grpclog"
 
-	cce "github.com/smartedgemec/controller-ce"
 	cceGRPC "github.com/smartedgemec/controller-ce/grpc"
 	authpb "github.com/smartedgemec/controller-ce/pb/auth"
 	"github.com/smartedgemec/controller-ce/pki"
@@ -308,54 +307,39 @@ func getApp(id string) *swagger.AppDetail {
 	return &app
 }
 
-func postDNSConfigs() (id string) {
-	By("Sending a POST /dns_configs request")
-	resp, err := apiCli.Post(
-		"http://127.0.0.1:8080/dns_configs",
+func patchNodeDNS(nodeID string) {
+	By("Sending a PATCH /nodes/{node_id}/dns request")
+
+	resp, err := apiCli.Patch(
+		fmt.Sprintf(
+			"http://127.0.0.1:8080/nodes/%s/dns",
+			nodeID,
+		),
 		"application/json",
 		strings.NewReader(`
-			{
-				"name": "dns config 123",
-				"a_records": [{
-					"name": "a record 1",
-					"description": "description 1",
-					"ips": [
-						"172.16.55.43",
-						"172.16.55.44"
-					]
-				}],
-				"forwarders": [{
-					"name": "forwarder 1",
-					"description": "description 1",
-					"ip": "8.8.8.8"
-				}, {
-					"name": "forwarder 2",
-					"description": "description 2",
-					"ip": "1.1.1.1"
-				}]
-			}`))
-	Expect(err).ToNot(HaveOccurred())
-	defer resp.Body.Close()
-
-	By("Verifying a 201 Created response")
-	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-	By("Reading the response body")
-	body, err := ioutil.ReadAll(resp.Body)
-	Expect(err).ToNot(HaveOccurred())
-
-	var rb respBody
-
-	By("Unmarshaling the response")
-	Expect(json.Unmarshal(body, &rb)).To(Succeed())
-
-	return rb.ID
-}
-
-func getDNSConfig(id string) *cce.DNSConfig {
-	By("Sending a GET /dns_configs/{id} request")
-	resp, err := apiCli.Get(
-		fmt.Sprintf("http://127.0.0.1:8080/dns_configs/%s", id))
+		{
+			"name": "Sample DNS configuration",
+			"records": {
+			  "a": [
+				{
+					"name": "sample-app1.demosite.com",
+					"description": "The domain for my sample app 1",
+					"alias": false,
+					"values": [
+						"192.168.1.5"
+				  ]
+				},
+				{
+					"name": "sample-app2.demosite.com",
+					"description": "The domain for my sample app 2",
+					"alias": false,
+					"values": [
+					  "192.168.1.9"
+				  ]
+				}
+			  ]
+			}
+		}`))
 	Expect(err).ToNot(HaveOccurred())
 	defer resp.Body.Close()
 
@@ -363,54 +347,44 @@ func getDNSConfig(id string) *cce.DNSConfig {
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Reading the response body")
-	body, err := ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
-
-	var dnsConfig cce.DNSConfig
-
-	By("Unmarshaling the response")
-	Expect(json.Unmarshal(body, &dnsConfig)).To(Succeed())
-
-	return &dnsConfig
 }
 
-func postDNSConfigsAppAliases(
-	dnsConfigID string,
-	appID string,
-) (id string) {
-	By("Sending a POST /dns_configs_app_aliases request")
-	resp, err := apiCli.Post(
-		"http://127.0.0.1:8080/dns_configs_app_aliases",
+func patchNodeDNSwithApp(nodeID, appID string) {
+	By("Sending a PATCH /nodes/{node_id}/dns request")
+
+	resp, err := apiCli.Patch(
+		fmt.Sprintf(
+			"http://127.0.0.1:8080/nodes/%s/dns",
+			nodeID,
+		),
 		"application/json",
-		strings.NewReader(fmt.Sprintf(`
-			{
-				"dns_config_id": "%s",
-				"name": "dns config app alias",
-				"description": "my dns config app alias",
-				"app_id": "%s"
-			}`, dnsConfigID, appID)))
-	Expect(err).ToNot(HaveOccurred())
-	defer resp.Body.Close()
-
-	By("Verifying a 201 Created response")
-	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-	By("Reading the response body")
-	body, err := ioutil.ReadAll(resp.Body)
-	Expect(err).ToNot(HaveOccurred())
-
-	var rb respBody
-
-	By("Unmarshaling the response")
-	Expect(json.Unmarshal(body, &rb)).To(Succeed())
-
-	return rb.ID
-}
-
-func getDNSConfigsAppAlias(id string) *cce.DNSConfigAppAlias {
-	By("Sending a GET /dns_configs_app_aliases/{id} request")
-	resp, err := apiCli.Get(
-		fmt.Sprintf("http://127.0.0.1:8080/dns_configs_app_aliases/%s", id))
+		strings.NewReader(
+			fmt.Sprintf(`
+		{
+			"name": "Sample DNS configuration",
+			"records": {
+			  "a": [
+				{
+					"name": "sample-app1.demosite.com",
+					"description": "The domain for my sample app 1",
+					"alias": false,
+					"values": [
+						"192.168.1.5"
+				  ]
+				},
+				{
+					"name": "sample-app2.demosite.com",
+					"description": "The domain for my sample app 2",
+					"alias": true,
+					"values": [
+					  "%s"
+				  ]
+				}
+			  ]
+			}
+		}`, appID)))
 	Expect(err).ToNot(HaveOccurred())
 	defer resp.Body.Close()
 
@@ -418,15 +392,8 @@ func getDNSConfigsAppAlias(id string) *cce.DNSConfigAppAlias {
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Reading the response body")
-	body, err := ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
-
-	var dnsConfigAppAlias cce.DNSConfigAppAlias
-
-	By("Unmarshaling the response")
-	Expect(json.Unmarshal(body, &dnsConfigAppAlias)).To(Succeed())
-
-	return &dnsConfigAppAlias
 }
 
 type nodeConfig struct {
@@ -523,7 +490,7 @@ func postNodesSerial(serial string) (id string) {
 	return rb.ID
 }
 
-func getNode(id string) *cce.NodeResp {
+func getNode(id string) *swagger.NodeDetail {
 	By("Sending a GET /nodes/{id} request")
 	resp, err := apiCli.Get(
 		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s", id))
@@ -537,7 +504,7 @@ func getNode(id string) *cce.NodeResp {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var nodeResp cce.NodeResp
+	var nodeResp swagger.NodeDetail
 
 	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &nodeResp)).To(Succeed())
@@ -545,38 +512,54 @@ func getNode(id string) *cce.NodeResp {
 	return &nodeResp
 }
 
-func postNodesApps(nodeID, appID string) (id string) {
-	By("Sending a POST /nodes_apps request")
-	resp, err := apiCli.Post(
-		"http://127.0.0.1:8080/nodes_apps",
-		"application/json",
-		strings.NewReader(fmt.Sprintf(`
-			{
-				"node_id": "%s",
-				"app_id": "%s"
-			}`, nodeID, appID)))
+func getNodeInterfaces(id string) *swagger.InterfaceList {
+	By("Sending a GET /nodes/{id} request")
+	resp, err := apiCli.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/interfaces", id))
 	Expect(err).ToNot(HaveOccurred())
 	defer resp.Body.Close()
 
-	By("Verifying a 201 Created response")
-	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+	By("Verifying a 200 OK response")
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Reading the response body")
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var rb respBody
+	var nodeResp swagger.InterfaceList
 
 	By("Unmarshaling the response")
-	Expect(json.Unmarshal(body, &rb)).To(Succeed())
+	Expect(json.Unmarshal(body, &nodeResp)).To(Succeed())
 
-	return rb.ID
+	return &nodeResp
 }
 
-func getNodeApp(id string) *cce.NodeAppResp {
+func getNodeInterfacePolicy(nodeID, interfaceID string) *swagger.BaseResource {
+	By("Sending a GET /nodes/{node_id}/interfaces/{interface_id}/policy request")
+	resp, err := apiCli.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/interfaces/%s/policy", nodeID, interfaceID))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+
+	By("Verifying a 200 OK response")
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var nodeResp swagger.BaseResource
+
+	By("Unmarshaling the response")
+	Expect(json.Unmarshal(body, &nodeResp)).To(Succeed())
+
+	return &nodeResp
+}
+
+func getNodeApp(nodeID, appID string) *swagger.NodeAppDetail {
 	By("Sending a GET /nodes_apps/{id} request")
 	resp, err := apiCli.Get(
-		fmt.Sprintf("http://127.0.0.1:8080/nodes_apps/%s", id))
+		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s", nodeID, appID))
 
 	By("Verifying a 200 OK response")
 	Expect(err).ToNot(HaveOccurred())
@@ -587,7 +570,7 @@ func getNodeApp(id string) *cce.NodeAppResp {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var nodeAppResp cce.NodeAppResp
+	var nodeAppResp swagger.NodeAppDetail
 
 	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &nodeAppResp)).To(Succeed())
@@ -595,63 +578,10 @@ func getNodeApp(id string) *cce.NodeAppResp {
 	return &nodeAppResp
 }
 
-func getNodeApps(nodeID, appID string) []*cce.NodeApp {
-	By("Sending a GET /nodes_apps request")
-	url := fmt.Sprintf("http://127.0.0.1:8080/nodes_apps?node_id=%s", nodeID)
-	if appID != "" {
-		url += "&app_id=" + appID
-	}
-	resp, err := apiCli.Get(url)
-
-	By("Verifying a 200 OK response")
-	Expect(err).ToNot(HaveOccurred())
-	defer resp.Body.Close()
-	Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-	By("Reading the response body")
-	body, err := ioutil.ReadAll(resp.Body)
-	Expect(err).ToNot(HaveOccurred())
-
-	var nodeApps []*cce.NodeApp
-
-	By("Unmarshaling the response")
-	Expect(json.Unmarshal(body, &nodeApps)).To(Succeed())
-
-	return nodeApps
-}
-
-func postNodesDNSConfigs(nodeID, dnsConfigID string) (id string) {
-	By("Sending a POST /nodes_dns_configs request")
-	resp, err := apiCli.Post(
-		"http://127.0.0.1:8080/nodes_dns_configs",
-		"application/json",
-		strings.NewReader(fmt.Sprintf(`
-			{
-				"node_id": "%s",
-				"dns_config_id": "%s"
-			}`, nodeID, dnsConfigID)))
-	Expect(err).ToNot(HaveOccurred())
-	defer resp.Body.Close()
-
-	By("Verifying a 201 Created response")
-	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-	By("Reading the response body")
-	body, err := ioutil.ReadAll(resp.Body)
-	Expect(err).ToNot(HaveOccurred())
-
-	var rb respBody
-
-	By("Unmarshaling the response")
-	Expect(json.Unmarshal(body, &rb)).To(Succeed())
-
-	return rb.ID
-}
-
-func getNodeDNSConfig(id string) *cce.NodeDNSConfig {
-	By("Sending a GET /nodes_dns_configs/{id} request")
+func getNodeDNS(id string) *swagger.DNSDetail {
+	By("Sending a GET /nodes/{node_id}/dns request")
 	resp, err := apiCli.Get(
-		fmt.Sprintf("http://127.0.0.1:8080/nodes_dns_configs/%s", id))
+		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/dns", id))
 	Expect(err).ToNot(HaveOccurred())
 	defer resp.Body.Close()
 
@@ -662,7 +592,7 @@ func getNodeDNSConfig(id string) *cce.NodeDNSConfig {
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var nodeDNSConfig cce.NodeDNSConfig
+	var nodeDNSConfig swagger.DNSDetail
 
 	By("Unmarshaling the response")
 	Expect(json.Unmarshal(body, &nodeDNSConfig)).To(Succeed())
@@ -792,35 +722,66 @@ func getPolicy(id string) *swagger.PolicyDetail {
 	return &policy
 }
 
-func postNodesAppsTrafficPolicies(
-	nodeAppID string,
-	trafficPolicyID string,
-) (id string) {
-	By("Sending a POST /nodes_apps_traffic_policies request")
+func postNodeApps(nodeID, appID string) {
+	By("Sending a POST /nodes/{node_id}/apps request")
 	resp, err := apiCli.Post(
-		"http://127.0.0.1:8080/nodes_apps_traffic_policies",
+		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps", nodeID),
 		"application/json",
 		strings.NewReader(fmt.Sprintf(`
 			{
-				"nodes_apps_id": "%s",
-				"traffic_policy_id": "%s"
-			}`, nodeAppID, trafficPolicyID)))
+				"id": "%s"
+			}`, appID)))
 	Expect(err).ToNot(HaveOccurred())
 	defer resp.Body.Close()
 
-	By("Verifying a 201 Created response")
-	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+	By("Verifying a 200 Created response")
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+}
+
+func getNodeApps(nodeID string) *swagger.NodeAppList {
+	By("Sending a GET /nodes/{node_id}/apps request")
+	resp, err := apiCli.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps", nodeID),
+	)
+
+	By("Verifying a 200 OK response")
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	By("Reading the response body")
 	body, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())
 
-	var rb respBody
+	var nodeApps *swagger.NodeAppList
 
 	By("Unmarshaling the response")
-	Expect(json.Unmarshal(body, &rb)).To(Succeed())
+	Expect(json.Unmarshal(body, &nodeApps)).To(Succeed())
 
-	return rb.ID
+	return nodeApps
+}
+
+func getNodeAppByID(nodeID, appID string) swagger.NodeAppDetail {
+	By("Sending a GET /nodes/{node_id}/apps/{app_id} request")
+	resp, err := apiCli.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s", nodeID, appID),
+	)
+
+	By("Verifying a 200 OK response")
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var nodeApp swagger.NodeAppDetail
+
+	By("Unmarshaling the response")
+	Expect(json.Unmarshal(body, &nodeApp)).To(Succeed())
+
+	return nodeApp
 }
 
 func patchNodesAppsPolicy(
