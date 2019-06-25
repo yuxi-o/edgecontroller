@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [0.0.47] - 2019-06-25
+### Fixed
+- UI: Form schema in TrafficPolicy had incorrect MacAddress type
+- UI: Form schema on GTPFilter.IMSIs now of type String
+
+## [0.0.46] - 2019-06-24
+### Fixed
+- UI: Traffic Policies on Interfaces & Applications did not show state
+
 ## [0.0.45] - 2019-06-23
 ### Fixed
 - The following endpoints are now Swagger schema compliant:

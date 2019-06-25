@@ -77,7 +77,7 @@ const GTPFilter = {
         type: "array",
         items: {
           title: "IMSI",
-          type: "number"
+          type: "string"
         }
       }
     }
@@ -167,7 +167,13 @@ export default {
                 },
                 mac_modifier: {
                   title: "MAC Modifier",
-                  type: "string"
+                  type: "object",
+                  properties: {
+                    mac_address: {
+                      title: "MAC Address",
+                      type: "string"
+                    },
+                  }
                 },
                 ip_modifier: {
                   title: "IP Modifier",
