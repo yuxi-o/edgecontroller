@@ -70,11 +70,8 @@ class DNSView extends Component {
         this.setState({
           loaded: true,
         });
-        if (err.response && err.response.status === 400 && err.response.data !== '') {
-          this.props.enqueueSnackbar(`${err.response.data}`, { variant: 'error' });
-        } else {
-          this.props.enqueueSnackbar(`${err.toString()}`, { variant: 'error' });
-        }
+
+        this.props.enqueueSnackbar(`${err.toString()}`, { variant: 'error' });
       });
   };
 

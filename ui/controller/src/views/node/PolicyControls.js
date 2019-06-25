@@ -23,7 +23,6 @@ class PolicyControls extends Component {
       showDialogLoader: false,
       resourcePolicyId: '',
       selectedPolicyId: '',
-      assignedPolicy: {},
       policyType,
       resourceId,
     };
@@ -35,7 +34,7 @@ class PolicyControls extends Component {
     return ApiClient.get(`/nodes/${nodeId}/${policyType}s/${resourceId}/policy`)
       .then((resp) => {
         this.setState({
-          assignedPolicy: resp.data || {},
+          resourcePolicyId: resp.data.id || '',
         })
       })
       .catch((err) => {
@@ -75,7 +74,7 @@ class PolicyControls extends Component {
     const { selectedPolicyId, showDialogLoader } = this.state;
 
     if (showDialogLoader === true) {
-      return ;
+      return;
     }
 
     this.setState({showDialogLoader: true});

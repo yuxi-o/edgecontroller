@@ -26,7 +26,6 @@ export default {
         enum: [
           "none",
           "upstream",
-          "none",
           "downstream",
           "bidirectional",
           "breakout"

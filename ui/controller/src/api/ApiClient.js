@@ -24,6 +24,7 @@ class ApiClient {
     if(this.interceptorEnabled === true) {
       return true;
     }
+
     this.axiosInstance.interceptors.response.use(function (response) {
       // Do something with response data
       return response;
@@ -39,7 +40,7 @@ class ApiClient {
         });
       }
 
-      if(err.response.data && err.response.data !== '') {
+      if(err.response && err.response.data && err.response.data !== '') {
         return Promise.reject(err.response.data)
       }
       // Do something with response error
@@ -97,7 +98,7 @@ class ApiClient {
    * @returns {Promise<AxiosResponse>}
    */
   async get(path, options = {}) {
-    if(this.interceptorEnabled === false) {this.setupInterceptor()};
+    if(this.interceptorEnabled === false) {this.setupInterceptor()}
     return await this.axiosInstance.get(path, options);
   }
 
@@ -108,6 +109,7 @@ class ApiClient {
    * @returns {Promise<AxiosResponse>}
    */
   async post(path, data = {}) {
+    if(this.interceptorEnabled === false) {this.setupInterceptor()}
     return await this.axiosInstance.post(path, data);
   }
 
@@ -118,6 +120,7 @@ class ApiClient {
  * @returns {Promise<AxiosResponse>}
  */
   async patch(path, data = {}) {
+    if(this.interceptorEnabled === false) {this.setupInterceptor()}
     return await this.axiosInstance.patch(path, data);
   }
 
@@ -128,6 +131,7 @@ class ApiClient {
    * @returns {Promise<AxiosResponse>}
    */
   async delete(path, options = {}) {
+    if(this.interceptorEnabled === false) {this.setupInterceptor()}
     return await this.axiosInstance.delete(path, options);
   }
 }

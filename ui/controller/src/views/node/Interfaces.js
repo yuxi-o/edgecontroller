@@ -28,7 +28,6 @@ class InterfacesView extends Component {
       showErrors: true,
       open: false,
       nodeInterfaces: [],
-      nodeInterface: {},
       interfaceID: '',
       policies: [],
       policiesLoaded: false,
@@ -92,31 +91,30 @@ class InterfacesView extends Component {
           loaded: true,
         });
 
-        if (err.response.status === 400) {
-          this.props.enqueueSnackbar(`${err.response.data}`, { variant: 'error' });
-        } else {
-          this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
-        }
+        this.props.enqueueSnackbar(`${err.toString()}`, { variant: 'error' });
       });
   };
 
-  // GET /nodes/:node_id/interfaces/:interface_id
   getNodeInterface = (interfaceID) => {
+    const { nodeInterfaces } = this.state;
     const { nodeID } = this.props;
+    const filterValue = (obj, key, value)=> obj.filter(v => v[key] === value);
+    const foundInterface = filterValue(nodeInterfaces, 'id', interfaceID);
 
-    ApiClient.get(`/nodes/${nodeID}/interfaces/${interfaceID}`)
+    if (foundInterface.length === 1) {
+      return foundInterface[0];
+    }
+
+    return ApiClient.get(`/nodes/${nodeID}/interfaces/${interfaceID}`)
       .then((resp) => {
-        this.setState({
-          loaded: true,
-          nodeInterface: resp.data || {},
-        });
+        return resp.data
       })
       .catch((err) => {
-        this.setState({
-          loaded: true,
-        });
-
         this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+
+        this.setState({
+          open: false,
+        })
       });
   };
 
@@ -130,12 +128,12 @@ class InterfacesView extends Component {
     this.setState({ policy: newInterface });
   };
 
-  handleOpen = (interfaceID) => {
-    this.getNodeInterface(interfaceID);
+  handleOpen = async(interfaceID) => {
+    const nodeInterface = await this.getNodeInterface(interfaceID);
 
     this.setState({
       open: true,
-      interfaceID: interfaceID,
+      nodeInterface,
     });
   };
 

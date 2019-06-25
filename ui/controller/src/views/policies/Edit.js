@@ -67,7 +67,7 @@ class PolicyView extends Component {
           loaded: true,
         });
 
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        this.props.enqueueSnackbar(`${err.toString()}.`, { variant: 'error' });
       });
   };
 
@@ -91,11 +91,7 @@ class PolicyView extends Component {
           loaded: true,
         });
 
-        if (err.response.status === 400) {
-          this.props.enqueueSnackbar(`${err.response.data}`, { variant: 'error' });
-        } else {
-          this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
-        }
+        this.props.enqueueSnackbar(`${err.toString()}.`, { variant: 'error' });
       });
   };
 
@@ -111,7 +107,6 @@ class PolicyView extends Component {
         });
 
         this.props.enqueueSnackbar(`Successfully created policy.`, { variant: 'success' });
-
         // Delay the redirect so the user has a moment to breath
         setTimeout(() => {
           history.push('/policies');
@@ -122,11 +117,7 @@ class PolicyView extends Component {
           loaded: true,
         });
 
-        if (err.response.status === 400 && err.response.data !== '') {
-          this.props.enqueueSnackbar(`${err.response.data}`, { variant: 'error' });
-        } else {
-          this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
-        }
+        this.props.enqueueSnackbar(`${err.toString()}.`, { variant: 'error' });
       });
   };
 
@@ -142,7 +133,6 @@ class PolicyView extends Component {
         });
 
         this.props.enqueueSnackbar(`Deleted policy ${policyID}.`, { variant: 'success' });
-
         history.push('/policies')
       })
       .catch((err) => {
@@ -150,7 +140,7 @@ class PolicyView extends Component {
           loaded: true,
         });
 
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        this.props.enqueueSnackbar(`${err.toString()}.`, { variant: 'error' });
       });
   };
 
@@ -162,7 +152,7 @@ class PolicyView extends Component {
     utils.selectOrSet(key, newPolicy, val);
 
     this.setState({ policy: newPolicy });
-  }
+  };
 
   componentDidMount() {
     this.getPolicy();
