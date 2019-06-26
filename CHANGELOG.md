@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.50] - 2019-06-26
+### Added
+- Comprehensive README additions with complementary commands from the Makefile
+
 ## [0.0.49] - 2019-06-25
 ### Fixed
 - Expose Syslog and StatsD service ports in `docker-compose.yml`

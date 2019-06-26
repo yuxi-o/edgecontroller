@@ -42,12 +42,16 @@ Controller CE services.
 
 The following service(s) are expected to be externally routable.
 
-| Service  | Protocol     | Port |
-| -------- | ------------ | ---- |
-| HTTP API | TCP          | 8080 |
-| gRPC API | TCP          | 8081 |
-| Syslog   | TLS over TCP | 6514 |
-| StatsD   | TLS over TCP | 8125 |
+| Service  | Protocol     | Port  | Direction |
+| -------- | ------------ | ----  | --------- |
+| Web UI   | TCP          | 3000  | INPUT     |
+| CUPS UI  | TCP          | 3010  | INPUT     |
+| HTTP API | TCP          | 8080  | INPUT     |
+| gRPC API | TCP (TLS)    | 8081  | INPUT     |
+| Syslog   | TCP (TLS)    | 6514  | INPUT     |
+| StatsD   | TCP (TLS)    | 8125  | INPUT     |
+| ELA API  | TCP (TLS)    | 42101 | OUTPUT    |
+| EVA API  | TCP (TLS)    | 42102 | OUTPUT    |
 
 ### Internal Services
 
