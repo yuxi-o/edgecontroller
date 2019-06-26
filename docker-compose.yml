@@ -8,21 +8,42 @@ services:
       - 8083:3306
     environment:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+    volumes:
+      - ./artifacts/db:/var/lib/mysql
   cce:
+    image: cce:latest
     build:
       context: .
       dockerfile: docker/run/Dockerfile
     depends_on:
       - mysql
-    command: -orchestration-mode "native" -dsn "root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/controller_ce" -adminPass "${CCE_ADMIN_PASSWORD}" -httpPort 8080 -grpcPort 8081 -elaPort 42101 -evaPort 42102 -log-level "${CCE_LOG_LEVEL}"
+    command: "${CCE_FLAGS}"
     ports:
       - 8080:8080
       - 8081:8081
+      - 6514:6514
+      - 8125:8125
+    volumes:
+      - ./artifacts/syslog.log:/syslog.log
+      - ./artifacts/statsd.log:/statsd.log
+      - ./artifacts:/certificates/ca
   ui:
-    image: cce-ui:latest
+    image: ui:latest
+    build:
+      context: ./ui/controller
+      args:
+        REACT_APP_CONTROLLER_API: "${REACT_APP_CONTROLLER_API}"
     ports:
       - 3000:80/tcp
+    environment:
+      REACT_APP_CONTROLLER_API: "${REACT_APP_CONTROLLER_API}"
   cups-ui:
-    image: cce-cups-ui:latest
+    build:
+      context: ./ui/cups
+      args:
+        REACT_APP_CUPS_API: "${REACT_APP_CUPS_API}"
     ports:
       - 3010:80/tcp
+    environment:
+      REACT_APP_CUPS_API: "${REACT_APP_CUPS_API}"
+

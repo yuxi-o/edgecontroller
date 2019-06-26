@@ -41,6 +41,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/joho/godotenv"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -55,9 +56,10 @@ import (
 	"github.com/smartedgemec/controller-ce/swagger"
 )
 
-const adminPass = "word"
-
 var (
+	adminPass string
+	dbPass    string
+
 	cmd    *exec.Cmd
 	ctrl   *gexec.Session
 	node   *gexec.Session
@@ -119,10 +121,19 @@ func startup() {
 	telemDir, err = filepath.Abs(tmpdir)
 	Expect(err).NotTo(HaveOccurred())
 
+	By("Loading environment variables from .env file")
+	Expect(godotenv.Load("../../.env")).To(Succeed())
+
+	adminPass = os.Getenv("CCE_ADMIN_PASSWORD")
+	Expect(adminPass).ToNot(BeEmpty())
+
+	dbPass = os.Getenv("MYSQL_ROOT_PASSWORD")
+	Expect(dbPass).ToNot(BeEmpty())
+
 	By("Starting the controller")
 	cmd = exec.Command(exe,
 		"-log-level", "debug",
-		"-dsn", "root:changeme@tcp(:8083)/controller_ce",
+		"-dsn", fmt.Sprintf("root:%s@tcp(:8083)/controller_ce", dbPass),
 		"-httpPort", "8080",
 		"-grpcPort", "8081",
 		"-elaPort", "42101",
@@ -194,7 +205,9 @@ func shutdown() {
 
 func clearGRPCTargetsTable() {
 	By("Connecting to the database")
-	db, err := sql.Open("mysql", "root:changeme@tcp(:8083)/controller_ce?multiStatements=true")
+	db, err := sql.Open(
+		"mysql",
+		fmt.Sprintf("root:%s@tcp(:8083)/controller_ce?multiStatements=true", dbPass))
 	Expect(err).ToNot(HaveOccurred())
 
 	defer func() {

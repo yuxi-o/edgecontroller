@@ -14,7 +14,7 @@ import {
   Paper,
 } from '@material-ui/core';
 
-const baseURL = (process.env.NODE_ENV === 'production') ? process.env.REACT_APP_CUPS_API_BASE_PATH : '/api';
+const baseURL = (process.env.NODE_ENV === 'production') ? process.env.REACT_APP_CUPS_API : '/api';
 
 const styles = theme => ({
   paper: {

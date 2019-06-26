@@ -33,6 +33,10 @@ app.use(
   })
 );
 
+app.get('/', (req, res) => {
+  res.render('index.html', { styleNonce: res.locals.styleNonce });
+});
+
 app.use(express.static(path.join(__dirname, 'build')));
 
 app.get('*', (req, res) => {

@@ -12,7 +12,7 @@ import {
   Snackbar,
 } from '@material-ui/core';
 
-const baseURL = (process.env.NODE_ENV === 'production') ? process.env.REACT_APP_CUPS_API_BASE_PATH : '/api';
+const baseURL = (process.env.NODE_ENV === 'production') ? process.env.REACT_APP_CUPS_API : '/api';
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 class Userplane extends Component {

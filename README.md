@@ -80,7 +80,6 @@ The flags are:
 - <k8s_master_user>: Kubernetes default user (default: none)
 
 ### Running the CCE-UI & CUPS-UI
-- You must have the corresponding .env.production environment files configured per the Readme's in the UI projects
 - Use `Make` in order to spin up the production level docker-containers via docker-compose
 - eg `make cups-ui-up && make ui-up`
 
@@ -104,12 +103,6 @@ For instructions on how to setup your development environment, see `ui/controlle
 **Any client web browser using the Controller CE web user interface must have network access
 to the listening address and port of the Controller CE REST API.**
 
-##### Prerequisites
-
-- For production deployments, create an `.env.production` file in the
-  `ui/controller` project and define the required variables. See the
-  `ui/controller/README.md` for details.
-
 ##### Running
 
 ```
@@ -129,11 +122,6 @@ make ui-down
 For instructions on how to setup your development environment, see `ui/cups/README.md`.
 
 #### Production Deployment
-
-##### Prerequisites
-- For production deployments, create an `.env.production` file in the `ui/cups`
-  project and define the required variables. See the `ui/cups/README.md` for
-  details.
 
 ##### Running
 

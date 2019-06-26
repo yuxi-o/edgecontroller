@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [0.0.49] - 2019-06-25
+### Fixed
+- Expose Syslog and StatsD service ports in `docker-compose.yml`
+- Persist telemetry logs on Docker host
+- UI AddNode & AddApp hangs on 400 response from API
+- UI not loading page on very first load
+
+### Removed
+- Hard-coded MySQL passwords
+- Hard-coded admin user password
+
+### Changed
+- Moved CCE UI and CUPS UI environment configuration to root project `.env` file
+- CCE run flags are configurable via the root project `.env` file
+
 ## [0.0.48] - 2019-06-25
 ### Fixed
 - PATCH /nodes/{node_id}/dns endpoint now returns a 501 when forwarders are provided, as they are currently unsupported

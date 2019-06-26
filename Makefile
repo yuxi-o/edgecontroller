@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Source user configured environment file.
+include .env
+
 export GO111MODULE = on
 export MINIKUBE_WANTUPDATENOTIFICATION=false
 export MINIKUBE_WANTREPORTERRORPROMPT=false
@@ -19,7 +22,35 @@ export MINIKUBE_HOME=$(HOME)
 export CHANGE_MINIKUBE_NONE_USER=true
 export KUBECONFIG=$(HOME)/.kube/config
 
-.PHONY: help all-up clean build lint test \
+# Build CCE run flags to be passed to docker-compose. This must be declared
+# before any command declarations since docker-compose depends on this variable
+# to always be set.
+define CCE_FLAGS_BASE
+	-adminPass $(CCE_ADMIN_PASSWORD) \
+	-dsn root:$(MYSQL_ROOT_PASSWORD)@tcp(mysql:3306)/controller_ce \
+	-log-level $(CCE_LOG_LEVEL)
+endef
+
+# Pass kubernetes related flags if and only if the user specified kubernetes
+# as the orchestration mode. Otherwise, assume native orchestration mode and
+# pass in base flags.
+ifeq ($(CCE_ORCHESTRATION_MODE),kubernetes)
+define CCE_FLAGS
+	$(CCE_FLAGS_BASE) \
+	-orchestration-mode kubernetes \
+	-k8s-client-ca-path $(CCE_K8S_CLIENT_CA_PATH) \
+	-k8s-client-cert-path $(CCE_K8S_CLIENT_CERT_PATH) \
+	-k8s-client-key-path $(CCE_K8S_CLIENT_KEY_PATH) \
+	-k8s-master-host $(CCE_K8S_MASTER_HOST) \
+	-k8s-api-path $(CCE_K8S_API_PATH) \
+	-k8s-master-user $(CCE_K8S_MASTER_USER)
+endef
+	export CCE_FLAGS
+else
+	export CCE_FLAGS=$(CCE_FLAGS_BASE)
+endif
+
+.PHONY: help all-up all-down clean build lint test \
 	db-up db-reset db-down \
 	minikube-install kubectl-install minikube-wait \
 	ui-up ui-down ui-test \
@@ -34,6 +65,7 @@ help:
 	@echo ""
 	@echo "Services:"
 	@echo "  all-up           to start the full controller stack"
+	@echo "  all-down         to stop the full controller stack"
 	@echo ""
 	@echo "  db-up            to start the MySQL database service"
 	@echo "  db-reset         to start and reset the MySQL database service"
@@ -65,11 +97,17 @@ help:
 	@echo "  test             to run unit followed by api tests"
 
 clean:
-	rm -rf dist certificates
+	@docker-compose stop
+	@docker-compose rm
+	rm -rf dist certificates artifacts
 
-all-up: db-up db-reset cce-up ui-up
+all-up: db-up cce-up ui-up
+
+all-down: db-down cce-down ui-down
 
 build:
+	# TODO: Remove the following section when the building of this image is consolidated to a multi-stage build
+	###########################
 	touch $(HOME)/.ssh/id_rsa
 	docker build -t cce-build -f ./docker/build/Dockerfile .
 	# multi-stage build won't work here; since pre-release commits are made to a private repo, we volume the id_rsa
@@ -77,21 +115,36 @@ build:
 	mkdir -p dist
 	docker cp cce-build:/go/src/github.com/smartedgemec/controller-ce/dist/cce ./dist/cce
 	docker rm cce-build
-	docker-compose build cce
-	go build -o dist/test-node ./test/node/grpc
+	###########################
+
+	docker-compose build
+
+	# TODO: Remove the following when the test node is built as a Docker image and add it to the docker-compose.yml
+	# and add details to the README about running a test node.
+	###########################
+	# go build -o dist/test-node ./test/node/grpc
+	###########################
 
 lint:
 	golangci-lint run
 
 db-up:
 	docker-compose up -d mysql
-	until mysql -P 8083 --protocol tcp -uroot -pchangeme -e '' 2>/dev/null; do \
+	@until mysql -P 8083 --protocol tcp -uroot -p$(MYSQL_ROOT_PASSWORD) -e '' 2>/dev/null; do \
 		echo "Waiting for DB..."; \
 		sleep 1; \
 		done
 
-db-reset: db-up
-	mysql -P 8083 --protocol tcp -u root -pchangeme < mysql/schema.sql
+# Checks if the DB exists; if not, it'll run the SQL script
+ifeq ($(shell mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) -e '' controller_ce >/dev/null 2>&1; echo $$?),1)
+	@mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) < mysql/schema.sql >/dev/null 2>&1
+endif
+
+db-reset:
+# Checks if the DB exists; if so, drop it
+ifeq ($(shell mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) -e '' >/dev/null 2>&1; echo $$?),0)
+	@mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) -e "DROP DATABASE IF EXISTS controller_ce;" >/dev/null 2>&1
+endif
 
 db-down:
 	docker-compose stop mysql
@@ -146,14 +199,15 @@ else
 	sudo -E minikube delete
 endif
 
-cce-up: build
+cce-up:
+	touch ./artifacts/syslog.log
+	touch ./artifacts/statsd.log
 	docker-compose up -d cce
 
 cce-down:
 	docker-compose stop cce
 
 ui-up:
-	docker build -t cce-ui ./ui/controller
 	docker-compose up -d ui
 
 ui-down:
@@ -166,7 +220,6 @@ ui-test:
 	cd ui/controller && yarn install && yarn build && yarn test
 
 cups-ui-up:
-	docker build -t cce-cups-ui ./ui/cups
 	docker-compose up -d cups-ui
 
 cups-ui-down:
@@ -182,10 +235,10 @@ test-unit:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites \
 		--skipPackage=vendor,k8s,cmd/cce,cmd/cce/k8s
 
-test-api: db-reset
+test-api: db-reset db-up
 	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce
 
-test-api-k8s: db-reset
+test-api-k8s: db-reset db-up
 	docker pull nginx:1.12
 	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce/k8s
 

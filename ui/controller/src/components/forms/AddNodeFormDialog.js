@@ -83,15 +83,14 @@ class AddNodeFormDialog extends Component {
         this.props.enqueueSnackbar(`Successfully added edge node ${serial}.`, { variant: 'success' });
       })
       .catch((err) => {
-        if ("response" in err && "data" in err.response) {
+        if (err && err.hasOwnProperty('response') && err.response.data) {
           this.setState({ loading: false, submitError: true, helperText: err.response.data });
           this.props.enqueueSnackbar(`${err.response.data}.`, { variant: 'error' });
           return;
         }
 
-        this.setState({ loading: false, submitError: true, helperText: 'Unknown error try again later' });
-
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        this.setState({ loading: false, submitError: true, helperText: err.toString() });
+        this.props.enqueueSnackbar(`${err.toString()}`, { variant: 'error' });
       });
   };
 

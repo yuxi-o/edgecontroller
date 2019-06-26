@@ -3,8 +3,6 @@ import Auth from '../components/Auth';
 
 class ApiClient {
   _CONTROLLER_API_ = process.env.REACT_APP_CONTROLLER_API;
-  _CUPS_API = process.env.REACT_APP_CUPS_API;
-  _CUPS_UI_URL = process.env.REACT_APP_CUPS_API;
 
   axiosConfig = {
     baseURL: (process.env.NODE_ENV === 'production') ? this._CONTROLLER_API_ : '/api',
@@ -21,7 +19,7 @@ class ApiClient {
 
   setupInterceptor() {
     // Response Interceptor
-    if(this.interceptorEnabled === true) {
+    if (this.interceptorEnabled === true) {
       return true;
     }
 
@@ -30,17 +28,17 @@ class ApiClient {
       return response;
     }, function (err) {
 
-      if(!err || !err.hasOwnProperty('response')) {
+      if (!err || !err.hasOwnProperty('response')) {
         return Promise.reject(err);
       }
 
-      if(err.response.status === 401) {
+      if (err.response.status === 401) {
         Auth.logout(() => {
           window.location.href = "/login";
         });
       }
 
-      if(err.response && err.response.data && err.response.data !== '') {
+      if (err.response && err.response.data && err.response.data !== '') {
         return Promise.reject(err.response.data)
       }
       // Do something with response error
@@ -98,7 +96,7 @@ class ApiClient {
    * @returns {Promise<AxiosResponse>}
    */
   async get(path, options = {}) {
-    if(this.interceptorEnabled === false) {this.setupInterceptor()}
+    if (this.interceptorEnabled === false) { this.setupInterceptor() }
     return await this.axiosInstance.get(path, options);
   }
 
@@ -109,7 +107,7 @@ class ApiClient {
    * @returns {Promise<AxiosResponse>}
    */
   async post(path, data = {}) {
-    if(this.interceptorEnabled === false) {this.setupInterceptor()}
+    if (this.interceptorEnabled === false) { this.setupInterceptor() }
     return await this.axiosInstance.post(path, data);
   }
 
@@ -120,7 +118,7 @@ class ApiClient {
  * @returns {Promise<AxiosResponse>}
  */
   async patch(path, data = {}) {
-    if(this.interceptorEnabled === false) {this.setupInterceptor()}
+    if (this.interceptorEnabled === false) { this.setupInterceptor() }
     return await this.axiosInstance.patch(path, data);
   }
 
@@ -131,7 +129,7 @@ class ApiClient {
    * @returns {Promise<AxiosResponse>}
    */
   async delete(path, options = {}) {
-    if(this.interceptorEnabled === false) {this.setupInterceptor()}
+    if (this.interceptorEnabled === false) { this.setupInterceptor() }
     return await this.axiosInstance.delete(path, options);
   }
 }

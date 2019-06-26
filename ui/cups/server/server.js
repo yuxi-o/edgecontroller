@@ -28,10 +28,14 @@ app.use(
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", (req, res) => `'nonce-${res.locals.styleNonce}'`],
-      connectSrc: [`${process.env.REACT_APP_CUPS_API_BASE_PATH}`]
+      connectSrc: [`${process.env.REACT_APP_CUPS_API}`]
     }
   })
 );
+
+app.get('/', (req, res) => {
+  res.render('index.html', { styleNonce: res.locals.styleNonce });
+});
 
 app.use(express.static(path.join(__dirname, 'build')));
 

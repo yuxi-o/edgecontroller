@@ -1,6 +1,13 @@
 # stage: 1
 FROM node:lts-alpine as react-build
 
+# Set the Controller API URL variable during build time
+ARG REACT_APP_CUPS_API
+ENV REACT_APP_CUPS_API=$REACT_APP_CUPS_API
+
+# Instruct webpack to only import runtime scripts
+ENV INLINE_RUNTIME_CHUNK=false
+
 # Create app directory
 WORKDIR /app
 
@@ -9,9 +16,6 @@ COPY . ./
 
 # Install production dependencies for app
 RUN yarn install --production
-
-# Instruct webpack to only import runtime scripts
-ENV INLINE_RUNTIME_CHUNK=false
 
 # Build production bundle
 RUN yarn build
@@ -27,9 +31,6 @@ COPY --from=react-build /app/build ./build
 
 # Copy static server
 COPY ./server ./
-
-# Copy environment files
-COPY .env.production ./.env
 
 # Install production dependencies for server
 RUN yarn install --production

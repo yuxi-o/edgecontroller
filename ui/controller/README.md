@@ -21,7 +21,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ### Development
 A development .env under `.env.development` is already configured with the default URLs
-for the controller API, CUPs API, and CUPs UI local development
+for the controller UI local development.
 
 The local development server is proxied via create-react-app's proxy functionality.
 This is to resolve CORS local dev concerns.
@@ -30,12 +30,6 @@ This is to resolve CORS local dev concerns.
 
 **Any client web browser using the Controller CE web user interface must have network access 
 to the listening address and port of the Controller CE REST API.**
-
-In order to setup a Production build, you must create a file under the project root
-with the filename of `.env.production`
-
-Here are the following variables
-- `REACT_APP_CONTROLLER_API`
 
 ## Available Scripts
 

@@ -43,6 +43,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/joho/godotenv"
 	k8sV1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -61,11 +62,10 @@ import (
 	"github.com/smartedgemec/controller-ce/swagger"
 )
 
-const (
-	adminPass = "word"
-)
-
 var (
+	adminPass string
+	dbPass    string
+
 	cmd    *exec.Cmd
 	ctrl   *gexec.Session
 	node   *gexec.Session
@@ -120,6 +120,15 @@ func startup() {
 	exe, err := gexec.Build("github.com/smartedgemec/controller-ce/cmd/cce")
 	Expect(err).ToNot(HaveOccurred(), "Problem building service")
 
+	By("Loading environment variables from .env file")
+	Expect(godotenv.Load("../../../.env")).To(Succeed())
+
+	adminPass = os.Getenv("CCE_ADMIN_PASSWORD")
+	Expect(adminPass).ToNot(BeEmpty())
+
+	dbPass = os.Getenv("MYSQL_ROOT_PASSWORD")
+	Expect(dbPass).ToNot(BeEmpty())
+
 	u, err := user.Current()
 	Expect(err).ToNot(HaveOccurred())
 	kubeConfig := path.Join(u.HomeDir, ".kube", "config")
@@ -128,7 +137,7 @@ func startup() {
 	Expect(err).ToNot(HaveOccurred())
 
 	cmd = exec.Command(exe,
-		"-dsn", "root:changeme@tcp(:8083)/controller_ce",
+		"-dsn", fmt.Sprintf("root:%s@tcp(:8083)/controller_ce", dbPass),
 		"-httpPort", "8080",
 		"-grpcPort", "8081",
 		"-elaPort", "42101",
@@ -204,7 +213,9 @@ func shutdown() {
 
 func clearGRPCTargetsTable() {
 	By("Connecting to the database")
-	db, err := sql.Open("mysql", "root:changeme@tcp(:8083)/controller_ce?multiStatements=true")
+	db, err := sql.Open(
+		"mysql",
+		fmt.Sprintf("root:%s@tcp(:8083)/controller_ce?multiStatements=true", dbPass))
 	Expect(err).ToNot(HaveOccurred())
 
 	defer func() {

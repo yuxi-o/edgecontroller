@@ -31,6 +31,9 @@ dist/
 # Container build binary artifact
 ./cce
 
+# Go build dependencies
+vendor/
+
 # Certificates folder
 certificates/
 
@@ -41,5 +44,5 @@ certificates/
 # Log files
 *.log
 
-# Production environment files
-.env.production
+# Runtime artifacts
+artifacts/
