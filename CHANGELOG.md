@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.48] - 2019-06-25
+### Fixed
+- PATCH /nodes/{node_id}/dns endpoint now returns a 501 when forwarders are provided, as they are currently unsupported
+
 ## [0.0.47] - 2019-06-25
 ### Fixed
 - UI: Form schema in TrafficPolicy had incorrect MacAddress type

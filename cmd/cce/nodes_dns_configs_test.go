@@ -85,6 +85,57 @@ var _ = Describe("/nodes/{node_id}/dns", func() {
 					}`, uuid.New()),
 				"DNS call failed mid operation: ips[0] could not be parsed"),
 		)
+		DescribeTable("501 Not Implemented",
+			func(req, expectedResp string) {
+				clearGRPCTargetsTable()
+				nodeCfg := createAndRegisterNode()
+				By("Sending a PATCH /nodes/{node_id}/dns request")
+				resp, err := apiCli.Patch(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/dns", nodeCfg.nodeID),
+					"application/json",
+					strings.NewReader(req))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 501 Not Implemented response")
+				Expect(resp.StatusCode).To(Equal(http.StatusNotImplemented))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Verifying the response body")
+				Expect(string(body)).To(Equal(expectedResp))
+			},
+			Entry(
+				"PATCH /nodes/{node_id}/dns with a forwarder provided",
+				fmt.Sprintf(`
+				{
+					"name": "Sample DNS configuration",
+					"records": {
+					  "a": [
+						{
+							"name": "sample-app1.demosite.com",
+							"description": "The domain for my sample app 1",
+							"alias": false,
+							"values": [
+								"192.168.1.5"
+						  ]
+						}
+					  ]
+					},
+					"configurations": {
+					  "forwarders" : [
+						  {
+								"name": "Google DNS",
+								"description": "This is the DNS server for Google",
+								"value": "8.8.8.8"
+						  }
+					   ]
+					}
+				}`),
+				"DNS call failed mid operation: received unimplemented field forwarders in request"),
+		)
 	})
 
 	Describe("GET /nodes/{node_id}/dns", func() {

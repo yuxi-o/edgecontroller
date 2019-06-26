@@ -735,6 +735,12 @@ func (g *Gorilla) swagDNSCreateHelper(w http.ResponseWriter, r *http.Request) er
 		return err
 	}
 
+	if len(requested.Configurations.Forwarders) != 0 {
+		log.Err("Received unimplemented field forwarders in request")
+		w.WriteHeader(http.StatusNotImplemented)
+		return fmt.Errorf("received unimplemented field forwarders in request")
+	}
+
 	// Create the new persistable entity for the DNS config
 	newConfig := &cce.DNSConfig{
 		ID:   uuid.New(),
