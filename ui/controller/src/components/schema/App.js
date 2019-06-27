@@ -44,10 +44,14 @@ export default {
       cores: {
         type: "number",
         title: "Cores",
+        minimum: 1,
+        maximum: 8,
       },
       memory: {
         type: "number",
-        title: "Memory",
+        title: "Memory (in MB)",
+        minimum: 1,
+        maximum: 16384,
       },
       ports: {
         type: "array",
@@ -59,6 +63,8 @@ export default {
             port: {
               type: "number",
               title: "Port",
+              minimum: 1,
+              maximum: 65535,
             },
             protocol: {
               type: "string",

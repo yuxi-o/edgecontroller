@@ -245,7 +245,7 @@ class AddAppFormDialog extends Component {
               {generateInputField("vendor", "vendor", "Vendor")}
               {generateInputField("description", "description", "Description")}
               {generateInputField("cores", "cores", "Cores")}
-              {generateInputField("memory", "memory", "Memory")}
+              {generateInputField("memory", "memory", "Memory (in MB)")}
               {generateInputField("source", "source", "Source")}
               {renderPortsInputField()}
 

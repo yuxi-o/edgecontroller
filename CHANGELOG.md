@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.0.53] - 2019-06-27
+### Added
+- Limits for application cores, memory, and ports
+- (INTC-762) Add unit size to App memory
+
 ## [0.0.52] - 2019-06-26
 ### Added
 - Added ansible playbook for controller deployment
