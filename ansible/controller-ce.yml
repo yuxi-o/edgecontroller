@@ -1,0 +1,18 @@
+---
+- hosts: "{{ controller_host }}"
+  vars:
+    remote_root: "{{ ansible_env.HOME }}/controller-ce"
+    local_root: "{{ lookup('env', 'PWD') }}/../"
+  roles:
+    - common
+    - docker
+    - controller-ce
+
+- hosts: "{{ ui_host }}"
+  vars:
+    remote_root: "{{ ansible_env.HOME }}/controller-ce"
+    local_root: "{{ lookup('env', 'PWD') }}/../"
+  roles:
+    - common
+    - docker
+    - controller-ui

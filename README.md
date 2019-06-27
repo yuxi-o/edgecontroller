@@ -154,7 +154,8 @@ typically adjacent to or within an Edge Node.
 
 Clone this repository onto the system you wish to setup the Controller and ensure the prerequisites below are met.
 
-Ansible scripts are provided for users that are familiar with the tooling.
+[Ansible](https://www.ansible.com) scripts are provided for users that are familiar with the tooling and can be found
+[here](ansible/README.md).
 
 ### OS
 
@@ -231,8 +232,8 @@ practices to protect network services with IDS, IDP, and firewall systems if it 
 As more advanced setup instructions are contributed, they will be found here. For now, reference the [`.env`](.env)
 file for the types of customizations are available.
 
-If you wish to use Ansible to set up the Controller, it follows a slightly different procedure. Please see the Ansible
-documentation to learn more about how to set it up.
+If you wish to use Ansible to set up the Controller, it follows a slightly different procedure. Please see the
+[Ansible documentation](ansible/README.md) to learn more about how to set it up.
 
 ## Usage
 

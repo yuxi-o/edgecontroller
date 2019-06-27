@@ -1,0 +1,5 @@
+[servers]
+server[1:3].example.com
+
+[servers:vars]
+ansible_user=root

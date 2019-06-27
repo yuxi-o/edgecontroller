@@ -1,0 +1,20 @@
+---
+- name: clone the controller-ce private repo
+  git:
+    repo: "https://{{ github_token }}@{{ repo_url }}"
+    version: "{{ branch }}"
+    dest: "{{ remote_root }}"
+    force: yes
+  when: github_token != ""
+
+- name: clone the controller-ce public repo
+  git:
+    repo: "https://{{ repo_url }}"
+    version: "{{ branch }}"
+    dest: "{{ remote_root }}"
+  when: github_token == ""
+
+- name: configure docker compose
+  template:
+    src: docker-compose.j2
+    dest: "{{ remote_root }}/docker-compose.yml"

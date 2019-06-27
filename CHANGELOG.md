@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.52] - 2019-06-26
+### Added
+- Added ansible playbook for controller deployment
+
 ## [0.0.51] - 2019-06-26
 ### Added
 - Configuration options to support private Git repositories if there are private dependencies

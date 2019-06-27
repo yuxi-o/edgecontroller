@@ -1,0 +1,12 @@
+---
+github_token: ""
+branch: master
+cce_admin_password: changeme
+mysql_root_password: changeme
+cce_orchestration_mode: native
+cce_log_level: info
+cce_flags: "-adminPass {{ cce_admin_password }} \
+	-dsn root:{{ mysql_root_password }}@tcp(mysql:3306)/controller_ce \
+  -log-level {{ cce_log_level }}"
+react_app_controller_api: http://{{ controller_host }}:8080
+react_app_cups_api: "http://{{ controller_host }}:8090"

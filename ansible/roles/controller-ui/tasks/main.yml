@@ -1,0 +1,20 @@
+---
+- name: build the UI image
+  shell: docker-compose build ui
+  args:
+    chdir: "{{ remote_root }}"
+
+- name: start the UI
+  make:
+    chdir: "{{ remote_root }}"
+    target: ui-up
+
+- name: build the CUPS UI image
+  shell: docker-compose build cups-ui
+  args:
+    chdir: "{{ remote_root }}"
+
+- name: start the CUPS UI
+  make:
+    chdir: "{{ remote_root }}"
+    target: cups-ui-up
