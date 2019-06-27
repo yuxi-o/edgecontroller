@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.54] - 2019-06-27
+### Changed
+- UI API request timeouts set to 120seconds
+
 ## [0.0.53] - 2019-06-27
 ### Added
 - Limits for application cores, memory, and ports

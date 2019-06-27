@@ -6,7 +6,7 @@ class ApiClient {
 
   axiosConfig = {
     baseURL: (process.env.NODE_ENV === 'production') ? this._CONTROLLER_API_ : '/api',
-    timeout: 10000,
+    timeout: 1000 * 120, // 120seconds/2minutes
     headers: {
       contentType: 'application/json',
       accept: 'application/json',
