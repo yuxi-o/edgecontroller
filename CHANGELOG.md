@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [0.0.51] - 2019-06-26
+### Added
+- Configuration options to support private Git repositories if there are private dependencies
+
+### Changed
+- Backend build inside of container now supports GitHub tokens instead of SSH keys
+
 ## [0.0.50] - 2019-06-26
 ### Added
 - Comprehensive README additions with complementary commands from the Makefile

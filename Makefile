@@ -106,17 +106,6 @@ all-up: db-up cce-up ui-up
 all-down: db-down cce-down ui-down
 
 build:
-	# TODO: Remove the following section when the building of this image is consolidated to a multi-stage build
-	###########################
-	touch $(HOME)/.ssh/id_rsa
-	docker build -t cce-build -f ./docker/build/Dockerfile .
-	# multi-stage build won't work here; since pre-release commits are made to a private repo, we volume the id_rsa
-	docker run --name cce-build -v $(HOME)/.ssh/id_rsa:/root/.ssh/id_rsa cce-build
-	mkdir -p dist
-	docker cp cce-build:/go/src/github.com/smartedgemec/controller-ce/dist/cce ./dist/cce
-	docker rm cce-build
-	###########################
-
 	docker-compose build
 
 	# TODO: Remove the following when the test node is built as a Docker image and add it to the docker-compose.yml

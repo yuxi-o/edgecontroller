@@ -7,12 +7,20 @@ WORKDIR /go/src/github.com/smartedgemec/controller-ce
 
 COPY . ./
 
-COPY .gitconfig /root/.gitconfig
-RUN mkdir /root/.ssh && echo "StrictHostKeyChecking no " > /root/.ssh/config
+RUN apk add git
 
-RUN apk add git openssh-client
+ARG GITHUB_TOKEN
+ENV github_token=$GITHUB_TOKEN
+RUN if [[ -n "${github_token}" ]]; \
+	then git config --global url.https://${github_token}@github.com/.insteadOf https://github.com/; \
+	fi;
 
-CMD cd /go/src/github.com/smartedgemec &&\
-    git clone git@github.com:smartedgemec/log.git &&\
+RUN cd /go/src/github.com/smartedgemec &&\
+    git clone https://github.com/smartedgemec/log.git &&\
     cd /go/src/github.com/smartedgemec/controller-ce &&\
-    go build -o dist/cce ./cmd/cce
+    go build -o dist/cce ./cmd/cce &&\
+	cp dist/cce /cce
+
+ENTRYPOINT ["/cce"]
+
+CMD []

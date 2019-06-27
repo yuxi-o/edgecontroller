@@ -14,7 +14,9 @@ services:
     image: cce:latest
     build:
       context: .
-      dockerfile: docker/run/Dockerfile
+      dockerfile: docker/build/Dockerfile
+      args:
+        GITHUB_TOKEN: "${GITHUB_TOKEN}"
     depends_on:
       - mysql
     command: "${CCE_FLAGS}"
@@ -38,6 +40,7 @@ services:
     environment:
       REACT_APP_CONTROLLER_API: "${REACT_APP_CONTROLLER_API}"
   cups-ui:
+    image: cups:latest
     build:
       context: ./ui/cups
       args:
