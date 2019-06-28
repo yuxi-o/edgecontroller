@@ -120,17 +120,16 @@ lint:
 db-up:
 	docker-compose up -d mysql
 	@until mysql -P 8083 --protocol tcp -uroot -p$(MYSQL_ROOT_PASSWORD) -e '' 2>/dev/null; do \
-		echo "Waiting for DB..."; \
+		echo "Bringing up DB (this may take a moment...)"; \
 		sleep 1; \
 		done
 
-# Checks if the DB exists; if not, it'll run the SQL script
-ifeq ($(shell mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) -e '' controller_ce >/dev/null 2>&1; echo $$?),1)
-	@mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) < mysql/schema.sql >/dev/null 2>&1
-endif
+	# Either the DB already exists or it should run the schema.sql to create the DB
+	@mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) -e '' controller_ce >/dev/null 2>&1 || \
+	mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) < mysql/schema.sql >/dev/null 2>&1
 
 db-reset:
-# Checks if the DB exists; if so, drop it
+# Checks if accessing the MySQL engine exits 0 (success); if so, try to drop the database
 ifeq ($(shell mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) -e '' >/dev/null 2>&1; echo $$?),0)
 	@mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) -e "DROP DATABASE IF EXISTS controller_ce;" >/dev/null 2>&1
 endif
@@ -189,8 +188,6 @@ else
 endif
 
 cce-up:
-	touch ./artifacts/syslog.log
-	touch ./artifacts/statsd.log
 	docker-compose up -d cce
 
 cce-down:
@@ -224,10 +221,14 @@ test-unit:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites \
 		--skipPackage=vendor,k8s,cmd/cce,cmd/cce/k8s
 
-test-api: db-reset db-up
+test-api:
+	$(MAKE) db-reset
+	$(MAKE) db-up
 	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce
 
-test-api-k8s: db-reset db-up
+test-api-k8s:
+	$(MAKE) db-reset
+	$(MAKE) db-up
 	docker pull nginx:1.12
 	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce/k8s
 

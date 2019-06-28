@@ -26,9 +26,7 @@ services:
       - 6514:6514
       - 8125:8125
     volumes:
-      - ./artifacts/syslog.log:/syslog.log
-      - ./artifacts/statsd.log:/statsd.log
-      - ./artifacts:/certificates/ca
+      - ./artifacts/controller:/artifacts
   ui:
     image: ui:latest
     build:

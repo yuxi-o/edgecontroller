@@ -21,6 +21,8 @@ RUN cd /go/src/github.com/smartedgemec &&\
     go build -o dist/cce ./cmd/cce &&\
 	cp dist/cce /cce
 
+WORKDIR /artifacts
+
 ENTRYPOINT ["/cce"]
 
 CMD []

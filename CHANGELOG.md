@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.0.55] - 2019-06-27
+### Fixed
+- Persistence on disk now has more organized directory structure
+- Controller backend was not persisting CA key+cert and the log/stats files
+- Some `make` commands were behaving non-deterministically
+
 ## [0.0.54] - 2019-06-27
 ### Changed
 - UI API request timeouts set to 120seconds
