@@ -108,11 +108,11 @@ all-down: db-down cce-down ui-down
 build:
 	docker-compose build
 
-	# TODO: Remove the following when the test node is built as a Docker image and add it to the docker-compose.yml
-	# and add details to the README about running a test node.
-	###########################
-	# go build -o dist/test-node ./test/node/grpc
-	###########################
+	@# TODO: Remove the following when the test node is built as a Docker image and add it to the docker-compose.yml
+	@# and add details to the README about running a test node.
+	@###########################
+	@# go build -o dist/test-node ./test/node/grpc
+	@###########################
 
 lint:
 	golangci-lint run
@@ -124,12 +124,12 @@ db-up:
 		sleep 1; \
 		done
 
-	# Either the DB already exists or it should run the schema.sql to create the DB
+	@# Either the DB already exists or it should run the schema.sql to create the DB
 	@mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) -e '' controller_ce >/dev/null 2>&1 || \
 	mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) < mysql/schema.sql >/dev/null 2>&1
 
 db-reset:
-# Checks if accessing the MySQL engine exits 0 (success); if so, try to drop the database
+	@# Checks if accessing the MySQL engine exits 0 (success); if so, try to drop the database
 ifeq ($(shell mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) -e '' >/dev/null 2>&1; echo $$?),0)
 	@mysql -P 8083 --protocol tcp -u root -p$(MYSQL_ROOT_PASSWORD) -e "DROP DATABASE IF EXISTS controller_ce;" >/dev/null 2>&1
 endif
@@ -167,13 +167,13 @@ endif
 
 minikube-wait:
 	kubectl cluster-info
-	# kube-addon-manager is responsible for managing other kubernetes components, such as kube-dns, dashboard, storage-provisioner.
+	@# kube-addon-manager is responsible for managing other kubernetes components, such as kube-dns, dashboard, storage-provisioner.
 	until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}" 2>&1 | grep -q "Ready=True"; do \
 		sleep 1; \
 		echo "waiting for kube-addon-manager to be available"; \
 		kubectl get pods --all-namespaces; \
 	done
-	# Wait for kube-dns to be ready.
+	@# Wait for kube-dns to be ready.
 	until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}" 2>&1 | grep -q "Ready=True"; do \
 		sleep 1; \
 		echo "waiting for kube-dns to be available"; \

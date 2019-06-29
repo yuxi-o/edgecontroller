@@ -5,6 +5,20 @@ Copyright © 2019 Intel Corporation and Smart-Edge.com, Inc.
 
 # CHANGELOG
 
+## [0.0.57] - 2019-06-29
+### Changed
+- Updated `ansible/README.md` with more information and define host requirements.
+- Updated `ansible/README.md` to explain how to install tag release of controller.
+- Ansible provides configuration with `.env` file.
+- Ansible brings up the controller using `make`.
+- Ansible installs to `/opt/controller` by default.
+- Ansible sets a random password for admin and MySQL. Credentials are stored
+    under `credentials/` from where you run `ansible-playbook`.
+
+### Fixed
+- Ansible installs missing dependencies such as `git`, `make`, and `epel-release`.
+- `make` no longer displays comments
+
 ## [0.0.56] - 2019-06-28
 ### Changed
 - Backend API times out HTTP requests after 120 seconds

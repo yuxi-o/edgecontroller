@@ -5,7 +5,7 @@ Copyright © 2019 Intel Corporation and Smart-Edge.com, Inc.
 
 # OpenNESS Controller
 The OpenNESS Controller is used to manage and control OpenNESS Edge Nodes, and is a component of the OpenNESS
-multi-access edge computing (MEC) platform. This repository contains the source for the the OpenNESS Controller.
+multi-access edge computing (MEC) platform. This repository contains the source for the OpenNESS Controller.
 Familiarize yourself with the OpenNESS Edge Node if you wish to take full advantage of this repository.
 
 The Controller features the following components:

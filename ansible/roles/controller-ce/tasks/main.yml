@@ -1,71 +1,28 @@
 ---
-- name: install mysql
-  yum:
-    name: mariadb
+- name: install make and mysql client
+  package:
+    name:
+      - make
+      - mariadb
     state: present
 
-- name: start the db container
-  shell: docker-compose up -d mysql
-  args:
-    chdir: "{{ remote_root }}"
+- name: build controller
+  make:
+    chdir: "{{ controller_path }}"
+    target: build
+  environment:
+    PATH: /usr/local/bin:{{ ansible_env.PATH }}
 
-- name: pause for db
-  pause:
-    seconds: 10
-
-- name: load the schema
-  shell: "mysql -P 8083 --protocol tcp -u root -p{{ mysql_password }} < mysql/schema.sql"
-  args:
-    chdir: "{{ remote_root }}"
-
-- name: remove existing controller-ce container
-  docker_container:
-    name: cce-build
-    state: absent
-
-- name: create the build image (private)
-  shell: "docker build --build-arg GITHUB_TOKEN={{ github_token }} -t cce-build -f ./docker/build/Dockerfile ."
-  args:
-    chdir: "{{ remote_root }}"
-  when: github_token != ""
-
-- name: create the build image (public)
-  shell: "docker build -t cce-build -f ./docker/build/Dockerfile ."
-  args:
-    chdir: "{{ remote_root }}"
-  when: github_token == ""
-
-- name: create dist directory
-  file:
-    path: "{{ remote_root }}/dist"
-    state: directory
-
-- name: build the binary
-  shell: "docker run --name cce-build cce-build"
-  args:
-    chdir: "{{ remote_root }}"
-
-- name: copy controller-ce binary
-  shell: "docker cp cce-build:/go/src/github.com/smartedgemec/controller-ce/dist/cce ./dist/cce"
-  args:
-    chdir: "{{ remote_root }}"
-
-- name: build the controller-ce container
-  shell: docker-compose build cce
-  args:
-    chdir: "{{ remote_root }}"
-
-- name: create a persistent syslog
-  file:
-    path: "{{ remote_root }}/artifacts/syslog.log"
-    state: touch
-
-- name: create a persistent statsd log
-  file:
-    path: "{{ remote_root }}/artifacts/statsd.log"
-    state: touch
+- name: start the database
+  make:
+    chdir: "{{ controller_path }}"
+    target: db-up
+  environment:
+    PATH: /usr/local/bin:{{ ansible_env.PATH }}
 
 - name: start the controller
-  shell: docker-compose up -d cce
-  args:
-    chdir: "{{ remote_root }}"
+  make:
+    chdir: "{{ controller_path }}"
+    target: cce-up
+  environment:
+    PATH: /usr/local/bin:{{ ansible_env.PATH }}

@@ -1,20 +1,41 @@
 ---
+- name: install git
+  package:
+    name:
+      - git
+    state: present
+
+- name: create Controller directory
+  file:
+    path: "{{ controller_path }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+
 - name: clone the controller-ce private repo
   git:
     repo: "https://{{ github_token }}@{{ repo_url }}"
-    version: "{{ branch }}"
-    dest: "{{ remote_root }}"
+    version: "{{ version }}"
+    dest: "{{ controller_path }}"
     force: yes
   when: github_token != ""
 
 - name: clone the controller-ce public repo
   git:
     repo: "https://{{ repo_url }}"
-    version: "{{ branch }}"
-    dest: "{{ remote_root }}"
+    version: "{{ version }}"
+    dest: "{{ controller_path }}"
   when: github_token == ""
 
-- name: configure docker compose
+- name: configure .env
   template:
-    src: docker-compose.j2
-    dest: "{{ remote_root }}/docker-compose.yml"
+    src: env.j2
+    dest: "{{ controller_path }}/.env"
+    owner: "{{ ansible_user }}"
+    mode: 0600
+
+- name: set owner of Controller directory
+  file:
+    path: "{{ controller_path }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    recurse: yes

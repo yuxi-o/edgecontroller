@@ -1,4 +1,11 @@
 ---
+- name: install epel-release
+  package:
+    name: epel-release
+    state: present
+  when:
+    - ansible_distribution in [ "CentOS", "RedHat" ]
+
 - name: install docker prerequisites
   yum:
     name:
@@ -33,3 +40,9 @@
 - name: install docker SDK
   pip:
     name: docker
+
+- name: add current user to docker group
+  user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes

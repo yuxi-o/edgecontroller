@@ -1,20 +1,26 @@
 ---
-- name: build the UI image
-  shell: docker-compose build ui
-  args:
-    chdir: "{{ remote_root }}"
+- name: install make
+  package:
+    name: make
+    state: present
+
+- name: build UI
+  make:
+    chdir: "{{ controller_path }}"
+    target: build
+  environment:
+    PATH: /usr/local/bin:{{ ansible_env.PATH }}
 
 - name: start the UI
   make:
-    chdir: "{{ remote_root }}"
+    chdir: "{{ controller_path }}"
     target: ui-up
-
-- name: build the CUPS UI image
-  shell: docker-compose build cups-ui
-  args:
-    chdir: "{{ remote_root }}"
+  environment:
+    PATH: /usr/local/bin:{{ ansible_env.PATH }}
 
 - name: start the CUPS UI
   make:
-    chdir: "{{ remote_root }}"
+    chdir: "{{ controller_path }}"
     target: cups-ui-up
+  environment:
+    PATH: /usr/local/bin:{{ ansible_env.PATH }}
