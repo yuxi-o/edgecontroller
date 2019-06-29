@@ -24,6 +24,10 @@ func (s *PersistenceService) Create(
 	ctx context.Context,
 	e cce.Persistable,
 ) error {
+	// Create a timeout context for a DB operation
+	ctx, cancel := context.WithTimeout(ctx, cce.MaxDBRequestTime)
+	defer cancel()
+
 	bytes, err := json.Marshal(e)
 	if err != nil {
 		return errors.Wrap(err, "error marshaling")
@@ -48,6 +52,10 @@ func (s *PersistenceService) Read(
 	id string,
 	zv cce.Persistable,
 ) (e cce.Persistable, err error) {
+	// Create a timeout context for a DB operation
+	ctx, cancel := context.WithTimeout(ctx, cce.MaxDBRequestTime)
+	defer cancel()
+
 	rows, err := s.DB.QueryContext(
 		ctx,
 		// gosec: Table name is not based on user input
@@ -78,6 +86,10 @@ func (s *PersistenceService) Filter(
 	zv cce.Filterable,
 	fs []cce.Filter,
 ) (es []cce.Persistable, err error) {
+	// Create a timeout context for a DB operation
+	ctx, cancel := context.WithTimeout(ctx, cce.MaxDBRequestTime)
+	defer cancel()
+
 	// gosec: Table name is not based on user input
 	q := fmt.Sprintf("SELECT entity FROM %s", zv.GetTableName()) //nolint:gosec
 
@@ -133,6 +145,10 @@ func (s *PersistenceService) ReadAll(
 	ctx context.Context,
 	zv cce.Persistable,
 ) (es []cce.Persistable, err error) {
+	// Create a timeout context for a DB operation
+	ctx, cancel := context.WithTimeout(ctx, cce.MaxDBRequestTime)
+	defer cancel()
+
 	rows, err := s.DB.QueryContext(
 		ctx,
 		// gosec: Table name is not based on user input
@@ -176,6 +192,10 @@ func (s *PersistenceService) BulkUpdate(
 	ctx context.Context,
 	es []cce.Persistable,
 ) error {
+	// Create a timeout context for a DB operation
+	ctx, cancel := context.WithTimeout(ctx, cce.MaxDBRequestTime)
+	defer cancel()
+
 	for _, e := range es {
 		bytes, err := json.Marshal(e)
 		if err != nil {
@@ -205,6 +225,10 @@ func (s *PersistenceService) Delete(
 	id string,
 	zv cce.Persistable,
 ) (ok bool, err error) {
+	// Create a timeout context for a DB operation
+	ctx, cancel := context.WithTimeout(ctx, cce.MaxDBRequestTime)
+	defer cancel()
+
 	result, err := s.DB.ExecContext(
 		ctx,
 		// gosec: Table name is not based on user input

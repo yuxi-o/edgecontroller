@@ -1696,8 +1696,9 @@ func (g *Gorilla) swagDELETENodeAppByID(w http.ResponseWriter, r *http.Request) 
 	if err = handleDeleteNodesApps(
 		r.Context(), ctrl.PersistenceService, nodeApps[0],
 	); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		log.Errf("Error making remote call: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	// Delete the resource

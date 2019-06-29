@@ -73,6 +73,7 @@ func authenticate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	// Return JSON-encoded auth token
+	w.Header().Set("Content-Type", "application/json")
 	if _, err = w.Write(bytes); err != nil {
 		log.Errf("Error writing response: %v", err)
 	}

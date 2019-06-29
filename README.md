@@ -31,8 +31,9 @@ details of the setup and operation of the Controller.*
 1. Clone this repository to your local system. You must have `make`, `docker` and `docker-compose` utilities installed
 and in your `PATH`.
 
-2. If this is your first time starting the controller, build the Docker containers by running the following command
-from the project directory:
+2. If this is your first time starting the controller, build the Docker images by running the following command from
+the project directory. **You should run this command any time there is a new release of the project to rebuild the
+Docker images**:
 
 
 *(skip to step 3 if you have already done this and you are starting the controller a subsequent time)*
@@ -218,7 +219,8 @@ assumes you've already become familiar with the [Quick Start](#quick-start).
 
 The Controller uses user-defined configurations from the [`.env`](.env) included in this repository. Review the file
 [here](.env) to familiarize yourself with the different types of configuration parameters that you must be defined and
-optionally changed.
+optionally changed. Some variables in the [`.env`](.env) require that you rebuild the Docker images. Be sure to see the
+comments in the [`.env`](.env) for more details.
 
 For example, you can set a different admin password by editing the file.
 

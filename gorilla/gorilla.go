@@ -174,6 +174,23 @@ func NewGorilla( //nolint:gocyclo
 		})
 	})
 
+	// Limit size of all request payloads to prevent resource starvation
+	g.router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r.Body = http.MaxBytesReader(w, r.Body, cce.MaxBodySize)
+			next.ServeHTTP(w, r)
+		})
+	})
+
+	// Set a timeout on all requests to prevent resource starvation
+	g.router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx, cancel := context.WithTimeout(r.Context(), cce.MaxHTTPRequestTime)
+			defer cancel()
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	})
+
 	// Inject the controller
 	g.router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

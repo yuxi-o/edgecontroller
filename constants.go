@@ -14,6 +14,19 @@
 
 package cce
 
+import (
+	"time"
+)
+
+// MaxBodySize is the maximum size (in bytes) of an acceptable request body
+const MaxBodySize = 64 * 1024
+
+// MaxHTTPRequestTime is the maximum time to request HTTP data before timing out
+const MaxHTTPRequestTime = 2 * time.Minute
+
+// MaxDBRequestTime is the maximum time to request database data before timing out
+const MaxDBRequestTime = 10 * time.Second
+
 // MaxCores is the maximum number of cores that an application can use.
 const MaxCores = 8
 

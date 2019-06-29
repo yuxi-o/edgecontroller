@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [0.0.56] - 2019-06-28
+### Changed
+- Backend API times out HTTP requests after 120 seconds
+- Backend API rejects requests payloads larger than 64 KB
+- Backend API times out non-singular DB queries after 10 seconds
+
+### Fixed
+- Auth (/auth) endpoint was not setting the content type
+- DELETE /nodes/{node_id}/apps/{app_id} endpoint did not safely return in an error case
+- README now makes the build requirements clearer when editing the `.env` file
+
 ## [0.0.55] - 2019-06-27
 ### Fixed
 - Persistence on disk now has more organized directory structure
