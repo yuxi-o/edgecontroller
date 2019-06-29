@@ -1,3 +1,8 @@
+```text
+SPDX-License-Identifier: Apache-2.0
+Copyright © 2019 Intel Corporation and Smart-Edge.com, Inc.
+```
+
 # Cryptography, TLS & PKI (Public Key Infrastructure)
 ## Overview of PKI architecture
 In the community edition, we've tried to strike a balance between encouraging best security practices and reducing contribution learning curve.

@@ -1,3 +1,8 @@
+```text
+SPDX-License-Identifier: Apache-2.0
+Copyright © 2019 Intel Corporation and Smart-Edge.com, Inc.
+```
+
 # Security Overview
 
 This document is intended to provide an overview of details relevant to the
