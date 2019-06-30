@@ -19,8 +19,20 @@ The Controller features the following components:
 - [x] **Kubernetes** support ([Kubernetes](https://kubernetes.io) API 1.0 or higher) to have a Kubernetes master manage
 container orchestration.
 
+OpenNESS supports Network Edge and On-Premise edge deployment. For details of these two deployment model please refer to the OpenNESS architecture specification. 
+- Network Edge deployment is based on Kubernetes 
+- On-Premise Edge deployment is based on Docker Containers and VMs based on libvirt. 
+
+The OpenNESS Edge Node and OpenNESS controller components build would remain unchanged for both the deployments. For the Network Edge deployment this document assumes that a Kubernetes cluster is setup with Kubernetes master and Node is added to the cluster. The document does not provide the steps for setting up Kubernetes cluster. 
+
+Reference for setting up Kubernetes cluster on CentOS [Install kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
+
 The Core, Web UIs, Database and Telemetry components are packaged as [Docker](https://docker.com) containers when you
 build this project using the instructions below.
+
+For the purpose of ease of installation of controller there are 2 methods available:
+1. **Quick start and use Ansible scripts**: [Quick Start](#quick-start) This method can be used when the deployment has direct connectivity to the internet without proxy and complex firewall configuration. 
+2. **Manual install**: [Manual Install](#manual-install) This method can be used when the deployment is behind proxy and firewall. 
 
 -------
 
@@ -155,6 +167,9 @@ typically adjacent to or within an Edge Node.
 
 Clone this repository onto the system you wish to setup the Controller and ensure the prerequisites below are met.
 
+Note: In some cases the OpenNESS package might be provided to you which contains all the required OpenNESS packages.
+Cloning of repository is not required in that case. 
+
 [Ansible](https://www.ansible.com) scripts are provided for users that are familiar with the tooling and can be found
 [here](ansible/README.md).
 
@@ -196,6 +211,11 @@ components on any listening ports based on your operating constraints. For outbo
 up a proxy.  Docker supports a proxy and more documentation can be found
 [here](https://docs.docker.com/network/proxy/).
 
+For detailed description of various part of the systems where proxy needs to be configured please refer to 
+[Proxy and Firewall Configuration](#proxy-and-firewall-configuration).      
+
+For setting up the env file please refer to [Setup env file](#setup-env-file) section.     
+
 You should always take precaution when exposing ports on your network.  Contact your system/network administrator if
 you require ports to be opened up for any of these communications or if you are uncertain of your network topology.
 
@@ -218,13 +238,18 @@ assumes you've already become familiar with the [Quick Start](#quick-start).
 ### Basic Setup
 
 The Controller uses user-defined configurations from the [`.env`](.env) included in this repository. Review the file
-[here](.env) to familiarize yourself with the different types of configuration parameters that you must be defined and
+[here](.env) to familiarize yourself with the different types of configuration parameters that must be defined and
 optionally changed. Some variables in the [`.env`](.env) require that you rebuild the Docker images. Be sure to see the
 comments in the [`.env`](.env) for more details.
 
 For example, you can set a different admin password by editing the file.
 
 Additionally, if the Controller will be deployed on a remote system you will need to update the API URL.
+For example: 
+```
+Default -- REACT_APP_CONTROLLER_API=http://localhost:8080     
+For remote -- REACT_APP_CONTROLLER_API=http://<IP_of_remote>:8080     
+``` 
 
 It is highly encouraged that you change the default credentials in the [`.env`](.env) file and follow industry best
 practices to protect network services with IDS, IDP, and firewall systems if it will be exposed to the internet.
@@ -373,3 +398,165 @@ make lint
 
 Additional `make` commands can be checked in the `Makefile`. Contributions to the repository are run through continuous
 integration (CI) as well on each build using these same commands.
+
+-------
+## Manual install
+1. **Setup Proxy** 
+    - For detailed description of various part of the systems where proxy needs to be configured please refer to [Proxy and Firewall Configuration](#proxy-and-firewall-configuration)   
+2. **Reload terminal** to get all the proxy setting to the active shell 
+3. **Install necessary packages** 
+```
+yum --enablerepo=extras install epel-release 
+yum update
+yum install -y yum-utils device-mapper-persistant-data lvm2 ansible python-pip git wget
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+yum install -y docker-ce docker-cli containerd.io
+pip install docker-py
+```
+4. **Reload docker demon** you need to do it every time you change the Proxy configuration for docker. 
+```
+systemctl daemon-reload
+systemctl restart docker 
+```
+5. **Install MySQL**
+```
+wget https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
+rpm -Uvh mysql57-community-release-el7-11.noarch.rpm
+yum update
+yum install mysql-server
+systemctl start mysqld
+```
+6. **Docker compose installation**
+```
+curl -L "https://github.com/docker/compose/releases/download/1.24.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+```
+7. **Clone the controller repo** 
+If you are not using offline install but using git then after cloning controller repo     
+git clone https://github.com/smartedgemec/controller-ce.git
+8. **Docker Files update** 
+Edit the Docker files with right environment variables please refer to "Docker files proxy setting before each of the yarn install" section in [Proxy and Firewall Configuration](#proxy-and-firewall-configuration)
+9. **Build Docker file update**  
+Edit the Docker files with right environment variables please refer to "Build docker file proxy settings update" section in [Proxy and Firewall Configuration](#proxy-and-firewall-configuration)
+10. **Update the env**      
+For setting up the env file please refer to [Setup env file](#setup-env-file) section.     
+11. **Build the controller**      
+to build the project to the ./dist/ folder run the command below from ```<controller>``` directory.       
+```
+make build      
+```
+12. **Build the database container**         
+to start the full controller stack run the command below from ```<controller>``` directory. 
+```
+make all-up
+```
+    Confirm that you are able to browse to ```http://<controller IP>:3000``` and access the UI.      
+    Note: To make sure you can browse the controller UI you should make sure IP address is allocated to the controller access interface.        
+13. **Verify the installation**     
+Log in to the Web UI with username admin and password.      
+14. **Stopping Controller**      
+  - To shutdown the Controller and preserve all data run the following command from ```<controller>``` directory     
+    ``` make all-down```     
+  - To clean up all data, you can run the following command from the project directory (this action cannot be reversed):    
+    ```	make clean ```      
+
+-------
+## Proxy and Firewall Configuration 
+Proxy and Firewall configuration might be needed in the following components depending your organization environment.
+
+- **Linux environment variable**
+```
+cat /etc/environment
+http_proxy=http://<proxy>:<port>
+https_proxy=http://<proxy>:<port>
+ftp_proxy=http://<proxy>:<port>
+no_proxy=localhost,127.0.0.1
+HTTP_PROXY=http://<proxy>:<port>
+HTTPS_PROXY=http://<proxy>:<port>
+FTP_PROXY=http://<proxy>:<port>
+NO_PROXY=localhost,127.0.0.1  
+```
+- **Yum config file** 
+```
+cat /etc/yum.conf 
+proxy=http://<proxy>:<port> 
+```
+- **Docker files proxy setting before each of the yarn install**   
+If you are not using offline install but using git then after cloning the repo update the following files     
+```
+<controller>/ui/cups/Dockerfile 
+<controller>/ui/controller/Dockerfile  
+```
+```
+RUN yarn config set strict-ssl false && yarn config set proxy http://<proxy>:<port> && yarn install --production
+```
+- **Build docker file proxy settings update**
+```
+<controller>/docker/build/Dockerfile     
+```
+add the proxy settings 
+```
+ENV http_proxy http://<proxy>:<port>
+ENV https_proxy http://<proxy>:<port>
+ENV ftp_proxy http://<proxy>:<port>
+ENV no_proxy localhost,127.0.0.1
+```
+- **Docker Proxy setting**
+in the file 
+```
+~/.docker/config.json    
+```
+add the following configureation
+```
+{
+ "proxies":
+ {
+   "default":
+   {
+     "httpProxy": "http://127.0.0.1:3001",
+     "httpsProxy": "http://127.0.0.1:3001",
+     "noProxy": "*.test.example.com,.example2.com"
+   }
+ }
+} 
+```
+Create the directory and edit the file 
+```
+mkdir /etc/systemd/system/docker.service.d/
+vim /etc/systemd/system/docker.service.d/http-proxy.conf
+```
+with the following configuration 
+```
+[Service]
+Environment="HTTP_PROXY=http://<proxy>:<port>" "HTTPS_PROXY=http://<proxy>:<port>" "NO_PROXY=localhost,127.0.0.1" 
+```
+- **Git proxy** 
+If you are not using offline install but using git and behind proxy you need to update      
+```
+~/.gitconfig
+```
+with following config 
+```
+[http] proxy = http://<proxy>:<port> [https] proxy = http://<proxy>:<port>
+```
+- **Firewall configuration through IP tables**
+```
+firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p tcp --dport 8080 -j ACCEPT
+firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p tcp --dport 8081 -j ACCEPT
+firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p tcp --dport 443 -j ACCEPT
+firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p tcp --dport 80 -j ACCEPT 
+firewall-cmd --reload  
+```
+
+-------
+## Setup env file 
+Set the GITHUB Token, MySql password, Controller Password and Controller IP in the 
+```
+<controller>/.env
+```
+```
+MYSQL_ROOT_PASSWORD=changeme
+CCE_ADMIN_PASSWORD=changeme
+REACT_APP_CONTROLLER_API=<controller IP>:<port>
+GITHUB_TOKEN=xxxxxxxxxxxxxx 
+```
