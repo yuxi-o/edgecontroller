@@ -560,3 +560,12 @@ CCE_ADMIN_PASSWORD=changeme
 REACT_APP_CONTROLLER_API=<controller IP>:<port>
 GITHUB_TOKEN=xxxxxxxxxxxxxx 
 ```
+## Troubleshooting 
+
+### Docker cannot connect to the Internet
+If Docker is unable to connect to internet although proxy is set properly in Docker environment, this could be related to Docker DNS misconfiguration. One way to address this issue is to clear the contents of file /etc/docker/daemon.json as below.
+```
+$ echo {} > /etc/docker/daemon.json
+$ systemctl daemon-reload
+$ systemctl restart docker
+```
