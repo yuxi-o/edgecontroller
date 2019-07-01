@@ -5,6 +5,13 @@ Copyright © 2019 Intel Corporation and Smart-Edge.com, Inc.
 
 # CHANGELOG
 
+## [0.0.58] - 2019-07-01
+### Changed
+- Updated version of `github.com/smartedgemec/log` used.
+
+### Fixed
+- Building the docker image no longer clones `github.com/smartedgemec/log` since `go.mod` is used.
+
 ## [0.0.57] - 2019-06-29
 ### Changed
 - Updated `ansible/README.md` with more information and define host requirements.

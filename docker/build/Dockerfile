@@ -29,9 +29,7 @@ RUN if [[ -n "${github_token}" ]]; \
 	then git config --global url.https://${github_token}@github.com/.insteadOf https://github.com/; \
 	fi;
 
-RUN cd /go/src/github.com/smartedgemec &&\
-    git clone https://github.com/smartedgemec/log.git &&\
-    cd /go/src/github.com/smartedgemec/controller-ce &&\
+RUN cd /go/src/github.com/smartedgemec/controller-ce &&\
     go build -o dist/cce ./cmd/cce &&\
 	cp dist/cce /cce
 
