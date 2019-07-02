@@ -469,13 +469,13 @@ Note: replace http://<proxy>:<port> with the actual proxy address and port
 - **Linux environment variable**
 ```
 cat /etc/environment
-http_proxy=http://<proxy>:<port>/
-https_proxy=http://<proxy>:<port>/
-ftp_proxy=http://<proxy>:<port>/
+http_proxy=http://<proxy>:<port>
+https_proxy=http://<proxy>:<port>
+ftp_proxy=http://<proxy>:<port>
 no_proxy=localhost,127.0.0.1
-HTTP_PROXY=http://<proxy>:<port>/
-HTTPS_PROXY=http://<proxy>:<port>/
-FTP_PROXY=http://<proxy>:<port>/
+HTTP_PROXY=http://<proxy>:<port>
+HTTPS_PROXY=http://<proxy>:<port>
+FTP_PROXY=http://<proxy>:<port>
 NO_PROXY=localhost,127.0.0.1  
 ```
 - **Yum config file** 
@@ -498,9 +498,9 @@ RUN yarn config set strict-ssl false && yarn config set proxy http://<proxy>:<po
 ```
 add the proxy settings 
 ```
-ENV http_proxy http://<proxy>:<port>/
-ENV https_proxy http://<proxy>:<port>/
-ENV ftp_proxy http://<proxy>:<port>/
+ENV http_proxy http://<proxy>:<port>
+ENV https_proxy http://<proxy>:<port>
+ENV ftp_proxy http://<proxy>:<port>
 ENV no_proxy localhost,127.0.0.1
 ```
 - **Docker Proxy setting**
