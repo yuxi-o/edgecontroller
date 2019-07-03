@@ -5,6 +5,10 @@ Copyright © 2019 Intel Corporation and Smart-Edge.com, Inc.
 
 # CHANGELOG
 
+## [0.0.59] - 2019-07-03
+### Changed
+- Updated version of `github.com/smartedgemec/log` used.
+
 ## [0.0.58] - 2019-07-01
 ### Changed
 - Updated version of `github.com/smartedgemec/log` used.
