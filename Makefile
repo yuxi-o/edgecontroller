@@ -38,9 +38,9 @@ ifeq ($(CCE_ORCHESTRATION_MODE),kubernetes)
 define CCE_FLAGS
 	$(CCE_FLAGS_BASE) \
 	-orchestration-mode kubernetes \
-	-k8s-client-ca-path $(CCE_K8S_CLIENT_CA_PATH) \
-	-k8s-client-cert-path $(CCE_K8S_CLIENT_CERT_PATH) \
-	-k8s-client-key-path $(CCE_K8S_CLIENT_KEY_PATH) \
+	-k8s-client-ca-path /artifacts/k8s/ca.pem \
+	-k8s-client-cert-path /artifacts/k8s/cert.pem \
+	-k8s-client-key-path /artifacts/k8s/key.pem \
 	-k8s-master-host $(CCE_K8S_MASTER_HOST) \
 	-k8s-api-path $(CCE_K8S_API_PATH) \
 	-k8s-master-user $(CCE_K8S_MASTER_USER)
@@ -188,6 +188,12 @@ else
 endif
 
 cce-up:
+ifeq ($(CCE_ORCHESTRATION_MODE),kubernetes)
+	mkdir -p ./artifacts/controller/k8s
+	cp ${CCE_K8S_CLIENT_CA_PATH} ./artifacts/controller/k8s/ca.pem
+	cp ${CCE_K8S_CLIENT_CERT_PATH} ./artifacts/controller/k8s/cert.pem
+	cp ${CCE_K8S_CLIENT_KEY_PATH} ./artifacts/controller/k8s/key.pem
+endif
 	docker-compose up -d cce
 
 cce-down:

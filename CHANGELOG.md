@@ -5,6 +5,12 @@ Copyright © 2019 Intel Corporation and Smart-Edge.com, Inc.
 
 # CHANGELOG
 
+## [0.0.60] - 2019-07-09
+### Changed
+- Updated `.env` example variable values and descriptions.
+- Updated `docker-compose.yml` to copy local Kubernetes PKI files to
+    temporary folder which is accessible by Docker.
+
 ## [0.0.59] - 2019-07-03
 ### Changed
 - Updated version of `github.com/smartedgemec/log` used.
