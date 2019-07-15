@@ -196,7 +196,7 @@ const selectorsFormSchema = {
                 title: "TAI",
                 type: "object",
                 properties: {
-                  mcc: {
+                  tac: {
                     title: "TAC",
                     type: "number",
                   },
@@ -206,7 +206,7 @@ const selectorsFormSchema = {
                 title: "ECGI",
                 type: "object",
                 properties: {
-                  mcc: {
+                  eci: {
                     title: "ECI",
                     type: "number",
                   },

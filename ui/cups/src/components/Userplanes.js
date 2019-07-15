@@ -66,7 +66,7 @@ class Userplanes extends Component {
     try {
       const response = await axios.get(`${baseURL}/userplanes`);
 
-      return response.data;
+      return response.data.userplanes || [];
     } catch (error) {
       console.error("Unable to get userplanes: " + error.toString());
       throw error;

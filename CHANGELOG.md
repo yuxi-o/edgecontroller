@@ -5,6 +5,11 @@ Copyright © 2019 Intel Corporation and Smart-Edge.com, Inc.
 
 # CHANGELOG
 
+## [0.0.61] - 2019-07-15
+### Fixed
+- CUPS /userplanes view expected array from GET /userplanes
+- CUPS create userplane form used incorrect keys for ULI TAC and ECI
+
 ## [0.0.60] - 2019-07-09
 ### Changed
 - Updated `.env` example variable values and descriptions.
