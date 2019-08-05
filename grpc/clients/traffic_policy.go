@@ -17,8 +17,8 @@ package clients
 import (
 	"fmt"
 
-	cce "github.com/smartedgemec/controller-ce"
-	elapb "github.com/smartedgemec/controller-ce/pb/ela"
+	cce "github.com/otcshare/edgecontroller"
+	elapb "github.com/otcshare/edgecontroller/pb/ela"
 )
 
 func toPBTrafficPolicy(id string, tp *cce.TrafficPolicy) *elapb.TrafficPolicy {

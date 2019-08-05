@@ -15,7 +15,7 @@
 package swagger
 
 import (
-	cce "github.com/smartedgemec/controller-ce"
+	cce "github.com/otcshare/edgecontroller"
 )
 
 // AppSummary is a summary representation of the app.

@@ -15,7 +15,7 @@
 package pki
 
 import (
-	logger "github.com/smartedgemec/log"
+	logger "github.com/otcshare/common"
 )
 
 var log = logger.DefaultLogger.WithField("pkg", "pki")

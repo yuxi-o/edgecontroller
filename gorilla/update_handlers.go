@@ -18,8 +18,8 @@ import (
 	"context"
 	"net/http"
 
+	cce "github.com/otcshare/edgecontroller"
 	"github.com/pkg/errors"
-	cce "github.com/smartedgemec/controller-ce"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

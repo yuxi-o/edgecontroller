@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	elapb "github.com/smartedgemec/controller-ce/pb/ela"
+	elapb "github.com/otcshare/edgecontroller/pb/ela"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

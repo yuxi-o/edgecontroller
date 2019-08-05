@@ -17,7 +17,7 @@ package gorilla
 import (
 	"context"
 
-	cce "github.com/smartedgemec/controller-ce"
+	cce "github.com/otcshare/edgecontroller"
 )
 
 func handleDeleteNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Persistable) error {

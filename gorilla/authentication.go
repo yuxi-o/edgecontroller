@@ -19,7 +19,7 @@ import (
 	"net/http"
 	"strings"
 
-	cce "github.com/smartedgemec/controller-ce"
+	cce "github.com/otcshare/edgecontroller"
 )
 
 func authenticate(w http.ResponseWriter, r *http.Request) {

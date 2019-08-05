@@ -34,9 +34,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	cce "github.com/smartedgemec/controller-ce"
-	"github.com/smartedgemec/controller-ce/swagger"
-	"github.com/smartedgemec/controller-ce/uuid"
+	cce "github.com/otcshare/edgecontroller"
+	"github.com/otcshare/edgecontroller/swagger"
+	"github.com/otcshare/edgecontroller/uuid"
 )
 
 // The following handlers are compliant to our published Swagger (OpenAPI 3.0) schema.

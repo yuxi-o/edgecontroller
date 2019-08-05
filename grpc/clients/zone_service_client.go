@@ -18,9 +18,9 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/otcshare/edgecontroller/grpc"
+	elapb "github.com/otcshare/edgecontroller/pb/ela"
 	"github.com/pkg/errors"
-	"github.com/smartedgemec/controller-ce/grpc"
-	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 )
 
 // ZoneServiceClient wraps the PB client.

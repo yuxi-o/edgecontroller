@@ -17,9 +17,9 @@ package clients_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	elapb "github.com/otcshare/edgecontroller/pb/ela"
+	"github.com/otcshare/edgecontroller/uuid"
 	"github.com/pkg/errors"
-	elapb "github.com/smartedgemec/controller-ce/pb/ela"
-	"github.com/smartedgemec/controller-ce/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

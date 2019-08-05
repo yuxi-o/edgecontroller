@@ -27,7 +27,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/smartedgemec/controller-ce/pki"
+	"github.com/otcshare/edgecontroller/pki"
 )
 
 var _ = Describe("Controller CA", func() {
@@ -40,7 +40,7 @@ var _ = Describe("Controller CA", func() {
 		By("Creating a temp directory for test artifacts")
 		tmpDir = filepath.Join(
 			os.TempDir(),
-			"github.com/smartedgemec/controller-ce/pki/ca_test",
+			"github.com/otcshare/edgecontroller/pki/ca_test",
 		)
 
 		By("Removing any existing test artifacts in the temp directory")

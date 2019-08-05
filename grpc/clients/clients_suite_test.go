@@ -20,9 +20,9 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	gclients "github.com/smartedgemec/controller-ce/grpc/clients"
-	ctrlgmock "github.com/smartedgemec/controller-ce/mock/controller/grpc"
-	nodegmock "github.com/smartedgemec/controller-ce/mock/node/grpc"
+	gclients "github.com/otcshare/edgecontroller/grpc/clients"
+	ctrlgmock "github.com/otcshare/edgecontroller/mock/controller/grpc"
+	nodegmock "github.com/otcshare/edgecontroller/mock/node/grpc"
 )
 
 var (

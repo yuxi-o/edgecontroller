@@ -25,8 +25,8 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"
 
-	"github.com/smartedgemec/controller-ce/telemetry"
-	"github.com/smartedgemec/log"
+	"github.com/otcshare/common"
+	"github.com/otcshare/edgecontroller/telemetry"
 )
 
 var _ = Describe("Telemetry", func() {

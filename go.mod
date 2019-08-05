@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module github.com/smartedgemec/controller-ce
+module github.com/otcshare/edgecontroller
 
 require (
 	github.com/go-sql-driver/mysql v1.4.1
@@ -23,9 +23,9 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
+	github.com/otcshare/common v0.0.0-20190731121638-5acbb45f824d
 	github.com/pkg/errors v0.8.1
 	github.com/satori/go.uuid v1.2.0
-	github.com/smartedgemec/log v0.0.0-20190701191526-b666051f6012
 	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
 	google.golang.org/genproto v0.0.0-20180831171423-11092d34479b

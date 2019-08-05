@@ -20,7 +20,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/smartedgemec/controller-ce/uuid"
+	"github.com/otcshare/edgecontroller/uuid"
 )
 
 // App is an application.

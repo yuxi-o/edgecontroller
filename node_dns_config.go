@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/smartedgemec/controller-ce/uuid"
+	"github.com/otcshare/edgecontroller/uuid"
 )
 
 // NodeDNSConfig represents an association between a Node and a DNSConfig.

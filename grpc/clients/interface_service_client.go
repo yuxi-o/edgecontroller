@@ -18,10 +18,10 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	cce "github.com/otcshare/edgecontroller"
+	"github.com/otcshare/edgecontroller/grpc"
+	elapb "github.com/otcshare/edgecontroller/pb/ela"
 	"github.com/pkg/errors"
-	cce "github.com/smartedgemec/controller-ce"
-	"github.com/smartedgemec/controller-ce/grpc"
-	elapb "github.com/smartedgemec/controller-ce/pb/ela"
 )
 
 // InterfaceServiceClient wraps the PB client.

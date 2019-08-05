@@ -15,8 +15,8 @@
 package clients
 
 import (
-	cce "github.com/smartedgemec/controller-ce"
-	evapb "github.com/smartedgemec/controller-ce/pb/eva"
+	cce "github.com/otcshare/edgecontroller"
+	evapb "github.com/otcshare/edgecontroller/pb/eva"
 )
 
 func fromPBLifecycleStatus(status *evapb.LifecycleStatus) cce.LifecycleStatus {

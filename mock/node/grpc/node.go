@@ -15,8 +15,8 @@
 package grpc
 
 import (
-	elapb "github.com/smartedgemec/controller-ce/pb/ela"
-	evapb "github.com/smartedgemec/controller-ce/pb/eva"
+	elapb "github.com/otcshare/edgecontroller/pb/ela"
+	evapb "github.com/otcshare/edgecontroller/pb/eva"
 )
 
 // MockNode provides a mock node gRPC server.

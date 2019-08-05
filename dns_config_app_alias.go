@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/smartedgemec/controller-ce/uuid"
+	"github.com/otcshare/edgecontroller/uuid"
 )
 
 // DNSConfigAppAlias represents an association between a DNSConfig and an AppID.

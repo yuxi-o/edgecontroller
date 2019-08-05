@@ -22,7 +22,7 @@ import (
 	"os"
 	"sync"
 
-	logger "github.com/smartedgemec/log"
+	logger "github.com/otcshare/common"
 )
 
 const (

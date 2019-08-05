@@ -22,8 +22,8 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	cce "github.com/smartedgemec/controller-ce"
-	logger "github.com/smartedgemec/log"
+	logger "github.com/otcshare/common"
+	cce "github.com/otcshare/edgecontroller"
 )
 
 var log = logger.DefaultLogger.WithField("pkg", "gorilla")

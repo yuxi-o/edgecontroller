@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/smartedgemec/controller-ce/uuid"
+	"github.com/otcshare/edgecontroller/uuid"
 )
 
 // TrafficPolicy is an application or interface traffic policy.

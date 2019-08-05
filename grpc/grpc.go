@@ -23,9 +23,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	elapb "github.com/smartedgemec/controller-ce/pb/ela"
-	evapb "github.com/smartedgemec/controller-ce/pb/eva"
-	logger "github.com/smartedgemec/log"
+	logger "github.com/otcshare/common"
+	elapb "github.com/otcshare/edgecontroller/pb/ela"
+	evapb "github.com/otcshare/edgecontroller/pb/eva"
 )
 
 var log = logger.DefaultLogger.WithField("pkg", "grpc")

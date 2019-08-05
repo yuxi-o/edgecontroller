@@ -17,7 +17,7 @@ FROM golang:1.12-alpine
 
 ENV GO111MODULE on
 
-WORKDIR /go/src/github.com/smartedgemec/controller-ce
+WORKDIR /go/src/github.com/otcshare/edgecontroller
 
 COPY . ./
 
@@ -29,7 +29,7 @@ RUN if [[ -n "${github_token}" ]]; \
 	then git config --global url.https://${github_token}@github.com/.insteadOf https://github.com/; \
 	fi;
 
-RUN cd /go/src/github.com/smartedgemec/controller-ce &&\
+RUN cd /go/src/github.com/otcshare/edgecontroller &&\
     go build -o dist/cce ./cmd/cce &&\
 	cp dist/cce /cce
 

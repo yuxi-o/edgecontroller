@@ -18,8 +18,8 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	gmock "github.com/smartedgemec/controller-ce/mock/node/grpc"
-	elapb "github.com/smartedgemec/controller-ce/pb/ela"
+	gmock "github.com/otcshare/edgecontroller/mock/node/grpc"
+	elapb "github.com/otcshare/edgecontroller/pb/ela"
 	"google.golang.org/grpc"
 )
 

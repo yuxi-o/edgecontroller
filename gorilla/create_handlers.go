@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	cce "github.com/smartedgemec/controller-ce"
+	cce "github.com/otcshare/edgecontroller"
 )
 
 func handleCreateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Persistable) error {

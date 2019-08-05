@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/smartedgemec/controller-ce/uuid"
+	"github.com/otcshare/edgecontroller/uuid"
 )
 
 // NodeApp represents an association between a Node and an App.

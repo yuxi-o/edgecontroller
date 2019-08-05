@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"net"
 
+	cce "github.com/otcshare/edgecontroller"
+	"github.com/otcshare/edgecontroller/grpc/node"
+	"github.com/otcshare/edgecontroller/k8s"
 	"github.com/pkg/errors"
-	cce "github.com/smartedgemec/controller-ce"
-	"github.com/smartedgemec/controller-ce/grpc/node"
-	"github.com/smartedgemec/controller-ce/k8s"
 )
 
 const (

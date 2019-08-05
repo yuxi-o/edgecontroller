@@ -15,7 +15,7 @@
 package swagger
 
 import (
-	cce "github.com/smartedgemec/controller-ce"
+	cce "github.com/otcshare/edgecontroller"
 )
 
 // PolicySummary is a summary of an application traffic policy or interface traffic policy.

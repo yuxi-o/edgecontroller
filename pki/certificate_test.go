@@ -33,7 +33,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 
-	"github.com/smartedgemec/controller-ce/pki"
+	"github.com/otcshare/edgecontroller/pki"
 )
 
 var _ = Describe("Certificate Persistence", func() {
@@ -49,7 +49,7 @@ var _ = Describe("Certificate Persistence", func() {
 		By("Creating a temp directory for test artifacts")
 		tmpDir = filepath.Join(
 			os.TempDir(),
-			"github.com/smartedgemec/controller-ce/pki/certificate_test",
+			"github.com/otcshare/edgecontroller/pki/certificate_test",
 		)
 		certFile = filepath.Join(tmpDir, "cert.pem")
 

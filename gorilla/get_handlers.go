@@ -17,7 +17,7 @@ package gorilla
 import (
 	"context"
 
-	cce "github.com/smartedgemec/controller-ce"
+	cce "github.com/otcshare/edgecontroller"
 )
 
 func handleGetNodes(

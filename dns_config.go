@@ -20,7 +20,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/smartedgemec/controller-ce/uuid"
+	"github.com/otcshare/edgecontroller/uuid"
 )
 
 // DNSConfig is a DNS configuration.

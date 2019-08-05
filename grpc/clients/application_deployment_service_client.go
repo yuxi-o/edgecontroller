@@ -17,10 +17,10 @@ package clients
 import (
 	"context"
 
+	cce "github.com/otcshare/edgecontroller"
+	"github.com/otcshare/edgecontroller/grpc"
+	evapb "github.com/otcshare/edgecontroller/pb/eva"
 	"github.com/pkg/errors"
-	cce "github.com/smartedgemec/controller-ce"
-	"github.com/smartedgemec/controller-ce/grpc"
-	evapb "github.com/smartedgemec/controller-ce/pb/eva"
 )
 
 // ApplicationDeploymentServiceClient wraps the PB client.

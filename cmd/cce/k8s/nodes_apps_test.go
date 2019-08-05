@@ -16,7 +16,7 @@ package k8s_test
 
 import (
 	"fmt"
-	"github.com/smartedgemec/controller-ce/swagger"
+	"github.com/otcshare/edgecontroller/swagger"
 	"io/ioutil"
 	"net/http"
 	"os/exec"
@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/smartedgemec/controller-ce/uuid"
+	"github.com/otcshare/edgecontroller/uuid"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"

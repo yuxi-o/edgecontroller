@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/smartedgemec/controller-ce/uuid"
+	"github.com/otcshare/edgecontroller/uuid"
 )
 
 // Node is a node (aka appliance or device).

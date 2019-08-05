@@ -21,10 +21,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/smartedgemec/controller-ce/swagger"
+	"github.com/otcshare/edgecontroller/swagger"
 
-	cce "github.com/smartedgemec/controller-ce"
-	"github.com/smartedgemec/controller-ce/uuid"
+	cce "github.com/otcshare/edgecontroller"
+	"github.com/otcshare/edgecontroller/uuid"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"

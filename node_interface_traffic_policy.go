@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/smartedgemec/controller-ce/uuid"
+	"github.com/otcshare/edgecontroller/uuid"
 )
 
 // TODO: Entire project: Rename all instance of `network_interface` to `interface`

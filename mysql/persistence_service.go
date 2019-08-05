@@ -24,8 +24,8 @@ import (
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql" // provides the mysql driver
+	cce "github.com/otcshare/edgecontroller"
 	"github.com/pkg/errors"
-	cce "github.com/smartedgemec/controller-ce"
 )
 
 // PersistenceService implements cce.PersistenceService.

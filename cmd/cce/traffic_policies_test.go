@@ -21,9 +21,9 @@ import (
 	"net/http"
 	"strings"
 
-	cce "github.com/smartedgemec/controller-ce"
-	"github.com/smartedgemec/controller-ce/swagger"
-	"github.com/smartedgemec/controller-ce/uuid"
+	cce "github.com/otcshare/edgecontroller"
+	"github.com/otcshare/edgecontroller/swagger"
+	"github.com/otcshare/edgecontroller/uuid"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"

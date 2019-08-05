@@ -33,11 +33,11 @@ import (
 	"syscall"
 	"time"
 
-	nodegmock "github.com/smartedgemec/controller-ce/mock/node/grpc"
-	elapb "github.com/smartedgemec/controller-ce/pb/ela"
-	evapb "github.com/smartedgemec/controller-ce/pb/eva"
-	"github.com/smartedgemec/controller-ce/pki"
-	"github.com/smartedgemec/log"
+	"github.com/otcshare/common"
+	nodegmock "github.com/otcshare/edgecontroller/mock/node/grpc"
+	elapb "github.com/otcshare/edgecontroller/pb/ela"
+	evapb "github.com/otcshare/edgecontroller/pb/eva"
+	"github.com/otcshare/edgecontroller/pki"
 	"google.golang.org/grpc"
 )
 

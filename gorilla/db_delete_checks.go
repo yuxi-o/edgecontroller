@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"net/http"
 
-	cce "github.com/smartedgemec/controller-ce"
+	cce "github.com/otcshare/edgecontroller"
 )
 
 func checkDBDeleteNodes(

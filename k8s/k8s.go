@@ -20,8 +20,8 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/otcshare/edgecontroller/uuid"
 	"github.com/pkg/errors"
-	"github.com/smartedgemec/controller-ce/uuid"
 	appsV1 "k8s.io/api/apps/v1"
 	autoscalingV1 "k8s.io/api/autoscaling/v1"
 	apiV1 "k8s.io/api/core/v1"

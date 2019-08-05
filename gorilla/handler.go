@@ -21,8 +21,8 @@ import (
 	"net/http"
 	"reflect"
 
+	cce "github.com/otcshare/edgecontroller"
 	uuid "github.com/satori/go.uuid"
-	cce "github.com/smartedgemec/controller-ce"
 )
 
 type handler struct {
