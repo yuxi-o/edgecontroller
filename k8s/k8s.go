@@ -250,6 +250,11 @@ func (ks *Client) deploy(nodeID string, app App) error {
 							Image:           app.ID,
 							Ports:           ports,
 							ImagePullPolicy: ks.ImagePullPolicy,
+							SecurityContext: &apiV1.SecurityContext{
+								Capabilities: &apiV1.Capabilities{
+									Add: []apiV1.Capability{"NET_ADMIN"},
+								},
+							},
 						},
 					},
 					NodeSelector: map[string]string{

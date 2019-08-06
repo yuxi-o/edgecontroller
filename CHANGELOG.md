@@ -5,6 +5,10 @@ Copyright © 2019 Intel Corporation and Smart-Edge.com, Inc.
 
 # CHANGELOG
 
+# [0.0.62] - TO BE RELEASED
+### Fixed
+- Kubernetes pods are created with NET_ADMIN capabilities
+
 ## [0.0.61] - 2019-07-15
 ### Fixed
 - CUPS /userplanes view expected array from GET /userplanes
