@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"reflect"
 
-	cce "github.com/otcshare/edgecontroller"
+	cce "github.com/open-ness/edgecontroller"
 	uuid "github.com/satori/go.uuid"
 )
 
