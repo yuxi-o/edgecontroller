@@ -33,11 +33,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/otcshare/common"
-	nodegmock "github.com/otcshare/edgecontroller/mock/node/grpc"
-	elapb "github.com/otcshare/edgecontroller/pb/ela"
-	evapb "github.com/otcshare/edgecontroller/pb/eva"
-	"github.com/otcshare/edgecontroller/pki"
+	"github.com/open-ness/common"
+	nodegmock "github.com/open-ness/edgecontroller/mock/node/grpc"
+	elapb "github.com/open-ness/edgecontroller/pb/ela"
+	evapb "github.com/open-ness/edgecontroller/pb/eva"
+	"github.com/open-ness/edgecontroller/pki"
 	"google.golang.org/grpc"
 )
 

@@ -24,7 +24,7 @@ import (
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql" // provides the mysql driver
-	cce "github.com/otcshare/edgecontroller"
+	cce "github.com/open-ness/edgecontroller"
 	"github.com/pkg/errors"
 )
 

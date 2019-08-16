@@ -15,7 +15,7 @@
 package pki
 
 import (
-	logger "github.com/otcshare/common"
+	logger "github.com/open-ness/common"
 )
 
 var log = logger.DefaultLogger.WithField("pkg", "pki")

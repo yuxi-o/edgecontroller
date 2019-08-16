@@ -18,8 +18,8 @@ import (
 	"context"
 	"crypto/tls"
 
-	"github.com/otcshare/edgecontroller/jose"
-	"github.com/otcshare/edgecontroller/k8s"
+	"github.com/open-ness/edgecontroller/jose"
+	"github.com/open-ness/edgecontroller/k8s"
 )
 
 // OrchestrationMode global level orchestration mode for application deployment

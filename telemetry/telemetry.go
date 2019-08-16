@@ -22,7 +22,7 @@ import (
 	"os"
 	"sync"
 
-	logger "github.com/otcshare/common"
+	logger "github.com/open-ness/common"
 )
 
 const (

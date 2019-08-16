@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"net"
 
-	cce "github.com/otcshare/edgecontroller"
-	"github.com/otcshare/edgecontroller/grpc/node"
-	"github.com/otcshare/edgecontroller/k8s"
+	cce "github.com/open-ness/edgecontroller"
+	"github.com/open-ness/edgecontroller/grpc/node"
+	"github.com/open-ness/edgecontroller/k8s"
 	"github.com/pkg/errors"
 )
 

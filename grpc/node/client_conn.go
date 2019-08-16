@@ -18,8 +18,8 @@ import (
 	"context"
 	"crypto/tls"
 
-	"github.com/otcshare/edgecontroller/grpc"
-	gclients "github.com/otcshare/edgecontroller/grpc/clients"
+	"github.com/open-ness/edgecontroller/grpc"
+	gclients "github.com/open-ness/edgecontroller/grpc/clients"
 )
 
 // ClientConn wraps a Node and provides a Connect() method to create wrapped gRPC clients.

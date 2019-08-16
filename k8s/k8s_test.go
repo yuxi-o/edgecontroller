@@ -26,7 +26,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/otcshare/edgecontroller/k8s"
+	"github.com/open-ness/edgecontroller/k8s"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
