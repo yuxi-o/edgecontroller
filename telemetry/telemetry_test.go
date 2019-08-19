@@ -25,7 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"
 
-	"github.com/otcshare/common"
+	"github.com/otcshare/common/log"
 	"github.com/otcshare/edgecontroller/telemetry"
 )
 

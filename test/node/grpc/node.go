@@ -33,7 +33,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/otcshare/common"
+	"github.com/otcshare/common/log"
 	nodegmock "github.com/otcshare/edgecontroller/mock/node/grpc"
 	elapb "github.com/otcshare/edgecontroller/pb/ela"
 	evapb "github.com/otcshare/edgecontroller/pb/eva"

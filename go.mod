@@ -23,7 +23,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
-	github.com/otcshare/common v0.0.0-20190731121638-5acbb45f824d
+	github.com/otcshare/common/log v0.0.0-20190819124907-99dcb8b50ed8
 	github.com/pkg/errors v0.8.1
 	github.com/satori/go.uuid v1.2.0
 	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c // indirect

@@ -39,7 +39,7 @@ import (
 	"syscall"
 	"time"
 
-	logger "github.com/otcshare/common"
+	logger "github.com/otcshare/common/log"
 	cce "github.com/otcshare/edgecontroller"
 	"github.com/otcshare/edgecontroller/gorilla"
 	"github.com/otcshare/edgecontroller/grpc"

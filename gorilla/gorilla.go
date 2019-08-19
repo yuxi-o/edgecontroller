@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	logger "github.com/otcshare/common"
+	logger "github.com/otcshare/common/log"
 	cce "github.com/otcshare/edgecontroller"
 )
 
