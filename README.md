@@ -433,7 +433,7 @@ chmod +x /usr/local/bin/docker-compose
 ```
 7. **Clone the controller repo** 
 If you are not using offline install but using git then after cloning controller repo     
-git clone https://github.com/smartedgemec/controller-ce.git
+git clone https://github.com/otcshare/edgecontroller.git
 8. **Docker Files update** 
 Edit the Docker files with right environment variables please refer to "Docker files proxy setting before each of the yarn install" section in [Proxy and Firewall Configuration](#proxy-and-firewall-configuration)
 9. **Build Docker file update**  
