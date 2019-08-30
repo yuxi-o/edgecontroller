@@ -40,7 +40,8 @@ func handleDeleteNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 	}
 
 	// if kubernetes un-deploy application
-	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes {
+	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes ||
+		ctrl.OrchestrationMode == cce.OrchestrationModeKubernetesOVN {
 		if err = ctrl.KubernetesClient.Undeploy(
 			ctx,
 			e.(*cce.NodeApp).NodeID,

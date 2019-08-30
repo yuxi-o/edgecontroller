@@ -66,7 +66,7 @@ func handleGetNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Pe
 			return nil, err
 		}
 		status = s.String()
-	case cce.OrchestrationModeKubernetes:
+	case cce.OrchestrationModeKubernetes, cce.OrchestrationModeKubernetesOVN:
 		s, err := ctrl.KubernetesClient.Status(ctx, e.(*cce.NodeApp).NodeID, e.(*cce.NodeApp).AppID)
 		if err != nil {
 			return nil, err

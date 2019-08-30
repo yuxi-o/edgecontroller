@@ -86,7 +86,8 @@ func init() {
 	flag.StringVar(&statsdOut, "statsd-path", "./statsd.log", "StatsD output file path")
 
 	// application orchestration mode
-	flag.StringVar(&orchMode, "orchestration-mode", "native", "Orchestration mode. options [native, kubernetes] ")
+	flag.StringVar(&orchMode, "orchestration-mode", "native", "Orchestration mode."+
+		"options [native, kubernetes, kubernetes-ovn] ")
 
 	// k8s
 	flag.StringVar(&k8sClient.CAFile, "k8s-client-ca-path", "", "Kubernetes root certificate path")
@@ -95,6 +96,26 @@ func init() {
 	flag.StringVar(&k8sClient.Host, "k8s-master-host", "", "Kubernetes master host")
 	flag.StringVar(&k8sClient.APIPath, "k8s-api-path", "", "Kubernetes api path")
 	flag.StringVar(&k8sClient.Username, "k8s-master-user", "", "Kubernetes default user")
+}
+
+func setupOrchestrator() (cce.OrchestrationMode, error) {
+	var orchestrationMode cce.OrchestrationMode
+	var err error
+
+	switch orchMode {
+	case "native":
+		orchestrationMode = cce.OrchestrationModeNative
+	case "kubernetes":
+		orchestrationMode = cce.OrchestrationModeKubernetes
+		err = k8sClient.Ping()
+	case "kubernetes-ovn":
+		orchestrationMode = cce.OrchestrationModeKubernetesOVN
+		err = k8sClient.Ping()
+	default:
+		err = errors.New("Invalid orchestration mode " + orchMode)
+	}
+
+	return orchestrationMode, err
 }
 
 func main() {
@@ -119,17 +140,8 @@ func main() {
 
 	// Setup orchestrator
 	var orchestrationMode cce.OrchestrationMode
-	switch orchMode {
-	case "native":
-		orchestrationMode = cce.OrchestrationModeNative
-	case "kubernetes":
-		orchestrationMode = cce.OrchestrationModeKubernetes
-		if err = k8sClient.Ping(); err != nil {
-			log.Alertf("Error configuring kubernetes client: %v", err)
-			os.Exit(1)
-		}
-	default:
-		log.Alertf("Invalid orchestration mode %q", orchMode)
+	if orchestrationMode, err = setupOrchestrator(); err != nil {
+		log.Alertf("Error getting orchestration mode: %v", err)
 		os.Exit(1)
 	}
 

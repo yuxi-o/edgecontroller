@@ -32,12 +32,19 @@ const (
 	// OrchestrationModeKubernetes uses an external Kubernetes master to
 	// control application container instances on nodes
 	OrchestrationModeKubernetes
+	// OrchestrationModeKubernetesOVN uses an external Kubernetes master to
+	// control application container instances on nodes. NTS functionality is
+	// replaced with OVN/OVS. Traffic Policies are replaced with Kubernetes
+	// Network Policies.
+	OrchestrationModeKubernetesOVN
 )
 
 // Controller aggregates controller services.
 type Controller struct {
-	OrchestrationMode  OrchestrationMode
-	KubernetesClient   *k8s.Client // must not be nil if OrchestrationModeKubernetes
+	OrchestrationMode OrchestrationMode
+	// must not be nil if
+	// OrchestrationModeKubernetes or OrchestrationModeKubernetesOVN
+	KubernetesClient   *k8s.Client
 	PersistenceService PersistenceService
 	AuthorityService   AuthorityService
 	TokenService       *jose.JWSTokenIssuer

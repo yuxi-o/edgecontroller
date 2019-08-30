@@ -43,7 +43,8 @@ func handleCreateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 		return err
 	}
 
-	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes {
+	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes ||
+		ctrl.OrchestrationMode == cce.OrchestrationModeKubernetesOVN {
 		err := ctrl.KubernetesClient.Deploy(
 			ctx,
 			e.(*cce.NodeApp).GetNodeID(),

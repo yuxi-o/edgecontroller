@@ -95,7 +95,7 @@ func handleUpdateNodesApps( //nolint: gocyclo
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
-	case cce.OrchestrationModeKubernetes:
+	case cce.OrchestrationModeKubernetes, cce.OrchestrationModeKubernetesOVN:
 		switch e.(*cce.NodeAppReq).Cmd {
 		case "start":
 			err = ctrl.KubernetesClient.Start(ctx,
