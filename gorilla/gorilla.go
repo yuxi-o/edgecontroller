@@ -41,10 +41,9 @@ type Gorilla struct {
 	dnsConfigsHandler      *handler
 
 	// join routes handlers
-	dnsConfigsAppAliasesHandler     *handler
-	nodesDNSConfigsHandler          *handler
-	nodesAppsHandler                *handler
-	nodesAppsTrafficPoliciesHandler *handler // TODO remove once POST /nodes_apps_traffic_policies is removed
+	dnsConfigsAppAliasesHandler *handler
+	nodesDNSConfigsHandler      *handler
+	nodesAppsHandler            *handler
 }
 
 // NewGorilla creates a new Gorilla.
@@ -102,13 +101,6 @@ func NewGorilla( //nolint:gocyclo
 
 			handleCreate: handleCreateNodesDNSConfigs,
 			handleDelete: handleDeleteNodesDNSConfigs,
-		},
-		nodesAppsTrafficPoliciesHandler: &handler{
-			model: &cce.NodeAppTrafficPolicy{},
-
-			checkDBCreate: checkDBCreateNodesAppsTrafficPolicies,
-
-			handleCreate: handleCreateNodesAppsTrafficPolicies,
 		},
 	}
 
