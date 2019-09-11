@@ -19,4 +19,5 @@ cce_orchestration_mode: native
 cce_log_level: info
 react_app_controller_api: http://{{ controller_host }}:8080
 react_app_cups_api: "http://{{ controller_host }}:8090"
+react_app_orchestration_mode: { { cce_orchestration_mode } }
 controller_path: /opt/controller

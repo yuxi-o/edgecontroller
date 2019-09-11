@@ -19,6 +19,10 @@ FROM node:lts-alpine as react-build
 ARG REACT_APP_CONTROLLER_API
 ENV REACT_APP_CONTROLLER_API=$REACT_APP_CONTROLLER_API
 
+# Set the Controller orchastration mode variable during build time
+ARG CCE_ORCHESTRATION_MODE
+ENV REACT_APP_ORCHESTRATION_MODE=$CCE_ORCHESTRATION_MODE
+
 # Instruct webpack to only import runtime scripts
 ENV INLINE_RUNTIME_CHUNK=false
 

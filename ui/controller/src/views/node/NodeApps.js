@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React, { Component } from 'react';
-import ApiClient from "../../api/ApiClient";
+import ApiClient from '../../api/ApiClient';
 import { withSnackbar } from 'notistack';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -21,10 +21,7 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import NodeApp from './NodeApp';
-import {
-  Grid,
-  Button,
-} from '@material-ui/core';
+import { Grid, Button } from '@material-ui/core';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -32,10 +29,9 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
-import {
-  Add
-} from '@material-ui/icons';
-import CircularProgress from "@material-ui/core/CircularProgress";
+import { Add } from '@material-ui/icons';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import OrchestrationContext from '../../context/orchestrationContext';
 
 class NodeApps extends Component {
   constructor(props) {
@@ -48,9 +44,11 @@ class NodeApps extends Component {
       apps: [],
       policies: [],
       nodeApps: [],
-      selectedAppId: ''
+      selectedAppId: '',
     };
   }
+
+  static contextType = OrchestrationContext;
 
   getApps = () => {
     return ApiClient.get(`/apps`)
@@ -60,19 +58,25 @@ class NodeApps extends Component {
         });
       })
       .catch((err) => {
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        this.props.enqueueSnackbar(
+          `${err.toString()}. Please try again later.`,
+          { variant: 'error' }
+        );
       });
   };
 
   getTrafficPolicies = () => {
-    ApiClient.get(`/policies`)
+    ApiClient.get(`${this.context.apiClientPath}`)
       .then((resp) => {
         this.setState({
           policies: resp.data.policies || [],
-        })
+        });
       })
       .catch((err) => {
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        this.props.enqueueSnackbar(
+          `${err.toString()}. Please try again later.`,
+          { variant: 'error' }
+        );
       });
   };
 
@@ -94,7 +98,10 @@ class NodeApps extends Component {
           return;
         }
 
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        this.props.enqueueSnackbar(
+          `${err.toString()}. Please try again later.`,
+          { variant: 'error' }
+        );
       });
   };
 
@@ -102,20 +109,26 @@ class NodeApps extends Component {
     const { nodeID } = this.props;
     const { selectedAppId } = this.state;
 
-    this.setState({loaded: false});
+    this.setState({ loaded: false });
 
-    return ApiClient.post(`/nodes/${nodeID}/apps`, {id: selectedAppId})
+    return ApiClient.post(`/nodes/${nodeID}/apps`, { id: selectedAppId })
       .then((resp) => {
         this.refreshNodeAppsView().then(() => {
-          this.props.enqueueSnackbar(`Successfully deployed app ${selectedAppId}.`, { variant: 'success' });
-          this.setState({loaded: true});
+          this.props.enqueueSnackbar(
+            `Successfully deployed app ${selectedAppId}.`,
+            { variant: 'success' }
+          );
+          this.setState({ loaded: true });
         });
       })
       .catch((err) => {
         this.setState({
           loaded: true,
         });
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        this.props.enqueueSnackbar(
+          `${err.toString()}. Please try again later.`,
+          { variant: 'error' }
+        );
       });
   };
 
@@ -132,19 +145,21 @@ class NodeApps extends Component {
     this.handleClose();
   };
 
-  handleChangeApp = event => {
+  handleChangeApp = (event) => {
     this.setState({ selectedAppId: event.target.value });
   };
 
   refreshNodeAppsView() {
     return Promise.all([
-      this.getApps(), this.getNodeApps(), this.getTrafficPolicies()
+      this.getApps(),
+      this.getNodeApps(),
+      this.getTrafficPolicies(),
     ]);
   }
 
   componentDidMount() {
     this.refreshNodeAppsView().then(() => {
-      this.setState({loaded: true});
+      this.setState({ loaded: true });
     });
   }
 
@@ -152,11 +167,10 @@ class NodeApps extends Component {
     const { apps, selectedAppId } = this.state;
 
     return (
-      <Dialog
-        open={this.state.open}
-        onClose={this.handleClose}
-      >
-        <DialogTitle id="form-dialog-title">Deploy Application to Node</DialogTitle>
+      <Dialog open={this.state.open} onClose={this.handleClose}>
+        <DialogTitle id="form-dialog-title">
+          Deploy Application to Node
+        </DialogTitle>
         <DialogContent>
           <DialogContentText>
             Choose an application to deploy:
@@ -168,10 +182,14 @@ class NodeApps extends Component {
                 value={selectedAppId}
                 onChange={this.handleChangeApp}
               >
-                <option key="0" value="">Select an Application</option>
-                {
-                  apps.map(item => <option key={item.id} value={item.id}>{item.name}</option>)
-                }
+                <option key="0" value="">
+                  Select an Application
+                </option>
+                {apps.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
               </Select>
             </FormControl>
           </form>
@@ -179,23 +197,19 @@ class NodeApps extends Component {
         <DialogActions>
           <Button onClick={this.handleClose} color="primary">
             Cancel
-            </Button>
+          </Button>
           <Button onClick={this.handleDeployApp} color="primary">
             Deploy
-            </Button>
+          </Button>
         </DialogActions>
       </Dialog>
     );
   };
 
   renderTable = () => {
-    const {
-      apps,
-      nodeApps,
-      policies
-    } = this.state;
+    const { apps, nodeApps, policies } = this.state;
 
-    const {nodeID} = this.props;
+    const { nodeID } = this.props;
 
     return (
       <React.Fragment>
@@ -212,12 +226,19 @@ class NodeApps extends Component {
             </TableRow>
           </TableHead>
           <TableBody>
-            {
-              nodeApps.map(nodeApp => {
-                const nodeAppWithDetails= apps.find(obj => {return obj.id === nodeApp.id});
-                return (<NodeApp key={nodeApp.id} nodeId={nodeID} nodeApp={nodeAppWithDetails} policies={policies} />)
-              })
-            }
+            {nodeApps.map((nodeApp) => {
+              const nodeAppWithDetails = apps.find((obj) => {
+                return obj.id === nodeApp.id;
+              });
+              return (
+                <NodeApp
+                  key={nodeApp.id}
+                  nodeId={nodeID}
+                  nodeApp={nodeAppWithDetails}
+                  policies={policies}
+                />
+              );
+            })}
           </TableBody>
         </Table>
       </React.Fragment>
@@ -225,9 +246,7 @@ class NodeApps extends Component {
   };
 
   render() {
-    const {
-      loaded
-    } = this.state;
+    const { loaded } = this.state;
 
     return (
       <React.Fragment>
@@ -243,15 +262,13 @@ class NodeApps extends Component {
             </Button>
           </Grid>
           <Grid item xs={12}>
-            {
-              (loaded ? this.renderTable() : (<CircularProgress />))
-            }
+            {loaded ? this.renderTable() : <CircularProgress />}
           </Grid>
         </Grid>
         {this.renderDeployDialog()}
       </React.Fragment>
     );
   }
-};
+}
 
 export default withSnackbar(NodeApps);
