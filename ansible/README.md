@@ -58,3 +58,7 @@ default.  You can configure this with the `controller_path` variable.
 Credentials for the admin user of the controller as well as the root MySQL user
 will be placed in a folder named `credentials/` from where you've run
 `ansible-playbook`.
+
+### Installing Kubernetes
+
+To install Kubernetes please change the Kubernetes enable flag value in roles/common/defaults/main.yml to true.

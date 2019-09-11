@@ -12,23 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-- hosts: "{{ controller_host }}"
-  vars:
-    remote_root: "{{ ansible_env.HOME }}/controller-ce"
-    local_root: "{{ lookup('env', 'PWD') }}/../"
-  roles:
-    - common
-    - docker
-    - role: kubernetes
-      when: kubernetes['enabled']
-    - controller-ce
+- name: Install Docker CE dependencies
+  yum:
+    name: "{{ docker_dependencies }}"
+    state: present
 
-- hosts: "{{ ui_host }}"
-  vars:
-    remote_root: "{{ ansible_env.HOME }}/controller-ce"
-    local_root: "{{ lookup('env', 'PWD') }}/../"
-  roles:
-    - common
-    - docker
-    - controller-ui
+- name: Install Docker CE additional packages
+  yum:
+    name: "{{ docker_packages }}"
+    state: present
+
+- name: Install docker-compose
+  pip:
+    name: "{{ docker_pip }}"
+    state: present

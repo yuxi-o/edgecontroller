@@ -12,23 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-- hosts: "{{ controller_host }}"
-  vars:
-    remote_root: "{{ ansible_env.HOME }}/controller-ce"
-    local_root: "{{ lookup('env', 'PWD') }}/../"
-  roles:
-    - common
-    - docker
-    - role: kubernetes
-      when: kubernetes['enabled']
-    - controller-ce
-
-- hosts: "{{ ui_host }}"
-  vars:
-    remote_root: "{{ ansible_env.HOME }}/controller-ce"
-    local_root: "{{ lookup('env', 'PWD') }}/../"
-  roles:
-    - common
-    - docker
-    - controller-ui
+- name: Setup firewall - 6443/tcp
+  ignore_errors: yes
+  firewalld:
+    port: 6443/tcp
+    permanent: yes
+    state: enabled
+    immediate: yes
+- name: Setup firewall - 2379-2380/tcp
+  ignore_errors: yes
+  firewalld:
+    port: 2379-2380/tcp
+    permanent: yes
+    state: enabled
+    immediate: yes
+- name: Setup firewall - 10250-10252/tcp
+  ignore_errors: yes
+  firewalld:
+    port: 10250-10252/tcp
+    permanent: yes
+    state: enabled
+    immediate: yes

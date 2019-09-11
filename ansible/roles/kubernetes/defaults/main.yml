@@ -13,22 +13,11 @@
 # limitations under the License.
 
 ---
-- hosts: "{{ controller_host }}"
-  vars:
-    remote_root: "{{ ansible_env.HOME }}/controller-ce"
-    local_root: "{{ lookup('env', 'PWD') }}/../"
-  roles:
-    - common
-    - docker
-    - role: kubernetes
-      when: kubernetes['enabled']
-    - controller-ce
-
-- hosts: "{{ ui_host }}"
-  vars:
-    remote_root: "{{ ansible_env.HOME }}/controller-ce"
-    local_root: "{{ lookup('env', 'PWD') }}/../"
-  roles:
-    - common
-    - docker
-    - controller-ui
+docker_packages: "docker-ce-cli,containerd.io"
+docker_dependencies: "yum-utils,device-mapper-persistent-data,lvm2,python-pip"
+docker_pip: "docker-compose"
+kubernetes_repo_yum_gpg: "https://packages.cloud.google.com/yum/doc/yum-key.gpg"
+kubernetes_repo_rpm_gpg: "https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg"
+kubernetes_packages: "kubelet,kubeadm,kubectl"
+kubernetes_sysctl: "/etc/sysctl.d/k8s.conf"
+kubernetes_kubeadm_conf: "/usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf"

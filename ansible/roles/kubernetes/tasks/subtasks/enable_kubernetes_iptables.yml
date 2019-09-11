@@ -12,23 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-- hosts: "{{ controller_host }}"
-  vars:
-    remote_root: "{{ ansible_env.HOME }}/controller-ce"
-    local_root: "{{ lookup('env', 'PWD') }}/../"
-  roles:
-    - common
-    - docker
-    - role: kubernetes
-      when: kubernetes['enabled']
-    - controller-ce
+- name: Enable Kubernetes ip6tables
+  sysctl:
+    name: net.bridge.bridge-nf-call-ip6tables
+    value: '1'
+    sysctl_set: yes
+    state: present
+    reload: yes
+    sysctl_file: "{{ kubernetes_sysctl }}"
 
-- hosts: "{{ ui_host }}"
-  vars:
-    remote_root: "{{ ansible_env.HOME }}/controller-ce"
-    local_root: "{{ lookup('env', 'PWD') }}/../"
-  roles:
-    - common
-    - docker
-    - controller-ui
+- name: Enable Kubernetes iptables
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: '1'
+    sysctl_set: yes
+    state: present
+    reload: yes
+    sysctl_file: "{{ kubernetes_sysctl }}"

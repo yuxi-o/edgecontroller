@@ -12,23 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-- hosts: "{{ controller_host }}"
-  vars:
-    remote_root: "{{ ansible_env.HOME }}/controller-ce"
-    local_root: "{{ lookup('env', 'PWD') }}/../"
-  roles:
-    - common
-    - docker
-    - role: kubernetes
-      when: kubernetes['enabled']
-    - controller-ce
-
-- hosts: "{{ ui_host }}"
-  vars:
-    remote_root: "{{ ansible_env.HOME }}/controller-ce"
-    local_root: "{{ lookup('env', 'PWD') }}/../"
-  roles:
-    - common
-    - docker
-    - controller-ui
+- name: Set SELinux to permissive mode
+  selinux:
+    policy: targeted
+    state: permissive

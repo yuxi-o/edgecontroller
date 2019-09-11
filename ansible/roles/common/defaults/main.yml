@@ -15,8 +15,17 @@
 ---
 github_token: ""
 version: master
-cce_orchestration_mode: native
 cce_log_level: info
 react_app_controller_api: http://{{ controller_host }}:8080
 react_app_cups_api: "http://{{ controller_host }}:8090"
 controller_path: /opt/controller
+#
+cce_k8s_master_host: "{{ controller_host }}:6443"
+kubernetes_certs_path: "{{ controller_path }}/certs"
+ca_path: "{{ kubernetes_certs_path }}/ca.pem"
+client_path: "{{ kubernetes_certs_path }}/client.pem"
+key_path: "{{ kubernetes_certs_path }}/key.pem"
+kubernetes:
+  enabled: false
+#
+cce_orchestration_mode: "{{ 'kubernetes' if kubernetes['enabled'] else 'native' }}"

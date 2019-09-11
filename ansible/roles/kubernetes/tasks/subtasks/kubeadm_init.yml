@@ -12,23 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-- hosts: "{{ controller_host }}"
-  vars:
-    remote_root: "{{ ansible_env.HOME }}/controller-ce"
-    local_root: "{{ lookup('env', 'PWD') }}/../"
-  roles:
-    - common
-    - docker
-    - role: kubernetes
-      when: kubernetes['enabled']
-    - controller-ce
+- name: Reset Kubernetes network
+  shell: kubeadm reset --force
 
-- hosts: "{{ ui_host }}"
-  vars:
-    remote_root: "{{ ansible_env.HOME }}/controller-ce"
-    local_root: "{{ lookup('env', 'PWD') }}/../"
-  roles:
-    - common
-    - docker
-    - controller-ui
+- name: Initialize Kubernetes network
+  shell: kubeadm init --pod-network-cidr=10.244.0.0/16
+  register: init_result
+
+- name: Get kubeadm join command
+  set_fact:
+    pattern: 'kubeadm join.*\n.*'
+- set_fact:
+    kubeadm_join: "{{ init_result.stdout | regex_search(pattern) | regex_replace('\\\\\\n {4}','') | regex_replace(' $','') }}" 
+- debug:
+    var: kubeadm_join
