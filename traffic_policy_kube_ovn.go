@@ -21,6 +21,10 @@ import (
 	"strings"
 
 	"github.com/otcshare/edgecontroller/uuid"
+
+	coreV1 "k8s.io/api/core/v1"
+	networkingV1 "k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // TrafficPolicyKubeOVN is an application or interface traffic policy.
@@ -275,7 +279,7 @@ func (ipb *IPBlock) String() string {
 		except)
 }
 
-// Port is the model for a ip block.
+// Port is the model for a port.
 type Port struct {
 	Port     uint16 `json:"port"`
 	Protocol string `json:"protocol"`
@@ -298,4 +302,100 @@ func (p *Port) String() string {
 				]`),
 		p.Port,
 		p.Protocol)
+}
+
+// ToK8s converts traffic policy into Kubernetes' NetworkPolicy
+func (tp *TrafficPolicyKubeOVN) ToK8s() *networkingV1.NetworkPolicy {
+	np := &networkingV1.NetworkPolicy{
+		Spec: networkingV1.NetworkPolicySpec{},
+	}
+
+	is := []networkingV1.NetworkPolicyIngressRule{}
+	for _, ingress := range tp.Ingress {
+		is = append(is, ingress.ToK8s())
+	}
+
+	es := []networkingV1.NetworkPolicyEgressRule{}
+	for _, egress := range tp.Egress {
+		es = append(es, egress.ToK8s())
+	}
+
+	policyTypes := []networkingV1.PolicyType{}
+	if len(es) > 0 {
+		np.Spec.Egress = es
+		policyTypes = append(policyTypes, "Egress")
+	}
+
+	if len(is) > 0 {
+		np.Spec.Ingress = is
+		policyTypes = append(policyTypes, "Ingress")
+	}
+
+	np.Spec.PolicyTypes = policyTypes
+
+	return np
+}
+
+// ToK8s converts port into Kubernetes' port
+func (p *Port) ToK8s() networkingV1.NetworkPolicyPort {
+	k8sProtocol := func(protocol string) coreV1.Protocol {
+		switch protocol {
+		case "udp", "UDP":
+			return coreV1.ProtocolUDP
+		case "sctp", "SCTP":
+			return coreV1.ProtocolSCTP
+		default:
+			return coreV1.ProtocolTCP
+		}
+	}
+
+	protocol := k8sProtocol(p.Protocol)
+	intstrPort := intstr.FromInt(int(p.Port))
+
+	return networkingV1.NetworkPolicyPort{
+		Protocol: &protocol,
+		Port:     &intstrPort,
+	}
+}
+
+// ToK8s converts IPBlock into Kubernetes' Peer
+func (ipb *IPBlock) ToK8s() networkingV1.NetworkPolicyPeer {
+	excepts := []string{}
+	excepts = append(excepts, ipb.Except...)
+	return networkingV1.NetworkPolicyPeer{
+		IPBlock: &networkingV1.IPBlock{
+			CIDR:   ipb.CIDR,
+			Except: excepts,
+		},
+	}
+}
+
+// ToK8s converts ingress rule into Kubernetes' ingress rule
+func (ir *IngressRule) ToK8s() networkingV1.NetworkPolicyIngressRule {
+	ingress := networkingV1.NetworkPolicyIngressRule{}
+
+	for _, port := range ir.Ports {
+		ingress.Ports = append(ingress.Ports, port.ToK8s())
+	}
+
+	for _, from := range ir.From {
+		ingress.From = append(ingress.From, from.ToK8s())
+	}
+
+	return ingress
+}
+
+// ToK8s converts egress rule into Kubernetes' egress rule
+func (er *EgressRule) ToK8s() networkingV1.NetworkPolicyEgressRule {
+	egress := networkingV1.NetworkPolicyEgressRule{}
+
+	for _, port := range er.Ports {
+		egress.Ports = append(egress.Ports, port.ToK8s())
+	}
+
+	for _, to := range er.To {
+		egress.To = append(egress.To, to.ToK8s())
+	}
+
+	return egress
 }

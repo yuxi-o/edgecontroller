@@ -284,4 +284,50 @@ TrafficPolicyKubeOVN[
 			)))
 		})
 	})
+
+	Describe("ToK8s", func() {
+		It("Should convert traffic policy to network policy", func() {
+			netpol := tp.ToK8s()
+
+			Expect(netpol.Spec.Ingress).To(HaveLen(2))
+
+			Expect(netpol.Spec.Ingress[0].Ports).To(HaveLen(1))
+			Expect(netpol.Spec.Ingress[0].Ports[0].Port.IntValue()).To(Equal(80))
+			Expect(*(netpol.Spec.Ingress[0].Ports[0].Protocol)).To(BeEquivalentTo("TCP"))
+			Expect(netpol.Spec.Ingress[0].From).To(HaveLen(1))
+			Expect(netpol.Spec.Ingress[0].From[0].IPBlock.CIDR).To(Equal("1.1.0.0/16"))
+			Expect(netpol.Spec.Ingress[0].From[0].IPBlock.Except).To(HaveLen(2))
+			Expect(netpol.Spec.Ingress[0].From[0].IPBlock.Except[0]).To(Equal("1.1.2.0/24"))
+			Expect(netpol.Spec.Ingress[0].From[0].IPBlock.Except[1]).To(Equal("1.1.3.0/24"))
+
+			Expect(netpol.Spec.Ingress[1].Ports).To(HaveLen(1))
+			Expect(netpol.Spec.Ingress[1].Ports[0].Port.IntValue()).To(Equal(80))
+			Expect(*(netpol.Spec.Ingress[1].Ports[0].Protocol)).To(BeEquivalentTo("UDP"))
+			Expect(netpol.Spec.Ingress[1].From).To(HaveLen(1))
+			Expect(netpol.Spec.Ingress[1].From[0].IPBlock.CIDR).To(Equal("2.2.0.0/16"))
+			Expect(netpol.Spec.Ingress[1].From[0].IPBlock.Except).To(HaveLen(2))
+			Expect(netpol.Spec.Ingress[1].From[0].IPBlock.Except[0]).To(Equal("2.2.2.0/24"))
+			Expect(netpol.Spec.Ingress[1].From[0].IPBlock.Except[1]).To(Equal("2.2.3.0/24"))
+
+			Expect(netpol.Spec.Egress).To(HaveLen(2))
+
+			Expect(netpol.Spec.Egress[0].Ports).To(HaveLen(1))
+			Expect(netpol.Spec.Egress[0].Ports[0].Port.IntValue()).To(Equal(80))
+			Expect(*(netpol.Spec.Egress[0].Ports[0].Protocol)).To(BeEquivalentTo("TCP"))
+			Expect(netpol.Spec.Egress[0].To).To(HaveLen(1))
+			Expect(netpol.Spec.Egress[0].To[0].IPBlock.CIDR).To(Equal("3.3.0.0/16"))
+			Expect(netpol.Spec.Egress[0].To[0].IPBlock.Except).To(HaveLen(2))
+			Expect(netpol.Spec.Egress[0].To[0].IPBlock.Except[0]).To(Equal("3.3.2.0/24"))
+			Expect(netpol.Spec.Egress[0].To[0].IPBlock.Except[1]).To(Equal("3.3.3.0/24"))
+
+			Expect(netpol.Spec.Egress[1].Ports).To(HaveLen(1))
+			Expect(netpol.Spec.Egress[1].Ports[0].Port.IntValue()).To(Equal(80))
+			Expect(*(netpol.Spec.Egress[1].Ports[0].Protocol)).To(BeEquivalentTo("UDP"))
+			Expect(netpol.Spec.Egress[1].To).To(HaveLen(1))
+			Expect(netpol.Spec.Egress[1].To[0].IPBlock.CIDR).To(Equal("4.4.0.0/16"))
+			Expect(netpol.Spec.Egress[1].To[0].IPBlock.Except).To(HaveLen(2))
+			Expect(netpol.Spec.Egress[1].To[0].IPBlock.Except[0]).To(Equal("4.4.2.0/24"))
+			Expect(netpol.Spec.Egress[1].To[0].IPBlock.Except[1]).To(Equal("4.4.3.0/24"))
+		})
+	})
 })

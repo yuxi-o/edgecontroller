@@ -26,6 +26,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	cce "github.com/otcshare/edgecontroller"
 	"github.com/otcshare/edgecontroller/k8s"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -87,6 +88,43 @@ var _ = Describe("K8S", func() {
 			}
 			Expect(client.Ping()).To(Succeed())
 
+			trafficPolicy := &cce.TrafficPolicyKubeOVN{
+				ID:   "374bd735-8be6-42c3-a7d1-41fbb61542e0",
+				Name: "traffic policy for app",
+				Ingress: []*cce.IngressRule{
+					{
+						From: []*cce.IPBlock{
+							{
+								CIDR:   "192.168.1.0/24",
+								Except: []string{"192.168.1.0/30"},
+							},
+						},
+						Ports: []*cce.Port{
+							{
+								Port:     80,
+								Protocol: "tcp",
+							},
+						},
+					},
+				},
+				Egress: []*cce.EgressRule{
+					{
+						To: []*cce.IPBlock{
+							{
+								CIDR:   "10.16.0.0/16",
+								Except: []string{"10.16.0.0/24"},
+							},
+						},
+						Ports: []*cce.Port{
+							{
+								Port:     443,
+								Protocol: "tcp",
+							},
+						},
+					},
+				},
+			}
+
 			app := k8s.App{
 				ID:     appID,
 				Image:  "nginx:1.12", // commonly used public docker container
@@ -119,6 +157,14 @@ var _ = Describe("K8S", func() {
 			ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			Expect(client.Start(ctx, nodeID, appID)).To(Succeed())
+
+			ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			Expect(client.ApplyNetworkPolicy(ctx, nodeID, appID, trafficPolicy.ToK8s())).To(Succeed())
+
+			ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			Expect(client.DeleteNetworkPolicy(ctx, nodeID, appID)).To(Succeed())
 
 			ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()

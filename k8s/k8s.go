@@ -25,6 +25,7 @@ import (
 	appsV1 "k8s.io/api/apps/v1"
 	autoscalingV1 "k8s.io/api/autoscaling/v1"
 	apiV1 "k8s.io/api/core/v1"
+	networkingV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -449,4 +450,59 @@ func (ks *Client) GetAppIDByIP(ctx context.Context, nodeID, ipAddr string) (stri
 	}
 
 	return "", errors.Errorf("no pod found with IP '%s'", ipAddr)
+}
+
+func (ks *Client) ApplyNetworkPolicy(ctx context.Context,
+	nodeID, appID string, policy *networkingV1.NetworkPolicy) error {
+
+	networkingClient := ks.clientSet.NetworkingV1().RESTClient()
+
+	// Currently only 1 NetworkPolicy per app so we can just concatenate node and app
+	policy.ObjectMeta.Name = fmt.Sprintf("%s.%s", nodeID, appID)
+
+	policy.Spec.PodSelector = metaV1.LabelSelector{
+		MatchLabels: map[string]string{
+			"app-id":  appID,
+			"node-id": nodeID,
+		},
+	}
+
+	err := networkingClient.Post().
+		Context(ctx).
+		Namespace(apiV1.NamespaceDefault).
+		Resource("networkpolicies").
+		Body(policy).
+		Do().Error()
+
+	if err != nil {
+		return errors.Wrap(err, "failed to create network policy")
+	}
+
+	return nil
+}
+
+func (ks *Client) DeleteNetworkPolicy(ctx context.Context, nodeID, appID string) error {
+	networkingClient := ks.clientSet.NetworkingV1().RESTClient()
+
+	propagation := metaV1.DeletePropagationBackground
+	gracePeriodSeconds := int64(0)
+	deleteOptions := &metaV1.DeleteOptions{
+		PropagationPolicy:  &propagation,
+		GracePeriodSeconds: &gracePeriodSeconds,
+	}
+	name := fmt.Sprintf("%s.%s", nodeID, appID)
+
+	err := networkingClient.Delete().
+		Context(ctx).
+		Namespace(apiV1.NamespaceDefault).
+		Resource("networkpolicies").
+		Name(name).
+		Body(deleteOptions).
+		Do().Error()
+
+	if err != nil {
+		return errors.Wrap(err, "failed to delete network policy")
+	}
+
+	return nil
 }
