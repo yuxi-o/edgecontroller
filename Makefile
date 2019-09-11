@@ -1,4 +1,4 @@
-# Copyright 2019 Smart-Edge.com, Inc. All rights reserved.
+# Copyright 2019 Intel Corporation and Smart-Edge.com, Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -238,7 +238,13 @@ test-api-k8s:
 	docker pull nginx:1.12
 	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce/k8s
 
+test-api-kubeovn:
+	$(MAKE) db-reset
+	$(MAKE) db-up
+	docker pull nginx:1.12
+	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce/kubeovn
+
 test-k8s:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites k8s
 
-test: test-unit test-api test-k8s test-api-k8s
+test: test-unit test-api test-k8s test-api-k8s test-api-kubeovn

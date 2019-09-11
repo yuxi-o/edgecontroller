@@ -1,4 +1,4 @@
-// Copyright 2019 Smart-Edge.com, Inc. All rights reserved.
+// Copyright 2019 Intel Corporation and Smart-Edge.com, Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,10 +35,11 @@ type Gorilla struct {
 
 	// TODO: Check if these handlers are still necessary
 	// entity routes handlers
-	nodesHandler           *handler
-	appsHandler            *handler
-	trafficPoliciesHandler *handler
-	dnsConfigsHandler      *handler
+	nodesHandler                  *handler
+	appsHandler                   *handler
+	trafficPoliciesHandler        *handler
+	trafficPoliciesKubeOVNHandler *handler
+	dnsConfigsHandler             *handler
 
 	// join routes handlers
 	dnsConfigsAppAliasesHandler *handler
@@ -70,6 +71,10 @@ func NewGorilla( //nolint:gocyclo
 		},
 		trafficPoliciesHandler: &handler{
 			model:         &cce.TrafficPolicy{},
+			checkDBDelete: checkDBDeleteTrafficPolicies,
+		},
+		trafficPoliciesKubeOVNHandler: &handler{
+			model:         &cce.TrafficPolicyKubeOVN{},
 			checkDBDelete: checkDBDeleteTrafficPolicies,
 		},
 		dnsConfigsHandler: &handler{
@@ -104,6 +109,30 @@ func NewGorilla( //nolint:gocyclo
 		},
 	}
 
+	nativePoliciesHandlers := map[string]http.HandlerFunc{
+		"GET      /policies":             g.swagGETPolicies,
+		"POST     /policies":             g.swagPOSTPolicies,
+		"GET      /policies/{policy_id}": g.swagGETPolicyByID,
+		"PATCH    /policies/{policy_id}": g.swagPATCHPolicyByID,
+		"DELETE   /policies/{policy_id}": g.swagDELETEPolicyByID,
+
+		"GET      /nodes/{node_id}/interfaces/{interface_id}/policy": g.swagGETNodeInterfacePolicy,
+		"PATCH    /nodes/{node_id}/interfaces/{interface_id}/policy": g.swagPATCHNodeInterfacePolicy,
+		"DELETE   /nodes/{node_id}/interfaces/{interface_id}/policy": g.swagDELETENodeInterfacePolicy,
+
+		"GET      /nodes/{node_id}/apps/{app_id}/policy": g.swagGETNodeAppPolicy,
+		"PATCH    /nodes/{node_id}/apps/{app_id}/policy": g.swagPATCHNodeAppPolicy,
+		"DELETE   /nodes/{node_id}/apps/{app_id}/policy": g.swagDELETENodeAppPolicy,
+	}
+
+	kubeOVNPoliciesHandlers := map[string]http.HandlerFunc{
+		"GET      /kube_ovn/policies":             g.swagGETKubeOVNPolicies,
+		"POST     /kube_ovn/policies":             g.swagPOSTKubeOVNPolicies,
+		"GET      /kube_ovn/policies/{policy_id}": g.swagGETKubeOVNPolicyByID,
+		"PATCH    /kube_ovn/policies/{policy_id}": g.swagPATCHKubeOVNPolicyByID,
+		"DELETE   /kube_ovn/policies/{policy_id}": g.swagDELETEKubeOVNPolicyByID,
+	}
+
 	routes := map[string]http.HandlerFunc{
 		"POST     /auth": authenticate,
 
@@ -119,12 +148,6 @@ func NewGorilla( //nolint:gocyclo
 		"PATCH    /apps/{app_id}": g.swagPATCHAppByID,
 		"DELETE   /apps/{app_id}": g.swagDELETEAppByID,
 
-		"GET      /policies":             g.swagGETPolicies,
-		"POST     /policies":             g.swagPOSTPolicies,
-		"GET      /policies/{policy_id}": g.swagGETPolicyByID,
-		"PATCH    /policies/{policy_id}": g.swagPATCHPolicyByID,
-		"DELETE   /policies/{policy_id}": g.swagDELETEPolicyByID,
-
 		"GET      /nodes/{node_id}/dns": g.swagGETNodeDNS,
 		"PATCH    /nodes/{node_id}/dns": g.swagPATCHNodeDNS,
 		"DELETE   /nodes/{node_id}/dns": g.swagDELETENodeDNS,
@@ -133,18 +156,21 @@ func NewGorilla( //nolint:gocyclo
 		"PATCH    /nodes/{node_id}/interfaces":                g.swagPATCHInterfaces,
 		"GET      /nodes/{node_id}/interfaces/{interface_id}": g.swagGETInterfaceByID,
 
-		"GET      /nodes/{node_id}/interfaces/{interface_id}/policy": g.swagGETNodeInterfacePolicy,
-		"PATCH    /nodes/{node_id}/interfaces/{interface_id}/policy": g.swagPATCHNodeInterfacePolicy,
-		"DELETE   /nodes/{node_id}/interfaces/{interface_id}/policy": g.swagDELETENodeInterfacePolicy,
+		"GET      /nodes/{node_id}/apps":          g.swagGETNodeApps,
+		"POST     /nodes/{node_id}/apps":          g.swagPOSTNodeApp,
+		"GET      /nodes/{node_id}/apps/{app_id}": g.swagGETNodeAppsByID,
+		"PATCH    /nodes/{node_id}/apps/{app_id}": g.swagPATCHNodeAppsByID,
+		"DELETE   /nodes/{node_id}/apps/{app_id}": g.swagDELETENodeAppByID,
+	}
 
-		"GET      /nodes/{node_id}/apps":                 g.swagGETNodeApps,
-		"POST     /nodes/{node_id}/apps":                 g.swagPOSTNodeApp,
-		"GET      /nodes/{node_id}/apps/{app_id}":        g.swagGETNodeAppsByID,
-		"PATCH    /nodes/{node_id}/apps/{app_id}":        g.swagPATCHNodeAppsByID,
-		"DELETE   /nodes/{node_id}/apps/{app_id}":        g.swagDELETENodeAppByID,
-		"GET      /nodes/{node_id}/apps/{app_id}/policy": g.swagGETNodeAppPolicy,
-		"PATCH    /nodes/{node_id}/apps/{app_id}/policy": g.swagPATCHNodeAppPolicy,
-		"DELETE   /nodes/{node_id}/apps/{app_id}/policy": g.swagDELETENodeAppPolicy,
+	if controller.OrchestrationMode == cce.OrchestrationModeKubernetesOVN {
+		for k, v := range kubeOVNPoliciesHandlers {
+			routes[k] = v
+		}
+	} else {
+		for k, v := range nativePoliciesHandlers {
+			routes[k] = v
+		}
 	}
 
 	for endpoint, handlerFunc := range routes {

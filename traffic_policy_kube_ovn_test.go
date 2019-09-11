@@ -100,8 +100,8 @@ var _ = Describe("Entities: TrafficPolicyKubeOVN", func() {
 	})
 
 	Describe("GetTableName", func() {
-		It(`Should return "traffic_policies_kube_ovn"`, func() {
-			Expect(tp.GetTableName()).To(Equal("traffic_policies_kube_ovn"))
+		It(`Should return "traffic_policies"`, func() {
+			Expect(tp.GetTableName()).To(Equal("traffic_policies"))
 		})
 	})
 

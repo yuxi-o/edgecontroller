@@ -37,7 +37,7 @@ type TrafficPolicyKubeOVN struct {
 
 // GetTableName returns the name of the persistence table.
 func (*TrafficPolicyKubeOVN) GetTableName() string {
-	return "traffic_policies_kube_ovn"
+	return "traffic_policies"
 }
 
 // GetID gets the ID.
