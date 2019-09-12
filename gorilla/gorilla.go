@@ -131,6 +131,10 @@ func NewGorilla( //nolint:gocyclo
 		"GET      /kube_ovn/policies/{policy_id}": g.swagGETKubeOVNPolicyByID,
 		"PATCH    /kube_ovn/policies/{policy_id}": g.swagPATCHKubeOVNPolicyByID,
 		"DELETE   /kube_ovn/policies/{policy_id}": g.swagDELETEKubeOVNPolicyByID,
+
+		"GET      /nodes/{node_id}/apps/{app_id}/kube_ovn/policy": g.swagGETNodeAppKubeOVNPolicy,
+		"PATCH    /nodes/{node_id}/apps/{app_id}/kube_ovn/policy": g.swagPATCHNodeAppKubeOVNPolicy,
+		"DELETE   /nodes/{node_id}/apps/{app_id}/kube_ovn/policy": g.swagDELETENodeAppKubeOVNPolicy,
 	}
 
 	routes := map[string]http.HandlerFunc{

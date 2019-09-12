@@ -452,6 +452,7 @@ func (ks *Client) GetAppIDByIP(ctx context.Context, nodeID, ipAddr string) (stri
 	return "", errors.Errorf("no pod found with IP '%s'", ipAddr)
 }
 
+// ApplyNetworkPolicy applies network policy for app on specified node
 func (ks *Client) ApplyNetworkPolicy(ctx context.Context,
 	nodeID, appID string, policy *networkingV1.NetworkPolicy) error {
 
@@ -481,6 +482,7 @@ func (ks *Client) ApplyNetworkPolicy(ctx context.Context,
 	return nil
 }
 
+// DeleteNetworkPolicy deletes network policy for app on specified node
 func (ks *Client) DeleteNetworkPolicy(ctx context.Context, nodeID, appID string) error {
 	networkingClient := ks.clientSet.NetworkingV1().RESTClient()
 
@@ -505,4 +507,15 @@ func (ks *Client) DeleteNetworkPolicy(ctx context.Context, nodeID, appID string)
 	}
 
 	return nil
+}
+
+// GetNetworkPolicy returns network policy for app on specified node
+func (ks *Client) GetNetworkPolicy(ctx context.Context, nodeID, appID string) (*networkingV1.NetworkPolicy, error) {
+	networkingClient := ks.clientSet.NetworkingV1().NetworkPolicies(apiV1.NamespaceDefault)
+
+	name := fmt.Sprintf("%s.%s", nodeID, appID)
+
+	netpol, err := networkingClient.Get(name, metaV1.GetOptions{})
+
+	return netpol, err
 }

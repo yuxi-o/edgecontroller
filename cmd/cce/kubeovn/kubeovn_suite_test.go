@@ -19,12 +19,18 @@ import (
 	"context"
 	"io"
 	"net"
+	"syscall"
 
-	//nolint:gosec
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/md5" //nolint:gosec
+	"crypto/rand"
 	"crypto/x509"
 	"database/sql"
 
+	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -171,6 +177,18 @@ func startup() {
 	apiCli = &apiClient{
 		Token: authToken(),
 	}
+
+	By("Initializing Kubernetes client")
+	k8sCli = &k8s.Client{
+		CAFile:   config.TLSClientConfig.CAFile,
+		CertFile: config.TLSClientConfig.CertFile,
+		KeyFile:  config.TLSClientConfig.KeyFile,
+		Host:     config.Host,
+		APIPath:  config.APIPath,
+		Username: config.Username,
+	}
+	err = k8sCli.Ping()
+	Expect(err).ToNot(HaveOccurred(), "Problem connecting to kubernetes")
 
 	By("Building the node")
 	exe, err = gexec.Build(
@@ -352,4 +370,166 @@ func getKubeOVNPolicy(id string) *swagger.PolicyKubeOVNDetail {
 	Expect(json.Unmarshal(body, &policy)).To(Succeed())
 
 	return &policy
+}
+
+type nodeConfig struct {
+	nodeID string
+	serial string
+	key    *ecdsa.PrivateKey
+	creds  *authpb.Credentials
+}
+
+func createAndRegisterNode() *nodeConfig {
+	By("Generating node private key")
+	key, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+	Expect(err).ToNot(HaveOccurred())
+
+	By("Creating a CSR with private key")
+	csrDER, err := x509.CreateCertificateRequest(
+		rand.Reader,
+		&x509.CertificateRequest{},
+		key,
+	)
+	Expect(err).ToNot(HaveOccurred())
+
+	By("Parsing the CSR")
+	certReq, err := x509.ParseCertificateRequest(csrDER)
+	Expect(err).ToNot(HaveOccurred())
+
+	By("Encoding the CSR in PEM")
+	csrPEM := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "CERTIFICATE REQUEST",
+			Bytes: csrDER,
+		})
+
+	By("Pre-approving Node by serial")
+	hash := md5.Sum(certReq.RawSubjectPublicKeyInfo) //nolint:gosec
+	serial := base64.RawURLEncoding.EncodeToString(hash[:])
+	nodeID := postNodesSerial(serial)
+
+	By("Resetting the node")
+	Expect(cmd.Process.Signal(syscall.SIGABRT)).To(Succeed(), "Problem resetting node")
+	Expect(fmt.Fprintln(nodeIn, nodeID)).To(Equal(len(nodeID) + 1))
+
+	By("Verifying that the node started successfully")
+	Eventually(node.Err, 3).Should(gbytes.Say(
+		"test-node: listening on port: 4210[12]"),
+		"Node did not start in time")
+	Eventually(node.Err, 3).Should(gbytes.Say(
+		"test-node: listening on port: 4210[12]"),
+		"Node did not start in time")
+
+	By("Requesting credentials from auth service")
+	creds, err := authSvcCli.RequestCredentials(
+		context.TODO(),
+		&authpb.Identity{
+			Csr: string(csrPEM),
+		},
+	)
+	Expect(err).ToNot(HaveOccurred())
+
+	return &nodeConfig{
+		nodeID: nodeID,
+		serial: serial,
+		key:    key,
+		creds:  creds,
+	}
+}
+
+func postNodesSerial(serial string) (id string) {
+	By("Sending a POST /nodes request")
+	resp, err := apiCli.Post(
+		"http://127.0.0.1:8080/nodes",
+		"application/json",
+		strings.NewReader(fmt.Sprintf(`
+			{
+				"name": "Test Node 1",
+				"location": "Localhost port 42101",
+				"serial": "%s"
+			}`, serial)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+
+	By("Verifying a 201 Created response")
+	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var rb respBody
+
+	By("Unmarshaling the response")
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
+
+	return rb.ID
+}
+
+func postApps(appType string) (id string) {
+	By("Sending a POST /apps request")
+	resp, err := apiCli.Post(
+		"http://127.0.0.1:8080/apps",
+		"application/json",
+		strings.NewReader(fmt.Sprintf(`
+			{
+				"type": "%s",
+				"name": "%s app",
+				"version": "latest",
+				"vendor": "smart edge",
+				"description": "my %s app",
+				"cores": 4,
+				"memory": 1024,
+				"ports": [{"port": 80, "protocol": "tcp"}],
+				"source": "http://www.test.com/my_%s_app.tar.gz"
+			}`, appType, appType, appType, appType)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+
+	By("Verifying a 201 Created response")
+	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var rb respBody
+
+	By("Unmarshaling the response")
+	Expect(json.Unmarshal(body, &rb)).To(Succeed())
+
+	return rb.ID
+}
+
+func postNodeApps(nodeID, appID string) {
+	By("Sending a POST /nodes/{node_id}/apps request")
+	resp, err := apiCli.Post(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps", nodeID),
+		"application/json",
+		strings.NewReader(fmt.Sprintf(`
+			{
+				"id": "%s"
+			}`, appID)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+
+	By("Verifying a 200 Created response")
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+}
+
+func patchNodesAppsKubeOVNPolicy(nodeID string, appID string, policyID string) {
+	By("Sending a PATCH /nodes/{node_id}/apps/{app_id}/policy request")
+	resp, err := apiCli.Patch(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps/%s/kube_ovn/policy", nodeID, appID),
+		"application/json",
+		strings.NewReader(fmt.Sprintf(
+			`
+			{
+				"id": "%s"
+			}`, policyID)))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+
+	By("Verifying a 200 response")
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 }
