@@ -1,0 +1,254 @@
+# Copyright 2019 Intel Corporation and Smart-Edge.com, Inc. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openness
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openness-config
+  namespace: openness
+data:
+  http_proxy: ""
+  https_proxy: ""
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eaa
+  namespace: openness
+spec:
+  clusterIP: None
+  selector:
+    name: appliance
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 443
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: appliance
+  namespace: openness
+spec:
+  selector:
+    matchLabels:
+      name: appliance
+  template:
+    metadata:
+      labels:
+        name: appliance
+    spec:
+      tolerations:
+      - key: node-role.kube-ovn/master
+        effect: NoSchedule
+      containers:
+      - name: appliance
+        image: appliance:1.0
+        imagePullPolicy: Never
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-certs
+          mountPath: /host_certs
+        - name: host-ns
+          mountPath: /var/host_ns
+          readOnly: true
+        - name: run
+          mountPath: /run
+        - name: netns
+          mountPath: /var/run/docker/netns
+        - name: host-net-devices
+          mountPath: /var/host_net_devices
+        - name: devices
+          mountPath: /devices      
+        - name: certs
+          mountPath: /root/certs
+        - name: configs
+          mountPath: /root/configs
+        - name: applications
+          mountPath: /var/lib/appliance/applications 
+        - name: openvswitch
+          mountPath: /usr/local/var/run/openvswitch           
+      volumes:
+      - name: host-certs
+        hostPath:
+          path: /etc/pki/tls/certs
+      - name: host-ns
+        hostPath:
+          path: /proc/1/ns
+      - name: run
+        hostPath:
+          path: /run
+      - name: netns
+        hostPath:
+          path: /var/run/docker/netns
+      - name: host-net-devices
+        hostPath:
+          path: /sys/class/net
+      - name: devices
+        hostPath:
+          path: /sys/devices
+      - name: certs
+        hostPath:
+          path: /var/lib/appliance/certs
+      - name: configs
+        hostPath:
+          path: /var/lib/appliance/configs
+      - name: applications
+        hostPath:
+          path: /var/lib/appliance/applications
+      - name: openvswitch
+        hostPath:
+          path: /var/run/openvswitch         
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mec-app-edgednssvr
+  namespace: openness
+spec:
+  clusterIP: None
+  selector:
+    name: mec-app-edgednssvr
+  ports:
+    - name: dns
+      protocol: UDP
+      port: 53
+      targetPort: 53
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: mec-app-edgednssvr
+  namespace: openness
+spec:
+  selector:
+    matchLabels:
+      name: mec-app-edgednssvr
+  template:
+    metadata:
+      labels:
+        name: mec-app-edgednssvr
+    spec:
+      tolerations:
+      - key: node-role.kube-ovn/master
+        effect: NoSchedule
+      containers:
+      - name: mec-app-edgednssvr
+        image: edgednssvr:1.0
+        imagePullPolicy: Never
+        securityContext:
+          capabilities:
+            add: ["NET_ADMIN"]
+        volumeMounts:
+        - name: edgednssvr
+          mountPath: /var/lib/edgedns
+        - name: run
+          mountPath: /run 
+        env:
+          - name: http_proxy
+            valueFrom:
+              configMapKeyRef:
+                name: openness-config
+                key: http_proxy
+          - name: https_proxy
+            valueFrom:
+              configMapKeyRef:
+                name: openness-config
+                key: https_proxy
+          - name: DNS_FWDR
+            value: 8.8.8.8
+          - name: LOCAL_SYSLOG
+            value: syslog-ng:514
+      volumes:
+      - name: edgednssvr
+        hostPath:
+          path: /var/lib/appliance/edgednssvr
+      - name: run
+        hostPath:
+          path: /run
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: syslog-ng
+  namespace: openness
+spec:
+  clusterIP: None
+  selector:
+    name: syslog-ng
+  ports:
+  - name: syslog
+    protocol: UDP
+    port: 514
+    targetPort: 514
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: syslog-ng
+  namespace: openness
+spec:
+  selector:
+    matchLabels:
+      name: syslog-ng
+  template:
+    metadata:
+      labels:
+        name: syslog-ng
+    spec:
+      tolerations:
+      - key: node-role.kube-ovn/master
+        effect: NoSchedule
+      containers:
+      - name: syslog-ng
+        image: balabit/syslog-ng:3.19.1
+        imagePullPolicy: IfNotPresent
+        args: ["--no-caps"]
+        volumeMounts:
+        - name: syslog-conf
+          mountPath: /etc/syslog-ng/syslog-ng.conf
+          readOnly: true
+        - name: certs
+          mountPath: /etc/syslog-ng/certs
+          readOnly: true
+        - name: log
+          mountPath: /var/log
+      volumes:
+      - name: syslog-conf
+        hostPath:
+          path: /var/lib/appliance/configs/syslog-ng.conf
+      - name: certs
+        hostPath:
+          path: /var/lib/appliance/certs
+      - name: log
+        hostPath:
+          path: /var/log/appliance
