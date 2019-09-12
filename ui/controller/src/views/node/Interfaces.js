@@ -14,7 +14,7 @@
 
 import React, { Component } from 'react';
 import { withSnackbar } from 'notistack';
-import ApiClient from "../../api/ApiClient";
+import ApiClient from '../../api/ApiClient';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -26,11 +26,9 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { SchemaForm, utils } from 'react-schema-form';
 import InterfaceSchema from '../../components/schema/NodeInterface';
-import PolicyControls from "./PolicyControls";
-import {
-  Grid,
-  Button
-} from '@material-ui/core';
+import PolicyControls from './PolicyControls';
+import { Grid, Button } from '@material-ui/core';
+import OrchestrationContext from '../../context/orchestrationContext';
 
 class InterfacesView extends Component {
   constructor(props) {
@@ -48,19 +46,24 @@ class InterfacesView extends Component {
       selectedInterfaceID: '',
       hasInterfaceChanges: false,
     };
-  };
+  }
+
+  static contextType = OrchestrationContext;
 
   // GET /policies
   getTrafficPolicies = () => {
-    ApiClient.get(`/policies`)
+    ApiClient.get(`${this.context.apiClientPath}`)
       .then((resp) => {
         this.setState({
           policiesLoaded: true,
           policies: resp.data.policies || [],
-        })
+        });
       })
       .catch((err) => {
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        this.props.enqueueSnackbar(
+          `${err.toString()}. Please try again later.`,
+          { variant: 'error' }
+        );
       });
   };
 
@@ -73,14 +76,17 @@ class InterfacesView extends Component {
           loaded: true,
           hasInterfaceChanges: false,
           nodeInterfaces: resp.data.interfaces || [],
-        })
+        });
       })
       .catch((err) => {
         this.setState({
           loaded: true,
         });
 
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        this.props.enqueueSnackbar(
+          `${err.toString()}. Please try again later.`,
+          { variant: 'error' }
+        );
       });
   };
 
@@ -89,7 +95,9 @@ class InterfacesView extends Component {
     const { nodeID } = this.props;
     const { nodeInterfaces } = this.state;
 
-    ApiClient.patch(`/nodes/${nodeID}/interfaces`, {interfaces: nodeInterfaces})
+    ApiClient.patch(`/nodes/${nodeID}/interfaces`, {
+      interfaces: nodeInterfaces,
+    })
       .then((resp) => {
         this.setState({
           loaded: true,
@@ -97,7 +105,9 @@ class InterfacesView extends Component {
         });
 
         this.setState({ open: false });
-        this.props.enqueueSnackbar(`Successfully updated node interfaces`, { variant: 'success' });
+        this.props.enqueueSnackbar(`Successfully updated node interfaces`, {
+          variant: 'success',
+        });
         this.getNodeInterfaces();
       })
       .catch((err) => {
@@ -112,7 +122,8 @@ class InterfacesView extends Component {
   getNodeInterface = (interfaceID) => {
     const { nodeInterfaces } = this.state;
     const { nodeID } = this.props;
-    const filterValue = (obj, key, value)=> obj.filter(v => v[key] === value);
+    const filterValue = (obj, key, value) =>
+      obj.filter((v) => v[key] === value);
     const foundInterface = filterValue(nodeInterfaces, 'id', interfaceID);
 
     if (foundInterface.length === 1) {
@@ -121,14 +132,17 @@ class InterfacesView extends Component {
 
     return ApiClient.get(`/nodes/${nodeID}/interfaces/${interfaceID}`)
       .then((resp) => {
-        return resp.data
+        return resp.data;
       })
       .catch((err) => {
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        this.props.enqueueSnackbar(
+          `${err.toString()}. Please try again later.`,
+          { variant: 'error' }
+        );
 
         this.setState({
           open: false,
-        })
+        });
       });
   };
 
@@ -142,7 +156,7 @@ class InterfacesView extends Component {
     this.setState({ policy: newInterface });
   };
 
-  handleOpen = async(interfaceID) => {
+  handleOpen = async (interfaceID) => {
     const nodeInterface = await this.getNodeInterface(interfaceID);
 
     this.setState({
@@ -158,28 +172,29 @@ class InterfacesView extends Component {
   handleUpdateInterface = () => {
     const { nodeInterface, nodeInterfaces } = this.state;
     // Construct payload by merging edited interface into existing list of node interfaces
-    const newInterfaces = nodeInterfaces.map(i => {
+    const newInterfaces = nodeInterfaces.map((i) => {
       if (i.id === nodeInterface.id) {
         return { ...i, ...nodeInterface };
       }
       return i;
     });
 
-    this.setState({open: false, nodeInterfaces: newInterfaces, hasInterfaceChanges: true});
-    this.props.enqueueSnackbar(`Successfully staged node interface change, Please remember to Commit the changes`, { variant: 'success' });
+    this.setState({
+      open: false,
+      nodeInterfaces: newInterfaces,
+      hasInterfaceChanges: true,
+    });
+    this.props.enqueueSnackbar(
+      `Successfully staged node interface change, Please remember to Commit the changes`,
+      { variant: 'success' }
+    );
   };
 
   renderEditInterfaceDialog = () => {
-    const {
-      showErrors,
-      nodeInterface,
-    } = this.state;
+    const { showErrors, nodeInterface } = this.state;
 
     return (
-      <Dialog
-        open={this.state.open}
-        onClose={this.handleClose}
-      >
+      <Dialog open={this.state.open} onClose={this.handleClose}>
         <DialogTitle id="form-dialog-title">Edit Interface</DialogTitle>
         <DialogContent>
           <SchemaForm
@@ -193,10 +208,10 @@ class InterfacesView extends Component {
         <DialogActions>
           <Button onClick={this.handleClose} color="primary">
             Cancel
-            </Button>
+          </Button>
           <Button onClick={this.handleUpdateInterface} color="primary">
             Save
-            </Button>
+          </Button>
         </DialogActions>
       </Dialog>
     );
@@ -220,7 +235,7 @@ class InterfacesView extends Component {
             </TableRow>
           </TableHead>
           <TableBody>
-            {nodeInterfaces.map(row => (
+            {nodeInterfaces.map((row) => (
               <TableRow key={row.id}>
                 <TableCell component="th" scope="row">
                   {row.id}
@@ -229,46 +244,39 @@ class InterfacesView extends Component {
                 <TableCell align="right">{row.driver}</TableCell>
                 <TableCell align="right">{row.type}</TableCell>
                 <TableCell align="right">
-                  {
-                    policiesLoaded ? (
-                      <PolicyControls nodeId={nodeID} resourceId={row.id} policyType="interface" policies={policies}/>
-                      ) : `Loading...`
-                  }
+                  {policiesLoaded ? (
+                    <PolicyControls
+                      nodeId={nodeID}
+                      resourceId={row.id}
+                      policyType="interface"
+                      policies={policies}
+                    />
+                  ) : (
+                    `Loading...`
+                  )}
                 </TableCell>
                 <TableCell align="right">
-                  <Button onClick={() => this.handleOpen(row.id)}>
-                    Edit
-                </Button>
+                  <Button onClick={() => this.handleOpen(row.id)}>Edit</Button>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
 
-        {
-          this.state.hasInterfaceChanges ? (
-            <Grid
-              container
-              justify="center"
-              alignItems="flex-end"
-              spacing={24}
-            >
-              <Grid item xs={12} style={{ textAlign: 'right' }}>
-                <Button onClick={this.getNodeInterfaces}>
-                  Cancel Changes
-                </Button>
-                <Button
-                  onClick={this.updateNodeInterface}
-                  variant="outlined"
-                  color="primary"
-                >
-                  Commit Changes
-                </Button>
-              </Grid>
+        {this.state.hasInterfaceChanges ? (
+          <Grid container justify="center" alignItems="flex-end" spacing={24}>
+            <Grid item xs={12} style={{ textAlign: 'right' }}>
+              <Button onClick={this.getNodeInterfaces}>Cancel Changes</Button>
+              <Button
+                onClick={this.updateNodeInterface}
+                variant="outlined"
+                color="primary"
+              >
+                Commit Changes
+              </Button>
             </Grid>
-
-          ) : null
-        }
+          </Grid>
+        ) : null}
         {this.renderEditInterfaceDialog()}
       </React.Fragment>
     );
@@ -277,15 +285,13 @@ class InterfacesView extends Component {
   componentDidMount() {
     this.getNodeInterfaces();
     this.getTrafficPolicies();
-  };
+  }
 
   render() {
-    const {
-      loaded
-    } = this.state;
+    const { loaded } = this.state;
 
     if (!loaded) {
-      return <React.Fragment>Loading ...</React.Fragment>
+      return <React.Fragment>Loading ...</React.Fragment>;
     }
 
     return (
