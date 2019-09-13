@@ -129,7 +129,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mec-app-edgednssvr
+  name: edgedns
   namespace: openness
 spec:
   clusterIP: None
@@ -185,7 +185,7 @@ spec:
           - name: DNS_FWDR
             value: 8.8.8.8
           - name: LOCAL_SYSLOG
-            value: syslog-ng:514
+            value: syslog:514
       volumes:
       - name: edgednssvr
         hostPath:
@@ -198,7 +198,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: syslog-ng
+  name: syslog
   namespace: openness
 spec:
   clusterIP: None
