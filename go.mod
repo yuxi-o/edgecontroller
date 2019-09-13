@@ -34,7 +34,7 @@ require (
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
 	github.com/otcshare/common/log v0.0.0-20190820113043-69a7d2cb754d
-	github.com/otcshare/common/proxy v0.0.0-20190820113043-69a7d2cb754d
+	github.com/otcshare/common/proxy v0.0.0-20190913124203-6b0465a8542e
 	github.com/pkg/errors v0.8.1
 	github.com/rogpeppe/godef v1.1.1 // indirect
 	github.com/satori/go.uuid v1.2.0
@@ -56,5 +56,3 @@ require (
 )
 
 replace golang.org/x/sys => golang.org/x/sys v0.0.0-20190226215855-775f8194d0f9
-
-replace github.com/otcshare/common/proxy => ../common/proxy
