@@ -32,7 +32,7 @@
 - name: install docker repo
   get_url:
     url: https://download.docker.com/linux/centos/docker-ce.repo
-    dest: /etc/yum.repos.d/docer-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
 
 - name: install docker
   yum:

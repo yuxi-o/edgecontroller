@@ -12,23 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Reset Kubernetes network
-  shell: kubeadm reset --force
-
-- name: Initialize cluster - flannel
-  shell: kubeadm init --pod-network-cidr=10.244.0.0/16
-  register: init_result
-  when: kubernetes['mode'] == "flannel"
-
-- name: Initialize cluster - kube-ovn
-  shell: kubeadm init
-  register: init_result
-  when: kubernetes['mode'] == "kubeovn"
-
-- name: Get kubeadm join command
-  set_fact:
-    pattern: 'kubeadm join.*\n.*'
-- set_fact:
-    kubeadm_join: "{{ init_result.stdout | regex_search(pattern) | regex_replace('\\\\\\n {4}','') | regex_replace(' $','') }}" 
-- debug:
-    var: kubeadm_join
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: block-all-ingress
+  namespace: default
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress: []

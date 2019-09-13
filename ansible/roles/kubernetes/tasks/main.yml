@@ -29,4 +29,7 @@
 - include_tasks: subtasks/kubeadm_init.yml
 - include_tasks: subtasks/configure.yml
 - include_tasks: subtasks/enable_flannel.yml
+  when: kubernetes['mode'] == "flannel"
+- include_tasks: subtasks/enable_kubeovn.yml
+  when: kubernetes['mode'] == "kubeovn"
 - include_tasks: subtasks/get_certs.yml

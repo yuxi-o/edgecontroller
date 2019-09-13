@@ -16,6 +16,8 @@
 github_token: ""
 version: master
 cce_log_level: info
+build:
+  enabled: true
 react_app_controller_api: http://{{ controller_host }}:8080
 react_app_cups_api: "http://{{ controller_host }}:8090"
 react_app_orchestration_mode: { { cce_orchestration_mode } }
@@ -28,5 +30,8 @@ client_path: "{{ kubernetes_certs_path }}/client.pem"
 key_path: "{{ kubernetes_certs_path }}/key.pem"
 kubernetes:
   enabled: false
+  mode: flannel
+
+kube_ovn_version: v0.7.0
 #
 cce_orchestration_mode: "{{ 'kubernetes' if kubernetes['enabled'] else 'native' }}"
