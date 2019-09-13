@@ -92,7 +92,10 @@ spec:
         - name: applications
           mountPath: /var/lib/appliance/applications 
         - name: openvswitch
-          mountPath: /usr/local/var/run/openvswitch           
+          mountPath: /usr/local/var/run/openvswitch
+        env:
+        - name: SYSLOG_ADDR
+          value: syslog
       volumes:
       - name: host-certs
         hostPath:
