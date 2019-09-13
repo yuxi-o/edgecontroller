@@ -30,6 +30,7 @@ func handleGetNodes(
 	if nodePort == "" {
 		nodePort = defaultELAPort
 	}
+
 	nodeCC, err := connectNode(ctx, ps, e.(*cce.Node), nodePort, ctrl.EdgeNodeCreds)
 
 	if err != nil {
@@ -53,6 +54,7 @@ func handleGetNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Pe
 	if nodePort == "" {
 		nodePort = defaultEVAPort
 	}
+
 	nodeCC, err := connectNode(ctx, ps, e.(*cce.NodeApp), nodePort, ctrl.EdgeNodeCreds)
 	if err != nil {
 		return nil, err
@@ -73,6 +75,8 @@ func handleGetNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Pe
 		}
 		status = s.String()
 	}
+
+	disconnectNode(nodeCC)
 
 	return &cce.NodeAppResp{
 		NodeApp: *e.(*cce.NodeApp),

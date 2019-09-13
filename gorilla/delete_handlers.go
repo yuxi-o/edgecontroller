@@ -51,7 +51,10 @@ func handleDeleteNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 		}
 	}
 
-	return nodeCC.AppDeploySvcCli.Undeploy(ctx, app.GetID())
+	err = nodeCC.AppDeploySvcCli.Undeploy(ctx, app.GetID())
+	disconnectNode(nodeCC)
+
+	return err
 }
 
 func handleDeleteNodesDNSConfigs(

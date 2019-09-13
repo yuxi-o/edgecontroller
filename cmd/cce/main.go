@@ -40,9 +40,11 @@ import (
 	"time"
 
 	logger "github.com/otcshare/common/log"
+	"github.com/otcshare/common/proxy/progutil"
 	cce "github.com/otcshare/edgecontroller"
 	"github.com/otcshare/edgecontroller/gorilla"
 	"github.com/otcshare/edgecontroller/grpc"
+	"github.com/otcshare/edgecontroller/grpc/node"
 	"github.com/otcshare/edgecontroller/http"
 	"github.com/otcshare/edgecontroller/jose"
 	"github.com/otcshare/edgecontroller/k8s"
@@ -308,7 +310,10 @@ func serveHTTP(ctx context.Context, controller *cce.Controller, addr string) fun
 }
 
 func serveGRPC(ctx context.Context, controller *cce.Controller, addr string, conf *tls.Config) func() error {
+
 	lis, err := net.Listen("tcp", addr)
+	node.PrefaceLis = progutil.NewPrefaceListener(lis)
+
 	if err != nil {
 		log.Alertf("Could not listen on %q: %v", addr, err)
 		os.Exit(1)
@@ -340,8 +345,8 @@ func serveGRPC(ctx context.Context, controller *cce.Controller, addr string, con
 	// Start the grpc server
 	log.Infof("gRPC server serving on %q", addr)
 	return func() error {
-		defer lis.Close()
-		return grpcServer.Serve(lis)
+		defer node.PrefaceLis.Close()
+		return grpcServer.Serve(node.PrefaceLis)
 	}
 }
 

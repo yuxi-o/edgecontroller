@@ -36,11 +36,10 @@ type ClientConn struct {
 }
 
 // Dial dials the remote server.
-func Dial(ctx context.Context, target string, conf *tls.Config) (*ClientConn, error) {
+func Dial(ctx context.Context, target string, conf *tls.Config, opts ...grpc.DialOption) (*ClientConn, error) {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
-	opts := []grpc.DialOption{grpc.WithBlock()}
 	if conf != nil {
 		opts = append(opts, grpc.WithTransportCredentials(
 			credentials.NewTLS(conf)))

@@ -56,6 +56,8 @@ func handleCreateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 
 	log.Infof("App %s deployed to node", app.GetID())
 
+	disconnectNode(nodeCC)
+
 	return nil
 }
 
