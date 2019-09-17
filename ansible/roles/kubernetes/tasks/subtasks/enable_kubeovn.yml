@@ -29,3 +29,18 @@
 
 - name: Install default network policy
   shell: "kubectl apply -f ../kube-ovn/default_network_policy.yaml"
+
+- name: Install OVN tools
+  yum:
+    name: "{{ ovn_packages }}"
+
+- name: Wait for OVN NB
+  wait_for:
+    path: /var/run/openvswitch/ovnnb_db.sock
+
+- name: Configure OVN
+  shell: | 
+    ovn-nbctl lsp-add ovn-default local-net-port
+    ovn-nbctl lsp-set-addresses local-net-port unknown
+    ovn-nbctl lsp-set-type local-net-port localnet
+    ovn-nbctl lsp-set-options local-net-port network_name=local-network
