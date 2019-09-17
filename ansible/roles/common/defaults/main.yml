@@ -20,7 +20,6 @@ build:
   enabled: true
 react_app_controller_api: http://{{ controller_host }}:8080
 react_app_cups_api: "http://{{ controller_host }}:8090"
-react_app_orchestration_mode: "{{ cce_orchestration_mode }}"
 controller_path: /opt/controller
 #
 cce_k8s_master_host: "{{ controller_host }}:6443"
@@ -34,4 +33,4 @@ kubernetes:
 
 kube_ovn_version: v0.7.0
 #
-cce_orchestration_mode: "{{ 'kubernetes' if kubernetes['enabled'] else 'native' }}"
+cce_orchestration_mode: "{{ 'native' if not kubernetes['enabled'] else 'kubernetes-ovn' if kubernetes['mode']=='kubeovn' else 'kubernetes' }}"
