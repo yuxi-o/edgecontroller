@@ -72,7 +72,7 @@ class PolicyView extends Component {
       return;
     }
 
-    ApiClient.get(`${this.context.apiClientPath}/${policyID}`)
+    ApiClient.get(`${this.context.apiClientPath}/policies/${policyID}`)
       .then((resp) => {
         this.setState({
           loaded: true,
@@ -95,7 +95,10 @@ class PolicyView extends Component {
 
     const policyID = match.params.id;
 
-    ApiClient.patch(`${this.context.apiClientPath}/${policyID}`, policy)
+    ApiClient.patch(
+      `${this.context.apiClientPath}/policies/${policyID}`,
+      policy
+    )
       .then((resp) => {
         this.setState({
           loaded: true,
@@ -119,7 +122,7 @@ class PolicyView extends Component {
     const { history } = this.props;
     const { policy } = this.state;
 
-    ApiClient.post(`${this.context.apiClientPath}`, policy)
+    ApiClient.post(`${this.context.apiClientPath}/policies`, policy)
       .then((resp) => {
         this.setState({
           loaded: true,
@@ -147,7 +150,7 @@ class PolicyView extends Component {
     const { history, match } = this.props;
     const policyID = match.params.id;
 
-    ApiClient.delete(`${this.context.apiClientPath}/${policyID}`)
+    ApiClient.delete(`${this.context.apiClientPath}/policies/${policyID}`)
       .then((resp) => {
         this.setState({
           loaded: true,

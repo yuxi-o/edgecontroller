@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React, { Component } from 'react';
-import ApiClient from "../../api/ApiClient";
+import ApiClient from '../../api/ApiClient';
 import { withSnackbar } from 'notistack';
 import { Button } from '@material-ui/core';
 import Dialog from '@material-ui/core/Dialog';
@@ -23,7 +23,8 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
-import CircularProgress from "@material-ui/core/CircularProgress";
+import CircularProgress from '@material-ui/core/CircularProgress';
+import OrchestrationContext from '../../context/orchestrationContext';
 
 class PolicyControls extends Component {
   constructor(props) {
@@ -42,21 +43,26 @@ class PolicyControls extends Component {
     };
   }
 
+  static contextType = OrchestrationContext;
+
   getPolicy = () => {
     const { nodeId, resourceId, policyType } = this.props;
 
-    return ApiClient.get(`/nodes/${nodeId}/${policyType}s/${resourceId}/policy`)
+    return ApiClient.get(
+      `/nodes/${nodeId}/${policyType}s/${resourceId}${this.context.apiClientPath}/policy`
+    )
       .then((resp) => {
         this.setState({
           resourcePolicyId: resp.data.id || '',
-        })
+        });
       })
       .catch((err) => {
         if (err.response.status === 404) {
           return;
         }
 
-        this.props.enqueueSnackbar(`Error fetching Node ${policyType} Policy: ${err.toString()}. Please try again later.`,
+        this.props.enqueueSnackbar(
+          `Error fetching Node ${policyType} Policy: ${err.toString()}. Please try again later.`,
           { variant: 'error' }
         );
       });
@@ -67,19 +73,29 @@ class PolicyControls extends Component {
     const { showDialogLoader } = this.state;
 
     if (showDialogLoader === true) {
-      return ;
+      return;
     }
 
-    this.setState({showDialogLoader: true});
-    ApiClient.delete(`/nodes/${nodeId}/${policyType}s/${resourceId}/policy`)
+    this.setState({ showDialogLoader: true });
+    ApiClient.delete(
+      `/nodes/${nodeId}/${policyType}s/${resourceId}${this.context.apiClientPath}/policy`
+    )
       .then((resp) => {
         this.setState({
-          resourcePolicyId: '', showDialogLoader: false, deleteDialogShown: false
+          resourcePolicyId: '',
+          showDialogLoader: false,
+          deleteDialogShown: false,
         });
-        this.props.enqueueSnackbar(`Successfully deleted policy on ${policyType}`, { variant: 'success' });
+        this.props.enqueueSnackbar(
+          `Successfully deleted policy on ${policyType}`,
+          { variant: 'success' }
+        );
       })
       .catch((err) => {
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        this.props.enqueueSnackbar(
+          `${err.toString()}. Please try again later.`,
+          { variant: 'error' }
+        );
       });
   };
 
@@ -91,16 +107,22 @@ class PolicyControls extends Component {
       return;
     }
 
-    this.setState({showDialogLoader: true});
-    ApiClient.patch(`/nodes/${nodeId}/${policyType}s/${resourceId}/policy`, {id: selectedPolicyId})
+    this.setState({ showDialogLoader: true });
+    ApiClient.patch(
+      `/nodes/${nodeId}/${policyType}s/${resourceId}${this.context.apiClientPath}/policy`,
+      { id: selectedPolicyId }
+    )
       .then((resp) => {
         this.setState({
           loaded: true,
           resourcePolicyId: selectedPolicyId,
-          showDialogLoader: false
+          showDialogLoader: false,
         });
 
-        this.props.enqueueSnackbar(`Successfully added policy on ${policyType}`, { variant: 'success' });
+        this.props.enqueueSnackbar(
+          `Successfully added policy on ${policyType}`,
+          { variant: 'success' }
+        );
         this.handleClosePolicy();
       })
       .catch((err) => {
@@ -109,7 +131,10 @@ class PolicyControls extends Component {
           error: err,
         });
 
-        this.props.enqueueSnackbar(`${err.toString()}. Please try again later.`, { variant: 'error' });
+        this.props.enqueueSnackbar(
+          `${err.toString()}. Please try again later.`,
+          { variant: 'error' }
+        );
       });
   };
 
@@ -122,21 +147,21 @@ class PolicyControls extends Component {
   handlePolicyDelete = () => {
     this.setState({
       deleteDialogShown: true,
-    })
+    });
   };
 
   handleClosePolicy = () => {
     this.setState({ deleteDialogShown: false, policyDialogShown: false });
   };
 
-  handleChangePolicy = event => {
+  handleChangePolicy = (event) => {
     this.setState({ selectedPolicyId: event.target.value });
   };
 
   componentDidMount() {
     this.getPolicy().then(() => {
-      this.setState({isLoaded: true})
-    })
+      this.setState({ isLoaded: true });
+    });
   }
 
   renderTrafficPolicyDialog = () => {
@@ -160,16 +185,20 @@ class PolicyControls extends Component {
                 onChange={this.handleChangePolicy}
                 defaultValue={resourcePolicyId}
               >
-                <option key="0" value="">Select a Traffic Policy</option>
-                {
-                  policies.map(item => <option key={item.id} value={item.id}>{item.name}</option>)
-                }
+                <option key="0" value="">
+                  Select a Traffic Policy
+                </option>
+                {policies.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
               </Select>
             </FormControl>
           </form>
         </DialogContent>
         <DialogActions>
-          { this.state.showDialogLoader ? (<CircularProgress />) : "" }
+          {this.state.showDialogLoader ? <CircularProgress /> : ''}
           <Button onClick={this.handleClosePolicy} color="primary">
             Cancel
           </Button>
@@ -182,21 +211,23 @@ class PolicyControls extends Component {
   };
 
   renderDeleteTrafficPolicyDialog = () => {
-    const {policyType} = this.props;
+    const { policyType } = this.props;
     return (
       <Dialog
         open={this.state.deleteDialogShown}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title">Remove Traffic Policy?</DialogTitle>
+        <DialogTitle id="alert-dialog-title">
+          Remove Traffic Policy?
+        </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             {`Doing so will remove the traffic policy from the selected ${policyType}`}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          { this.state.showDialogLoader ? (<CircularProgress />) : "" }
+          {this.state.showDialogLoader ? <CircularProgress /> : ''}
           <Button onClick={this.handleClosePolicy} color="primary">
             Cancel
           </Button>
@@ -205,19 +236,19 @@ class PolicyControls extends Component {
           </Button>
         </DialogActions>
       </Dialog>
-    )
+    );
   };
 
   render() {
-    const {isLoaded, resourcePolicyId} = this.state;
+    const { isLoaded, resourcePolicyId } = this.state;
     if (isLoaded === false) {
-      return (`Loading....`);
+      return `Loading....`;
     }
 
     return (
       <React.Fragment>
         <Button onClick={() => this.handleOpenPolicyDialog()}>
-          {resourcePolicyId ? "Edit" : "Add"}
+          {resourcePolicyId ? 'Edit' : 'Add'}
         </Button>
         {resourcePolicyId ? (
           <Button onClick={() => this.handlePolicyDelete()}>
@@ -227,9 +258,8 @@ class PolicyControls extends Component {
         {this.renderTrafficPolicyDialog()}
         {this.renderDeleteTrafficPolicyDialog()}
       </React.Fragment>
-
-    )
+    );
   }
 }
 
-export default withSnackbar(PolicyControls)
+export default withSnackbar(PolicyControls);

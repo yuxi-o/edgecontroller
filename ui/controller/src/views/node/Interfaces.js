@@ -28,7 +28,9 @@ import { SchemaForm, utils } from 'react-schema-form';
 import InterfaceSchema from '../../components/schema/NodeInterface';
 import PolicyControls from './PolicyControls';
 import { Grid, Button } from '@material-ui/core';
-import OrchestrationContext from '../../context/orchestrationContext';
+import OrchestrationContext, {
+  orchestrationModes,
+} from '../../context/orchestrationContext';
 
 class InterfacesView extends Component {
   constructor(props) {
@@ -52,7 +54,7 @@ class InterfacesView extends Component {
 
   // GET /policies
   getTrafficPolicies = () => {
-    ApiClient.get(`${this.context.apiClientPath}`)
+    ApiClient.get(`${this.context.apiClientPath}/policies`)
       .then((resp) => {
         this.setState({
           policiesLoaded: true,
@@ -220,6 +222,8 @@ class InterfacesView extends Component {
   renderTable = () => {
     const { nodeInterfaces, policies, policiesLoaded } = this.state;
     const { nodeID } = this.props;
+    const isInKubeOVNMode =
+      this.context.mode === orchestrationModes.kubernetes_ovn.name;
 
     return (
       <React.Fragment>
@@ -230,7 +234,9 @@ class InterfacesView extends Component {
               <TableCell align="right">Description</TableCell>
               <TableCell align="right">Driver</TableCell>
               <TableCell align="right">Type</TableCell>
-              <TableCell align="right">Traffic Policy</TableCell>
+              {isInKubeOVNMode ? null : (
+                <TableCell align="right">Traffic Policy</TableCell>
+              )}
               <TableCell align="right">Action</TableCell>
             </TableRow>
           </TableHead>
@@ -243,18 +249,20 @@ class InterfacesView extends Component {
                 <TableCell align="right">{row.description}</TableCell>
                 <TableCell align="right">{row.driver}</TableCell>
                 <TableCell align="right">{row.type}</TableCell>
-                <TableCell align="right">
-                  {policiesLoaded ? (
-                    <PolicyControls
-                      nodeId={nodeID}
-                      resourceId={row.id}
-                      policyType="interface"
-                      policies={policies}
-                    />
-                  ) : (
-                    `Loading...`
-                  )}
-                </TableCell>
+                {isInKubeOVNMode ? null : (
+                  <TableCell align="right">
+                    {policiesLoaded ? (
+                      <PolicyControls
+                        nodeId={nodeID}
+                        resourceId={row.id}
+                        policyType="interface"
+                        policies={policies}
+                      />
+                    ) : (
+                      `Loading...`
+                    )}
+                  </TableCell>
+                )}
                 <TableCell align="right">
                   <Button onClick={() => this.handleOpen(row.id)}>Edit</Button>
                 </TableCell>
