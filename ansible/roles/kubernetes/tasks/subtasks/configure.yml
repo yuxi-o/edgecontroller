@@ -18,10 +18,10 @@
     state: directory
 
 - name: Copy configuration
-  copy:
-    src: "/etc/kubernetes/admin.conf"
-    dest: "{{ ansible_env.HOME }}/.kube/config"
-    force: yes
+  shell: "/usr/bin/cp -f /etc/kubernetes/admin.conf {{ ansible_env.HOME }}/.kube/config"
 
 - name: Change ownership of configuration file
   shell: chown $(id -u):$(id -g) $HOME/.kube/config
+
+- name: Set user rights
+  shell: kubectl create clusterrolebinding openness-controller-admin --clusterrole=cluster-admin --user=openness-controller
