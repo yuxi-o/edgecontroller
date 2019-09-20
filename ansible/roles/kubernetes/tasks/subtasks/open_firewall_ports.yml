@@ -12,18 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Setup firewall - 6441/tcp
+- name: Setup firewall - 6641/tcp
   ignore_errors: yes
   firewalld:
-    port: 6441/tcp
+    port: 6641/tcp
     permanent: yes
     state: enabled
     immediate: yes
   when: kubernetes['mode'] == "kubeovn"
-- name: Setup firewall - 6442/tcp
+- name: Setup firewall - 6642/tcp
   ignore_errors: yes
   firewalld:
-    port: 644/tcp
+    port: 6642/tcp
+    permanent: yes
+    state: enabled
+    immediate: yes
+  when: kubernetes['mode'] == "kubeovn"
+- name: Setup firewall - 6081/udp
+  ignore_errors: yes
+  firewalld:
+    port: 6081/udp
     permanent: yes
     state: enabled
     immediate: yes
