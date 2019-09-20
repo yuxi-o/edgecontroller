@@ -15,15 +15,12 @@
 - name: Reset Kubernetes network
   shell: kubeadm reset --force
 
-- name: Initialize cluster - flannel
-  shell: kubeadm init --pod-network-cidr=10.244.0.0/16
-  register: init_result
-  when: kubernetes['mode'] == "flannel"
+- set_fact:
+    kubeadm_cmd: "{{ 'kubeadm init --pod-network-cidr=10.244.0.0/16' if kubernetes['mode']=='flannel' else 'kubeadm init' }}"
 
-- name: Initialize cluster - kube-ovn
-  shell: kubeadm init
+- name: Initialize cluster - "{{ kubernetes['mode'] }}"
+  shell: "{{ kubeadm_cmd }}"
   register: init_result
-  when: kubernetes['mode'] == "kubeovn"
 
 - name: Get kubeadm join command
   set_fact:
