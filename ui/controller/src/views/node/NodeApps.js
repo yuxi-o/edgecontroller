@@ -66,7 +66,7 @@ class NodeApps extends Component {
   };
 
   getTrafficPolicies = () => {
-    ApiClient.get(`${this.context.apiClientPath}`)
+    ApiClient.get(`${this.context.apiClientPath}/policies`)
       .then((resp) => {
         this.setState({
           policies: resp.data.policies || [],

@@ -64,7 +64,7 @@ class PoliciesView extends Component {
 
   // GET /policies
   getPolicies = () => {
-    ApiClient.get(`${this.context.apiClientPath}`)
+    ApiClient.get(`${this.context.apiClientPath}/policies`)
       .then((resp) => {
         this.setState({
           loaded: true,

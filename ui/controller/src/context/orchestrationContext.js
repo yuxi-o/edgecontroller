@@ -17,15 +17,15 @@ import React from 'react';
 export const orchestrationModes = {
   native: {
     name: 'native',
-    path: '/policies',
+    path: '',
   },
   kubernetes_ovn: {
     name: 'kubernetes-ovn',
-    path: '/kube_ovn/policies',
+    path: '/kube_ovn',
   },
   kubernetes: {
     name: 'kubernetes',
-    path: '/policies',
+    path: '',
   },
 };
 const defaultOrchestrationValue = {
