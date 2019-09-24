@@ -459,7 +459,7 @@ func (ks *Client) ApplyNetworkPolicy(ctx context.Context,
 	networkingClient := ks.clientSet.NetworkingV1().RESTClient()
 
 	// Currently only 1 NetworkPolicy per app so we can just concatenate node and app
-	policy.ObjectMeta.Name = fmt.Sprintf("%s.%s", nodeID, appID)
+	policy.ObjectMeta.Name = fmt.Sprintf("np-%s.%s", nodeID, appID)
 
 	policy.Spec.PodSelector = metaV1.LabelSelector{
 		MatchLabels: map[string]string{
@@ -492,7 +492,7 @@ func (ks *Client) DeleteNetworkPolicy(ctx context.Context, nodeID, appID string)
 		PropagationPolicy:  &propagation,
 		GracePeriodSeconds: &gracePeriodSeconds,
 	}
-	name := fmt.Sprintf("%s.%s", nodeID, appID)
+	name := fmt.Sprintf("np-%s.%s", nodeID, appID)
 
 	err := networkingClient.Delete().
 		Context(ctx).
@@ -513,7 +513,7 @@ func (ks *Client) DeleteNetworkPolicy(ctx context.Context, nodeID, appID string)
 func (ks *Client) GetNetworkPolicy(ctx context.Context, nodeID, appID string) (*networkingV1.NetworkPolicy, error) {
 	networkingClient := ks.clientSet.NetworkingV1().NetworkPolicies(apiV1.NamespaceDefault)
 
-	name := fmt.Sprintf("%s.%s", nodeID, appID)
+	name := fmt.Sprintf("np-%s.%s", nodeID, appID)
 
 	netpol, err := networkingClient.Get(name, metaV1.GetOptions{})
 
