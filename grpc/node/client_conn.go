@@ -17,7 +17,6 @@ package node
 import (
 	"context"
 	"crypto/tls"
-	"net"
 
 	cce "github.com/otcshare/edgecontroller"
 	"github.com/otcshare/edgecontroller/grpc"

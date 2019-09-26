@@ -17,6 +17,7 @@ package cce
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 
 	"github.com/otcshare/common/proxy/progutil"
 	"github.com/otcshare/edgecontroller/jose"
@@ -135,9 +136,11 @@ func getIp(ctx context.Context, ps PersistenceService, nodeId string) (string, e
 		return "", err
 	}
 
-	target := targets[0].(*NodeGRPCTarget).GRPCTarget
-
-	return target, nil
+	if len(targets) > 0 {
+		target := targets[0].(*NodeGRPCTarget).GRPCTarget
+		return target, nil
+	}
+	return "", fmt.Errorf("IP for %v not found", nodeId)
 }
 
 // Inform the proxy we're serving this host
