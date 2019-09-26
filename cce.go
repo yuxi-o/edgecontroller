@@ -18,9 +18,13 @@ import (
 	"context"
 	"crypto/tls"
 
+	"github.com/otcshare/common/proxy/progutil"
 	"github.com/otcshare/edgecontroller/jose"
 	"github.com/otcshare/edgecontroller/k8s"
 )
+
+// Our network callback helper
+var PrefaceLis *progutil.PrefaceListener
 
 // OrchestrationMode global level orchestration mode for application deployment
 type OrchestrationMode int
@@ -117,4 +121,30 @@ type NodeEntity interface {
 type Filter struct {
 	Field string
 	Value string
+}
+
+func getIp(ctx context.Context, ps PersistenceService, nodeId string) (string, error) {
+	targets, err := ps.Filter(ctx, &NodeGRPCTarget{},
+		[]Filter{
+			{
+				Field: "node_id",
+				Value: nodeId,
+			},
+		})
+	if err != nil {
+		return "", err
+	}
+
+	target := targets[0].(*NodeGRPCTarget).GRPCTarget
+
+	return target, nil
+}
+
+// Inform the proxy we're serving this host
+func RegisterToProxy(ctx context.Context, ps PersistenceService, nodeId string) {
+	ip, err := getIp(ctx, ps, nodeId)
+	if err != nil {
+		return
+	}
+	PrefaceLis.RegisterHost(ip)
 }

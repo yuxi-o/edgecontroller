@@ -19,14 +19,11 @@ import (
 	"crypto/tls"
 	"net"
 
-	"github.com/otcshare/common/proxy/progutil"
+	cce "github.com/otcshare/edgecontroller"
 	"github.com/otcshare/edgecontroller/grpc"
 	gclients "github.com/otcshare/edgecontroller/grpc/clients"
 	ggrpc "google.golang.org/grpc"
 )
-
-// Our network callback helper
-var PrefaceLis *progutil.PrefaceListener
 
 // ClientConn wraps a Node and provides a Connect() method to create wrapped gRPC clients.
 type ClientConn struct {
@@ -49,19 +46,17 @@ type ClientConn struct {
 func (cc *ClientConn) Connect(ctx context.Context) error {
 	var err error
 
-	endpoint := net.JoinHostPort(cc.Addr, cc.Port)
-
 	if cc.Port == "42102" { // XXX use the actual variable with this!
-		cc.conn, err = grpc.Dial(ctx, endpoint, cc.TLS,
-			ggrpc.WithDialer(PrefaceLis.DialEva))
+		cc.conn, err = grpc.Dial(ctx, cc.Addr, cc.TLS,
+			ggrpc.WithDialer(cce.PrefaceLis.DialEva))
 
 		cc.AppDeploySvcCli = gclients.NewApplicationDeploymentServiceClient(cc.conn)
 		cc.AppLifeSvcCli = gclients.NewApplicationLifecycleServiceClient(cc.conn)
 
 		return nil
 	} else {
-		cc.conn, err = grpc.Dial(ctx, endpoint, cc.TLS,
-			ggrpc.WithDialer(PrefaceLis.DialEla))
+		cc.conn, err = grpc.Dial(ctx, cc.Addr, cc.TLS,
+			ggrpc.WithDialer(cce.PrefaceLis.DialEla))
 
 		// ELA
 		cc.AppPolicySvcCli = gclients.NewApplicationPolicyServiceClient(cc.conn)

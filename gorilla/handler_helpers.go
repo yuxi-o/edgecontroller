@@ -55,7 +55,7 @@ func connectNode(
 	}
 
 	target := targets[0].(*cce.NodeGRPCTarget)
-	addr := targets[0].(*cce.NodeGRPCTarget).GRPCTarget
+	addr := target.GRPCTarget
 	if conf != nil {
 		conf = conf.Clone()
 		conf.ServerName = e.GetNodeID()

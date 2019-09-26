@@ -264,6 +264,8 @@ func (s *Server) RequestCredentials(ctx context.Context, id *authpb.Identity) ( 
 		log.Errf("Failed to store Node address: %v", err)
 		return nil, status.Error(codes.Internal, "unable to store node address")
 	}
+	// Also let the proxy node we have a new client
+	cce.RegisterToProxy(ctx, s.controller.PersistenceService, node.ID)
 
 	return &authpb.Credentials{
 		Certificate: creds.Certificate,

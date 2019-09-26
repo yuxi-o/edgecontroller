@@ -44,7 +44,6 @@ import (
 	cce "github.com/otcshare/edgecontroller"
 	"github.com/otcshare/edgecontroller/gorilla"
 	"github.com/otcshare/edgecontroller/grpc"
-	"github.com/otcshare/edgecontroller/grpc/node"
 	"github.com/otcshare/edgecontroller/http"
 	"github.com/otcshare/edgecontroller/jose"
 	"github.com/otcshare/edgecontroller/k8s"
@@ -218,6 +217,17 @@ func main() {
 	}
 }
 
+func registerAllNodes(ctx context.Context, ps cce.PersistenceService) {
+	persisted, err := ps.ReadAll(ctx, &cce.Node{})
+	if err == nil {
+		for _, n := range persisted {
+			node := n.(*cce.Node)
+			id := node.ID
+			cce.RegisterToProxy(ctx, ps, id)
+		}
+	}
+}
+
 // Connect to a mysql DB and ping it for readiness.
 func connectDB(dsn string) *sql.DB {
 	db, err := sql.Open("mysql", dsn)
@@ -312,7 +322,7 @@ func serveHTTP(ctx context.Context, controller *cce.Controller, addr string) fun
 func serveGRPC(ctx context.Context, controller *cce.Controller, addr string, conf *tls.Config) func() error {
 
 	lis, err := net.Listen("tcp", addr)
-	node.PrefaceLis = progutil.NewPrefaceListener(lis)
+	cce.PrefaceLis = progutil.NewPrefaceListener(lis)
 
 	if err != nil {
 		log.Alertf("Could not listen on %q: %v", addr, err)
@@ -342,11 +352,13 @@ func serveGRPC(ctx context.Context, controller *cce.Controller, addr string, con
 		}
 	}()
 
+	registerAllNodes(context.TODO(), controller.PersistenceService)
+
 	// Start the grpc server
 	log.Infof("gRPC server serving on %q", addr)
 	return func() error {
-		defer node.PrefaceLis.Close()
-		return grpcServer.Serve(node.PrefaceLis)
+		defer cce.PrefaceLis.Close()
+		return grpcServer.Serve(cce.PrefaceLis)
 	}
 }
 
