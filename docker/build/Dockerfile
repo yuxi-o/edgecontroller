@@ -19,9 +19,10 @@ ENV GO111MODULE on
 
 WORKDIR /go/src/github.com/otcshare/edgecontroller
 
-COPY . ./
-
 RUN apk add git
+
+COPY go.mod .
+COPY go.sum .
 
 ARG GITHUB_TOKEN
 ENV github_token=$GITHUB_TOKEN
@@ -29,8 +30,11 @@ RUN if [[ -n "${github_token}" ]]; \
 	then git config --global url.https://${github_token}@github.com/.insteadOf https://github.com/; \
 	fi;
 
-RUN cd /go/src/github.com/otcshare/edgecontroller &&\
-    go build -o dist/cce ./cmd/cce &&\
+RUN go mod download
+
+COPY . .
+
+RUN go build -o dist/cce ./cmd/cce && \
 	cp dist/cce /cce
 
 WORKDIR /artifacts
