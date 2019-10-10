@@ -59,27 +59,37 @@ func handleGetNodesApps(ctx context.Context, ps cce.PersistenceService, e cce.Pe
 	if err != nil {
 		return nil, err
 	}
+	defer disconnectNode(nodeCC)
 
-	var status string
-	switch ctrl.OrchestrationMode {
-	case cce.OrchestrationModeNative:
-		s, err := nodeCC.AppLifeSvcCli.GetStatus(ctx, e.(*cce.NodeApp).AppID)
-		if err != nil {
-			return nil, err
-		}
-		status = s.String()
-	case cce.OrchestrationModeKubernetes, cce.OrchestrationModeKubernetesOVN:
-		s, err := ctrl.KubernetesClient.Status(ctx, e.(*cce.NodeApp).NodeID, e.(*cce.NodeApp).AppID)
-		if err != nil {
-			return nil, err
-		}
-		status = s.String()
+	s, err := nodeCC.AppLifeSvcCli.GetStatus(ctx, e.(*cce.NodeApp).AppID)
+	if err != nil {
+		return nil, err
 	}
 
-	disconnectNode(nodeCC)
+	if ctrl.OrchestrationMode == cce.OrchestrationModeNative {
+		return &cce.NodeAppResp{
+			NodeApp: *e.(*cce.NodeApp),
+			Status:  s.String(),
+		}, nil
+	}
+
+	// Kubernetes status
+	// For Unknown, Deploying and Error return immediately
+	switch s {
+	case cce.Unknown, cce.Deploying, cce.Error:
+		return &cce.NodeAppResp{
+			NodeApp: *e.(*cce.NodeApp),
+			Status:  s.String(),
+		}, nil
+	}
+
+	k8sStatus, err := ctrl.KubernetesClient.Status(ctx, e.(*cce.NodeApp).NodeID, e.(*cce.NodeApp).AppID)
+	if err != nil {
+		return nil, err
+	}
 
 	return &cce.NodeAppResp{
 		NodeApp: *e.(*cce.NodeApp),
-		Status:  status,
+		Status:  string(k8sStatus),
 	}, nil
 }

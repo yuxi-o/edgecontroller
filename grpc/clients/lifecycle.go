@@ -23,6 +23,8 @@ func fromPBLifecycleStatus(status *evapb.LifecycleStatus) cce.LifecycleStatus {
 	switch status.Status {
 	case evapb.LifecycleStatus_UNKNOWN:
 		return cce.Unknown
+	case evapb.LifecycleStatus_DEPLOYING:
+		return cce.Deploying
 	case evapb.LifecycleStatus_READY:
 		return cce.Deployed
 	case evapb.LifecycleStatus_STARTING:
