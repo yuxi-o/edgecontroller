@@ -5,8 +5,46 @@ Copyright © 2019 Intel Corporation and Smart-Edge.com, Inc.
 
 # CHANGELOG
 
-# [0.0.62] - TO BE RELEASED
+## [0.2.0] - 2019-10-23
+### Feature
+- BIOSFW for remote changing node's BIOS settings
 ### Fixed
+- Kubernetes: Fixed status of the K8s application
+### Changed
+- Kubernetes-OVN: Changed method of connecting local OVS ports to OVN
+- Kubernetes-OVN: Retry adding local cluster port to ovn-cluster
+- Controller: Faster rebuilds of the container
+
+## [0.1.5] - 2019-09-16
+### Changed
+- Documentation: Setting up Kubernetes/Kubernetes-OVN mode
+
+## [0.1.4] - 2019-09-26
+### Feature
+- Proxy/gateway: Support for multiple nodes behind the NATs
+
+## [0.1.3] - 2019-09-24
+### Fixed
+- Kubernetes-OVN: Fixed naming of K8s network policies
+
+## [0.1.2] - 2019-09-20
+### Fixed
+- UI: Wrong mode for Kubernetes-OVN orchestration mode
+- UI: Fixed paths for Kubernetes-OVN mode
+- Ansible: missing OVN NB setup 
+- Ansible: Fixed kubeadm init command
+- Ansible: Fixed firewall configuration
+- Ansible: Kubernetes packages versions are now fixed to 1.15.3
+- Ansible: Added creation of K8s cluster-admin for openness-controller
+
+## [0.1.1] - 2019-09-16
+### Fixed
+- Ansible: Fixed orchestration mode template typo
+
+## [0.1.0] - 2019-09-13
+### Features
+- Kubernetes-OVN orchestration mode
+- Gateway for nodes behind the NAT
 - Kubernetes pods are created with NET_ADMIN capabilities
 - Added functionality of applying and deleting Kubernetes network policies
 
