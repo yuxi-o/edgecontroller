@@ -38,9 +38,15 @@
   wait_for:
     path: /var/run/openvswitch/ovnnb_db.sock
 
-- name: Configure OVN
+- name: Configure ovn-cluster
+  shell: ovn-nbctl lrp-add ovn-cluster ovn-cluster-local 02:0a:0a:0a:0a:01 192.168.1.1/24
+  register: result
+  until: result.failed == false
+  retries: 5
+  delay: 30
+
+- name: Configure local-ovn-cluster
   shell: | 
-    ovn-nbctl lrp-add ovn-cluster ovn-cluster-local 02:0a:0a:0a:0a:01 192.168.1.1/24
     ovn-nbctl ls-add local
     ovn-nbctl lsp-add local local-ovn-cluster
     ovn-nbctl lsp-set-type local-ovn-cluster router
