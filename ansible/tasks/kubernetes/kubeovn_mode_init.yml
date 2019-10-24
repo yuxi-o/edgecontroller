@@ -1,0 +1,104 @@
+# Copyright 2019 Intel Corporation. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Init Kubernetes cluster
+  shell: kubeadm init
+  register: kubernetes_init
+
+- debug:
+    msg: "{{ kubernetes_init.stdout }}"
+
+- name: Create .kube user directory
+  file:
+    path: /root/.kube
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Copy default kubernetes admin.conf file to /root/.kube/config folder
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    owner: root
+    group: root
+    mode: '0664'
+
+- name: Get current hostname
+  shell: hostname
+  register: current_hostname
+
+- name: Add label to master Node
+  shell: "kubectl label node {{ current_hostname.stdout }} kube-ovn/role=master"
+  
+- name: Install Kube-OVN related CRDs
+  shell: "kubectl apply -f {{ kubeovn_mode_crd_link }}"
+
+- name: Install native OVS and OVN components
+  shell: "kubectl apply -f {{ kubeovn_components_link }}"
+  
+- name: Install the Kube-OVN Controller and CNI plugins
+  shell: kubectl apply -f {{ kubeovn_cni_plugins_link }}
+
+- name: Install OpenNess daemons
+  shell: kubectl apply -f {{ repo_path }}/kube-ovn/openness.yaml
+
+- name: Install default network policy
+  shell: kubectl apply -f {{ repo_path }}/kube-ovn/default_network_policy.yaml
+
+- name: Install OVN tools (URLs)
+  shell: "yum install -y {{ ovn_packages_url | join(' ') }}"
+
+- name: Install OVN tools (yum)
+  yum: 
+    name: "{{ ovn_packages_yum }}"
+    state: installed
+    update_cache: yes
+    allow_downgrade: true
+    validate_certs: no
+
+- name: Wait for OVN DB socket file
+  command: "stat /var/run/openvswitch/ovnnb_db.sock"
+  register: ovn_db_sock_file
+  retries: 60
+  delay: 10
+  until: ovn_db_sock_file.rc == 0
+
+- name: Configure ovn-cluster
+  shell: ovn-nbctl lrp-add ovn-cluster ovn-cluster-local 02:0a:0a:0a:0a:01 192.168.1.1/24
+  register: result
+  until: result.failed == false
+  retries: 5
+  delay: 30
+
+- name: Configure local-ovn-cluster
+  shell: | 
+    ovn-nbctl ls-add local
+    ovn-nbctl lsp-add local local-ovn-cluster
+    ovn-nbctl lsp-set-type local-ovn-cluster router
+    ovn-nbctl lsp-set-addresses local-ovn-cluster 02:0a:0a:0a:0a:01
+    ovn-nbctl lsp-set-options local-ovn-cluster router-port=ovn-cluster-local
+    ovn-nbctl lsp-add local local-ovs-phy
+    ovn-nbctl lsp-set-addresses local-ovs-phy unknown
+    ovn-nbctl lsp-set-type local-ovs-phy localnet
+    ovn-nbctl lsp-set-options local-ovs-phy network_name=local-network
+
+- include: "{{ base_path }}/tasks/os/get_hostname.yml"
+
+- name: Wait till k8s master starts
+  shell: kubectl get nodes {{ env_hostname }} | awk '$2=="Ready"'
+  register: k8s_master_init_start
+  retries: 30
+  delay: 10
+  until: k8s_master_init_start.rc == 0

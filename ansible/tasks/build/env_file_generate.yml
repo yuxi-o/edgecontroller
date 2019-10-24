@@ -1,0 +1,46 @@
+# Copyright 2019 Intel Corporation. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Create a new .env file
+  copy:
+    content: ""
+    dest: "{{ repo_path }}/.env"
+    force: yes
+    group: root
+    owner: root
+    mode: 0660
+
+
+- name: Generate new .env file
+  lineinfile:
+    path: "{{ repo_path }}/.env"
+    insertafter: EOF
+    line: "{{ item.line }}"
+  with_items: 
+    - { line: "### This file was created by Ansible build script       ###" }
+    - { line: "### base on values provided in defaults.yml config file ###" }
+    - { line: "CCE_ORCHESTRATION_MODE={{ CCE_ORCHESTRATION_MODE }}" }
+    - { line: "CCE_LOG_LEVEL={{ CCE_LOG_LEVEL }}" }
+    - { line: "MYSQL_ROOT_PASSWORD={{ MYSQL_ROOT_PASSWORD }}" }
+    - { line: "CCE_ADMIN_PASSWORD={{ CCE_ADMIN_PASSWORD }}" }
+    - { line: "REACT_APP_CONTROLLER_API={{ REACT_APP_CONTROLLER_API }}" }
+    - { line: "REACT_APP_CUPS_API={{ REACT_APP_CUPS_API }}" }
+    - { line: "GITHUB_TOKEN={{ GITHUB_TOKEN }}" }
+    - { line: "CCE_K8S_MASTER_HOST={{ CCE_K8S_MASTER_HOST }}" }
+    - { line: "CCE_K8S_MASTER_USER={{ CCE_K8S_MASTER_USER }}" }
+    - { line: "CCE_K8S_API_PATH={{ CCE_K8S_API_PATH }}" }
+    - { line: "CCE_K8S_CLIENT_CA_PATH={{ CCE_K8S_CLIENT_CA_PATH }}" }
+    - { line: "CCE_K8S_CLIENT_CERT_PATH={{ CCE_K8S_CLIENT_CERT_PATH }}" }
+    - { line: "CCE_K8S_CLIENT_KEY_PATH={{ CCE_K8S_CLIENT_KEY_PATH }}" }
+    

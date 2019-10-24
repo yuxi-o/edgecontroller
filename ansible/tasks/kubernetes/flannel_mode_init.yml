@@ -1,0 +1,48 @@
+# Copyright 2019 Intel Corporation. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Init Flannel mode
+  shell: kubeadm init --pod-network-cidr=10.244.0.0/16
+  register: kubernetes_init
+
+- debug:
+    msg: "{{ kubernetes_init.stdout }}"
+
+- name: Create .kube user directory
+  file:
+    path: /root/.kube
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Copy default kubernetes admin.conf file to /root/.kube/config folder
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    owner: root
+    group: root
+    mode: '0664'
+
+- name: Enable Flannel network plugin
+  shell: kubectl apply -f {{ flannel_mode_config_link }}
+
+- include: "{{ base_path }}/tasks/os/get_hostname.yml"
+
+- name: Wait till k8s master starts
+  shell: kubectl get nodes {{ env_hostname }} | awk '$2=="Ready"'
+  register: k8s_master_init_start
+  retries: 30
+  delay: 10
+  until: k8s_master_init_start.rc == 0

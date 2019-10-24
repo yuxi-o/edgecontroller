@@ -1,0 +1,76 @@
+# Copyright 2019 Intel Corporation. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Add OS http_proxy
+  lineinfile:    
+    dest: /etc/environment
+    line: "http_proxy={{ proxy_http }}"
+    create: yes
+  when: proxy_enable == true and proxy_http != ""
+
+- name: Add OS HTTP_PROXY
+  lineinfile:    
+    dest: /etc/environment
+    line: "HTTP_PROXY={{ proxy_http }}"
+    create: yes
+  when: proxy_enable == true and proxy_http != ""
+
+- name: Add OS https_proxy
+  lineinfile:    
+    dest: /etc/environment
+    line: "https_proxy={{ proxy_https }}"
+    create: yes
+  when: proxy_enable == true and proxy_https != ""
+
+- name: Add OS HTTPS_PROXY
+  lineinfile:    
+    dest: /etc/environment
+    line: "HTTPS_PROXY={{ proxy_https }}"
+    create: yes
+  when: proxy_enable == true and proxy_https != ""
+
+- name: Add OS no_proxy
+  lineinfile:    
+    dest: /etc/environment
+    line: "no_proxy={{ proxy_noproxy }}"
+    create: yes
+  when: proxy_enable == true and proxy_noproxy != ""
+
+- name: Add OS NO_PROXY
+  lineinfile:    
+    dest: /etc/environment
+    line: "NO_PROXY={{ proxy_noproxy }}"
+    create: yes
+  when: proxy_enable == true and proxy_noproxy != ""
+
+- name: Add OS ftp_proxy
+  lineinfile:    
+    dest: /etc/environment
+    line: "ftp_proxy={{ proxy_ftp }}"
+    create: yes
+  when: proxy_enable == true and proxy_ftp != ""
+
+- name: Add OS FTP_PROXY
+  lineinfile:    
+    dest: /etc/environment
+    line: "FTP_PROXY={{ proxy_ftp }}"
+    create: yes
+  when: proxy_enable == true and proxy_ftp != ""
+
+- name: Add yum proxy
+  lineinfile:    
+    dest: /etc/yum.conf
+    line: "proxy={{ proxy_yum }}"
+    create: yes
+  when: proxy_enable == true and proxy_yum != ""
