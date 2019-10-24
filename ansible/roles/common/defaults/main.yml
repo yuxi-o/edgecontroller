@@ -32,10 +32,10 @@ kubernetes:
   mode: flannel
 
 #
-kube_ovn_version: v0.7.0
-openvswitch_url: "https://github.com/alauda/ovs/releases/download/v2.11.1-1/openvswitch-2.11.1-1.el7.x86_64.rpm"
-ovn_url: "https://github.com/alauda/ovs/releases/download/v2.11.1-1/ovn-2.11.1-1.el7.x86_64.rpm"
-ovn_common_url: "https://github.com/alauda/ovs/releases/download/v2.11.1-1/ovn-common-2.11.1-1.el7.x86_64.rpm"
+kube_ovn_version: v0.8.0
+openvswitch_url: "https://github.com/alauda/ovs/releases/download/v2.11.4-1/openvswitch-2.11.4-1.el7.x86_64.rpm"
+ovn_url: "https://github.com/alauda/ovs/releases/download/v2.11.4-1/ovn-2.11.4-1.el7.x86_64.rpm"
+ovn_common_url: "https://github.com/alauda/ovs/releases/download/v2.11.4-1/ovn-common-2.11.4-1.el7.x86_64.rpm"
 ovn_packages: "unbound,{{ openvswitch_url }},{{ ovn_url }},{{ ovn_common_url }}"
 #
 cce_orchestration_mode: "{{ 'native' if not kubernetes['enabled'] else 'kubernetes-ovn' if kubernetes['mode']=='kubeovn' else 'kubernetes' }}"
