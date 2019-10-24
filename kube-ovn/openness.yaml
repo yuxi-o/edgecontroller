@@ -36,7 +36,7 @@ metadata:
 spec:
   clusterIP: None
   selector:
-    name: appliance
+    name: eaa
   ports:
     - name: http
       protocol: TCP
@@ -51,67 +51,34 @@ spec:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: appliance
+  name: eaa
   namespace: openness
 spec:
   selector:
     matchLabels:
-      name: appliance
+      name: eaa
   template:
     metadata:
       labels:
-        name: appliance
+        name: eaa
     spec:
       tolerations:
       - key: node-role.kube-ovn/master
         effect: NoSchedule
       containers:
-      - name: appliance
-        image: appliance:1.0
+      - name: eaa
+        image: eaa:1.0
         imagePullPolicy: Never
         securityContext:
           privileged: true
         volumeMounts:
-        - name: host-certs
-          mountPath: /host_certs
-        - name: host-ns
-          mountPath: /var/host_ns
-          readOnly: true
-        - name: run
-          mountPath: /run
-        - name: netns
-          mountPath: /var/run/docker/netns
-        - name: host-net-devices
-          mountPath: /var/host_net_devices
         - name: devices
           mountPath: /devices      
         - name: certs
           mountPath: /root/certs
         - name: configs
           mountPath: /root/configs
-        - name: applications
-          mountPath: /var/lib/appliance/applications 
-        - name: openvswitch
-          mountPath: /usr/local/var/run/openvswitch
-        env:
-        - name: SYSLOG_ADDR
-          value: syslog
       volumes:
-      - name: host-certs
-        hostPath:
-          path: /etc/pki/tls/certs
-      - name: host-ns
-        hostPath:
-          path: /proc/1/ns
-      - name: run
-        hostPath:
-          path: /run
-      - name: netns
-        hostPath:
-          path: /var/run/docker/netns
-      - name: host-net-devices
-        hostPath:
-          path: /sys/class/net
       - name: devices
         hostPath:
           path: /sys/devices
@@ -121,12 +88,6 @@ spec:
       - name: configs
         hostPath:
           path: /var/lib/appliance/configs
-      - name: applications
-        hostPath:
-          path: /var/lib/appliance/applications
-      - name: openvswitch
-        hostPath:
-          path: /var/run/openvswitch         
 
 ---
 apiVersion: v1
