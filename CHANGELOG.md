@@ -5,6 +5,13 @@ Copyright © 2019 Intel Corporation and Smart-Edge.com, Inc.
 
 # CHANGELOG
 
+## [0.3.0] - 2019-10-24
+### Feature
+- Stand-alone EAA
+### Changed
+- Updated Kubernetes version to 1.16.2
+- Updated kube-ovn version to 0.8.0 and related ovs/ovn utilities to 2.11.4
+
 ## [0.2.0] - 2019-10-23
 ### Feature
 - BIOSFW for remote changing node's BIOS settings
