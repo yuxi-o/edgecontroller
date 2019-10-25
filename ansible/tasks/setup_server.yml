@@ -113,6 +113,17 @@
     when: (CCE_ORCHESTRATION_MODE == "kubernetes") or
           (CCE_ORCHESTRATION_MODE == "kubernetes-ovn")
 
+  # Download and build K8s device plugins fo VC FEC
+  - name: Obtain K8s device and CNI plugins
+    block:
+      - include_tasks: "{{ base_path }}/tasks/kubernetes/download_and_patch_device_plugins.yml"
+      - include_tasks: "{{ base_path }}/tasks/kubernetes/build_device_plugin_images.yml"
+      - include_tasks: "{{ base_path }}/tasks/kubernetes/deploy_device_plugins.yml"
+    #TODO The orchestation mode will need to be changed to kubernetes-ovn once it will be supported via Multus, can be tested with flannel for now
+    when: 
+      - CCE_ORCHESTRATION_MODE == "kubernetes"
+      - vc_fec['enabled'] or sriov['enabled']
+
   # Generate build .env file based on provided data in vars/defaults.yml file
   - include_tasks: "{{ base_path }}/tasks/build/env_file_backup_original.yml"
   - include_tasks: "{{ base_path }}/tasks/build/env_file_generate.yml"
