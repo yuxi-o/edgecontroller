@@ -113,6 +113,12 @@
     when: (CCE_ORCHESTRATION_MODE == "kubernetes") or
           (CCE_ORCHESTRATION_MODE == "kubernetes-ovn")
 
+  - name: Install Kubernetes plugins for kubernetes-ovn mode
+    include_tasks: "{{ base_path }}/tasks/kubernetes/install_nfd.yml"
+    when: 
+      - CCE_ORCHESTRATION_MODE == "kubernetes-ovn"
+      - nfd_enabled == true
+
   # Generate build .env file based on provided data in vars/defaults.yml file
   - include_tasks: "{{ base_path }}/tasks/build/env_file_backup_original.yml"
   - include_tasks: "{{ base_path }}/tasks/build/env_file_generate.yml"
