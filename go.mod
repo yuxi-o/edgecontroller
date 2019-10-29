@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module github.com/otcshare/edgecontroller
+module github.com/open-ness/edgecontroller
 
 require (
 	9fans.net/go v0.0.2 // indirect
@@ -33,8 +33,8 @@ require (
 	github.com/nsf/gocode v0.0.0-20190302080247-5bee97b48836 // indirect
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
-	github.com/otcshare/common/log v0.0.0-20190926085025-d7b0a7a47249
-	github.com/otcshare/common/proxy v0.0.0-20190926085025-d7b0a7a47249
+	github.com/open-ness/common/log v0.0.0-20190926085025-d7b0a7a47249
+	github.com/open-ness/common/proxy v0.0.0-20190926085025-d7b0a7a47249
 	github.com/pkg/errors v0.8.1
 	github.com/rogpeppe/godef v1.1.1 // indirect
 	github.com/satori/go.uuid v1.2.0

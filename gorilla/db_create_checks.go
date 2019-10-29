@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"net/http"
 
-	cce "github.com/otcshare/edgecontroller"
+	cce "github.com/open-ness/edgecontroller"
 )
 
 func checkDBCreateNodesApps(
