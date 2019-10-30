@@ -43,7 +43,8 @@ func handleCreateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 		return err
 	}
 
-	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes {
+	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes ||
+		ctrl.OrchestrationMode == cce.OrchestrationModeKubernetesOVN {
 		err := ctrl.KubernetesClient.Deploy(
 			ctx,
 			e.(*cce.NodeApp).GetNodeID(),
@@ -54,6 +55,8 @@ func handleCreateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 	}
 
 	log.Infof("App %s deployed to node", app.GetID())
+
+	disconnectNode(nodeCC)
 
 	return nil
 }
@@ -130,35 +133,4 @@ func handleCreateNodesDNSConfigsWithAliases(
 	}
 
 	return nil
-}
-
-// TODO remove once nodesAppsTrafficPoliciesHandler in gorilla.go is removed
-func handleCreateNodesAppsTrafficPolicies(
-	ctx context.Context,
-	ps cce.PersistenceService,
-	e cce.Persistable,
-) error {
-	trafficPolicy, err := ps.Read(ctx, e.(*cce.NodeAppTrafficPolicy).TrafficPolicyID, &cce.TrafficPolicy{})
-	if err != nil {
-		return err
-	}
-	log.Debugf("Loaded traffic policy %s\n%+v", trafficPolicy.GetID(), trafficPolicy)
-
-	nodeApp, err := ps.Read(ctx, e.(*cce.NodeAppTrafficPolicy).NodeAppID, &cce.NodeApp{})
-	if err != nil {
-		return err
-	}
-	log.Debugf("Loaded node app %s\n%+v", nodeApp.GetID(), nodeApp)
-
-	ctrl := getController(ctx)
-	nodePort := ctrl.ELAPort
-	if nodePort == "" {
-		nodePort = defaultELAPort
-	}
-	nodeCC, err := connectNode(ctx, ps, nodeApp.(*cce.NodeApp), nodePort, ctrl.EdgeNodeCreds)
-	if err != nil {
-		return err
-	}
-
-	return nodeCC.AppPolicySvcCli.Set(ctx, nodeApp.(*cce.NodeApp).AppID, trafficPolicy.(*cce.TrafficPolicy))
 }

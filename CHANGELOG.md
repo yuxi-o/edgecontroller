@@ -8,6 +8,7 @@ Copyright © 2019 Intel Corporation and Smart-Edge.com, Inc.
 # [0.0.62] - TO BE RELEASED
 ### Fixed
 - Kubernetes pods are created with NET_ADMIN capabilities
+- Added functionality of applying and deleting Kubernetes network policies
 
 ## [0.0.61] - 2019-07-15
 ### Fixed

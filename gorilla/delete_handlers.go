@@ -40,7 +40,8 @@ func handleDeleteNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 	}
 
 	// if kubernetes un-deploy application
-	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes {
+	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes ||
+		ctrl.OrchestrationMode == cce.OrchestrationModeKubernetesOVN {
 		if err = ctrl.KubernetesClient.Undeploy(
 			ctx,
 			e.(*cce.NodeApp).NodeID,
@@ -50,7 +51,10 @@ func handleDeleteNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 		}
 	}
 
-	return nodeCC.AppDeploySvcCli.Undeploy(ctx, app.GetID())
+	err = nodeCC.AppDeploySvcCli.Undeploy(ctx, app.GetID())
+	disconnectNode(nodeCC)
+
+	return err
 }
 
 func handleDeleteNodesDNSConfigs(

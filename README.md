@@ -25,7 +25,7 @@ OpenNESS supports Network Edge and On-Premise edge deployment. For details of th
 
 The OpenNESS Edge Node and OpenNESS controller components build would remain unchanged for both the deployments. For the Network Edge deployment this document assumes that a Kubernetes cluster is setup with Kubernetes master and Node is added to the cluster. The document does not provide the steps for setting up Kubernetes cluster. 
 
-Reference for setting up Kubernetes cluster on CentOS [Install kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
+`NOTE:  For installation of Controller in Kubernetes/Kube-OVN mode, please use guide document doc/openness_howto.md delivered in specs repository.`
 
 The Core, Web UIs, Database and Telemetry components are packaged as [Docker](https://docker.com) containers when you
 build this project using the instructions below.
@@ -401,6 +401,9 @@ integration (CI) as well on each build using these same commands.
 
 -------
 ## Manual install
+
+`NOTE:  For installation with Kubernetes/Kube-OVN, please use guide document doc/openness_howto.md delivered in specs repository.`
+
 1. **Setup Proxy** 
     - For detailed description of various part of the systems where proxy needs to be configured please refer to [Proxy and Firewall Configuration](#proxy-and-firewall-configuration)   
 2. **Reload terminal** to get all the proxy setting to the active shell 

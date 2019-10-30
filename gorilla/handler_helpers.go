@@ -18,7 +18,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"net"
 
 	cce "github.com/open-ness/edgecontroller"
 	"github.com/open-ness/edgecontroller/grpc/node"
@@ -55,19 +54,28 @@ func connectNode(
 		return nil, fmt.Errorf("filter returned %v", targets)
 	}
 
-	addr := net.JoinHostPort(targets[0].(*cce.NodeGRPCTarget).GRPCTarget, port)
+	target := targets[0].(*cce.NodeGRPCTarget)
+	addr := target.GRPCTarget
 	if conf != nil {
 		conf = conf.Clone()
 		conf.ServerName = e.GetNodeID()
 	}
-	nodeCC := node.ClientConn{Addr: addr, TLS: conf}
+
+	log.Debugf("connectNode(%v): connecting to %v", e.GetNodeID(), target)
+
+	nodeCC := node.ClientConn{Addr: addr, Port: port, TLS: conf}
 	if err := nodeCC.Connect(ctx); err != nil {
 		log.Noticef("Could not connect to node: %v", err)
 		return nil, errors.Wrap(err, "could not connect to node")
 	}
-
 	log.Debugf("Connection to node %s established: %s", e.GetNodeID(), addr)
+
 	return &nodeCC, nil
+}
+
+func disconnectNode(nodeCC *node.ClientConn) {
+	log.Debugf("Disconnecting %v", nodeCC)
+	nodeCC.Disconnect()
 }
 
 func getController(ctx context.Context) *cce.Controller {

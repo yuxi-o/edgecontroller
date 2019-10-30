@@ -17,10 +17,15 @@ package cce
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 
+	"github.com/open-ness/common/proxy/progutil"
 	"github.com/open-ness/edgecontroller/jose"
 	"github.com/open-ness/edgecontroller/k8s"
 )
+
+// Our network callback helper
+var PrefaceLis *progutil.PrefaceListener
 
 // OrchestrationMode global level orchestration mode for application deployment
 type OrchestrationMode int
@@ -32,12 +37,19 @@ const (
 	// OrchestrationModeKubernetes uses an external Kubernetes master to
 	// control application container instances on nodes
 	OrchestrationModeKubernetes
+	// OrchestrationModeKubernetesOVN uses an external Kubernetes master to
+	// control application container instances on nodes. NTS functionality is
+	// replaced with OVN/OVS. Traffic Policies are replaced with Kubernetes
+	// Network Policies.
+	OrchestrationModeKubernetesOVN
 )
 
 // Controller aggregates controller services.
 type Controller struct {
-	OrchestrationMode  OrchestrationMode
-	KubernetesClient   *k8s.Client // must not be nil if OrchestrationModeKubernetes
+	OrchestrationMode OrchestrationMode
+	// must not be nil if
+	// OrchestrationModeKubernetes or OrchestrationModeKubernetesOVN
+	KubernetesClient   *k8s.Client
 	PersistenceService PersistenceService
 	AuthorityService   AuthorityService
 	TokenService       *jose.JWSTokenIssuer
@@ -110,4 +122,32 @@ type NodeEntity interface {
 type Filter struct {
 	Field string
 	Value string
+}
+
+func getIp(ctx context.Context, ps PersistenceService, nodeId string) (string, error) {
+	targets, err := ps.Filter(ctx, &NodeGRPCTarget{},
+		[]Filter{
+			{
+				Field: "node_id",
+				Value: nodeId,
+			},
+		})
+	if err != nil {
+		return "", err
+	}
+
+	if len(targets) > 0 {
+		target := targets[0].(*NodeGRPCTarget).GRPCTarget
+		return target, nil
+	}
+	return "", fmt.Errorf("IP for %v not found", nodeId)
+}
+
+// Inform the proxy we're serving this host
+func RegisterToProxy(ctx context.Context, ps PersistenceService, nodeId string) {
+	ip, err := getIp(ctx, ps, nodeId)
+	if err != nil {
+		return
+	}
+	PrefaceLis.RegisterHost(ip)
 }

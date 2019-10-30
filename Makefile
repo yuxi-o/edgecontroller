@@ -1,4 +1,4 @@
-# Copyright 2019 Smart-Edge.com, Inc. All rights reserved.
+# Copyright 2019 Intel Corporation and Smart-Edge.com, Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,10 +34,10 @@ endef
 # Pass kubernetes related flags if and only if the user specified kubernetes
 # as the orchestration mode. Otherwise, assume native orchestration mode and
 # pass in base flags.
-ifeq ($(CCE_ORCHESTRATION_MODE),kubernetes)
+ifeq ($(CCE_ORCHESTRATION_MODE),$(filter $(CCE_ORCHESTRATION_MODE),kubernetes kubernetes-ovn))
 define CCE_FLAGS
 	$(CCE_FLAGS_BASE) \
-	-orchestration-mode kubernetes \
+	-orchestration-mode $(CCE_ORCHESTRATION_MODE) \
 	-k8s-client-ca-path /artifacts/k8s/ca.pem \
 	-k8s-client-cert-path /artifacts/k8s/cert.pem \
 	-k8s-client-key-path /artifacts/k8s/key.pem \
@@ -188,7 +188,7 @@ else
 endif
 
 cce-up:
-ifeq ($(CCE_ORCHESTRATION_MODE),kubernetes)
+ifeq ($(CCE_ORCHESTRATION_MODE),$(filter $(CCE_ORCHESTRATION_MODE),kubernetes kubernetes-ovn))
 	mkdir -p ./artifacts/controller/k8s
 	cp ${CCE_K8S_CLIENT_CA_PATH} ./artifacts/controller/k8s/ca.pem
 	cp ${CCE_K8S_CLIENT_CERT_PATH} ./artifacts/controller/k8s/cert.pem
@@ -238,7 +238,13 @@ test-api-k8s:
 	docker pull nginx:1.12
 	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce/k8s
 
+test-api-kubeovn:
+	$(MAKE) db-reset
+	$(MAKE) db-up
+	docker pull nginx:1.12
+	ginkgo -v --randomizeAllSpecs --randomizeSuites cmd/cce/kubeovn
+
 test-k8s:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites k8s
 
-test: test-unit test-api test-k8s test-api-k8s
+test: test-unit test-api test-k8s test-api-k8s test-api-kubeovn

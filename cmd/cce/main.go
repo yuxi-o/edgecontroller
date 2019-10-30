@@ -39,7 +39,8 @@ import (
 	"syscall"
 	"time"
 
-	logger "github.com/open-ness/common"
+	logger "github.com/open-ness/common/log"
+	"github.com/open-ness/common/proxy/progutil"
 	cce "github.com/open-ness/edgecontroller"
 	"github.com/open-ness/edgecontroller/gorilla"
 	"github.com/open-ness/edgecontroller/grpc"
@@ -86,7 +87,8 @@ func init() {
 	flag.StringVar(&statsdOut, "statsd-path", "./statsd.log", "StatsD output file path")
 
 	// application orchestration mode
-	flag.StringVar(&orchMode, "orchestration-mode", "native", "Orchestration mode. options [native, kubernetes] ")
+	flag.StringVar(&orchMode, "orchestration-mode", "native", "Orchestration mode."+
+		"options [native, kubernetes, kubernetes-ovn] ")
 
 	// k8s
 	flag.StringVar(&k8sClient.CAFile, "k8s-client-ca-path", "", "Kubernetes root certificate path")
@@ -95,6 +97,26 @@ func init() {
 	flag.StringVar(&k8sClient.Host, "k8s-master-host", "", "Kubernetes master host")
 	flag.StringVar(&k8sClient.APIPath, "k8s-api-path", "", "Kubernetes api path")
 	flag.StringVar(&k8sClient.Username, "k8s-master-user", "", "Kubernetes default user")
+}
+
+func setupOrchestrator() (cce.OrchestrationMode, error) {
+	var orchestrationMode cce.OrchestrationMode
+	var err error
+
+	switch orchMode {
+	case "native":
+		orchestrationMode = cce.OrchestrationModeNative
+	case "kubernetes":
+		orchestrationMode = cce.OrchestrationModeKubernetes
+		err = k8sClient.Ping()
+	case "kubernetes-ovn":
+		orchestrationMode = cce.OrchestrationModeKubernetesOVN
+		err = k8sClient.Ping()
+	default:
+		err = errors.New("Invalid orchestration mode " + orchMode)
+	}
+
+	return orchestrationMode, err
 }
 
 func main() {
@@ -119,17 +141,8 @@ func main() {
 
 	// Setup orchestrator
 	var orchestrationMode cce.OrchestrationMode
-	switch orchMode {
-	case "native":
-		orchestrationMode = cce.OrchestrationModeNative
-	case "kubernetes":
-		orchestrationMode = cce.OrchestrationModeKubernetes
-		if err = k8sClient.Ping(); err != nil {
-			log.Alertf("Error configuring kubernetes client: %v", err)
-			os.Exit(1)
-		}
-	default:
-		log.Alertf("Invalid orchestration mode %q", orchMode)
+	if orchestrationMode, err = setupOrchestrator(); err != nil {
+		log.Alertf("Error getting orchestration mode: %v", err)
 		os.Exit(1)
 	}
 
@@ -201,6 +214,17 @@ func main() {
 	if err := eg.Wait(); err != nil && err != errSignalShutdown {
 		log.Alert(err)
 		os.Exit(1)
+	}
+}
+
+func registerAllNodes(ctx context.Context, ps cce.PersistenceService) {
+	persisted, err := ps.ReadAll(ctx, &cce.Node{})
+	if err == nil {
+		for _, n := range persisted {
+			node := n.(*cce.Node)
+			id := node.ID
+			cce.RegisterToProxy(ctx, ps, id)
+		}
 	}
 }
 
@@ -296,7 +320,10 @@ func serveHTTP(ctx context.Context, controller *cce.Controller, addr string) fun
 }
 
 func serveGRPC(ctx context.Context, controller *cce.Controller, addr string, conf *tls.Config) func() error {
+
 	lis, err := net.Listen("tcp", addr)
+	cce.PrefaceLis = progutil.NewPrefaceListener(lis)
+
 	if err != nil {
 		log.Alertf("Could not listen on %q: %v", addr, err)
 		os.Exit(1)
@@ -325,11 +352,13 @@ func serveGRPC(ctx context.Context, controller *cce.Controller, addr string, con
 		}
 	}()
 
+	registerAllNodes(context.TODO(), controller.PersistenceService)
+
 	// Start the grpc server
 	log.Infof("gRPC server serving on %q", addr)
 	return func() error {
-		defer lis.Close()
-		return grpcServer.Serve(lis)
+		defer cce.PrefaceLis.Close()
+		return grpcServer.Serve(cce.PrefaceLis)
 	}
 }
 

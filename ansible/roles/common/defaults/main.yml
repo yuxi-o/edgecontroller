@@ -15,8 +15,27 @@
 ---
 github_token: ""
 version: master
-cce_orchestration_mode: native
 cce_log_level: info
+build:
+  enabled: true
 react_app_controller_api: http://{{ controller_host }}:8080
 react_app_cups_api: "http://{{ controller_host }}:8090"
 controller_path: /opt/controller
+#
+cce_k8s_master_host: "{{ controller_host }}:6443"
+kubernetes_certs_path: "{{ controller_path }}/certs"
+ca_path: "{{ kubernetes_certs_path }}/ca.pem"
+client_path: "{{ kubernetes_certs_path }}/client.pem"
+key_path: "{{ kubernetes_certs_path }}/key.pem"
+kubernetes:
+  enabled: false
+  mode: flannel
+
+#
+kube_ovn_version: v0.7.0
+openvswitch_url: "https://github.com/alauda/ovs/releases/download/v2.11.1-1/openvswitch-2.11.1-1.el7.x86_64.rpm"
+ovn_url: "https://github.com/alauda/ovs/releases/download/v2.11.1-1/ovn-2.11.1-1.el7.x86_64.rpm"
+ovn_common_url: "https://github.com/alauda/ovs/releases/download/v2.11.1-1/ovn-common-2.11.1-1.el7.x86_64.rpm"
+ovn_packages: "unbound,{{ openvswitch_url }},{{ ovn_url }},{{ ovn_common_url }}"
+#
+cce_orchestration_mode: "{{ 'native' if not kubernetes['enabled'] else 'kubernetes-ovn' if kubernetes['mode']=='kubeovn' else 'kubernetes' }}"

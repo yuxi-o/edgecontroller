@@ -1,4 +1,4 @@
-// Copyright 2019 Smart-Edge.com, Inc. All rights reserved.
+// Copyright 2019 Intel Corporation and Smart-Edge.com, Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -545,6 +545,175 @@ func (g *Gorilla) swagDELETEPolicyByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ok, err := ctrl.PersistenceService.Delete(r.Context(), mux.Vars(r)["policy_id"], &cce.TrafficPolicy{})
+	if err != nil {
+		log.Errf("Error deleting entity: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// we just fetched the entity, so if !ok then something went wrong
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+// Used for GET /kube_ovn/policies endpoints
+func (g *Gorilla) swagGETKubeOVNPolicies(w http.ResponseWriter, r *http.Request) {
+	// Load the controller to access the persistence
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
+
+	// Fetch the nodes from persistence
+	persisted, err := ctrl.PersistenceService.ReadAll(r.Context(), &cce.TrafficPolicyKubeOVN{})
+	if err != nil {
+		log.Errf("Failed to fetch the nodes from persistence: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Construct the response object
+	policies := swagger.PolicyList{Policies: []swagger.PolicySummary{}}
+	for _, a := range persisted {
+		policy := swagger.PolicySummary{
+			ID:   a.(*cce.TrafficPolicyKubeOVN).ID,
+			Name: a.(*cce.TrafficPolicyKubeOVN).Name,
+		}
+		policies.Policies = append(policies.Policies, policy)
+	}
+
+	// Marshal the response object to JSON
+	policiesJSON, err := json.Marshal(policies)
+	if err != nil {
+		log.Errf("Failed to marshal the response object to JSON: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if _, err = w.Write(policiesJSON); err != nil {
+		log.Errf("Error writing response: %v", err)
+	}
+}
+
+// Used for POST /kube_ovn/policies endpoint
+func (g *Gorilla) swagPOSTKubeOVNPolicies(w http.ResponseWriter, r *http.Request) {
+	g.trafficPoliciesKubeOVNHandler.create(w, r)
+}
+
+// Used for GET /policies/{policy_id} endpoint
+func (g *Gorilla) swagGETKubeOVNPolicyByID(w http.ResponseWriter, r *http.Request) {
+	// Load the controller to access the persistence
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
+
+	// Fetch the entity from persistence and check if it's there
+	persisted, err := ctrl.PersistenceService.Read(r.Context(), mux.Vars(r)["policy_id"], &cce.TrafficPolicyKubeOVN{})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if persisted == nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// Construct the response object
+	policy := swagger.PolicyKubeOVNDetail{
+		PolicySummary: swagger.PolicySummary{
+			ID:   persisted.(*cce.TrafficPolicyKubeOVN).ID,
+			Name: persisted.(*cce.TrafficPolicyKubeOVN).Name,
+		},
+		IngressRules: persisted.(*cce.TrafficPolicyKubeOVN).Ingress,
+		EgressRules:  persisted.(*cce.TrafficPolicyKubeOVN).Egress,
+	}
+
+	// Marshal the response object to JSON
+	policyJSON, err := json.Marshal(policy)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if _, err = w.Write(policyJSON); err != nil {
+		log.Errf("Error writing response: %v", err)
+	}
+}
+
+// Used for PATCH /kube_ovn/policies/{policy_id} endpoint
+func (g *Gorilla) swagPATCHKubeOVNPolicyByID(w http.ResponseWriter, r *http.Request) {
+	// Load the controller to access the persistence and the payload
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
+	body := r.Context().Value(contextKey("body")).([]byte)
+
+	// Unmarshal the payload
+	policy := swagger.PolicyKubeOVNDetail{}
+	if err := json.Unmarshal(body, &policy); err != nil {
+		log.Errf("Error unmarshaling json: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Convert it to a persistable object
+	persisted := cce.TrafficPolicyKubeOVN{
+		ID:      policy.ID,
+		Name:    policy.Name,
+		Ingress: policy.IngressRules,
+		Egress:  policy.EgressRules,
+	}
+
+	// Validate the object
+	if err := persisted.Validate(); err != nil {
+		log.Debugf("Validation failed for %#v: %v", persisted, err)
+		w.WriteHeader(http.StatusBadRequest)
+		_, err = w.Write([]byte(fmt.Sprintf("Validation failed: %v", err)))
+		if err != nil {
+			log.Errf("Error writing response: %v", err)
+		}
+		return
+	}
+
+	// Persist the object
+	if err := ctrl.PersistenceService.BulkUpdate(r.Context(), []cce.Persistable{&persisted}); err != nil {
+		log.Errf("Error updating entities: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+// Used for DELETE /kube_ovn/policies/{policy_id}
+func (g *Gorilla) swagDELETEKubeOVNPolicyByID(w http.ResponseWriter, r *http.Request) {
+	// Load the controller to access the persistence and the payload
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
+
+	// Check that we can delete the entity
+	if statusCode, err := checkDBDeleteTrafficPolicies(
+		r.Context(),
+		ctrl.PersistenceService,
+		mux.Vars(r)["policy_id"]); err != nil {
+		log.Errf("Error running DB logic: %v", err)
+		w.WriteHeader(statusCode)
+		_, err = w.Write([]byte(err.Error()))
+		if err != nil {
+			log.Errf("Error writing response: %v", err)
+		}
+		return
+	}
+
+	// Fetch the entity from persistence and check if it's there
+	persisted, err := ctrl.PersistenceService.Read(r.Context(), mux.Vars(r)["policy_id"], &cce.TrafficPolicyKubeOVN{})
+	if err != nil {
+		log.Errf("Error reading entity: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, err = w.Write([]byte(err.Error()))
+		if err != nil {
+			log.Errf("Error writing response: %v", err)
+		}
+		return
+	}
+	if persisted == nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	ok, err := ctrl.PersistenceService.Delete(r.Context(), mux.Vars(r)["policy_id"], &cce.TrafficPolicyKubeOVN{})
 	if err != nil {
 		log.Errf("Error deleting entity: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -1992,6 +2161,271 @@ func (g *Gorilla) swagDELETENodeAppPolicy(w http.ResponseWriter, r *http.Request
 	if err = nodeCC.AppPolicySvcCli.Delete(
 		r.Context(),
 		nodeApps[0].(*cce.NodeApp).AppID,
+	); err != nil {
+		log.Errf("Error deleting policy: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Delete the resource
+	ok, err := ctrl.PersistenceService.Delete(r.Context(), nodeAppPolicies[0].GetID(), &cce.NodeAppTrafficPolicy{})
+	if err != nil {
+		log.Errf("Error deleting from nodes_apps_traffic_policies: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if !ok {
+		log.Err("Did not delete 1 record from nodes_apps_traffic_policies")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// Used for GET /nodes/{node_id}/apps/{app_id}/kube_ovn/policy endpoint
+func (g *Gorilla) swagGETNodeAppKubeOVNPolicy(w http.ResponseWriter, r *http.Request) {
+	// Load the controller to access the persistence
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
+
+	// Filter nodes_apps to get the node_app_id
+	nodeApps, err := ctrl.PersistenceService.Filter(
+		r.Context(),
+		&cce.NodeApp{},
+		[]cce.Filter{
+			{
+				Field: "node_id",
+				Value: mux.Vars(r)["node_id"],
+			},
+			{
+				Field: "app_id",
+				Value: mux.Vars(r)["app_id"],
+			},
+		})
+	if err != nil {
+		log.Errf("Error filtering node_apps: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(nodeApps) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if len(nodeApps) > 1 {
+		log.Errf("Filter node_apps returned %d records", len(nodeApps))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Filter nodes_apps_traffic_policies to get the traffic_policy_id
+	nodeAppTrafficPolicies, err := ctrl.PersistenceService.Filter(
+		r.Context(),
+		&cce.NodeAppTrafficPolicy{},
+		[]cce.Filter{
+			{
+				Field: "nodes_apps_id",
+				Value: nodeApps[0].GetID(),
+			},
+		})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(nodeAppTrafficPolicies) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if len(nodeAppTrafficPolicies) > 1 {
+		log.Errf("Filter nodes_apps_traffic_policies returned %d records", len(nodeAppTrafficPolicies))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Construct the response object
+	baseResource := swagger.BaseResource{
+		ID: nodeAppTrafficPolicies[0].(*cce.NodeAppTrafficPolicy).TrafficPolicyID,
+	}
+
+	// Marshal the response object to JSON
+	baseResourceJSON, err := json.Marshal(baseResource)
+	if err != nil {
+		log.Errf("Error marshaling response: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if _, err = w.Write(baseResourceJSON); err != nil {
+		log.Errf("Error writing response: %v", err)
+	}
+}
+
+// Used for PATCH /nodes/{node_id}/apps/{app_id}/kube_ovn/policy endpoint
+func (g *Gorilla) swagPATCHNodeAppKubeOVNPolicy(w http.ResponseWriter, r *http.Request) { //nolint:gocyclo
+	// Load the controller to access the persistence and the payload
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
+	body := r.Context().Value(contextKey("body")).([]byte)
+
+	// Unmarshal the payload
+	var baseResource swagger.BaseResource
+	if err := json.Unmarshal(body, &baseResource); err != nil {
+		log.Errf("Error unmarshaling json: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Filter nodes_apps to get the node_app_id
+	nodeApps, err := ctrl.PersistenceService.Filter(
+		r.Context(),
+		&cce.NodeApp{},
+		[]cce.Filter{
+			{
+				Field: "node_id",
+				Value: mux.Vars(r)["node_id"],
+			},
+			{
+				Field: "app_id",
+				Value: mux.Vars(r)["app_id"],
+			},
+		})
+	if err != nil {
+		log.Errf("Error filtering node_apps: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(nodeApps) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if len(nodeApps) > 1 {
+		log.Errf("Filter node_apps returned %d records", len(nodeApps))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Query traffic_policies to verify the baseResourceID is valid
+	policy, err := ctrl.PersistenceService.Read(r.Context(), baseResource.ID, &cce.TrafficPolicyKubeOVN{})
+	if err != nil {
+		log.Errf("Error reading traffic_policies: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if policy == nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// Try delete network policy for app
+	_ = ctrl.KubernetesClient.DeleteNetworkPolicy(r.Context(), nodeApps[0].(*cce.NodeApp).NodeID,
+		nodeApps[0].(*cce.NodeApp).AppID)
+
+	// Apply new network policy for app
+	if err = ctrl.KubernetesClient.ApplyNetworkPolicy(r.Context(), nodeApps[0].(*cce.NodeApp).NodeID,
+		nodeApps[0].(*cce.NodeApp).AppID, policy.(*cce.TrafficPolicyKubeOVN).ToK8s(),
+	); err != nil {
+		log.Errf("Error setting policy: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Filter nodes_apps_traffic_policies to see if a record already exists
+	nodeAppPolicies, err := ctrl.PersistenceService.Filter(
+		r.Context(),
+		&cce.NodeAppTrafficPolicy{},
+		[]cce.Filter{
+			{
+				Field: "nodes_apps_id",
+				Value: nodeApps[0].GetID(),
+			},
+		})
+	if err != nil {
+		log.Errf("Error reading nodes_apps_traffic_policies: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// If it exists, delete it
+	if len(nodeAppPolicies) == 1 {
+		ok, err := ctrl.PersistenceService.Delete(r.Context(), nodeAppPolicies[0].GetID(), &cce.NodeAppTrafficPolicy{})
+		if err != nil {
+			log.Errf("Error deleting from nodes_apps_traffic_policies: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if !ok {
+			log.Err("Did not delete 1 record from nodes_apps_traffic_policies")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Convert the base resource to a persistable object
+	persisted := cce.NodeAppTrafficPolicy{
+		ID:              uuid.New(),
+		NodeAppID:       nodeApps[0].GetID(),
+		TrafficPolicyID: baseResource.ID,
+	}
+
+	// Persist the object
+	if err := ctrl.PersistenceService.Create(r.Context(), &persisted); err != nil {
+		log.Errf("Error creating entity: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+// Used for DELETE /nodes/{node_id}/apps/{app_id}/kube_ovn/policy endpoint
+func (g *Gorilla) swagDELETENodeAppKubeOVNPolicy(w http.ResponseWriter, r *http.Request) {
+	// Load the controller to access the persistence and the payload
+	ctrl := r.Context().Value(contextKey("controller")).(*cce.Controller)
+
+	// Filter nodes_apps to get the node_app_id
+	nodeApps, err := ctrl.PersistenceService.Filter(
+		r.Context(),
+		&cce.NodeApp{},
+		[]cce.Filter{
+			{
+				Field: "node_id",
+				Value: mux.Vars(r)["node_id"],
+			},
+			{
+				Field: "app_id",
+				Value: mux.Vars(r)["app_id"],
+			},
+		})
+	if err != nil {
+		log.Errf("Error filtering node_apps: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(nodeApps) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if len(nodeApps) > 1 {
+		log.Errf("Filter node_apps returned %d records", len(nodeApps))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Filter nodes_apps_traffic_policies to get the ID
+	nodeAppPolicies, err := ctrl.PersistenceService.Filter(
+		r.Context(),
+		&cce.NodeAppTrafficPolicy{},
+		[]cce.Filter{
+			{
+				Field: "nodes_apps_id",
+				Value: nodeApps[0].GetID(),
+			},
+		})
+	if err != nil {
+		log.Errf("Error reading nodes_apps_traffic_policies: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Make gRPC call to node to delete the policy
+	if err = ctrl.KubernetesClient.DeleteNetworkPolicy(
+		r.Context(), nodeApps[0].(*cce.NodeApp).NodeID, nodeApps[0].(*cce.NodeApp).AppID,
 	); err != nil {
 		log.Errf("Error deleting policy: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)

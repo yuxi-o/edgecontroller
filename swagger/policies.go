@@ -1,4 +1,4 @@
-// Copyright 2019 Smart-Edge.com, Inc. All rights reserved.
+// Copyright 2019 Intel Corporation and Smart-Edge.com, Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,13 @@ type PolicySummary struct {
 type PolicyDetail struct {
 	PolicySummary
 	Rules []*cce.TrafficRule `json:"traffic_rules"`
+}
+
+// PolicyKubeOVNDetail is a detailed representation of the traffic policy for KubeOVN implementation.
+type PolicyKubeOVNDetail struct {
+	PolicySummary
+	IngressRules []*cce.IngressRule `json:"ingress_rules"`
+	EgressRules  []*cce.EgressRule  `json:"egress_rules"`
 }
 
 // PolicyList is a list representation of traffic policies.

@@ -42,7 +42,7 @@
 
 - name: configure .env
   template:
-    src: env.j2
+    src: "{{ 'env_kubernetes.j2' if kubernetes['enabled'] else 'env.j2' }}"
     dest: "{{ controller_path }}/.env"
     owner: "{{ ansible_user }}"
     mode: 0600

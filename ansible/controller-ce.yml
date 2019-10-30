@@ -18,15 +18,21 @@
     remote_root: "{{ ansible_env.HOME }}/controller-ce"
     local_root: "{{ lookup('env', 'PWD') }}/../"
   roles:
-    - common
+    - role: common
+      when: controller_host != "localhost"
     - docker
-    - controller-ce
+    - role: kubernetes
+      when: kubernetes['enabled']
+    - role: controller-ce
+      when: build['enabled']
 
 - hosts: "{{ ui_host }}"
   vars:
     remote_root: "{{ ansible_env.HOME }}/controller-ce"
     local_root: "{{ lookup('env', 'PWD') }}/../"
   roles:
-    - common
+    - role: common
+      when: ui_host != "localhost"
     - docker
-    - controller-ui
+    - role: controller-ui
+      when: build['enabled']

@@ -12,25 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from "react";
-import { Route, Redirect,withRouter } from "react-router-dom";
-import Auth from "./Auth";
+import React from 'react';
+import { Route, Redirect, withRouter } from 'react-router-dom';
+import Auth from './Auth';
 
-const ProtectedRoute = ({component: Component,...rest}) => {
+const ProtectedRoute = ({ component: Component, ...rest }) => {
   return (
     <Route
       {...rest}
-      render={props => {
+      render={(props) => {
         if (Auth.isAuthenticated()) {
           return <Component {...props} />;
         } else {
           return (
             <Redirect
               to={{
-                pathname: "/login",
+                pathname: '/login',
                 state: {
-                  from: props.location
-                }
+                  from: props.location,
+                },
               }}
             />
           );
