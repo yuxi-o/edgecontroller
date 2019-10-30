@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"k8s.io/klog"
+	"time"
 )
 
 // Connectivity constants
@@ -31,30 +32,36 @@ const (
 
 // HTTP client
 var client = &http.Client{
-	Timeout: 0,
+	Timeout: 10 * time.Second,
 }
 
 // AFCreateSubscription create new Traffic Influence Subscription at AF
 func AFCreateSubscription(client *http.Client, sub TrafficInfluSub) error {
 
-	subBytes, _ := json.Marshal(sub)
+	subBytes, err := json.Marshal(sub)
+	if err != nil {
+		klog.Error("Failed to marshal TrafficInfluSub:", err)
+		return err
+	}
 
 	req, err := http.NewRequest("POST",
-		AFServName+":"+AFServPort+"/AFTransactions",
-		bytes.NewReader(subBytes))
+					AFServName+":"+AFServPort+"/AFTransactions",
+					bytes.NewReader(subBytes))
 	if err != nil {
-		klog.Info("Create request failed:", err)
+		klog.Error("Create request failed:", err)
 		return err
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		klog.Info("Create request transmission failed:", err)
+		klog.Error("Create request transmission failed:", err)
 		return err
 	}
+
 	err = resp.Body.Close()
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

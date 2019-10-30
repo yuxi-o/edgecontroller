@@ -15,42 +15,31 @@
 package main
 
 import (
-  "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
-  Use:   "create",
+	Use:   "create",
 	Short: "Create new Traffic Influence Subscription at 5G AF",
-	Long: `Create new Traffic Influence Subscription at 5G AF.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Long:  `Create new Traffic Influence Subscription at 5G AF.`,
+	Run:   func(cmd *cobra.Command, args []string) {
 
-    sub := TrafficInfluSub{
-      AFServiceID: "myServiceId",
-      AFAppID:     "myAppId",
-      AFTransID:   "myTransId",
-    }
-
-    // create new Traffic Influence Subscription at AF
-    err := AFCreateSubscription(client, sub)
-    if err != nil {
-      return
-    }
+		// TODO to be provided from .yml
+		sub := TrafficInfluSub{
+			AFServiceID: "myServiceId",
+			AFAppID:     "myAppId",
+			AFTransID:   "myTransId",
+		}
+		// create new Traffic Influence Subscription at AF
+		err := AFCreateSubscription(client, sub)
+		if err != nil {
+			return
+		}
 	},
 }
 
 func init() {
-  // add `create` command
+	// add `create` command
 	cncaCmd.AddCommand(createCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// createCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// createCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 }

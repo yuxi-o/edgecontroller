@@ -15,28 +15,21 @@
 package main
 
 import (
-  "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // cncaCmd represents the base command when called without any subcommands
 var cncaCmd = &cobra.Command{
-  Use:   "cnca",
-  Short: "CNCA application",
-  Long: `Kubernetes CNCA configuration command line`,
-  // Uncomment the following line if your bare application
-  // has an action associated with it:
-  //	Run: func(cmd *cobra.Command, args []string) { },
+	Use:   "cnca",
+	Short: "CNCA application",
+	Long:  `Kubernetes CNCA configuration command line`,
+	// Uncomment the following line if your bare application
+	// has an action associated with it:
+	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
 func init() {
-  //cobra.AddCommand(initConfig)
-
-  // Here you will define your flags and configuration settings.
-  // Cobra supports persistent flags, which, if defined here,
-  // will be global for your application.
+	// Here you will define your flags and configuration settings.
+	// Cobra supports persistent flags, which, if defined here,
+	// will be global for your application.
 }
-
-// initConfig reads in config file and ENV variables if set.
-//func initConfig() {
-
-//}
