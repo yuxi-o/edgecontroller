@@ -33,8 +33,8 @@ require (
 	github.com/nsf/gocode v0.0.0-20190302080247-5bee97b48836 // indirect
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
-	github.com/open-ness/common/log v0.0.0-20191030130010-15d3905a86dd
-	github.com/open-ness/common/proxy v0.0.0-20191030130010-15d3905a86dd
+	github.com/open-ness/common/log v0.0.0-20191030144720-fb6cccb373bf
+	github.com/open-ness/common/proxy v0.0.0-20191030144720-fb6cccb373bf
 	github.com/pkg/errors v0.8.1
 	github.com/rogpeppe/godef v1.1.1 // indirect
 	github.com/satori/go.uuid v1.2.0
