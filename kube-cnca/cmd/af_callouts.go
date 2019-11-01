@@ -24,10 +24,8 @@ import (
 
 // Connectivity constants
 const (
-	AFServName  = "http://localhost"
-	AFServPort  = "80"
-	OAMServName = "http://localhost"
-	OAMServPort = "80"
+	AFServer  = "http://localhost:80/"
+	OAMServer = "http://localhost:80/"
 )
 
 // HTTP client
@@ -36,7 +34,7 @@ var client = &http.Client{
 }
 
 // AFCreateSubscription create new Traffic Influence Subscription at AF
-func AFCreateSubscription(client *http.Client, sub TrafficInfluSub) error {
+func AFCreateSubscription(sub TrafficInfluSub) error {
 
 	subBytes, err := json.Marshal(sub)
 	if err != nil {
@@ -45,7 +43,7 @@ func AFCreateSubscription(client *http.Client, sub TrafficInfluSub) error {
 	}
 
 	req, err := http.NewRequest("POST",
-					AFServName+":"+AFServPort+"/AFTransactions",
+					AFServer + "AFTransactions",
 					bytes.NewReader(subBytes))
 	if err != nil {
 		klog.Error("Create request failed:", err)
