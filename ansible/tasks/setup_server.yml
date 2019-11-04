@@ -106,6 +106,13 @@
       - include_tasks: "{{ base_path }}/tasks/kubernetes/kubeovn_mode_init.yml"
     when: CCE_ORCHESTRATION_MODE == "kubernetes-ovn"
 
+  - name: Configure Multus
+    - include_tasks: "{{ base_path }}/tasks/kubernetes/install_multus.yml"
+    when:
+      - (CCE_ORCHESTRATION_MODE == "kubernetes") or
+          (CCE_ORCHESTRATION_MODE == "kubernetes-ovn")
+      - multus_enabled == true
+
   - name: Obtain kubernetes certificates
     block:
       - include_tasks: "{{ base_path }}/tasks/kubernetes/grant_cluster_admin_rights.yml"
