@@ -107,7 +107,7 @@
     when: CCE_ORCHESTRATION_MODE == "kubernetes-ovn"
 
   - name: Configure Multus
-    - include_tasks: "{{ base_path }}/tasks/kubernetes/install_multus.yml"
+    include_tasks: "{{ base_path }}/tasks/kubernetes/install_multus.yml"
     when:
       - (CCE_ORCHESTRATION_MODE == "kubernetes") or
           (CCE_ORCHESTRATION_MODE == "kubernetes-ovn")
