@@ -46,14 +46,17 @@ func (cc *ClientConn) Connect(ctx context.Context) error {
 	var err error
 
 	if cc.Port == "42102" { // XXX use the actual variable with this!
+		// OP-1742: ContextDialler not supported by Gateway
+		//nolint:staticcheck
 		cc.conn, err = grpc.Dial(ctx, cc.Addr, cc.TLS,
 			ggrpc.WithDialer(cce.PrefaceLis.DialEva))
 
+		// EVA
 		cc.AppDeploySvcCli = gclients.NewApplicationDeploymentServiceClient(cc.conn)
 		cc.AppLifeSvcCli = gclients.NewApplicationLifecycleServiceClient(cc.conn)
-
-		return nil
 	} else {
+		// OP-1742: ContextDialler not supported by Gateway
+		//nolint:staticcheck
 		cc.conn, err = grpc.Dial(ctx, cc.Addr, cc.TLS,
 			ggrpc.WithDialer(cce.PrefaceLis.DialEla))
 
@@ -65,11 +68,8 @@ func (cc *ClientConn) Connect(ctx context.Context) error {
 
 		cc.ZoneSvcCli = gclients.NewZoneServiceClient(cc.conn) // XXX unimplemented?
 	}
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func (cc *ClientConn) Disconnect() {

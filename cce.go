@@ -24,7 +24,7 @@ import (
 	"github.com/otcshare/edgecontroller/k8s"
 )
 
-// Our network callback helper
+// PrefaceLis Our network callback helper
 var PrefaceLis *progutil.PrefaceListener
 
 // OrchestrationMode global level orchestration mode for application deployment
@@ -124,12 +124,12 @@ type Filter struct {
 	Value string
 }
 
-func getIp(ctx context.Context, ps PersistenceService, nodeId string) (string, error) {
+func getIP(ctx context.Context, ps PersistenceService, nodeID string) (string, error) {
 	targets, err := ps.Filter(ctx, &NodeGRPCTarget{},
 		[]Filter{
 			{
 				Field: "node_id",
-				Value: nodeId,
+				Value: nodeID,
 			},
 		})
 	if err != nil {
@@ -140,12 +140,12 @@ func getIp(ctx context.Context, ps PersistenceService, nodeId string) (string, e
 		target := targets[0].(*NodeGRPCTarget).GRPCTarget
 		return target, nil
 	}
-	return "", fmt.Errorf("IP for %v not found", nodeId)
+	return "", fmt.Errorf("IP for %v not found", nodeID)
 }
 
 // Inform the proxy we're serving this host
-func RegisterToProxy(ctx context.Context, ps PersistenceService, nodeId string) {
-	ip, err := getIp(ctx, ps, nodeId)
+func RegisterToProxy(ctx context.Context, ps PersistenceService, nodeID string) {
+	ip, err := getIP(ctx, ps, nodeID)
 	if err != nil {
 		return
 	}
