@@ -126,10 +126,10 @@
       - include_tasks: "{{ base_path }}/tasks/kubernetes/download_and_patch_device_plugins.yml"
       - include_tasks: "{{ base_path }}/tasks/kubernetes/build_device_plugin_images.yml"
       - include_tasks: "{{ base_path }}/tasks/kubernetes/deploy_device_plugins.yml"
-    #TODO The orchestation mode will need to be changed to kubernetes-ovn once it will be supported via Multus, can be tested with flannel for now
     when: 
-      - CCE_ORCHESTRATION_MODE == "kubernetes"
-      - vc_fec['enabled'] or sriov['enabled']
+      - (CCE_ORCHESTRATION_MODE == "kubernetes") or
+          (CCE_ORCHESTRATION_MODE == "kubernetes-ovn")
+      - sriov['enabled']
 
   - name: Install Kubernetes plugins for kubernetes-ovn mode
     include_tasks: "{{ base_path }}/tasks/kubernetes/install_nfd.yml"

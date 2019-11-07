@@ -12,13 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Download Multus plugin
-  git:
-    repo: "{{ multus_cni_url }}"
-    dest: "{{ multus_cni_downloaddir }}"
-    clone: yes
-    version: "{{ multus_cni_commit }}"
-
 - name: Download SRIOV-CNI plugin
   git:
     repo: "{{ sriov_cni_url }}"
@@ -38,12 +31,12 @@
     repo: "{{ sriov_dev_plugin_url }}"
     dest: "{{ sriov_dev_plugin_downloaddir }}"
     clone: yes
-    version: "{{ vc_fec_dev_plugin_commit }}"
+    version: "{{ fpga_sriov_userspace_dev_plugin_commit }}"
 
 - name: Patch SRIOV device plugin for VC FEC functionality
   patch:
-    src: "{{ vc_fec_patch_path }}"
+    src: "{{ fpga_sriov_userspace_patch_path }}"
     basedir: "{{ sriov_dev_plugin_downloaddir }}"
     strip: 1
     binary: no
-  when: vc_fec['enabled']
+  when: fpga_sriov_userspace['enabled']

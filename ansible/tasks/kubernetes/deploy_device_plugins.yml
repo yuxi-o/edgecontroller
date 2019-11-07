@@ -12,30 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Deploy Multus CNI
-- name: Deploy Multus CNI
-  shell: source /etc/profile && cat ./images/multus-daemonset.yml | kubectl apply -f -
-  args:
-    chdir: "{{ multus_cni_downloaddir }}"
-
 # Deploy SRIOV-CNI
 - name: Deploy SRIOV CNI
-  shell: source /etc/profile && kubectl create -f ./images/sriov-cni-daemonset.yaml
+  shell: kubectl create -f ./images/sriov-cni-daemonset.yaml
   args:
     chdir: "{{ sriov_cni_downloaddir }}"
 
 # Create/deploy a sample configMap to be used for SRIOV-DEVICE plugin
-- name: Deploy SRIOV CNI
-  shell: source /etc/profile && kubectl create -f {{ sriov_config_map_path }}
-  when: not vc_fec['enabled']
+- name: Deploy SRIOV dev plugin configMap
+  shell: kubectl create -f {{ sriov_config_map_path }}
+  when: not fpga_sriov_userspace['enabled']
 
-# Create/deploy a sample configMap to be used for VC FEC SRIOV-DEVICE plugin
-- name: Deploy VC FEC SRIOV CNI
-  shell: source /etc/profile && kubectl create -f {{ vc_fec_config_map_path }}
-  when: vc_fec['enabled']
+# Create/deploy a sample configMap to be used for FPGA USERSPACE SRIOV-DEVICE plugin
+- name: Deploy  FPGA SRIOV dev plugin configMap
+  shell: kubectl create -f {{ fpga_sriov_userspace_config_map_path }}
+  when: fpga_sriov_userspace['enabled']
 
 # Deploy SRIOV-DEVICE Plugin
-- name: Deploy SRIOV CNI
-  shell: source /etc/profile && kubectl create -f ./deployments/k8s-v1.16/sriovdp-daemonset.yaml
+- name: Deploy SRIOV dev plugin
+  shell: kubectl create -f ./deployments/k8s-v1.16/sriovdp-daemonset.yaml
   args:
     chdir: "{{ sriov_dev_plugin_downloaddir }}"
