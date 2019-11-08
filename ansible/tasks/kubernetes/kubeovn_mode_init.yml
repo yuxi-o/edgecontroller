@@ -50,6 +50,10 @@
   
 - name: Install the Kube-OVN Controller and CNI plugins
   shell: kubectl apply -f {{ kubeovn_cni_plugins_link }}
+- name: Create openness namespace
+  shell: "kubectl create namespace openness"
+
+- include: "{{ base_path }}/tasks/kubernetes/kubeovn_certificates.yml"
 
 - name: Install OpenNess daemons
   shell: kubectl apply -f {{ repo_path }}/kube-ovn/openness.yaml
