@@ -16,16 +16,13 @@ package main
 
 import (
 	"os"
-	"k8s.io/klog"
+	"cnca"
 )
 
 func main() {
-	klog.Info("kubectl-cnca started!")
 
-	if err := cncaCmd.Execute(); err != nil {
-		klog.Errorln(err)
+	if err := cnca.Execute(); err != nil {
 		os.Exit(1)
 	}
-
 	return
 }

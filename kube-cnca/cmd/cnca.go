@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package cnca
 
 import (
 	"github.com/spf13/cobra"
@@ -20,16 +20,35 @@ import (
 
 // cncaCmd represents the base command when called without any subcommands
 var cncaCmd = &cobra.Command{
-	Use:   "cnca",
-	Short: "CNCA application",
-	Long:  `Kubernetes CNCA configuration command line`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Use:  "cnca",
+	Long: "Kubernetes CNCA configuration command line",
+	SilenceUsage: true,
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+
+	const usage =
+`Usage:
+  kubectl cnca [command] [flags]
+
+Available Commands:
+  apply       Apply new CNCA traffic policy
+  get         Get an active CNCA traffic policy
+  get all     Get all active CNCA traffic policies
+  patch       Patch an active CNCA traffic policy
+  delete      Delete an active CNCA traffic policy
+  help        Help about any command
+
+Flags:
+  -h, --help   help
+
+Use "kubectl [command] --help" for more information about a command.
+`
+
+	cncaCmd.SetUsageTemplate(usage)
+}  
+
+// Execute CNCA agent
+func Execute() error {
+	return cncaCmd.Execute()
 }
