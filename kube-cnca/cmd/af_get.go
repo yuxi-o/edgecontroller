@@ -29,7 +29,7 @@ var getCmd = &cobra.Command{
 
 	Run:  func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			fmt.Println(errors.New("Subscription ID missing"))
+			fmt.Println(errors.New("No option selected"))
 			return
 		}
 
@@ -66,7 +66,7 @@ func init() {
 `Get active CNCA subscription(s)
 
 Usage:
-  kubectl cnca get [all] [<subscriptionID>]
+  kubectl cnca get { all | <subscriptionID> }
 
 Example:
   kubectl cnca get <subscriptionID>

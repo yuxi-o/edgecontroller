@@ -106,6 +106,7 @@ Usage:
 Example:
   kubectl cnca patch <subscriptionID> -f <CNCAConfig.yml>
   kubectl cnca patch <subscriptionID> --appId=<AppID>
+  kubectl cnca patch <subscriptionID> --transId=<TransID> --dnn=<DNN>
 
 Flags:
   -h, --help       help
