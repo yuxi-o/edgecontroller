@@ -37,22 +37,22 @@ type RouteInformation struct {
 // RouteToLocation tba
 type RouteToLocation struct {
 
-	Dnai string `json:"dnai"`
+	DNAI string `json:"dnai"`
 
 	RouteInfo *RouteInformation `json:"routeInfo,omitempty"`
 
 	RouteProfID string `json:"routeProfId,omitempty"`
 }
 
-// Snssai tba
+// Snssai Snssai
 type Snssai struct {
 
-	Sst int32 `json:"sst"`
+	SST int32 `json:"sst"`
 
-	Sd string `json:"sd,omitempty"`
+	SD string `json:"sd,omitempty"`
 }
 
-// WebsockNotifConfig tba
+// WebsockNotifConfig WebsockNotifConfig
 type WebsockNotifConfig struct {
 
 	// string formatted according to IETF RFC 3986 identifying a referenced resource.
@@ -124,9 +124,9 @@ type TrafficInfluSub struct {
 	AppReloInd bool `json:"appReloInd,omitempty"`
 
 	// Identifies data network name
-	Dnn string `json:"dnn,omitempty"`
+	DNN string `json:"dnn,omitempty"`
 
-	Snssai *Snssai `json:"snssai,omitempty"`
+	SNSSAI *Snssai `json:"snssai,omitempty"`
 
 	// string containing a local identifier followed by \"@\" and a domain identifier. Both the local identifier and the domain identifier shall be encoded as strings that do not contain any \"@\" characters. See Clauses 4.6.2 and 4.6.3 of 3GPP TS 23.682 for more information.
 	ExternalGroupID string `json:"externalGroupId,omitempty"`
@@ -137,7 +137,7 @@ type TrafficInfluSub struct {
 	// Identifies the requirement to be notified of the event(s).
 	SubscribedEvents []SubscribedEvent `json:"subscribedEvents,omitempty"`
 
-	Gpsi string `json:"gpsi,omitempty"`
+	GPSI string `json:"gpsi,omitempty"`
 
 	// string identifying a Ipv4 address formatted in the \"dotted decimal\" notation as defined in IETF RFC 1166.
 	Ipv4Addr string `json:"ipv4Addr,omitempty"`
@@ -148,7 +148,7 @@ type TrafficInfluSub struct {
 	MacAddr string `json:"macAddr,omitempty"`
 
 	// Identifies the type of notification regarding UP path management event. Possible values are EARLY - early notification of UP path reconfiguration. EARLY_LATE - early and late notification of UP path reconfiguration. This value shall only be present in the subscription to the DNAI change event. LATE - late notification of UP path reconfiguration.
-	DnaiChgType string `json:"dnaiChgType,omitempty"`
+	DNAIChgType string `json:"dnaiChgType,omitempty"`
 
 	NotificationDestination *Link `json:"notificationDestination,omitempty"`
 
@@ -157,7 +157,7 @@ type TrafficInfluSub struct {
 
 	WebsockNotifConfig *WebsockNotifConfig `json:"websockNotifConfig,omitempty"`
 
-	Self *Link `json:"self,omitempty"`
+	Self string `json:"self,omitempty"`
 
 	// Identifies IP packet filters.
 	TrafficFilters []FlowInfo `json:"trafficFilters,omitempty"`
@@ -174,4 +174,25 @@ type TrafficInfluSub struct {
 	ValidGeoZoneIds []string `json:"validGeoZoneIds,omitempty"`
 
 	SuppFeat *SupportedFeatures `json:"suppFeat,omitempty"`
+}
+
+
+// AfService AfService
+type AfService struct {
+
+	AfID string `json:"afId,omitempty"`
+
+	AfInstance string `json:"afInstance,omitempty"`
+
+	LocationServices []LocationService `json:"locationServices,omitempty"`
+}
+
+// LocationService LocationService
+type LocationService struct {
+
+	DNAI string `json:"dnai,omitempty"`
+
+	DNN string `json:"dnn,omitempty"`
+
+	DNS string `json:"dns,omitempty"`
 }

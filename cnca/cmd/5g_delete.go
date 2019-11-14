@@ -23,18 +23,14 @@ import (
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
-	Use:  "delete",
-	Long: "Delete an active CNCA subscription",
-
-	Run:  func(cmd *cobra.Command, args []string) {
+	Use:   "delete",
+	Short: "Delete an active CNCA subscription",
+	Args:   cobra.MaximumNArgs(1),
+	Run:   func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
 			fmt.Println(errors.New("Subscription ID missing"))
 			return
-		}
-
-		if len(args) > 1 {
-			fmt.Println("WARNING: Extra args ignored")
 		}
 
 		// delete subscription
@@ -53,12 +49,12 @@ func init() {
 `Delete an active CNCA subscription
 	
 Usage:
-  kubectl cnca delete <subscriptionID>
+  cnca delete <subscriptionID>
 
 Flags:
   -h, --help   help
 `
-	
+
 	// add `delete` command
 	cncaCmd.AddCommand(deleteCmd)
 	deleteCmd.SetHelpTemplate(help)

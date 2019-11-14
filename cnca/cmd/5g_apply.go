@@ -26,9 +26,10 @@ import (
 
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
-	Use:  "apply",
-	Long: "Apply new CNCA subscription using YAML configuration file",
-	Run:  func(cmd *cobra.Command, args []string) {
+	Use:   "apply",
+	Short: "Apply new CNCA subscription using YAML configuration file",
+	Args:   cobra.MaximumNArgs(0),
+	Run:   func(cmd *cobra.Command, args []string) {
 
 		ymlFile, _ := cmd.Flags().GetString("filename")
 		if ymlFile == "" {
@@ -76,7 +77,7 @@ func init() {
 `Apply new CNCA subscription using YAML configuration file
 
 Usage:
-  kubectl cnca apply -f <CNCAConfig.yml>
+  cnca apply -f <CNCAConfig.yml>
 
 Flags:
   -h, --help       help

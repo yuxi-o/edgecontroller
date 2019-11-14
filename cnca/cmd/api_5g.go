@@ -24,8 +24,8 @@ import (
 
 // Connectivity constants
 const (
-	AFServer  = "http://localhost:8080"
-	OAMServer = "http://localhost:8080"
+	AFServer    = "http://localhost:8080"
+	OAM5gServer = "http://localhost:8081"
 )
 
 // HTTP client
@@ -33,10 +33,35 @@ var client = &http.Client{
 	Timeout: 10 * time.Second,
 }
 
-// AFGetAllSubscriptions get all the active subscriptions for the AF
-func AFGetAllSubscriptions() ([]TrafficInfluSub, error) {
+// OAM5gRegisterAFService register controller to AF services registry
+func OAM5gRegisterAFService(service []byte) (string, error) {
 
-	return nil, nil
+	var afService string
+
+	req, err := http.NewRequest("POST",
+		OAM5gServer + "/oam/v1/af/services",
+		bytes.NewReader(service))
+	if err != nil {
+		return afService, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return afService, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusCreated {
+		bodyB, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return afService, err
+		}
+		afService = string(bodyB)
+	} else {
+		return afService, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+	}
+
+	return afService, nil
 }
 
 // AFCreateSubscription create new Traffic Influence Subscription at AF
@@ -96,11 +121,21 @@ func AFPatchSubscription(subID string, sub []byte) error {
 // AFGetSubscription get the active Traffic Influence Subscription for the AF
 func AFGetSubscription(subID string) ([]byte, error) {
 	var sub []byte
+	var req *http.Request
+	var err error
 
-	req, err := http.NewRequest("GET",
+	if subID == "all" {
+		req, err = http.NewRequest("GET",
+		AFServer + "/CNCA/1.0.1/subscriptions/", nil)
+		if err != nil {
+			return sub, err
+		}
+	} else {
+		req, err = http.NewRequest("GET",
 		AFServer + "/CNCA/1.0.1/subscriptions/" + subID, nil)
-	if err != nil {
-		return sub, err
+		if err != nil {
+			return sub, err
+		}
 	}
 
 	resp, err := client.Do(req)

@@ -21,32 +21,9 @@ import (
 // cncaCmd represents the base command when called without any subcommands
 var cncaCmd = &cobra.Command{
 	Use:  "cnca",
-	Long: "Kubernetes CNCA configuration command line",
+	Long: "CNCA command line",
 	SilenceUsage: true,
 }
-
-func init() {
-
-	const usage =
-`Usage:
-  kubectl cnca [command] [flags]
-
-Available Commands:
-  apply       Apply new CNCA traffic policy
-  get         Get an active CNCA traffic policy
-  get all     Get all active CNCA traffic policies
-  patch       Patch an active CNCA traffic policy
-  delete      Delete an active CNCA traffic policy
-  help        Help about any command
-
-Flags:
-  -h, --help   help
-
-Use "kubectl [command] --help" for more information about a command.
-`
-
-	cncaCmd.SetUsageTemplate(usage)
-}  
 
 // Execute CNCA agent
 func Execute() error {

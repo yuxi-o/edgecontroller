@@ -24,26 +24,17 @@ import (
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{
-	Use:  "get",
-	Long: "Get active CNCA subscription(s)",
+	Use:   "get",
+	Short: "Get active CNCA subscription(s)",
+	Args:  cobra.MaximumNArgs(1),
+	Run:   func(cmd *cobra.Command, args []string) {
 
-	Run:  func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			fmt.Println(errors.New("No option selected"))
 			return
 		}
 
-		if len(args) > 1 {
-			fmt.Println("WARNING: Extra args ignored")
-		}
-
-		if args[0] == "all" {
-			// get all subscriptions
-			klog.Info("GET ALL >> TBA <<")
-			return
-		}
-
-		// get subscription
+		// get subscription(s)
 		sub, err := AFGetSubscription(args[0])
 		if err != nil {
 			klog.Info(err)
@@ -56,7 +47,7 @@ var getCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Printf("Subscription `%s`:\n---\n%s\n", args[0], string(sub))
+		fmt.Printf("Active AF Subscription(s):\n%s", string(sub))
 	},
 }
 
