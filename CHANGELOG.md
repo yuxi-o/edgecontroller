@@ -5,6 +5,28 @@ Copyright © 2019 Intel Corporation and Smart-Edge.com, Inc.
 
 # CHANGELOG
 
+## [0.6.2] - 2019-11-08
+### Changed
+- Provide certificates for secured connections in scope of NFD
+
+## [0.6.1] - 2019-11-04
+### Fixed
+- Fixed Multus setup issue
+
+## [0.6.0] - 2019-11-04
+### Feature
+- Multus support
+
+## [0.5.0] - 2019-10-26
+### Feature
+- Vista Creek FPGA support
+
+## [0.4.0] - 2019-10-25
+### Feature
+- Basic NFD functionality
+### Changed
+- Improved Controller Platform Setup Automation Scripts
+
 ## [0.3.0] - 2019-10-24
 ### Feature
 - Stand-alone EAA
