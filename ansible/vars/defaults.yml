@@ -20,7 +20,7 @@ ansible_params: ""
 # OS setup
 #####################################
 
-os_base_packages: "nano,mc,dstat,jq,vim-common,curl,yum-utils,python-pip,wget,bridge-utils,device-mapper-persistent-data,lvm2,git,moreutils,gcc,python-devel"
+os_base_packages: "nano,mc,dstat,jq,vim-common,curl,yum-utils,python-pip,wget,bridge-utils,device-mapper-persistent-data,lvm2,git,moreutils,gcc,python-devel,patch"
 os_epel_repository_package_link: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
 os_mysql_repository_package_link: "https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm"
 os_mysql_client_package: "mysql-community-client"
