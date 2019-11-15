@@ -26,6 +26,7 @@ import (
 const (
 	AFServer    = "http://localhost:8080"
 	OAM5gServer = "http://localhost:8081"
+	OAMLteServer = "http://localhost:8082"
 )
 
 // HTTP client
@@ -35,9 +36,7 @@ var client = &http.Client{
 
 // OAM5gRegisterAFService register controller to AF services registry
 func OAM5gRegisterAFService(service []byte) (string, error) {
-
 	var afService string
-
 	req, err := http.NewRequest("POST",
 		OAM5gServer + "/oam/v1/af/services",
 		bytes.NewReader(service))
@@ -52,11 +51,11 @@ func OAM5gRegisterAFService(service []byte) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusCreated {
-		bodyB, err := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return afService, err
 		}
-		afService = string(bodyB)
+		afService = string(b)
 	} else {
 		return afService, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
@@ -66,9 +65,7 @@ func OAM5gRegisterAFService(service []byte) (string, error) {
 
 // AFCreateSubscription create new Traffic Influence Subscription at AF
 func AFCreateSubscription(sub []byte) (string, error) {
-
 	var subID string
-
 	req, err := http.NewRequest("POST",
 		AFServer + "/CNCA/1.0.1/subscriptions",
 		bytes.NewReader(sub))
@@ -83,11 +80,11 @@ func AFCreateSubscription(sub []byte) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusCreated {
-		bodyB, err := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return subID, err
 		}
-		subID = string(bodyB)
+		subID = string(b)
 	} else {
 		return subID, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
@@ -174,4 +171,33 @@ func AFDeleteSubscription(subID string) error {
 	}
 
 	return nil
+}
+
+// LteCreateUserplane create new LTE userplane
+func LteCreateUserplane(up []byte) (string, error) {
+	var ID string
+	req, err := http.NewRequest("POST",
+		OAMLteServer + "/userplanes",
+		bytes.NewReader(up))
+	if err != nil {
+		return ID, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return ID, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusCreated {
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return ID, err
+		}
+		ID = string(b)
+	} else {
+		return ID, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+	}
+
+	return ID, nil
 }

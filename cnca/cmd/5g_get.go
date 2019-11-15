@@ -57,16 +57,15 @@ func init() {
 `Get active CNCA subscription(s)
 
 Usage:
-  kubectl cnca get { all | <subscriptionID> }
+  cnca get { all | <subscriptionID> }
 
 Example:
-  kubectl cnca get <subscriptionID>
-  kubectl cnca get all
+  cnca get <subscriptionID>
+  cnca get all
 
 Flags:
   -h, --help   help
 `
-
 	// add `get` command
 	cncaCmd.AddCommand(getCmd)
 	getCmd.SetHelpTemplate(help)

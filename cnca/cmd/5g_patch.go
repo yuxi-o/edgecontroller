@@ -47,7 +47,7 @@ var patchCmd = &cobra.Command{
 			}
 		}
 
-		var p TrafficPolicy
+		var p AFTrafficInfluSub
 		if err = yaml.Unmarshal(data, &p); err != nil {
 			fmt.Println(err)
 			return

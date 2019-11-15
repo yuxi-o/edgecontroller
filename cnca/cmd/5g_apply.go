@@ -43,31 +43,69 @@ var applyCmd = &cobra.Command{
 			return
 		}
 
-		var p TrafficPolicy
-		if err = yaml.Unmarshal(data, &p); err != nil {
+		var c Header
+		if err = yaml.Unmarshal(data, &c); err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		sub, err := yaml.Marshal(p.Policy)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		switch c.Kind {
+		case "ngc":
+			var s AFTrafficInfluSub
+			if err = yaml.Unmarshal(data, &s); err != nil {
+				fmt.Println(err)
+				return
+			}
 
-		sub, err = y2j.YAMLToJSON(sub)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+			sub, err := yaml.Marshal(s.Policy)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+	
+			sub, err = y2j.YAMLToJSON(sub)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+	
+			// create new subscription
+			subID, err := AFCreateSubscription(sub)
+			if err != nil {
+				klog.Info(err)
+				return
+			}
+			fmt.Println("Subscription created:", subID)
 
-		// create new subscription
-		subID, err := AFCreateSubscription(sub)
-		if err != nil {
-			klog.Info(err)
-			return
+		case "lte":
+			var u LTEUserplane
+			if err = yaml.Unmarshal(data, &u); err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			fmt.Println(u.Policy)
+
+			up, err := yaml.Marshal(u.Policy)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+	
+			up, err = y2j.YAMLToJSON(up)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+	
+			// create new LTE userplane
+			upID, err := LteCreateUserplane(up)
+			if err != nil {
+				klog.Info(err)
+				return
+			}
+			fmt.Println("Userplane created:", upID)
 		}
-		fmt.Println("Subscription created:", subID)
 	},
 }
 

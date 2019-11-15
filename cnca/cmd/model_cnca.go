@@ -14,10 +14,17 @@
 
 package cnca
 
-// TrafficPolicy describes CNCA traffic policy
-type TrafficPolicy struct {
+// Header holds version & type of YAML configuration
+type Header struct {
 	Version string `yaml:"apiVersion"`
+	//  ngc: 5G Traffic Influence Subscription, or
+	//  lte: LTE CUPS Userplane
 	Kind    string `yaml:"kind"`
+}
+
+// AFTrafficInfluSub describes 5G AF Traffic Influence Subscription
+type AFTrafficInfluSub struct {
+	H Header
 	Policy  struct {
 		// Identifies a service on behalf of which the AF is issuing the request.
 		AfServiceID string `yaml:"afServiceId,omitempty"`
@@ -62,4 +69,73 @@ type TrafficPolicy struct {
 			RouteProfID string `yaml:"routeProfId,omitempty"`
 		} `yaml:"trafficRoutes,omitempty"`
 	} `yaml:"policy"`
+}
+
+// LTEUserplane describes LTE Userplane Configuration
+type LTEUserplane struct {
+	H Header
+	Policy  struct {
+		ID string `yaml:"id,omitempty"`
+		UUID string `yaml:"uuid,omitempty"`
+		Function string `yaml:"function,omitempty"`
+		Config struct {
+			Sxa LteConfigInfoCpup `yaml:"sxa,omitempty"`
+			Sxb LteConfigInfoCpup `yaml:"sxb,omitempty"`
+			S1u LteConfigInfoUp `yaml:"s1u,omitempty"`
+			S5uSGW LteConfigInfoUp `yaml:"s5u_sgw,omitempty"`
+			S5uPGW LteConfigInfoUp `yaml:"s5u_pgw,omitempty"`
+			SGi LteConfigInfoUp `yaml:"sgi,omitempty"`
+			Breakout []LteConfigInfoUp `yaml:"breakout,omitempty"`
+			DNS []LteConfigInfoUp `yaml:"dns,omitempty"`
+		} `yaml:"config,omitempty"`
+
+		Selectors []struct {
+			ID string `yaml:"id,omitempty"`
+			Network struct {
+				MCC string `yaml:"mcc,omitempty"`
+				MNC string `yaml:"mnc,omitempty"`
+			} `yaml:"network,omitempty"`
+			ULI struct {
+				TAI struct {
+					// Tracking area code (TAC), which is typically an unsigned integer
+					// from 1 to 2^16, inclusive.
+					TAC int64 `yaml:"tac,omitempty"`
+				} `yaml:"tai,omitempty"`
+				ECGI struct {
+					// E-UTRAN cell identifier (ECI), which is typically an unsigned integer
+					// from 1 to 2^32, inclusive.
+					ECI int64 `yaml:"eci,omitempty"`
+				} `yaml:"ecgi,omitempty"`
+			} `yaml:"uli,omitempty"`
+			PDN struct {
+				APNs []string `yaml:"apns,omitempty"`
+			} `yaml:"pdn,omitempty"`
+		} `yaml:"selectors,omitempty"`
+
+		// The UEs that should be entitled to access privileged networks via this
+		// userplane.  Note: UEs not in this list will still be able to get a bearer
+		// via the userplane. The UEs in this list are just for entitlement
+		// purposes. (optional)
+		Entitlements []struct {
+			ID string `yaml:"id,omitempty"`
+			APNs []string `yaml:"apns,omitempty"`
+			IMSIs []struct {
+				Begin string `yaml:"begin,omitempty"`
+				End string `yaml:"end,omitempty"`
+			} `yaml:"imsis,omitempty"`
+		} `yaml:"entitlements,omitempty"`
+	}
+}
+
+// LteConfigInfoCpup Information that the userplane should configure, which
+// relates to the control plane (CP) side and the user plane (UP) side.
+type LteConfigInfoCpup struct {
+	CpIPAddress string `yaml:"cp_ip_address,omitempty"`
+	UpIPAddress string `yaml:"up_ip_address,omitempty"`
+}
+
+// LteConfigInfoUp Information that the userplane should configure, which
+// relates to the user plane (UP) side only.
+type LteConfigInfoUp struct {
+	UpIPAddress string `yaml:"up_ip_address,omitempty"`
 }
