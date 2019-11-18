@@ -15,8 +15,8 @@
 package main
 
 import (
-	"os"
 	"cnca"
+	"os"
 )
 
 func main() {

@@ -27,7 +27,7 @@ var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get active LTE CUPS userplane(s) or NGC AF subscription(s)",
 	Args:  cobra.MaximumNArgs(2),
-	Run:   func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 2 {
 			fmt.Println(errors.New("Missing input(s)"))
@@ -118,8 +118,7 @@ var getCmd = &cobra.Command{
 
 func init() {
 
-	const help =
-`Get active LTE CUPS userplane(s) or NGC AF subscription(s)
+	const help = `Get active LTE CUPS userplane(s) or NGC AF subscription(s)
 
 Usage:
   cnca get { all { userplanes | subscriptions } | { userplane <userplane-id> | subscription <subscription-id> }

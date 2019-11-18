@@ -19,13 +19,13 @@ type Header struct {
 	Version string `yaml:"apiVersion"`
 	//  ngc: 5G Traffic Influence Subscription, or
 	//  lte: LTE CUPS Userplane
-	Kind    string `yaml:"kind"`
+	Kind string `yaml:"kind"`
 }
 
 // AFTrafficInfluSub describes NGC AF Traffic Influence Subscription
 type AFTrafficInfluSub struct {
-	H Header
-	Policy  struct {
+	H      Header
+	Policy struct {
 		// Identifies a service on behalf of which the AF is issuing the request.
 		AfServiceID string `yaml:"afServiceId,omitempty"`
 		// Identifies an application.
@@ -38,8 +38,8 @@ type AFTrafficInfluSub struct {
 		Dnn string `yaml:"dnn,omitempty"`
 		// Snssai
 		Snssai struct {
-			Sst int32 `yaml:"sst"`
-			Sd string `yaml:"sd,omitempty"`
+			Sst int32  `yaml:"sst"`
+			Sd  string `yaml:"sd,omitempty"`
 		} `yaml:"snssai,omitempty"`
 		// Identifies whether the AF request applies to any UE.
 		AnyUeInd bool `yaml:"anyUeInd,omitempty"`
@@ -55,16 +55,16 @@ type AFTrafficInfluSub struct {
 		RequestTestNotification bool `yaml:"requestTestNotification,omitempty"`
 		// WebsockNotifConfig
 		WebsockNotifConfig struct {
-			WebsocketURI string `yaml:"websocketUri,omitempty"`
-			RequestWebsocketURI bool `yaml:"requestWebsocketUri,omitempty"`
+			WebsocketURI        string `yaml:"websocketUri,omitempty"`
+			RequestWebsocketURI bool   `yaml:"requestWebsocketUri,omitempty"`
 		} `yaml:"websockNotifConfig,omitempty"`
 		// Identifies the N6 traffic routing requirement.
 		TrafficRoutes []struct {
-			Dnai string `yaml:"dnai"`
+			Dnai      string `yaml:"dnai"`
 			RouteInfo struct {
-				Ipv4Addr string `yaml:"ipv4Addr,omitempty"`
-				Ipv6Addr string `yaml:"ipv6Addr,omitempty"`
-				PortNumber int32 `yaml:"portNumber"`
+				Ipv4Addr   string `yaml:"ipv4Addr,omitempty"`
+				Ipv6Addr   string `yaml:"ipv6Addr,omitempty"`
+				PortNumber int32  `yaml:"portNumber"`
 			} `yaml:"routeInfo,omitempty"`
 			RouteProfID string `yaml:"routeProfId,omitempty"`
 		} `yaml:"trafficRoutes,omitempty"`
@@ -73,24 +73,24 @@ type AFTrafficInfluSub struct {
 
 // LTEUserplane describes LTE Userplane Configuration
 type LTEUserplane struct {
-	H Header
-	Policy  struct {
-		ID string `yaml:"id,omitempty"`
-		UUID string `yaml:"uuid,omitempty"`
+	H      Header
+	Policy struct {
+		ID       string `yaml:"id,omitempty"`
+		UUID     string `yaml:"uuid,omitempty"`
 		Function string `yaml:"function,omitempty"`
-		Config struct {
-			Sxa LteConfigInfoCpup `yaml:"sxa,omitempty"`
-			Sxb LteConfigInfoCpup `yaml:"sxb,omitempty"`
-			S1u LteConfigInfoUp `yaml:"s1u,omitempty"`
-			S5uSGW LteConfigInfoUp `yaml:"s5u_sgw,omitempty"`
-			S5uPGW LteConfigInfoUp `yaml:"s5u_pgw,omitempty"`
-			SGi LteConfigInfoUp `yaml:"sgi,omitempty"`
+		Config   struct {
+			Sxa      LteConfigInfoCpup `yaml:"sxa,omitempty"`
+			Sxb      LteConfigInfoCpup `yaml:"sxb,omitempty"`
+			S1u      LteConfigInfoUp   `yaml:"s1u,omitempty"`
+			S5uSGW   LteConfigInfoUp   `yaml:"s5u_sgw,omitempty"`
+			S5uPGW   LteConfigInfoUp   `yaml:"s5u_pgw,omitempty"`
+			SGi      LteConfigInfoUp   `yaml:"sgi,omitempty"`
 			Breakout []LteConfigInfoUp `yaml:"breakout,omitempty"`
-			DNS []LteConfigInfoUp `yaml:"dns,omitempty"`
+			DNS      []LteConfigInfoUp `yaml:"dns,omitempty"`
 		} `yaml:"config,omitempty"`
 
 		Selectors []struct {
-			ID string `yaml:"id,omitempty"`
+			ID      string `yaml:"id,omitempty"`
 			Network struct {
 				MCC string `yaml:"mcc,omitempty"`
 				MNC string `yaml:"mnc,omitempty"`
@@ -117,11 +117,11 @@ type LTEUserplane struct {
 		// via the userplane. The UEs in this list are just for entitlement
 		// purposes. (optional)
 		Entitlements []struct {
-			ID string `yaml:"id,omitempty"`
-			APNs []string `yaml:"apns,omitempty"`
+			ID    string   `yaml:"id,omitempty"`
+			APNs  []string `yaml:"apns,omitempty"`
 			IMSIs []struct {
 				Begin string `yaml:"begin,omitempty"`
-				End string `yaml:"end,omitempty"`
+				End   string `yaml:"end,omitempty"`
 			} `yaml:"imsis,omitempty"`
 		} `yaml:"entitlements,omitempty"`
 	}

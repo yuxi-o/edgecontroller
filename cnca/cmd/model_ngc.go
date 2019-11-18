@@ -31,21 +31,21 @@ type RouteInformation struct {
 	// string identifying a Ipv6 address formatted according to clause 4 in
 	// IETF RFC 5952. The mixed Ipv4 Ipv6 notation according to clause 5 of
 	// IETF RFC 5952 shall not be used.
-	IPv6Addr string `json:"ipv6Addr,omitempty"`
-	PortNumber int32 `json:"portNumber"`
+	IPv6Addr   string `json:"ipv6Addr,omitempty"`
+	PortNumber int32  `json:"portNumber"`
 }
 
 // RouteToLocation RouteToLocation
 type RouteToLocation struct {
-	DNAI string `json:"dnai"`
-	RouteInfo *RouteInformation `json:"routeInfo,omitempty"`
-	RouteProfID string `json:"routeProfId,omitempty"`
+	DNAI        string            `json:"dnai"`
+	RouteInfo   *RouteInformation `json:"routeInfo,omitempty"`
+	RouteProfID string            `json:"routeProfId,omitempty"`
 }
 
 // Snssai Snssai
 type Snssai struct {
-	SST int32 `json:"sst"`
-	SD string `json:"sd,omitempty"`
+	SST int32  `json:"sst"`
+	SD  string `json:"sd,omitempty"`
 }
 
 // WebsockNotifConfig WebsockNotifConfig
@@ -86,7 +86,7 @@ type FlowInfo struct {
 // EthFlowDescription Identifies an Ethernet flow
 type EthFlowDescription struct {
 	DestMacAddr string `json:"destMacAddr,omitempty"`
-	EthType string `json:"ethType"`
+	EthType     string `json:"ethType"`
 	// Defines a packet filter of an IP flow.
 	FDesc string `json:"fDesc,omitempty"`
 	// Possible values are DOWNLINK - The corresponding filter applies for
@@ -96,9 +96,9 @@ type EthFlowDescription struct {
 	// for traffic to the UE (downlink), but has no specific direction declared.
 	// The service data flow detection shall apply the filter for uplink traffic
 	// as if the filter was bidirectional.
-	FDir string `json:"fDir,omitempty"`
-	SourceMacAddr string `json:"sourceMacAddr,omitempty"`
-	VLANTags []string `json:"vlanTags,omitempty"`
+	FDir          string   `json:"fDir,omitempty"`
+	SourceMacAddr string   `json:"sourceMacAddr,omitempty"`
+	VLANTags      []string `json:"vlanTags,omitempty"`
 }
 
 // TrafficInfluSub describes Traffic Influence Subscription
@@ -112,7 +112,7 @@ type TrafficInfluSub struct {
 	// Identifies whether an application can be relocated once a location of the application has been selected.
 	AppReloInd bool `json:"appReloInd,omitempty"`
 	// Identifies data network name
-	DNN string `json:"dnn,omitempty"`
+	DNN    string  `json:"dnn,omitempty"`
 	SNSSAI *Snssai `json:"snssai,omitempty"`
 	// string containing a local identifier followed by \"@\" and a domain identifier. Both the local identifier and the domain identifier shall be encoded as strings that do not contain any \"@\" characters. See Clauses 4.6.2 and 4.6.3 of 3GPP TS 23.682 for more information.
 	ExternalGroupID string `json:"externalGroupId,omitempty"`
@@ -120,41 +120,41 @@ type TrafficInfluSub struct {
 	AnyUEInd bool `json:"anyUeInd,omitempty"`
 	// Identifies the requirement to be notified of the event(s).
 	SubscribedEvents []SubscribedEvent `json:"subscribedEvents,omitempty"`
-	GPSI string `json:"gpsi,omitempty"`
+	GPSI             string            `json:"gpsi,omitempty"`
 	// string identifying a Ipv4 address formatted in the \"dotted decimal\" notation as defined in IETF RFC 1166.
 	IPv4Addr string `json:"ipv4Addr,omitempty"`
 	// string identifying a Ipv6 address formatted according to clause 4 in IETF RFC 5952.
 	IPv6Addr string `json:"ipv6Addr,omitempty"`
-	MACAddr string `json:"macAddr,omitempty"`
+	MACAddr  string `json:"macAddr,omitempty"`
 	// Identifies the type of notification regarding UP path management event. Possible values are EARLY - early notification of UP path reconfiguration. EARLY_LATE - early and late notification of UP path reconfiguration. This value shall only be present in the subscription to the DNAI change event. LATE - late notification of UP path reconfiguration.
-	DNAIChgType string `json:"dnaiChgType,omitempty"`
-	NotificationDestination *Link `json:"notificationDestination,omitempty"`
+	DNAIChgType             string `json:"dnaiChgType,omitempty"`
+	NotificationDestination *Link  `json:"notificationDestination,omitempty"`
 	// Set to true by the AF to request the NEF to send a test notification. Set to false or omitted otherwise.
-	RequestTestNotification bool `json:"requestTestNotification,omitempty"`
-	WebsockNotifConfig *WebsockNotifConfig `json:"websockNotifConfig,omitempty"`
-	Self string `json:"self,omitempty"`
+	RequestTestNotification bool                `json:"requestTestNotification,omitempty"`
+	WebsockNotifConfig      *WebsockNotifConfig `json:"websockNotifConfig,omitempty"`
+	Self                    string              `json:"self,omitempty"`
 	// Identifies IP packet filters.
 	TrafficFilters []FlowInfo `json:"trafficFilters,omitempty"`
 	// Identifies Ethernet packet filters.
 	EthTrafficFilters []EthFlowDescription `json:"ethTrafficFilters,omitempty"`
 	// Identifies the N6 traffic routing requirement.
-	TrafficRoutes []RouteToLocation `json:"trafficRoutes,omitempty"`
+	TrafficRoutes  []RouteToLocation  `json:"trafficRoutes,omitempty"`
 	TempValidities []TemporalValidity `json:"tempValidities,omitempty"`
 	// Identifies a geographic zone that the AF request applies only to the traffic of UE(s) located in this specific zone.
-	ValidGeoZoneIds []string `json:"validGeoZoneIds,omitempty"`
-	SuppFeat *SupportedFeatures `json:"suppFeat,omitempty"`
+	ValidGeoZoneIds []string           `json:"validGeoZoneIds,omitempty"`
+	SuppFeat        *SupportedFeatures `json:"suppFeat,omitempty"`
 }
 
 // AfService AfService
 type AfService struct {
-	AfID string `json:"afId,omitempty"`
-	AfInstance string `json:"afInstance,omitempty"`
+	AfID             string            `json:"afId,omitempty"`
+	AfInstance       string            `json:"afInstance,omitempty"`
 	LocationServices []LocationService `json:"locationServices,omitempty"`
 }
 
 // LocationService LocationService
 type LocationService struct {
 	DNAI string `json:"dnai,omitempty"`
-	DNN string `json:"dnn,omitempty"`
-	DNS string `json:"dns,omitempty"`
+	DNN  string `json:"dnn,omitempty"`
+	DNS  string `json:"dns,omitempty"`
 }

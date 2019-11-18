@@ -15,8 +15,8 @@
 package cnca
 
 import (
-	"errors"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
@@ -27,7 +27,7 @@ var registerCmd = &cobra.Command{
 	Use:   "register",
 	Short: "Register controller to AF services registry",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
 
 		var s AfService
 
@@ -72,8 +72,7 @@ var registerCmd = &cobra.Command{
 
 func init() {
 
-	const help =
-`Register controller to NGC AF services registry
+	const help = `Register controller to NGC AF services registry
 
 Usage:
   cnca register <service-name> [FLAGS]

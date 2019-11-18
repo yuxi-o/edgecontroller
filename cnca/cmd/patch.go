@@ -15,8 +15,8 @@
 package cnca
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	y2j "github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
@@ -29,7 +29,7 @@ var patchCmd = &cobra.Command{
 	Use:   "patch",
 	Short: "Patch an active LTE CUPS userplane or NGC AF subscription using YAML configuration file",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
 			fmt.Println(errors.New("LTE CUPS userplane or NGC AF subscription ID missing"))
@@ -67,13 +67,13 @@ var patchCmd = &cobra.Command{
 				fmt.Println(err)
 				return
 			}
-	
+
 			sub, err = y2j.YAMLToJSON(sub)
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-	
+
 			// patch subscription
 			err = AFPatchSubscription(args[0], sub)
 			if err != nil {
@@ -94,13 +94,13 @@ var patchCmd = &cobra.Command{
 				fmt.Println(err)
 				return
 			}
-	
+
 			up, err = y2j.YAMLToJSON(up)
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-	
+
 			// patch userplane
 			err = LtePatchUserplane(args[0], up)
 			if err != nil {
@@ -117,8 +117,7 @@ var patchCmd = &cobra.Command{
 
 func init() {
 
-	const help =
-`Patch an active LTE CUPS userplane or NGC AF subscription using YAML configuration file
+	const help = `Patch an active LTE CUPS userplane or NGC AF subscription using YAML configuration file
 
 Usage:
   cnca patch { <userplane-id> | <subscription-id> } -f <config.yml>

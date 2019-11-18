@@ -24,9 +24,9 @@ import (
 
 // Connectivity constants
 const (
-	NGCOAMServer  = "http://localhost:8081"
-	NGCAFServer   = "http://localhost:8080"
-	LteOAMServer  = "http://localhost:8082"
+	NGCOAMServer = "http://localhost:8081"
+	NGCAFServer  = "http://localhost:8080"
+	LteOAMServer = "http://localhost:8082"
 )
 
 // HTTP client
@@ -38,7 +38,7 @@ var client = &http.Client{
 func OAM5gRegisterAFService(service []byte) (string, error) {
 	var afService string
 	req, err := http.NewRequest("POST",
-		NGCOAMServer + "/oam/v1/af/services",
+		NGCOAMServer+"/oam/v1/af/services",
 		bytes.NewReader(service))
 	if err != nil {
 		return afService, err
@@ -67,7 +67,7 @@ func OAM5gRegisterAFService(service []byte) (string, error) {
 func AFCreateSubscription(sub []byte) (string, error) {
 	var subID string
 	req, err := http.NewRequest("POST",
-		NGCAFServer + "/CNCA/1.0.1/subscriptions",
+		NGCAFServer+"/CNCA/1.0.1/subscriptions",
 		bytes.NewReader(sub))
 	if err != nil {
 		return subID, err
@@ -96,7 +96,7 @@ func AFCreateSubscription(sub []byte) (string, error) {
 func AFPatchSubscription(subID string, sub []byte) error {
 
 	req, err := http.NewRequest("PATCH",
-		NGCAFServer + "/CNCA/1.0.1/subscriptions/" + subID,
+		NGCAFServer+"/CNCA/1.0.1/subscriptions/"+subID,
 		bytes.NewReader(sub))
 	if err != nil {
 		return err
@@ -123,13 +123,13 @@ func AFGetSubscription(subID string) ([]byte, error) {
 
 	if subID == "all" {
 		req, err = http.NewRequest("GET",
-			NGCAFServer + "/CNCA/1.0.1/subscriptions", nil)
+			NGCAFServer+"/CNCA/1.0.1/subscriptions", nil)
 		if err != nil {
 			return sub, err
 		}
 	} else {
 		req, err = http.NewRequest("GET",
-			NGCAFServer + "/CNCA/1.0.1/subscriptions/" + subID, nil)
+			NGCAFServer+"/CNCA/1.0.1/subscriptions/"+subID, nil)
 		if err != nil {
 			return sub, err
 		}
@@ -155,7 +155,7 @@ func AFGetSubscription(subID string) ([]byte, error) {
 func AFDeleteSubscription(subID string) error {
 
 	req, err := http.NewRequest("DELETE",
-		NGCAFServer + "/CNCA/1.0.1/subscriptions/" + subID, nil)
+		NGCAFServer+"/CNCA/1.0.1/subscriptions/"+subID, nil)
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func AFDeleteSubscription(subID string) error {
 func LteCreateUserplane(up []byte) (string, error) {
 	var ID string
 	req, err := http.NewRequest("POST",
-		LteOAMServer + "/userplanes",
+		LteOAMServer+"/userplanes",
 		bytes.NewReader(up))
 	if err != nil {
 		return ID, err
@@ -206,7 +206,7 @@ func LteCreateUserplane(up []byte) (string, error) {
 func LtePatchUserplane(upID string, up []byte) error {
 
 	req, err := http.NewRequest("PATCH",
-		LteOAMServer + "/userplanes/" + upID,
+		LteOAMServer+"/userplanes/"+upID,
 		bytes.NewReader(up))
 	if err != nil {
 		return err
@@ -233,13 +233,13 @@ func LteGetUserplane(upID string) ([]byte, error) {
 
 	if upID == "all" {
 		req, err = http.NewRequest("GET",
-			LteOAMServer + "/userplanes", nil)
+			LteOAMServer+"/userplanes", nil)
 		if err != nil {
 			return up, err
 		}
 	} else {
 		req, err = http.NewRequest("GET",
-			LteOAMServer + "/userplanes/" + upID, nil)
+			LteOAMServer+"/userplanes/"+upID, nil)
 		if err != nil {
 			return up, err
 		}
@@ -265,7 +265,7 @@ func LteGetUserplane(upID string) ([]byte, error) {
 func LteDeleteUserplane(upID string) error {
 
 	req, err := http.NewRequest("DELETE",
-		LteOAMServer + "/userplanes/" + upID, nil)
+		LteOAMServer+"/userplanes/"+upID, nil)
 	if err != nil {
 		return err
 	}

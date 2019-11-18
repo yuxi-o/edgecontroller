@@ -15,8 +15,8 @@
 package cnca
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	y2j "github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
@@ -28,8 +28,8 @@ import (
 var applyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Apply LTE CUPS userplane or NGC AF subscription using YAML configuration file",
-	Args:   cobra.MaximumNArgs(0),
-	Run:   func(cmd *cobra.Command, args []string) {
+	Args:  cobra.MaximumNArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
 
 		ymlFile, _ := cmd.Flags().GetString("filename")
 		if ymlFile == "" {
@@ -62,13 +62,13 @@ var applyCmd = &cobra.Command{
 				fmt.Println(err)
 				return
 			}
-	
+
 			sub, err = y2j.YAMLToJSON(sub)
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-	
+
 			// create new subscription
 			subID, err := AFCreateSubscription(sub)
 			if err != nil {
@@ -89,13 +89,13 @@ var applyCmd = &cobra.Command{
 				fmt.Println(err)
 				return
 			}
-	
+
 			up, err = y2j.YAMLToJSON(up)
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-	
+
 			// create new LTE userplane
 			upID, err := LteCreateUserplane(up)
 			if err != nil {
@@ -112,8 +112,7 @@ var applyCmd = &cobra.Command{
 
 func init() {
 
-	const help =
-`Apply LTE CUPS userplane or NGC AF subscription using YAML configuration file
+	const help = `Apply LTE CUPS userplane or NGC AF subscription using YAML configuration file
 
 Usage:
   cnca apply -f <config.yml>

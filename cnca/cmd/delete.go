@@ -25,8 +25,8 @@ import (
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete an active LTE CUPS userplane or NGC AF subscription",
-	Args:   cobra.MaximumNArgs(2),
-	Run:   func(cmd *cobra.Command, args []string) {
+	Args:  cobra.MaximumNArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 2 {
 			fmt.Println(errors.New("Missing input(s)"))
@@ -61,8 +61,7 @@ var deleteCmd = &cobra.Command{
 
 func init() {
 
-	const help =
-`Delete an active LTE CUPS userplane or NGC AF subscription
+	const help = `Delete an active LTE CUPS userplane or NGC AF subscription
 	
 Usage:
   cnca delete { userplane <userplane-id> | subscription <subscription-id> }

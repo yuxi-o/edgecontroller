@@ -35,10 +35,10 @@ const (
 
 // CupsUserplane CupsUserplane
 type CupsUserplane struct {
-	ID string `json:"id,omitempty"`
-	UUID string `json:"uuid,omitempty"`
-	Function *UserplaneFunction `json:"function,omitempty"`
-	Config *UserplaneConfig `json:"config,omitempty"`
+	ID        string              `json:"id,omitempty"`
+	UUID      string              `json:"uuid,omitempty"`
+	Function  *UserplaneFunction  `json:"function,omitempty"`
+	Config    *UserplaneConfig    `json:"config,omitempty"`
 	Selectors []UserplaneSelector `json:"selectors,omitempty"`
 	// The UEs that should be entitled to access privileged networks via this
 	// userplane.  Note: UEs not in this list will still be able to get a bearer
@@ -49,14 +49,14 @@ type CupsUserplane struct {
 
 // UserplaneConfig UserplaneConfig
 type UserplaneConfig struct {
-	Sxa *ConfigInfoCpup `json:"sxa,omitempty"`
-	Sxb *ConfigInfoCpup `json:"sxb,omitempty"`
-	S1u *ConfigInfoUp `json:"s1u,omitempty"`
-	S5uSGW *ConfigInfoUp `json:"s5u_sgw,omitempty"`
-	S5uPGW *ConfigInfoUp `json:"s5u_pgw,omitempty"`
-	SGi *ConfigInfoUp `json:"sgi,omitempty"`
-	Breakout []ConfigInfoUp `json:"breakout,omitempty"`
-	DNS []ConfigInfoUp `json:"dns,omitempty"`
+	Sxa      *ConfigInfoCpup `json:"sxa,omitempty"`
+	Sxb      *ConfigInfoCpup `json:"sxb,omitempty"`
+	S1u      *ConfigInfoUp   `json:"s1u,omitempty"`
+	S5uSGW   *ConfigInfoUp   `json:"s5u_sgw,omitempty"`
+	S5uPGW   *ConfigInfoUp   `json:"s5u_pgw,omitempty"`
+	SGi      *ConfigInfoUp   `json:"sgi,omitempty"`
+	Breakout []ConfigInfoUp  `json:"breakout,omitempty"`
+	DNS      []ConfigInfoUp  `json:"dns,omitempty"`
 }
 
 // ConfigInfoCpup Information that the userplane should configure, which relates
@@ -74,16 +74,16 @@ type ConfigInfoUp struct {
 
 // UserplaneSelector UserplaneSelector
 type UserplaneSelector struct {
-	ID string `json:"id,omitempty"`
+	ID      string           `json:"id,omitempty"`
 	Network *SelectorNetwork `json:"network,omitempty"`
-	ULI *SelectorUli `json:"uli,omitempty"`
-	PDN *SelectorPdn `json:"pdn,omitempty"`
+	ULI     *SelectorUli     `json:"uli,omitempty"`
+	PDN     *SelectorPdn     `json:"pdn,omitempty"`
 }
 
 // UserplaneEntitlement UserplaneEntitlement
 type UserplaneEntitlement struct {
-	ID string `json:"id,omitempty"`
-	APNs []string `json:"apns,omitempty"`
+	ID    string                `json:"id,omitempty"`
+	APNs  []string              `json:"apns,omitempty"`
 	IMSIs []EntitlementImsiList `json:"imsis,omitempty"`
 }
 
@@ -95,7 +95,7 @@ type SelectorNetwork struct {
 
 // SelectorUli SelectorUli
 type SelectorUli struct {
-	TAI *Ulitai `json:"tai,omitempty"`
+	TAI  *Ulitai  `json:"tai,omitempty"`
 	ECGI *Uliecgi `json:"ecgi,omitempty"`
 }
 
@@ -121,5 +121,5 @@ type Uliecgi struct {
 // EntitlementImsiList EntitlementImsiList
 type EntitlementImsiList struct {
 	Begin string `json:"begin,omitempty"`
-	End string `json:"end,omitempty"`
+	End   string `json:"end,omitempty"`
 }
