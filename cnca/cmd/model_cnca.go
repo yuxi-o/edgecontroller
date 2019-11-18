@@ -22,7 +22,7 @@ type Header struct {
 	Kind    string `yaml:"kind"`
 }
 
-// AFTrafficInfluSub describes 5G AF Traffic Influence Subscription
+// AFTrafficInfluSub describes NGC AF Traffic Influence Subscription
 type AFTrafficInfluSub struct {
 	H Header
 	Policy  struct {

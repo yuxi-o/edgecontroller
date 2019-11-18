@@ -24,16 +24,21 @@ import (
 	"k8s.io/klog"
 )
 
-// applyCmd represents the apply command
-var applyCmd = &cobra.Command{
-	Use:   "apply",
-	Short: "Apply new CNCA subscription using YAML configuration file",
-	Args:   cobra.MaximumNArgs(0),
+// patchCmd represents the patch command
+var patchCmd = &cobra.Command{
+	Use:   "patch",
+	Short: "Patch an active LTE CUPS userplane or NGC AF subscription using YAML configuration file",
+	Args:  cobra.MaximumNArgs(1),
 	Run:   func(cmd *cobra.Command, args []string) {
+
+		if len(args) < 1 {
+			fmt.Println(errors.New("LTE CUPS userplane or NGC AF subscription ID missing"))
+			return
+		}
 
 		ymlFile, _ := cmd.Flags().GetString("filename")
 		if ymlFile == "" {
-			fmt.Println(errors.New("CNCA yaml file missing"))
+			fmt.Println(errors.New("YAML file missing"))
 			return
 		}
 
@@ -69,13 +74,13 @@ var applyCmd = &cobra.Command{
 				return
 			}
 	
-			// create new subscription
-			subID, err := AFCreateSubscription(sub)
+			// patch subscription
+			err = AFPatchSubscription(args[0], sub)
 			if err != nil {
 				klog.Info(err)
 				return
 			}
-			fmt.Println("Subscription created:", subID)
+			fmt.Printf("Subscription %s patched\n", args[0])
 
 		case "lte":
 			var u LTEUserplane
@@ -98,13 +103,16 @@ var applyCmd = &cobra.Command{
 				return
 			}
 	
-			// create new LTE userplane
-			upID, err := LteCreateUserplane(up)
+			// patch userplane
+			err = LtePatchUserplane(args[0], up)
 			if err != nil {
 				klog.Info(err)
 				return
 			}
-			fmt.Println("Userplane created:", upID)
+			fmt.Printf("Subscription %s patched\n", args[0])
+
+		default:
+			fmt.Println(errors.New("`kind` missing or unknown in YAML file"))
 		}
 	},
 }
@@ -112,18 +120,18 @@ var applyCmd = &cobra.Command{
 func init() {
 
 	const help =
-`Apply new CNCA subscription using YAML configuration file
+`Patch an active LTE CUPS userplane or NGC AF subscription using YAML configuration file
 
 Usage:
-  cnca apply -f <CNCAConfig.yml>
+  cnca patch { <userplane-id> | <subscription-id> } -f <config.yml>
 
 Flags:
   -h, --help       help
   -f, --filename   YAML configuration file
 `
-	// add `apply` command
-	cncaCmd.AddCommand(applyCmd)
-	applyCmd.Flags().StringP("filename", "f", "", "YAML configuration file")
+	// add `patch` command
+	cncaCmd.AddCommand(patchCmd)
+	patchCmd.Flags().StringP("filename", "f", "", "YAML configuration file")
 	applyCmd.MarkFlagRequired("filename")
-	applyCmd.SetHelpTemplate(help)
+	patchCmd.SetHelpTemplate(help)
 }

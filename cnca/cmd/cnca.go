@@ -21,7 +21,7 @@ import (
 // cncaCmd represents the base command when called without any subcommands
 var cncaCmd = &cobra.Command{
 	Use:  "cnca",
-	Long: "CNCA command line",
+	Long: "Core Newtwork Configuration Agent (CNCA) command line",
 	SilenceUsage: true,
 }
 

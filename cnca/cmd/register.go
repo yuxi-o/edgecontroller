@@ -73,7 +73,7 @@ var registerCmd = &cobra.Command{
 func init() {
 
 	const help =
-`Register controller to AF services registry
+`Register controller to NGC AF services registry
 
 Usage:
   cnca register <service-name> [FLAGS]

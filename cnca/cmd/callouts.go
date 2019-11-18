@@ -24,9 +24,9 @@ import (
 
 // Connectivity constants
 const (
-	AFServer    = "http://localhost:8080"
-	OAM5gServer = "http://localhost:8081"
-	OAMLteServer = "http://localhost:8082"
+	NGCOAMServer  = "http://localhost:8081"
+	NGCAFServer   = "http://localhost:8080"
+	LteOAMServer  = "http://localhost:8082"
 )
 
 // HTTP client
@@ -38,7 +38,7 @@ var client = &http.Client{
 func OAM5gRegisterAFService(service []byte) (string, error) {
 	var afService string
 	req, err := http.NewRequest("POST",
-		OAM5gServer + "/oam/v1/af/services",
+		NGCOAMServer + "/oam/v1/af/services",
 		bytes.NewReader(service))
 	if err != nil {
 		return afService, err
@@ -67,7 +67,7 @@ func OAM5gRegisterAFService(service []byte) (string, error) {
 func AFCreateSubscription(sub []byte) (string, error) {
 	var subID string
 	req, err := http.NewRequest("POST",
-		AFServer + "/CNCA/1.0.1/subscriptions",
+		NGCAFServer + "/CNCA/1.0.1/subscriptions",
 		bytes.NewReader(sub))
 	if err != nil {
 		return subID, err
@@ -96,7 +96,7 @@ func AFCreateSubscription(sub []byte) (string, error) {
 func AFPatchSubscription(subID string, sub []byte) error {
 
 	req, err := http.NewRequest("PATCH",
-		AFServer + "/CNCA/1.0.1/subscriptions/" + subID,
+		NGCAFServer + "/CNCA/1.0.1/subscriptions/" + subID,
 		bytes.NewReader(sub))
 	if err != nil {
 		return err
@@ -123,13 +123,13 @@ func AFGetSubscription(subID string) ([]byte, error) {
 
 	if subID == "all" {
 		req, err = http.NewRequest("GET",
-		AFServer + "/CNCA/1.0.1/subscriptions/", nil)
+			NGCAFServer + "/CNCA/1.0.1/subscriptions", nil)
 		if err != nil {
 			return sub, err
 		}
 	} else {
 		req, err = http.NewRequest("GET",
-		AFServer + "/CNCA/1.0.1/subscriptions/" + subID, nil)
+			NGCAFServer + "/CNCA/1.0.1/subscriptions/" + subID, nil)
 		if err != nil {
 			return sub, err
 		}
@@ -155,7 +155,7 @@ func AFGetSubscription(subID string) ([]byte, error) {
 func AFDeleteSubscription(subID string) error {
 
 	req, err := http.NewRequest("DELETE",
-		AFServer + "/CNCA/1.0.1/subscriptions/" + subID, nil)
+		NGCAFServer + "/CNCA/1.0.1/subscriptions/" + subID, nil)
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func AFDeleteSubscription(subID string) error {
 func LteCreateUserplane(up []byte) (string, error) {
 	var ID string
 	req, err := http.NewRequest("POST",
-		OAMLteServer + "/userplanes",
+		LteOAMServer + "/userplanes",
 		bytes.NewReader(up))
 	if err != nil {
 		return ID, err
@@ -189,7 +189,7 @@ func LteCreateUserplane(up []byte) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusCreated {
+	if resp.StatusCode == http.StatusOK {
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return ID, err
@@ -200,4 +200,85 @@ func LteCreateUserplane(up []byte) (string, error) {
 	}
 
 	return ID, nil
+}
+
+// LtePatchUserplane update an active LTE CUPS userplane
+func LtePatchUserplane(upID string, up []byte) error {
+
+	req, err := http.NewRequest("PATCH",
+		LteOAMServer + "/userplanes/" + upID,
+		bytes.NewReader(up))
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+// LteGetUserplane get the active CUPS userplane
+func LteGetUserplane(upID string) ([]byte, error) {
+	var up []byte
+	var req *http.Request
+	var err error
+
+	if upID == "all" {
+		req, err = http.NewRequest("GET",
+			LteOAMServer + "/userplanes", nil)
+		if err != nil {
+			return up, err
+		}
+	} else {
+		req, err = http.NewRequest("GET",
+			LteOAMServer + "/userplanes/" + upID, nil)
+		if err != nil {
+			return up, err
+		}
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return up, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		up, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return up, err
+		}
+		return up, nil
+	}
+	return up, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+}
+
+// LteDeleteUserplane delete an active LTE CUPS userplane
+func LteDeleteUserplane(upID string) error {
+
+	req, err := http.NewRequest("DELETE",
+		LteOAMServer + "/userplanes/" + upID, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+	}
+
+	return nil
 }
