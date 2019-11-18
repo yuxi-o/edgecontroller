@@ -17,7 +17,7 @@
     name: golang
     state: present
 
-- name: delete any residuals from a previous cnca build
+- name: delete any residuals from a previous CNCA build
   file:
     path: "{{ item }}"
     state: absent
@@ -31,7 +31,6 @@
     chdir: "{{ repo_path }}/cnca/"
 
 - name: Install CNCA kubectl plugin
-  copy:
-    src: "{{ repo_path }}/cnca/kubectl-cnca"
-    dest: /usr/bin/
-    mode: 0755
+  shell: mv "{{ repo_path }}/cnca/kubectl-cnca" /usr/bin/
+  args:
+    chdir: "{{ repo_path }}/cnca/"
