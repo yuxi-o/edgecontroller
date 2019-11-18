@@ -12,22 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: nfd-network-policy
-  namespace: openness
-spec:
-  podSelector:
-    matchLabels:
-      app: nfd-master
-  policyTypes:
-  - Ingress
-  ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          app: nfd-worker
-    ports:
-    - protocol: TCP
-      port: 8080
+  name: bbdev-config
+data:
+  fpga_bbdev.cfg: |
+    [MODE]
+    pf_mode_en = 0
+    
+    [UL]
+    bandwidth = 3
+    load_balance = 128
+    vfqmap = 16,16,0,0,0,0,0,0
+    
+    [DL]
+    bandwidth = 3
+    load_balance = 128
+    vfqmap = 16,16,0,0,0,0,0,0
+    
+    [FLR]
+    flr_time_out = 610

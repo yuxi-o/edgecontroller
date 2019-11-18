@@ -173,10 +173,7 @@ func startup() {
 		"github.com/otcshare/edgecontroller/test/node/grpc")
 	Expect(err).ToNot(HaveOccurred(), "Problem building node")
 
-	cmd = exec.Command(exe,
-		"-ela-port", "42101",
-		"-eva-port", "42102",
-	)
+	cmd = exec.Command(exe)
 	nodeIn, err = cmd.StdinPipe()
 	Expect(err).ToNot(HaveOccurred(), "Problem creating node stdin pipe")
 
@@ -451,10 +448,10 @@ func createAndRegisterNode() *nodeConfig {
 
 	By("Verifying that the node started successfully")
 	Eventually(node.Err, 3).Should(gbytes.Say(
-		"test-node: listening on port: 4210[12]"),
+		"connecting to port 8081"),
 		"Node did not start in time")
 	Eventually(node.Err, 3).Should(gbytes.Say(
-		"test-node: listening on port: 4210[12]"),
+		"connecting to port 8081"),
 		"Node did not start in time")
 
 	By("Requesting credentials from auth service")

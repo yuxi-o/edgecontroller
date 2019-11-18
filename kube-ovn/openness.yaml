@@ -13,12 +13,6 @@
 # limitations under the License.
 
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: openness
-
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: openness-config
@@ -216,3 +210,80 @@ spec:
       - name: log
         hostPath:
           path: /var/log/appliance
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: interfaceservice
+  namespace: openness
+spec:
+  clusterIP: None
+  selector:
+    name: interfaceservice
+  ports:
+  - name: interfaceservice
+    protocol: TCP
+    port: 42101
+    targetPort: 42101
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: interfaceservice
+  namespace: openness
+spec:
+  selector:
+    matchLabels:
+      name: interfaceservice
+  template:
+    metadata:
+      labels:
+        name: interfaceservice
+    spec:
+      tolerations:
+      - key: node-role.kube-ovn/master
+        effect: NoSchedule
+      containers:
+      - name: interfaceservice
+        image: interfaceservice:1.0
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: configs
+          mountPath: /root/configs
+          readOnly: true
+        - name: certs
+          mountPath: /root/certs
+          readOnly: true
+        - name: log
+          mountPath: /var/log
+      initContainers:
+      - name: openssl
+        image: emberstack/openssl:latest
+        command: ["/root/certgen/entrypoint_tls.sh", "interfaceservice.openness", "/root/certs", "/root/CA"]
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: ca
+          mountPath: /root/CA
+        - name: certs
+          mountPath: /root/certs
+        - name: certgen
+          mountPath: /root/certgen
+      volumes:
+      - name: configs
+        hostPath:
+          path: /var/lib/appliance/configs
+      - name: certs
+        hostPath:
+          path: /var/lib/appliance/certs/interfaceservice
+      - name: log
+        hostPath:
+          path: /var/log/appliance
+      - name: ca
+        secret:
+          secretName: root-ca
+      - name: certgen
+        secret:
+          secretName: certgen
+          defaultMode: 0744

@@ -106,12 +106,30 @@
       - include_tasks: "{{ base_path }}/tasks/kubernetes/kubeovn_mode_init.yml"
     when: CCE_ORCHESTRATION_MODE == "kubernetes-ovn"
 
+  - name: Configure Multus
+    include_tasks: "{{ base_path }}/tasks/kubernetes/install_multus.yml"
+    when:
+      - (CCE_ORCHESTRATION_MODE == "kubernetes") or
+          (CCE_ORCHESTRATION_MODE == "kubernetes-ovn")
+      - multus_enabled == true
+
   - name: Obtain kubernetes certificates
     block:
       - include_tasks: "{{ base_path }}/tasks/kubernetes/grant_cluster_admin_rights.yml"
       - include_tasks: "{{ base_path }}/tasks/kubernetes/obtain_certificates.yml"
     when: (CCE_ORCHESTRATION_MODE == "kubernetes") or
           (CCE_ORCHESTRATION_MODE == "kubernetes-ovn")
+
+  # Download and build K8s device plugins fo VC FEC
+  - name: Obtain K8s device and CNI plugins
+    block:
+      - include_tasks: "{{ base_path }}/tasks/kubernetes/download_and_patch_device_plugins.yml"
+      - include_tasks: "{{ base_path }}/tasks/kubernetes/build_device_plugin_images.yml"
+      - include_tasks: "{{ base_path }}/tasks/kubernetes/deploy_device_plugins.yml"
+    when: 
+      - (CCE_ORCHESTRATION_MODE == "kubernetes") or
+          (CCE_ORCHESTRATION_MODE == "kubernetes-ovn")
+      - sriov['enabled']
 
   - name: Install Kubernetes plugins for kubernetes-ovn mode
     include_tasks: "{{ base_path }}/tasks/kubernetes/install_nfd.yml"

@@ -34,11 +34,13 @@ import (
 	"time"
 
 	"github.com/otcshare/common/log"
+	"github.com/otcshare/common/proxy/progutil"
 	nodegmock "github.com/otcshare/edgecontroller/mock/node/grpc"
 	elapb "github.com/otcshare/edgecontroller/pb/ela"
 	evapb "github.com/otcshare/edgecontroller/pb/eva"
 	"github.com/otcshare/edgecontroller/pki"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 const name = "test-node"
@@ -48,11 +50,9 @@ func main() {
 
 	// CLI flags
 	var (
-		elaPort uint
-		evaPort uint
+		controllerPort uint
 	)
-	flag.UintVar(&elaPort, "ela-port", 42101, "Port for ELA service to listen on")
-	flag.UintVar(&evaPort, "eva-port", 42102, "Port for EVA service to listen on")
+	flag.UintVar(&controllerPort, "controller-port", 8081, "Port for EVA service to listen on")
 	flag.Parse()
 
 	// Set up channels to capture SIGINT and SIGTERM
@@ -66,14 +66,16 @@ func main() {
 	// Create the mock node
 	mockNode := nodegmock.NewMockNode()
 
+	tlsConf := credentials.NewTLS(newTLSConf(loadCA(), loadCAKey(), "*."))
+
 	// Register the services with the grpc servers
-	elaServer := grpc.NewServer()
+	elaServer := grpc.NewServer(grpc.Creds(tlsConf))
 	elapb.RegisterApplicationPolicyServiceServer(elaServer, mockNode.AppPolicySvc)
 	elapb.RegisterInterfaceServiceServer(elaServer, mockNode.InterfaceSvc)
 	elapb.RegisterInterfacePolicyServiceServer(elaServer, mockNode.IfPolicySvc)
 	elapb.RegisterZoneServiceServer(elaServer, mockNode.ZoneSvc)
 	elapb.RegisterDNSServiceServer(elaServer, mockNode.DNSSvc)
-	evaServer := grpc.NewServer()
+	evaServer := grpc.NewServer(grpc.Creds(tlsConf))
 	evapb.RegisterApplicationDeploymentServiceServer(evaServer, mockNode.AppDeploySvc)
 	evapb.RegisterApplicationLifecycleServiceServer(evaServer, mockNode.AppLifeSvc)
 
@@ -107,28 +109,26 @@ func main() {
 		mockNode.Reset()
 
 		// Start the listeners
-		conf := newTLSConf(loadCA(), loadCAKey(), id)
-		elaLis, err := tls.Listen("tcp", fmt.Sprintf(":%d", elaPort), conf)
+		addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf(":%d", controllerPort))
 		if err != nil {
-			log.Alert("Error listening on port:", err)
+			log.Alert("Failed to resolve controller address:", err)
 			os.Exit(1)
 		}
+
+		elaLis := &progutil.DialListener{RemoteAddr: addr, Name: "ELA"}
 		prevELALis = elaLis
-		evaLis, err := tls.Listen("tcp", fmt.Sprintf(":%d", evaPort), conf)
-		if err != nil {
-			log.Alert("Error listening on port:", err)
-			os.Exit(1)
-		}
+
+		evaLis := &progutil.DialListener{RemoteAddr: addr, Name: "EVA"}
 		prevEVALis = evaLis
 
 		// Start the servers
 		go func() {
-			log.Info(name, ": listening on port: ", elaLis.Addr().(*net.TCPAddr).Port)
-			log.Alert("GRPC server exited:", elaServer.Serve(elaLis))
+			log.Info("elaServer connecting to port ", controllerPort)
+			log.Alert("ELA GRPC server exited:", elaServer.Serve(elaLis))
 		}()
 		go func() {
-			log.Info(name, ": listening on port: ", evaLis.Addr().(*net.TCPAddr).Port)
-			log.Alert("GRPC server exited:", evaServer.Serve(evaLis))
+			log.Info("evaServer connecting to port ", controllerPort)
+			log.Alert("EVA GRPC server exited:", evaServer.Serve(evaLis))
 		}()
 	}
 }
