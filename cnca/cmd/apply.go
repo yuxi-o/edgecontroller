@@ -84,8 +84,6 @@ var applyCmd = &cobra.Command{
 				return
 			}
 
-			fmt.Println(u.Policy)
-
 			up, err := yaml.Marshal(u.Policy)
 			if err != nil {
 				fmt.Println(err)

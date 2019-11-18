@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module kubectl-cnca
-
-replace cnca v0.0.0 => ./cmd
+module cnca-cmd
 
 require (
 	cnca v0.0.0
@@ -23,3 +21,6 @@ require (
 	gopkg.in/yaml.v2 v2.2.5 // indirect
 	k8s.io/klog v1.0.0 // indirect
 )
+
+replace cnca v0.0.0 => ./cmd
+
