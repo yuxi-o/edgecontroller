@@ -26,12 +26,11 @@
     - /usr/bin/kubectl-cnca
 
 - name: Build CNCA kubectl plugin
-  shell: go build -o kubectl-cnca
+  shell: go build -o cnca
   args:
     chdir: "{{ repo_path }}/cnca/"
 
 - name: Install CNCA kubectl plugin
-  copy:
-    src: "{{ repo_path }}/cnca/kubectl-cnca"
-    dest: /usr/bin/
-    mode: 0755
+  shell: mv "{{ repo_path }}/cnca/cnca" /usr/bin/
+  args:
+    chdir: "{{ repo_path }}/cnca/"

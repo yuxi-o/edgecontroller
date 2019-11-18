@@ -93,12 +93,6 @@
     when: (CCE_ORCHESTRATION_MODE == "kubernetes") or
           (CCE_ORCHESTRATION_MODE == "kubernetes-ovn")
 
-  - name: CNCA kubectl plugin for kubernetes mode
-    block:
-      - include_tasks: "{{ base_path }}/tasks/kubernetes/install_kube_cnca.yml"
-    when: (CCE_ORCHESTRATION_MODE == "kubernetes") or
-          (CCE_ORCHESTRATION_MODE == "kubernetes-ovn")
-
   - name: Additional configuration for kubernetes mode
     block:
       - include_tasks: "{{ base_path }}/tasks/os/reload_firewall_rules.yml"
@@ -124,6 +118,17 @@
     when: 
       - CCE_ORCHESTRATION_MODE == "kubernetes-ovn"
       - nfd_enabled == true
+
+  - name: CNCA kubectl plugin for kubernetes mode
+    block:
+      - include_tasks: "{{ base_path }}/tasks/kubernetes/install_kube_cnca.yml"
+    when: (CCE_ORCHESTRATION_MODE == "kubernetes") or
+          (CCE_ORCHESTRATION_MODE == "kubernetes-ovn")
+
+  - name: CNCA kubectl plugin for native mode
+    block:
+      - include_tasks: "{{ base_path }}/tasks/build/install_cnca.yml"
+    when: (CCE_ORCHESTRATION_MODE == "native")
 
   # Generate build .env file based on provided data in vars/defaults.yml file
   - include_tasks: "{{ base_path }}/tasks/build/env_file_backup_original.yml"
