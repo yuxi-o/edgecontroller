@@ -35,22 +35,31 @@ type AFTrafficInfluSub struct {
 		// Identifies whether an application can be relocated once a location of the application has been selected.
 		AppReloInd bool `yaml:"appReloInd,omitempty"`
 		// Identifies data network name
-		Dnn string `yaml:"dnn,omitempty"`
+		DNN string `yaml:"dnn,omitempty"`
 		// Snssai
-		Snssai struct {
-			Sst int32  `yaml:"sst"`
-			Sd  string `yaml:"sd,omitempty"`
+		SNSSAI struct {
+			SST int32  `yaml:"sst"`
+			SD  string `yaml:"sd,omitempty"`
 		} `yaml:"snssai,omitempty"`
+		// string containing a local identifier followed by \"@\" and a domain identifier. Both the local identifier and the domain identifier shall be encoded as strings that do not contain any \"@\" characters. See Clauses 4.6.2 and 4.6.3 of 3GPP TS 23.682 for more information.
+		ExternalGroupID string `yaml:"externalGroupId,omitempty"`
 		// Identifies whether the AF request applies to any UE.
 		AnyUeInd bool `yaml:"anyUeInd,omitempty"`
+		// Identifies the requirement to be notified of the event(s):
+		// - UP_PATH_CHANGE
+		SubscribedEvents []string `yaml:"subscribedEvents,omitempty"`
 		// Gpsi
-		Gpsi string `yaml:"gpsi,omitempty"`
+		GPSI string `yaml:"gpsi,omitempty"`
 		// string identifying a Ipv4 address formatted in the \"dotted decimal\" notation as defined in IETF RFC 1166.
-		Ipv4Addr string `yaml:"ipv4Addr,omitempty"`
+		IPv4Addr string `yaml:"ipv4Addr,omitempty"`
 		// string identifying a Ipv6 address formatted according to clause 4 in IETF RFC 5952.
-		Ipv6Addr string `yaml:"ipv6Addr,omitempty"`
+		IPv6Addr string `yaml:"ipv6Addr,omitempty"`
 		// string identifying MAC Address
-		MacAddr string `yaml:"macAddr,omitempty"`
+		MACAddr string `yaml:"macAddr,omitempty"`
+		// Identifies the type of notification regarding UP path management event. Possible values are EARLY - early notification of UP path reconfiguration. EARLY_LATE - early and late notification of UP path reconfiguration. This value shall only be present in the subscription to the DNAI change event. LATE - late notification of UP path reconfiguration.
+		DNAIChgType string `yaml:"dnaiChgType,omitempty"`
+		// string formatted according to IETF RFC 3986 identifying a referenced resource.
+		NotificationDestination string `yaml:"notificationDestination,omitempty"`
 		// Set to true by the AF to request the NEF to send a test notification. Set to false or omitted otherwise.
 		RequestTestNotification bool `yaml:"requestTestNotification,omitempty"`
 		// WebsockNotifConfig
@@ -58,16 +67,47 @@ type AFTrafficInfluSub struct {
 			WebsocketURI        string `yaml:"websocketUri,omitempty"`
 			RequestWebsocketURI bool   `yaml:"requestWebsocketUri,omitempty"`
 		} `yaml:"websockNotifConfig,omitempty"`
+		// Identifies IP packet filters.
+		TrafficFilters []struct {
+			// Indicates the IP flow.
+			FlowID int32 `yaml:"flowId"`
+			// Indicates the packet filters of the IP flow. Refer to subclause 5.3.8 of 3GPP TS 29.214 for encoding. It shall contain UL and/or DL IP flow description.
+			FlowDescriptions []string `yaml:"flowDescriptions,omitempty"`
+		} `yaml:"trafficFilters,omitempty"`
+		// Identifies Ethernet packet filters.
+		EthTrafficFilters []struct {
+			DestMACAddr string `yaml:"destMacAddr,omitempty"`
+			EthType     string `yaml:"ethType"`
+			// Defines a packet filter of an IP flow.
+			FDesc string `yaml:"fDesc,omitempty"`
+			// Possible values are :
+			// - DOWNLINK - The corresponding filter applies for traffic to the UE.
+			// - UPLINK - The corresponding filter applies for traffic from the UE.
+			// - BIDIRECTIONAL The corresponding filter applies for traffic both to and from the UE.
+			// UNSPECIFIED - The corresponding filter applies for traffic to the UE (downlink), but has no specific direction declared. The service data flow detection shall apply the filter for uplink traffic as if the filter was bidirectional.
+			FDir          string   `yaml:"fDir,omitempty"`
+			SourceMACAddr string   `yaml:"sourceMacAddr,omitempty"`
+			VLANTags      []string `yaml:"vlanTags,omitempty"`
+		} `yaml:"ethTrafficFilters,omitempty"`
 		// Identifies the N6 traffic routing requirement.
 		TrafficRoutes []struct {
-			Dnai      string `yaml:"dnai"`
+			DNAI      string `yaml:"dnai"`
 			RouteInfo struct {
-				Ipv4Addr   string `yaml:"ipv4Addr,omitempty"`
-				Ipv6Addr   string `yaml:"ipv6Addr,omitempty"`
+				IPv4Addr   string `yaml:"ipv4Addr,omitempty"`
+				IPv6Addr   string `yaml:"ipv6Addr,omitempty"`
 				PortNumber int32  `yaml:"portNumber"`
 			} `yaml:"routeInfo,omitempty"`
 			RouteProfID string `yaml:"routeProfId,omitempty"`
 		} `yaml:"trafficRoutes,omitempty"`
+		// Indicates the time interval(s) during which the AF request is to be applied
+		TempValidities []struct {
+			// string with format \"date-time\" as defined in OpenAPI.
+			StartTime string `yaml:"startTime,omitempty"`
+			// string with format \"date-time\" as defined in OpenAPI.
+			StopTime string `yaml:"stopTime,omitempty"`
+		} `yaml:"tempValidities,omitempty"`
+		// Identifies a geographic zone that the AF request applies only to the traffic of UE(s) located in this specific zone.
+		ValidGeoZoneIds []string `yaml:"validGeoZoneIds,omitempty"`
 	} `yaml:"policy"`
 }
 

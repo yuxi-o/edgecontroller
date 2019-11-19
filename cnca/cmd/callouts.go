@@ -79,16 +79,15 @@ func AFCreateSubscription(sub []byte) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusCreated {
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return subID, err
-		}
-		subID = string(b)
-	} else {
+	if resp.StatusCode != http.StatusCreated {
 		return subID, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
 
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return subID, err
+	}
+	subID = string(b)
 	return subID, nil
 }
 
@@ -141,14 +140,15 @@ func AFGetSubscription(subID string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
-		sub, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return sub, err
-		}
-		return sub, nil
+	if resp.StatusCode != http.StatusOK {
+		return sub, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
-	return sub, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+
+	sub, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return sub, err
+	}
+	return sub, nil
 }
 
 // AFDeleteSubscription delete an active Traffic Influence Subscription for the AF
@@ -189,16 +189,15 @@ func LteCreateUserplane(up []byte) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return ID, err
-		}
-		ID = string(b)
-	} else {
+	if resp.StatusCode != http.StatusOK {
 		return ID, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
 
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return ID, err
+	}
+	ID = string(b)
 	return ID, nil
 }
 
@@ -251,14 +250,15 @@ func LteGetUserplane(upID string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
-		up, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return up, err
-		}
-		return up, nil
+	if resp.StatusCode != http.StatusOK {
+		return up, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
-	return up, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+
+	up, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return up, err
+	}
+	return up, nil
 }
 
 // LteDeleteUserplane delete an active LTE CUPS userplane

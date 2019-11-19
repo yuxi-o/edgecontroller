@@ -85,7 +85,7 @@ type FlowInfo struct {
 
 // EthFlowDescription Identifies an Ethernet flow
 type EthFlowDescription struct {
-	DestMacAddr string `json:"destMacAddr,omitempty"`
+	DestMACAddr string `json:"destMacAddr,omitempty"`
 	EthType     string `json:"ethType"`
 	// Defines a packet filter of an IP flow.
 	FDesc string `json:"fDesc,omitempty"`
@@ -97,7 +97,7 @@ type EthFlowDescription struct {
 	// The service data flow detection shall apply the filter for uplink traffic
 	// as if the filter was bidirectional.
 	FDir          string   `json:"fDir,omitempty"`
-	SourceMacAddr string   `json:"sourceMacAddr,omitempty"`
+	SourceMACAddr string   `json:"sourceMacAddr,omitempty"`
 	VLANTags      []string `json:"vlanTags,omitempty"`
 }
 

@@ -29,11 +29,6 @@ var getCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) < 2 {
-			fmt.Println(errors.New("Missing input(s)"))
-			return
-		}
-
 		if args[0] == "subscription" {
 
 			// get subscription
@@ -51,10 +46,10 @@ var getCmd = &cobra.Command{
 
 			fmt.Printf("Active AF Subscription:\n%s", string(sub))
 			return
-		} else if args[0] == "all" && args[1] == "subscriptions" {
+		} else if args[0] == "subscriptions" {
 
 			// get subscriptions
-			sub, err := AFGetSubscription(args[0])
+			sub, err := AFGetSubscription("all")
 			if err != nil {
 				klog.Info(err)
 				return
@@ -89,10 +84,10 @@ var getCmd = &cobra.Command{
 
 			fmt.Printf("Active LTE CUPS Userplane:\n%s", string(up))
 			return
-		} else if args[0] == "all" && args[1] == "userplanes" {
+		} else if args[0] == "userplanes" {
 
 			// get userplanes
-			up, err := LteGetUserplane(args[0])
+			up, err := LteGetUserplane("all")
 			if err != nil {
 				klog.Info(err)
 				return
@@ -121,13 +116,13 @@ func init() {
 	const help = `Get active LTE CUPS userplane(s) or NGC AF subscription(s)
 
 Usage:
-  cnca get { all { userplanes | subscriptions } | { userplane <userplane-id> | subscription <subscription-id> }
+  cnca get { { userplanes | subscriptions } | { userplane <userplane-id> | subscription <subscription-id> } }
 
 Example:
   cnca get userplane <subscription-id>
   cnca get subscription <subscription-id>
-  cnca get all userplanes
-  cnca get all subscriptions
+  cnca get userplanes
+  cnca get subscriptions
 
 Flags:
   -h, --help   help
