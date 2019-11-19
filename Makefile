@@ -50,18 +50,19 @@ else
 	export CCE_FLAGS=$(CCE_FLAGS_BASE)
 endif
 
-.PHONY: help all-up all-down clean build lint test \
+.PHONY: help all-up all-down clean build build-dnscli lint test \
 	db-up db-reset db-down \
 	minikube-install kubectl-install minikube-wait \
 	ui-up ui-down ui-test \
 	test-k8s test-api-k8s \
-	test-unit test-api
+	test-unit test-api test-dnscli
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
 	@echo "Building:"
 	@echo "  clean            to clean up build artifacts and docker volumes"
 	@echo "  build            to build the project to the ./dist/ folder"
+	@echo "  build-dnscli     to build edgednscli to the ./dist/ folder"
 	@echo ""
 	@echo "Services:"
 	@echo "  all-up           to start the full controller stack"
@@ -94,6 +95,7 @@ help:
 	@echo "  test-api         to run api tests"
 	@echo "  test-api-k8s     to run k8s app deployment api tests"
 	@echo "  test-k8s         to run kubernetes orchestration tests"
+	@echo "  test-dnscli      to run edgednscli tests"
 	@echo "  test             to run unit followed by api tests"
 
 clean:
@@ -223,6 +225,9 @@ cups-ui-dev-up:
 cups-ui-test:
 	cd ui/cups && yarn install && yarn build && yarn test
 
+build-dnscli:
+	go build -o dist/edgednscli ./cmd/edgednscli
+
 test-unit:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites \
 		--skipPackage=vendor,k8s,cmd/cce,cmd/cce/k8s
@@ -247,4 +252,7 @@ test-api-kubeovn:
 test-k8s:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites k8s
 
-test: test-unit test-api test-k8s test-api-k8s test-api-kubeovn
+test-dnscli:
+	ginkgo -v -r --randomizeAllSpecs --randomizeSuites edgednscli
+
+test: test-unit test-api test-k8s test-api-k8s test-api-kubeovn test-dnscli
