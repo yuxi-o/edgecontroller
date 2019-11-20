@@ -249,6 +249,8 @@ spec:
       - name: interfaceservice
         image: interfaceservice:1.0
         imagePullPolicy: Never
+        securityContext:
+          privileged: true 
         volumeMounts:
         - name: configs
           mountPath: /root/configs
@@ -258,6 +260,15 @@ spec:
           readOnly: true
         - name: log
           mountPath: /var/log
+        - name: host-netdevs
+          mountPath: /var/host_net_devices
+        - name: host-ns
+          mountPath: /var/host_ns
+          readOnly: true
+        - name: devices
+          mountPath: /devices
+        - name: run
+          mountPath: /var/run
       initContainers:
       - name: openssl
         image: emberstack/openssl:latest
@@ -280,6 +291,18 @@ spec:
       - name: log
         hostPath:
           path: /var/log/appliance
+      - name: host-netdevs
+        hostPath:
+          path: /sys/class/net
+      - name: host-ns
+        hostPath:
+          path: /proc/1/ns
+      - name: devices
+        hostPath:
+          path: /sys/devices
+      - name: run
+        hostPath:
+          path: /var/run
       - name: ca
         secret:
           secretName: root-ca

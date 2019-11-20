@@ -62,6 +62,7 @@ help:
 	@echo "Building:"
 	@echo "  clean            to clean up build artifacts and docker volumes"
 	@echo "  build            to build the project to the ./dist/ folder"
+	@echo "  build-ifsvccli   to build interfaceservice CLI to the ./dist/ folder"
 	@echo "  build-dnscli     to build edgednscli to the ./dist/ folder"
 	@echo ""
 	@echo "Services:"
@@ -115,6 +116,9 @@ build:
 	@###########################
 	@# go build -o dist/test-node ./test/node/grpc
 	@###########################
+
+build-ifsvccli:
+	go build -o dist/interfaceservicecli ./cmd/interfaceservicecli
 
 lint:
 	golangci-lint run
