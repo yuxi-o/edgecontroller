@@ -90,6 +90,24 @@ export default {
       source: {
         type: "string",
         title: "Source",
+      },
+      epafeatures: {
+        type: "array",
+        title: "EPA Features",
+        items: {
+          type: "object",
+          title: "EPA Feature",
+          properties: {
+            key: {
+              type: "string",
+              title: "EPA Feature Key",
+            },
+            value: {
+              type: "string",
+              title: "EPA Feature Value",
+            },
+          },
+        },
       }
     }
   },
