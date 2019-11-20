@@ -191,25 +191,134 @@ spec:
         image: balabit/syslog-ng:3.19.1
         imagePullPolicy: IfNotPresent
         args: ["--no-caps"]
+        env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
         volumeMounts:
         - name: syslog-conf
-          mountPath: /etc/syslog-ng/syslog-ng.conf
+          mountPath: /etc/syslog-ng
           readOnly: true
         - name: certs
           mountPath: /etc/syslog-ng/certs
           readOnly: true
         - name: log
           mountPath: /var/log
+      initContainers:
+      - name: openssl
+        image: emberstack/openssl:latest
+        command: ["/root/certgen/entrypoint_tls.sh", "syslog.openness", "/root/certs", "/root/CA"]
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: ca
+          mountPath: /root/CA
+        - name: certs
+          mountPath: /root/certs
+        - name: certgen
+          mountPath: /root/certgen
       volumes:
       - name: syslog-conf
-        hostPath:
-          path: /var/lib/appliance/configs/syslog-ng.conf
+        configMap:
+          name: syslog-conf
+          items:
+          - key: syslog-ng-k8s-worker.conf
+            path: syslog-ng.conf
       - name: certs
         hostPath:
-          path: /var/lib/appliance/certs
+          path: /etc/openness/certs/syslog
       - name: log
         hostPath:
-          path: /var/log/appliance
+          path: /var/log/edgenode
+      - name: ca
+        secret:
+          secretName: root-ca
+      - name: certgen
+        secret:
+          secretName: certgen
+          defaultMode: 0744
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: syslog-master
+  namespace: openness
+spec:
+  clusterIP: None
+  selector:
+    name: syslog-master
+  ports:
+  - name: syslog
+    protocol: UDP
+    port: 6514
+    targetPort: 6514
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: syslog-master
+  namespace: openness
+spec:
+  selector:
+    matchLabels:
+      name: syslog-master
+  template:
+    metadata:
+      labels:
+        name: syslog-master
+    spec:
+      nodeSelector:
+        kube-ovn/role: "master"
+      tolerations:
+      - operator: Exists
+      containers:
+      - name: syslog-ng
+        image: balabit/syslog-ng:3.19.1
+        imagePullPolicy: IfNotPresent
+        args: ["--no-caps"]
+        volumeMounts:
+        - name: syslog-conf
+          mountPath: /etc/syslog-ng
+          readOnly: true
+        - name: certs
+          mountPath: /etc/syslog-ng/certs
+          readOnly: true
+        - name: log
+          mountPath: /var/log
+      initContainers:
+      - name: openssl
+        image: emberstack/openssl:latest
+        command: ["/root/certgen/entrypoint_tls.sh", "syslog-master.openness", "/root/certs", "/root/CA"]
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: ca
+          mountPath: /root/CA
+        - name: certs
+          mountPath: /root/certs
+        - name: certgen
+          mountPath: /root/certgen
+      volumes:
+      - name: syslog-conf
+        configMap:
+          name: syslog-conf
+          items:
+          - key: syslog-ng-k8s-master.conf
+            path: syslog-ng.conf
+      - name: certs
+        hostPath:
+          path: /etc/openness/certs/syslog
+      - name: log
+        hostPath:
+          path: /var/log/openness
+      - name: ca
+        secret:
+          secretName: root-ca
+      - name: certgen
+        secret:
+          secretName: certgen
+          defaultMode: 0744
 
 ---
 apiVersion: v1

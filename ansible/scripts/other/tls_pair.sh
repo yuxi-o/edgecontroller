@@ -34,4 +34,6 @@ else
     openssl req -new -key "$2/key.pem" -out "$2/request.csr" -subj "/CN=$1"
     echo "Signing certificate with $3..."
     openssl x509 -req -in "$2/request.csr" -CA "$3/cert.pem" -CAkey "$3/key.pem" -days 1095 -out "$2/cert.pem" -CAcreateserial
+    cd $2
+    ln -s root.pem `openssl x509 -hash -noout -in root.pem`.0
 fi
