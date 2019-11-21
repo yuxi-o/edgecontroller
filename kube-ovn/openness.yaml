@@ -67,7 +67,7 @@ spec:
           privileged: true
         volumeMounts:
         - name: devices
-          mountPath: /devices      
+          mountPath: /devices
         - name: certs
           mountPath: /root/certs
         - name: configs
@@ -92,43 +92,54 @@ metadata:
 spec:
   clusterIP: None
   selector:
-    name: mec-app-edgednssvr
+    name: edgedns
   ports:
     - name: dns
       protocol: UDP
       port: 53
       targetPort: 53
+    - name: cli
+      protocol: TCP
+      port: 4204
+      targetPort: 4204
 
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: mec-app-edgednssvr
+  name: edgedns
   namespace: openness
 spec:
   selector:
     matchLabels:
-      name: mec-app-edgednssvr
+      name: edgedns
   template:
     metadata:
       labels:
-        name: mec-app-edgednssvr
+        name: edgedns
     spec:
       tolerations:
       - key: node-role.kube-ovn/master
         effect: NoSchedule
       containers:
-      - name: mec-app-edgednssvr
+      - name: edgedns
         image: edgednssvr:1.0
         imagePullPolicy: Never
         securityContext:
           capabilities:
             add: ["NET_ADMIN"]
+        args:
+        - -address=:4204
+        - -port=53
+        - -fwdr=$DNS_FWDR
         volumeMounts:
         - name: edgednssvr
           mountPath: /var/lib/edgedns
         - name: run
-          mountPath: /run 
+          mountPath: /run
+        - name: certs
+          mountPath: /root/certs
+          readOnly: true
         env:
           - name: http_proxy
             valueFrom:
@@ -144,6 +155,18 @@ spec:
             value: 8.8.8.8
           - name: LOCAL_SYSLOG
             value: syslog:514
+      initContainers:
+      - name: openssl
+        image: emberstack/openssl:latest
+        command: ["/root/certgen/entrypoint_tls.sh", "edgedns.openness", "/root/certs", "/root/CA"]
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: ca
+          mountPath: /root/CA
+        - name: certs
+          mountPath: /root/certs
+        - name: certgen
+          mountPath: /root/certgen
       volumes:
       - name: edgednssvr
         hostPath:
@@ -151,6 +174,16 @@ spec:
       - name: run
         hostPath:
           path: /run
+      - name: ca
+        secret:
+          secretName: root-ca
+      - name: certgen
+        secret:
+          secretName: certgen
+          defaultMode: 0744
+      - name: certs
+        hostPath:
+          path: /var/lib/appliance/certs/edgedns
 
 ---
 apiVersion: v1

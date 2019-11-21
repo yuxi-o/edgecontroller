@@ -25,11 +25,19 @@
     name: "{{ repo_path }}/certs/client/interfaceservice"
     state: directory
 
+- name: Create directory for EdgeDNS client certificate
+  file:
+    name: "{{ repo_path }}/certs/client/edgedns"
+    state: directory
+
 - name: Create Interface Service client certificate
   shell: "{{ base_path }}/scripts/other/tls_pair.sh interfaceservice.openness {{ repo_path }}/certs/client/interfaceservice {{ repo_path }}/certs/CA"
+
+- name: Create EdgeDNS client certificate
+  shell: "{{ base_path }}/scripts/other/tls_pair.sh edgedns.openness {{ repo_path }}/certs/client/edgedns {{ repo_path }}/certs/CA"
 
 - name: Create secret storing Root CA
   shell: "kubectl create secret generic root-ca --from-file={{ repo_path }}/certs/CA/key.pem --from-file={{ repo_path }}/certs/CA/cert.pem --namespace=openness"
 
-- name: Create secret storing certificate generator 
+- name: Create secret storing certificate generator
   shell: "kubectl create secret generic certgen --from-file={{ base_path }}/scripts/other/tls_pair.sh --from-file={{ base_path }}/scripts/other/entrypoint_tls.sh --namespace=openness"
