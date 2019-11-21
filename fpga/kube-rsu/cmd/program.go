@@ -21,9 +21,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -31,52 +29,7 @@ import (
 // default values
 var (
 	RSUJobNameSpace = "default"
-	privileged      = true
 )
-
-// RSUJob struct to hold RSU job specification for K8
-var RSUJob = &batchv1.Job{
-	TypeMeta: metav1.TypeMeta{
-		Kind:       "Job",
-		APIVersion: "v1",
-	},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:   "rsu-pi-pod",
-		Labels: make(map[string]string),
-	},
-	Spec: batchv1.JobSpec{
-		// Optional: Parallelism:,
-		// Optional: Completions:,
-		// Optional: ActiveDeadlineSeconds:,
-		// Optional: Selector:,
-		// Optional: ManualSelector:,
-		Template: corev1.PodTemplateSpec{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:   "rsu-pi",
-				Labels: make(map[string]string),
-			},
-			Spec: corev1.PodSpec{
-				InitContainers: []corev1.Container{}, // Doesn't seem obligatory(?)...
-				Containers: []corev1.Container{
-					{
-						Name:    "pi",
-						Image:   "perl",
-						Command: []string{"perl", "-Mbignum=bpi", "-wle", "print bpi(2000)"},
-						SecurityContext: &corev1.SecurityContext{
-							Privileged: &privileged,
-						},
-						ImagePullPolicy: corev1.PullPolicy(corev1.PullIfNotPresent),
-						Env:             []corev1.EnvVar{},
-						VolumeMounts:    []corev1.VolumeMount{},
-					},
-				},
-				RestartPolicy:    corev1.RestartPolicyOnFailure,
-				Volumes:          []corev1.Volume{},
-				ImagePullSecrets: []corev1.LocalObjectReference{},
-			},
-		},
-	},
-}
 
 // programCmd represents the program command
 var programCmd = &cobra.Command{
@@ -92,8 +45,8 @@ var programCmd = &cobra.Command{
 		}
 
 		// get absolute path
-		RTLFile, _ = filepath.Abs(RTLFile)
-		fmt.Println(RTLFile)
+		//RTLFile, _ = filepath.Abs(RTLFile)
+		//fmt.Println(RTLFile)
 
 		node, _ := cmd.Flags().GetString("node")
 		if node == "" {
@@ -101,8 +54,8 @@ var programCmd = &cobra.Command{
 			return
 		}
 
-		dev, _ := cmd.Flags().GetString("device")
-		if dev == "" {
+		pciID, _ := cmd.Flags().GetString("device")
+		if pciID == "" {
 			fmt.Println(errors.New("target PCI device missing"))
 			return
 		}
@@ -124,6 +77,48 @@ var programCmd = &cobra.Command{
 		if err != nil {
 			fmt.Println(err.Error())
 			return
+		}
+
+		// edit K8 job with `program` command specifics
+		podSpec := &(RSUJob.Spec.Template.Spec)
+		containerSpec := &(RSUJob.Spec.Template.Spec.Containers[0])
+
+		containerSpec.Args = []string{
+			"./check_if_modules_loaded.sh && fpgasupdate " +
+				"/root/images/" + RTLFile + " " +
+				pciID + " && rsu bmcimg " + pciID,
+		}
+
+		containerSpec.VolumeMounts = []corev1.VolumeMount{
+			{
+				Name:      "class",
+				MountPath: "/sys/devices",
+				ReadOnly:  false,
+			},
+			{
+				Name:      "image-dir",
+				MountPath: "/root/images",
+				ReadOnly:  false,
+			},
+		}
+		podSpec.NodeSelector["kubernetes.io/hostname"] = node
+		podSpec.Volumes = []corev1.Volume{
+			{
+				Name: "class",
+				VolumeSource: corev1.VolumeSource{
+					HostPath: &corev1.HostPathVolumeSource{
+						Path: "/sys/devices",
+					},
+				},
+			},
+			{
+				Name: "image-dir",
+				VolumeSource: corev1.VolumeSource{
+					HostPath: &corev1.HostPathVolumeSource{
+						Path: "/temp/vran_images",
+					},
+				},
+			},
 		}
 
 		jobsClient := clientset.BatchV1().Jobs(RSUJobNameSpace)
