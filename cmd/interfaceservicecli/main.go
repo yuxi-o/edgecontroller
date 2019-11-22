@@ -148,7 +148,7 @@ func updateInterfaces(driver pb.NetworkInterface_InterfaceDriver, val string) er
 		return err
 	}
 
-	addr := validatePCIFormat(val)
+	addr := splitAndValidatePCIFormat(val)
 	for _, a := range addr {
 		found := false
 		for _, i := range ifsActual.GetNetworkInterfaces() {
