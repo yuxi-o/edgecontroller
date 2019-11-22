@@ -42,21 +42,21 @@ type cliFlags struct {
 	Val         string
 }
 
-var cfg cliFlags
+var Cfg cliFlags
 
 func init() {
-	flag.StringVar(&cfg.Endpoint, "endpoint", "", "Interface service endpoint")
-	flag.StringVar(&cfg.ServiceName, "servicename", "interfaceservice.openness", "Name of server in certificate")
-	flag.StringVar(&cfg.Cmd, "cmd", "help", "Interface service command")
-	flag.StringVar(&cfg.Val, "val", "", "Interface service command parameters")
-	flag.StringVar(&cfg.CertsDir, "certsdir", "./certs/client/interfaceservice", "Directory of key and certificate")
-	flag.IntVar(&cfg.Timeout, "timeout", 3, "Timeout value for grpc call (in seconds)")
+	flag.StringVar(&Cfg.Endpoint, "endpoint", "", "Interface service endpoint")
+	flag.StringVar(&Cfg.ServiceName, "servicename", "interfaceservice.openness", "Name of server in certificate")
+	flag.StringVar(&Cfg.Cmd, "cmd", "help", "Interface service command")
+	flag.StringVar(&Cfg.Val, "val", "", "Interface service command parameters")
+	flag.StringVar(&Cfg.CertsDir, "certsdir", "./certs/client/interfaceservice", "Directory of key and certificate")
+	flag.IntVar(&Cfg.Timeout, "timeout", 3, "Timeout value for grpc call (in seconds)")
 }
 
 func getTransportCredentials() (*credentials.TransportCredentials, error) {
-	crtPath := filepath.Clean(filepath.Join(cfg.CertsDir, "cert.pem"))
-	keyPath := filepath.Clean(filepath.Join(cfg.CertsDir, "key.pem"))
-	caPath := filepath.Clean(filepath.Join(cfg.CertsDir, "root.pem"))
+	crtPath := filepath.Clean(filepath.Join(Cfg.CertsDir, "cert.pem"))
+	keyPath := filepath.Clean(filepath.Join(Cfg.CertsDir, "key.pem"))
+	caPath := filepath.Clean(filepath.Join(Cfg.CertsDir, "root.pem"))
 
 	cert, err := tls.LoadX509KeyPair(crtPath, keyPath)
 	if err != nil {
@@ -76,7 +76,7 @@ func getTransportCredentials() (*credentials.TransportCredentials, error) {
 	creds := credentials.NewTLS(&tls.Config{
 		Certificates: []tls.Certificate{cert},
 		RootCAs:      certPool,
-		ServerName:   cfg.ServiceName,
+		ServerName:   Cfg.ServiceName,
 	})
 
 	return &creds, nil
@@ -89,11 +89,11 @@ func createConnection(ctx context.Context) *grpc.ClientConn {
 		os.Exit(1)
 	}
 
-	conn, err := grpc.DialContext(ctx, cfg.Endpoint,
+	conn, err := grpc.DialContext(ctx, Cfg.Endpoint,
 		grpc.WithTransportCredentials(*tc), grpc.WithBlock())
 
 	if err != nil {
-		fmt.Println("Error when dialing: " + cfg.Endpoint + " err:" + err.Error())
+		fmt.Println("Error when dialing: " + Cfg.Endpoint + " err:" + err.Error())
 		os.Exit(1)
 	}
 
@@ -131,9 +131,9 @@ func splitAndValidatePCIFormat(val string) []string {
 	return validPCIs
 }
 
-func updateInterfaces(driver pb.NetworkInterface_InterfaceDriver, pcis string) error {
+func updateInterfaces(driver pb.NetworkInterface_InterfaceDriver, val string) error {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.Timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(Cfg.Timeout)*time.Second)
 	defer cancel()
 
 	conn := createConnection(ctx)
@@ -148,11 +148,11 @@ func updateInterfaces(driver pb.NetworkInterface_InterfaceDriver, pcis string) e
 		return err
 	}
 
-	addr := splitAndValidatePCIFormat(pcis)
+	addr := validatePCIFormat(val)
 	for _, a := range addr {
 		found := false
 		for _, i := range ifsActual.GetNetworkInterfaces() {
-			if i.GetId() == a {
+			if i.GetMacAddress() == a {
 				i.Driver = driver
 				ifsReq = append(ifsReq, i)
 				found = true
@@ -188,7 +188,7 @@ func updateInterfaces(driver pb.NetworkInterface_InterfaceDriver, pcis string) e
 
 func printInterfaces() error {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.Timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(Cfg.Timeout)*time.Second)
 	defer cancel()
 
 	conn := createConnection(ctx)
@@ -220,23 +220,28 @@ func printInterfaces() error {
 func main() {
 	flag.Parse()
 
+	if err := StartCli(); err != nil {
+		fmt.Println("Error when executing command: [" + Cfg.Cmd + "] err: " + err.Error())
+		os.Exit(1)
+	}
+}
+
+func StartCli() error {
 	var err error
-	switch cfg.Cmd {
+
+	switch Cfg.Cmd {
 	case "attach":
-		err = updateInterfaces(pb.NetworkInterface_USERSPACE, cfg.Val)
+		err = updateInterfaces(pb.NetworkInterface_USERSPACE, Cfg.Val)
 	case "detach":
-		err = updateInterfaces(pb.NetworkInterface_KERNEL, cfg.Val)
+		err = updateInterfaces(pb.NetworkInterface_KERNEL, Cfg.Val)
 	case "get":
 		err = printInterfaces()
 	case "help", "h", "":
 		printHelp()
 	default:
-		fmt.Println("Unrecognized action: " + cfg.Cmd)
+		fmt.Println("Unrecognized action: " + Cfg.Cmd)
 		printHelp()
 	}
 
-	if err != nil {
-		fmt.Println("Error when executing command: [" + cfg.Cmd + "] err: " + err.Error())
-		os.Exit(1)
-	}
+	return err
 }
