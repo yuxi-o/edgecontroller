@@ -42,6 +42,7 @@ type cliFlags struct {
 	Val         string
 }
 
+// Cfg stores flags passed to CLI
 var Cfg cliFlags
 
 func init() {
@@ -131,7 +132,7 @@ func splitAndValidatePCIFormat(val string) []string {
 	return validPCIs
 }
 
-func updateInterfaces(driver pb.NetworkInterface_InterfaceDriver, val string) error {
+func updateInterfaces(driver pb.NetworkInterface_InterfaceDriver, pcis string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(Cfg.Timeout)*time.Second)
 	defer cancel()
@@ -148,11 +149,11 @@ func updateInterfaces(driver pb.NetworkInterface_InterfaceDriver, val string) er
 		return err
 	}
 
-	addr := splitAndValidatePCIFormat(val)
+	addr := splitAndValidatePCIFormat(pcis)
 	for _, a := range addr {
 		found := false
 		for _, i := range ifsActual.GetNetworkInterfaces() {
-			if i.GetMacAddress() == a {
+			if i.GetId() == a {
 				i.Driver = driver
 				ifsReq = append(ifsReq, i)
 				found = true
@@ -226,6 +227,7 @@ func main() {
 	}
 }
 
+// StartCli handles command and arguments to call corresponding CLI function
 func StartCli() error {
 	var err error
 

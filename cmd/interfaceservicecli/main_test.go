@@ -102,8 +102,8 @@ var _ = Describe("CLI tests", func() {
 
 			Ni := &pb.NetworkInterface{
 				Driver:     0,
-				Id:         "1",
-				MacAddress: "5201:54:00.0",
+				Id:         "5201:54:00.0",
+				MacAddress: "aa:bb:cc:dd:ee:ff",
 			}
 
 			Iserv.getAllReturnNi = &pb.NetworkInterfaces{
@@ -125,8 +125,8 @@ var _ = Describe("CLI tests", func() {
 
 			Ni := &pb.NetworkInterface{
 				Driver:     0,
-				Id:         "1",
-				MacAddress: "5201:54:00.0",
+				Id:         "5201:54:00.0",
+				MacAddress: "aa:bb:cc:dd:ee:ff",
 			}
 
 			Iserv.getAllReturnNi = &pb.NetworkInterfaces{
@@ -148,8 +148,8 @@ var _ = Describe("CLI tests", func() {
 
 			Ni := &pb.NetworkInterface{
 				Driver:     1,
-				Id:         "1",
-				MacAddress: "5201:54:00.0",
+				Id:         "5201:54:00.0",
+				MacAddress: "aa:bb:cc:dd:ee:ff",
 			}
 
 			Iserv.getAllReturnNi = &pb.NetworkInterfaces{
@@ -170,14 +170,14 @@ var _ = Describe("CLI tests", func() {
 
 			Ni := &pb.NetworkInterface{
 				Driver:     0,
-				Id:         "1",
-				MacAddress: "5200:54:00.0",
+				Id:         "5200:54:00.0",
+				MacAddress: "aa:bb:cc:dd:ee:ff",
 			}
 
 			Ni2 := &pb.NetworkInterface{
 				Driver:     1,
-				Id:         "2",
-				MacAddress: "5201:54:00.0",
+				Id:         "5201:54:00.0",
+				MacAddress: "aa:bb:cc:dd:ee:ff",
 			}
 
 			Iserv.getAllReturnNi = &pb.NetworkInterfaces{

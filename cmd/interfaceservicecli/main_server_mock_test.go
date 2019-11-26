@@ -29,16 +29,12 @@ type InterfaceServiceServer struct {
 	Endpoint string
 	server   *grpc.Server
 
-	updateReturnEmpty *empty.Empty
-	updateReturnErr   error
-
-	bulkUpdateReturnEmpty *empty.Empty
-	bulkUpdateReturnErr   error
+	updateReturnErr     error
+	bulkUpdateReturnErr error
 
 	getAllReturnNi  *pb.NetworkInterfaces
 	getAllReturnErr error
 
-	getReturnNi  *pb.NetworkInterface
 	getReturnErr error
 }
 
