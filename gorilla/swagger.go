@@ -276,13 +276,11 @@ func (g *Gorilla) swagGETAppByID(w http.ResponseWriter, r *http.Request) {
 			Vendor:      persisted.(*cce.App).Vendor,
 			Description: persisted.(*cce.App).Description,
 		},
-		Cores:  persisted.(*cce.App).Cores,
-		Memory: persisted.(*cce.App).Memory,
-		Ports:  []swagger.PortProto{},
-		Source: persisted.(*cce.App).Source,
-	}
-	for _, port := range persisted.(*cce.App).Ports {
-		app.Ports = append(app.Ports, swagger.PortProto{PortProto: port})
+		Cores:       persisted.(*cce.App).Cores,
+		Memory:      persisted.(*cce.App).Memory,
+		Source:      persisted.(*cce.App).Source,
+		Ports:       persisted.(*cce.App).Ports,
+		EPAFeatures: persisted.(*cce.App).EPAFeatures,
 	}
 
 	// Marshal the response object to JSON
@@ -321,11 +319,9 @@ func (g *Gorilla) swagPATCHAppByID(w http.ResponseWriter, r *http.Request) {
 		Description: app.Description,
 		Cores:       app.Cores,
 		Memory:      app.Memory,
-		Ports:       []cce.PortProto{},
 		Source:      app.Source,
-	}
-	for _, port := range app.Ports {
-		persisted.Ports = append(persisted.Ports, cce.PortProto{Port: port.Port, Protocol: port.Protocol})
+		Ports:       app.Ports,
+		EPAFeatures: app.EPAFeatures,
 	}
 
 	// Validate the object

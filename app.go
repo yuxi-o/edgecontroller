@@ -25,27 +25,35 @@ import (
 
 // App is an application.
 type App struct {
-	ID          string      `json:"id"`
-	Type        string      `json:"type"`
-	Name        string      `json:"name"`
-	Version     string      `json:"version"`
-	Vendor      string      `json:"vendor"`
-	Description string      `json:"description"`
-	Cores       int         `json:"cores"`
-	Memory      int         `json:"memory"` // in MB
-	Ports       []PortProto `json:"ports"`
-	Source      string      `json:"source"`
+	ID          string       `json:"id"`
+	Type        string       `json:"type"`
+	Name        string       `json:"name"`
+	Version     string       `json:"version"`
+	Vendor      string       `json:"vendor"`
+	Description string       `json:"description"`
+	Cores       int          `json:"cores"`
+	Memory      int          `json:"memory"` // in MB
+	Ports       []PortProto  `json:"ports,omitempty"`
+	Source      string       `json:"source"`
+	EPAFeatures []EPAFeature `json:"epafeatures,omitempty"`
 }
 
 // PortProto is a port and protocol combination. It is typically used to represent the ports and protocols that an
 // application is listening on and needs exposed.
 type PortProto struct {
-	Port     uint32 `json:"port"`
-	Protocol string `json:"protocol"`
+	Port     uint32 `json:"port,omitempty"`
+	Protocol string `json:"protocol,omitempty"`
 }
 
 func (pp PortProto) String() string {
 	return fmt.Sprintf("%d/%s", pp.Port, pp.Protocol)
+}
+
+// EPAFeature is a key-value pair used to represent
+// Enhanced Platform Awareness feature settings
+type EPAFeature struct {
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
 }
 
 // GetTableName returns the name of the persistence table.
@@ -87,13 +95,17 @@ func (app *App) Validate() error { // nolint: gocyclo
 		return fmt.Errorf("memory must be in [1..%d]", MaxMemory)
 	}
 	for _, pp := range app.Ports {
-		if pp.Port < 1 || pp.Port > MaxPort {
-			return fmt.Errorf("port must be in [1..%d]", MaxPort)
-		}
 		switch pp.Protocol {
 		case "tcp", "udp", "icmp", "sctp", "all":
+		case "":
+			if pp.Port == 0 {
+				continue // permit empty / no setting
+			}
 		default:
 			return fmt.Errorf("protocol must be tcp, udp, sctp, icmp or all")
+		}
+		if pp.Port < 1 || pp.Port > MaxPort {
+			return fmt.Errorf("port must be in [1..%d]", MaxPort)
 		}
 	}
 	if app.Source == "" {
