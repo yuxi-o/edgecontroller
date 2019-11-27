@@ -16,6 +16,7 @@ package clients
 
 import (
 	"context"
+	"encoding/json"
 
 	cce "github.com/otcshare/edgecontroller"
 	"github.com/otcshare/edgecontroller/grpc"
@@ -44,6 +45,7 @@ func (c *ApplicationDeploymentServiceClient) Deploy(
 	app *cce.App,
 ) error {
 	var err error
+
 	switch app.Type {
 	case "container":
 		_, err = c.PBCli.DeployContainer(ctx, toPBApp(app))
@@ -74,7 +76,12 @@ func toPBApp(app *cce.App) *evapb.Application {
 		ports = append(ports, &evapb.PortProto{Port: pp.Port, Protocol: protocol})
 	}
 
-	return &evapb.Application{
+	tmp, err := json.Marshal(app.EPAFeatures)
+	if err != nil {
+		return nil
+	}
+
+	pb := evapb.Application{
 		Id:          app.ID,
 		Name:        app.Name,
 		Vendor:      app.Vendor,
@@ -88,7 +95,10 @@ func toPBApp(app *cce.App) *evapb.Application {
 				HttpUri: app.Source,
 			},
 		},
+		EACJsonBlob: string(tmp),
 	}
+
+	return &pb
 }
 
 // Redeploy redeploys an application.

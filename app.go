@@ -135,6 +135,7 @@ App[
     Memory: %d
     Ports: %s
     Source: %s
+    EPAFeatures: %s
 ]`),
 		app.ID,
 		app.Name,
@@ -144,5 +145,6 @@ App[
 		app.Cores,
 		app.Memory,
 		app.Ports,
-		app.Source)
+		app.Source,
+		app.EPAFeatures)
 }
