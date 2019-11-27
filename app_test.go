@@ -153,6 +153,7 @@ App[
     Memory: 1024
     Ports: [80/tcp 443/tcp]
     Source: https://path/to/file.zip
+    EPAFeatures: []
 ]`,
 			)))
 		})
