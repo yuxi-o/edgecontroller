@@ -19,16 +19,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-)
-
-// default values
-var (
-	RSUJobNameSpace = "default"
 )
 
 // programCmd represents the program command
@@ -44,18 +42,14 @@ var programCmd = &cobra.Command{
 			return
 		}
 
-		// get absolute path
-		//RTLFile, _ = filepath.Abs(RTLFile)
-		//fmt.Println(RTLFile)
-
 		node, _ := cmd.Flags().GetString("node")
 		if node == "" {
 			fmt.Println(errors.New("target node missing"))
 			return
 		}
 
-		pciID, _ := cmd.Flags().GetString("device")
-		if pciID == "" {
+		device, _ := cmd.Flags().GetString("device")
+		if device == "" {
 			fmt.Println(errors.New("target PCI device missing"))
 			return
 		}
@@ -82,11 +76,14 @@ var programCmd = &cobra.Command{
 		// edit K8 job with `program` command specifics
 		podSpec := &(RSUJob.Spec.Template.Spec)
 		containerSpec := &(RSUJob.Spec.Template.Spec.Containers[0])
+		// assign unique job name for the target device
+		d := strings.ReplaceAll(device, ":", "")
+		RSUJob.ObjectMeta.Name = "fpga-opae-" + node + "-" + d
 
 		containerSpec.Args = []string{
 			"./check_if_modules_loaded.sh && fpgasupdate " +
 				"/root/images/" + RTLFile + " " +
-				pciID + " && rsu bmcimg " + pciID,
+				device + " && rsu bmcimg " + device,
 		}
 
 		containerSpec.VolumeMounts = []corev1.VolumeMount{
@@ -121,14 +118,48 @@ var programCmd = &cobra.Command{
 			},
 		}
 
-		jobsClient := clientset.BatchV1().Jobs(RSUJobNameSpace)
+		// create job in K8 environment
+		jobsClient := clientset.BatchV1().Jobs(namespace)
 		k8Job, err := jobsClient.Create(RSUJob)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
+		// print logs from pod
+		logProcess, err := PrintJobLogs(clientset, k8Job)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		defer logProcess.Process.Kill()
+		defer logProcess.Wait()
 
-		fmt.Println("Successfully created job:", k8Job.Name)
+		// no timeout (this is a long process)
+		for {
+			// wait
+			time.Sleep(1 * time.Second)
+			// get job
+			k8Job, err := jobsClient.Get(RSUJob.Name, metav1.GetOptions{})
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
+			if k8Job.Status.Failed > 0 {
+				fmt.Println("Job `" + k8Job.Name + "` failed!")
+				break
+			}
+			if (k8Job.Status.Succeeded > 0) && (k8Job.Status.Active == 0) {
+				fmt.Println("Job `" + k8Job.Name + "` completed successfully!")
+				break
+			}
+		}
+
+		// delete job after completion
+		err = jobsClient.Delete(k8Job.Name, &metav1.DeleteOptions{})
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
 	},
 }
 
@@ -137,11 +168,11 @@ func init() {
 	const help = `Program an FPGA device on a target node with an RTL image
 
 Usage:
-  rsu program -f <RTL-img-file> -n <target-node> -d <target-device>
+  rsu program -f <signed-RTL-img-file> -n <target-node> -d <target-device>
 
 Flags:
   -h, --help       help
-  -f, --filename   RTL image file
+  -f, --filename   signed RTL image file
   -n, --node       where the target FPGA card is plugged in
   -d, --device     PCI ID of the target FPGA card
 `

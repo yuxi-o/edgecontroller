@@ -17,7 +17,9 @@ package rsu
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -28,13 +30,51 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// getCmd represents the get command
-var getCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Get FPGA telemetry",
+// copy image for signing
+func copyRTLFile(node string, file string) error {
+	var err error
+	var cmd *exec.Cmd
+
+	// #nosec
+	cmd = exec.Command("scp", file, node+":/temp/vran_images/")
+
+	stdout, _ := cmd.StdoutPipe()
+	stderr, _ := cmd.StderrPipe()
+	go func() {
+		if _, err = io.Copy(os.Stdout, stdout); err != nil {
+			fmt.Println(err.Error())
+		}
+	}()
+	go func() {
+		if _, err = io.Copy(os.Stderr, stderr); err != nil {
+			fmt.Println(err.Error())
+		}
+	}()
+
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// signCmd represents the sign command
+var signCmd = &cobra.Command{
+	Use:   "sign",
+	Short: "Sign FPGA RTL image for RSU",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		var jobArgs string
+
+		RTLFile, _ := cmd.Flags().GetString("filename")
+		if RTLFile == "" {
+			fmt.Println(errors.New("RTL image file missing"))
+			return
+		}
 
 		node, _ := cmd.Flags().GetString("node")
 		if node == "" {
@@ -42,34 +82,10 @@ var getCmd = &cobra.Command{
 			return
 		}
 
-		switch args[0] {
-		case "power":
-			jobArgs = "./check_if_modules_loaded.sh && fpgainfo power"
-
-		case "temp":
-			jobArgs = "./check_if_modules_loaded.sh && fpgainfo temp"
-
-		case "fme":
-			jobArgs = "./check_if_modules_loaded.sh && fpgainfo fme"
-
-		case "port":
-			fmt.Println(errors.New("Not supported"))
-			return
-
-		case "bmc":
-			fmt.Println(errors.New("Not supported"))
-			return
-
-		case "phy":
-			fmt.Println(errors.New("Not supported"))
-			return
-
-		case "mac":
-			fmt.Println(errors.New("Not supported"))
-			return
-
-		default:
-			fmt.Println(errors.New("Undefined or missing metric"))
+		// copy RTL image to target node
+		err := copyRTLFile(node, RTLFile)
+		if err != nil {
+			fmt.Println(err.Error())
 			return
 		}
 
@@ -97,21 +113,26 @@ var getCmd = &cobra.Command{
 		containerSpec := &(RSUJob.Spec.Template.Spec.Containers[0])
 		RSUJob.ObjectMeta.Name = "fpga-opae-"+node
 
-		containerSpec.Args = []string{jobArgs}
+		containerSpec.Args = []string{
+			"./check_if_modules_loaded.sh && yes Y | " +
+				"python3 /usr/local/bin/PACSign SR -t UPDATE -H openssl_manager -i " +
+				"/root/images/" + RTLFile + " -o /root/images/SIGNED_" + RTLFile,
+		}
+
 		containerSpec.VolumeMounts = []corev1.VolumeMount{
 			{
-				Name:      "class",
-				MountPath: "/sys/devices",
+				Name:      "image-dir",
+				MountPath: "/root/images",
 				ReadOnly:  false,
 			},
 		}
 		podSpec.NodeSelector["kubernetes.io/hostname"] = node
 		podSpec.Volumes = []corev1.Volume{
 			{
-				Name: "class",
+				Name: "image-dir",
 				VolumeSource: corev1.VolumeSource{
 					HostPath: &corev1.HostPathVolumeSource{
-						Path: "/sys/devices",
+						Path: "/temp/vran_images",
 					},
 				},
 			},
@@ -142,10 +163,12 @@ var getCmd = &cobra.Command{
 				fmt.Println(err.Error())
 				return
 			}
+
 			if (k8Job.Status.Failed > 0) {
 				fmt.Println("Job `"+k8Job.Name+"` failed!")
 				break
 			}
+
 			if (k8Job.Status.Succeeded > 0) && (k8Job.Status.Active == 0) {
 				fmt.Println("Job `"+k8Job.Name+"` completed successfully!")
 				break
@@ -163,27 +186,21 @@ var getCmd = &cobra.Command{
 
 func init() {
 
-	const help = `Get FPGA telemetry
+	const help = `Sign FPGA RTL image for RSU
 
 Usage:
-  rsu get <metric> -n <target-node>
-
-Metrics:
-  power            print power metrics
-  temp             print thermal metrics
-  fme              print FME information
-  port             print accelerator port information
-  bmc              print all Board Management Controller sensor values
-  phy              print all PHY information
-  mac              print MAC information
+  rsu sign -f <unsigned-RTL-img-file> -n <target-node>
 
 Flags:
   -h, --help       help
-  -n, --node       where the target FPGA card(s) is/are plugged in
+  -f, --filename   unsigned RTL image file
+  -n, --node       where the target FPGA card is plugged in
 `
-	// add `get` command
-	rsuCmd.AddCommand(getCmd)
-	getCmd.Flags().StringP("node", "n", "", "where the target FPGA card is plugged in")
-	getCmd.MarkFlagRequired("node")
-	getCmd.SetHelpTemplate(help)
+	// add `sign` command
+	rsuCmd.AddCommand(signCmd)
+	signCmd.Flags().StringP("filename", "f", "", "RTL image file")
+	signCmd.MarkFlagRequired("filename")
+	signCmd.Flags().StringP("node", "n", "", "where the target FPGA card is plugged in")
+	signCmd.MarkFlagRequired("node")
+	signCmd.SetHelpTemplate(help)
 }

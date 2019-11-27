@@ -17,14 +17,81 @@ package rsu
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
-	"path/filepath"
+	"os/exec"
 
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
+
+func listImages(node string) error {
+	var err error
+	var cmd *exec.Cmd
+
+	// #nosec
+	cmd = exec.Command("ssh", "root@"+node,
+		"ls -lh", "/temp/vran_images/", "| awk '{print $5, $6, $7, $9}'")
+
+	stdout, _ := cmd.StdoutPipe()
+	stderr, _ := cmd.StderrPipe()
+	go func() {
+		if _, err = io.Copy(os.Stdout, stdout); err != nil {
+			fmt.Println(err.Error())
+		}
+	}()
+	go func() {
+		if _, err = io.Copy(os.Stderr, stderr); err != nil {
+			fmt.Println(err.Error())
+		}
+	}()
+
+	fmt.Printf("\nAvailable RTL images:\n-----------")
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("\n")
+	return nil
+}
+
+func listDevices(node string) error {
+	var err error
+	var cmd *exec.Cmd
+
+	// #nosec
+	cmd = exec.Command("ssh", node, "lspci", "-knnd:0b30")
+
+	stdout, _ := cmd.StdoutPipe()
+	stderr, _ := cmd.StderrPipe()
+	go func() {
+		if _, err = io.Copy(os.Stdout, stdout); err != nil {
+			fmt.Println(err.Error())
+		}
+	}()
+	go func() {
+		if _, err = io.Copy(os.Stderr, stderr); err != nil {
+			fmt.Println(err.Error())
+		}
+	}()
+
+	fmt.Printf("FPGA devices installed:\n-----------------------\n")
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("\n")
+	return nil
+}
 
 // discoverCmd represents the discover command
 var discoverCmd = &cobra.Command{
@@ -39,56 +106,17 @@ var discoverCmd = &cobra.Command{
 			return
 		}
 
-		// retrieve .kube/config file
-		kubeconfig := filepath.Join(
-			os.Getenv("HOME"), ".kube", "config",
-		)
+		err := listImages(node)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-		// use the current context in kubeconfig
-		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+		err = listDevices(node)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-
-		// create the clientset
-		clientset, err := kubernetes.NewForConfig(config)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		// edit K8 job with `program` command specifics
-		podSpec := &(RSUJob.Spec.Template.Spec)
-		containerSpec := &(RSUJob.Spec.Template.Spec.Containers[0])
-		containerSpec.Args = []string{"lspci -vd:0b30"}
-		containerSpec.VolumeMounts = []corev1.VolumeMount{
-			{
-				Name:      "class",
-				MountPath: "/sys/devices",
-				ReadOnly:  false,
-			},
-		}
-		podSpec.NodeSelector["kubernetes.io/hostname"] = node
-		podSpec.Volumes = []corev1.Volume{
-			{
-				Name: "class",
-				VolumeSource: corev1.VolumeSource{
-					HostPath: &corev1.HostPathVolumeSource{
-						Path: "/sys/devices",
-					},
-				},
-			},
-		}
-
-		jobsClient := clientset.BatchV1().Jobs(RSUJobNameSpace)
-		k8Job, err := jobsClient.Create(RSUJob)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		fmt.Println("Successfully created job:", k8Job.Name)
 	},
 }
 
