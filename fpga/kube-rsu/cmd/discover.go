@@ -30,7 +30,7 @@ func listImages(node string) error {
 
 	// #nosec
 	cmd = exec.Command("ssh", "root@"+node,
-		"ls -lh", "/temp/vran_images/", "| awk '{print $5, $6, $7, $9}'")
+		"ls -lh", "/temp/vran_images/", "| awk '{print $6,$7,\"\t\",$5,\"\t\",$9}'")
 
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
@@ -45,7 +45,7 @@ func listImages(node string) error {
 		}
 	}()
 
-	fmt.Printf("\nAvailable RTL images:\n-----------")
+	fmt.Printf("\nAvailable RTL images:\n---------------------")
 	err = cmd.Start()
 	if err != nil {
 		return err

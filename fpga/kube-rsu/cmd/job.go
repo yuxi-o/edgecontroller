@@ -20,20 +20,22 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // default values
 var (
-	privileged      = true
-	backoffLimit    = int32(0)
-	namespace = "default"
+	privileged   = true
+	backoffLimit = int32(0)
+	namespace    = "default"
 	jobTimeout   = 300 //seconds
 )
 
@@ -97,43 +99,12 @@ func k8LogCmd(pod string) (*exec.Cmd, error) {
 	if err != nil {
 		return cmd, err
 	}
-
-/*
-	fmt.Println(k8Job.Spec.Selector.MatchLabels["controller-uid"])
-
-	// get pod of job based on labels
-	set := labels.Set(k8Job.Spec.Selector.MatchLabels)
-	listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
-	pods, err := clientset.CoreV1().Pods("default").List(listOptions)
-	for _, pod := range pods.Items {
-		fmt.Printf("pod name: %v\n", pod.Name)
-
-
-		req := clientset.CoreV1().Pods("default").GetLogs(pod.Name, &corev1.PodLogOptions{})
-		podLogs, err := req.Stream()
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		defer podLogs.Close()
-
-		buf := new(bytes.Buffer)
-		_, err = io.Copy(buf, podLogs)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		fmt.Println(buf.String())
-	}
-*/
 	return cmd, nil
 }
 
 // PrintJobLogs prints logs from k8 pod belonging to the given job
 func PrintJobLogs(clientset *kubernetes.Clientset, job *batchv1.Job) (*exec.Cmd, error) {
 	var cmd *exec.Cmd
-
 	// get pod of job based on labels
 	set := labels.Set(job.Spec.Selector.MatchLabels)
 	listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
@@ -142,7 +113,7 @@ func PrintJobLogs(clientset *kubernetes.Clientset, job *batchv1.Job) (*exec.Cmd,
 	if len(pods.Items) < 1 {
 		return cmd, errors.New("Failed to retrieve pod")
 	}
-
+	// we should have 1 pod for the job
 	pod := pods.Items[0]
 	// wait for pod to create container
 	for {
@@ -152,11 +123,30 @@ func PrintJobLogs(clientset *kubernetes.Clientset, job *batchv1.Job) (*exec.Cmd,
 		}
 		time.Sleep(1 * time.Second)
 	}
-
 	// print logs
 	cmd, err = k8LogCmd(pod.Name)
 	if err != nil {
 		return cmd, err
 	}
 	return cmd, nil
+}
+
+// GetK8Clientset returns the clientset for kubernetes
+func GetK8Clientset() (*kubernetes.Clientset, error) {
+	var clientset *kubernetes.Clientset
+	// retrieve .kube/config file
+	kubeconfig := filepath.Join(
+		os.Getenv("HOME"), ".kube", "config",
+	)
+	// use the current context in kubeconfig
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		return clientset, err
+	}
+	// create the clientset
+	clientset, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		return clientset, err
+	}
+	return clientset, nil
 }

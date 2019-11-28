@@ -17,15 +17,11 @@ package rsu
 import (
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // getCmd represents the get command
@@ -73,20 +69,8 @@ var getCmd = &cobra.Command{
 			return
 		}
 
-		// retrieve .kube/config file
-		kubeconfig := filepath.Join(
-			os.Getenv("HOME"), ".kube", "config",
-		)
-
-		// use the current context in kubeconfig
-		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		// create the clientset
-		clientset, err := kubernetes.NewForConfig(config)
+		// get k8 clientset
+		clientset, err := GetK8Clientset()
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -95,7 +79,7 @@ var getCmd = &cobra.Command{
 		// edit K8 job with `program` command specifics
 		podSpec := &(RSUJob.Spec.Template.Spec)
 		containerSpec := &(RSUJob.Spec.Template.Spec.Containers[0])
-		RSUJob.ObjectMeta.Name = "fpga-opae-"+node
+		RSUJob.ObjectMeta.Name = "fpga-opae-" + node
 
 		containerSpec.Args = []string{jobArgs}
 		containerSpec.VolumeMounts = []corev1.VolumeMount{
@@ -125,13 +109,13 @@ var getCmd = &cobra.Command{
 			return
 		}
 		// print logs from pod
-		logProcess, err := PrintJobLogs(clientset, k8Job)
+		logs, err := PrintJobLogs(clientset, k8Job)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		defer logProcess.Process.Kill()
-		defer logProcess.Wait()
+		defer logs.Process.Kill()
+		defer logs.Wait()
 
 		for i := 0; i < jobTimeout; i++ {
 			// wait
@@ -142,12 +126,12 @@ var getCmd = &cobra.Command{
 				fmt.Println(err.Error())
 				return
 			}
-			if (k8Job.Status.Failed > 0) {
-				fmt.Println("Job `"+k8Job.Name+"` failed!")
+			if k8Job.Status.Failed > 0 {
+				fmt.Println("Job `" + k8Job.Name + "` failed!")
 				break
 			}
 			if (k8Job.Status.Succeeded > 0) && (k8Job.Status.Active == 0) {
-				fmt.Println("Job `"+k8Job.Name+"` completed successfully!")
+				fmt.Println("Job `" + k8Job.Name + "` completed successfully!")
 				break
 			}
 		}
