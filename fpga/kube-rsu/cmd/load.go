@@ -28,7 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// copy image for loading
+// copy image
 func copyRTLFile(node string, file string) error {
 	var err error
 	var cmd *exec.Cmd
@@ -111,8 +111,8 @@ var loadCmd = &cobra.Command{
 
 		containerSpec.Args = []string{
 			"./check_if_modules_loaded.sh && yes Y | " +
-				"python3 /usr/local/bin/PACload SR -t UPDATE -H openssl_manager -i " +
-				"/root/images/" + RTLFile + " -o /root/images/loadED_" + RTLFile,
+				"python3 /usr/local/bin/PACSign SR -t UPDATE -H openssl_manager -i " +
+				"/root/images/" + RTLFile + " -o /root/images/SIGNED_" + RTLFile,
 		}
 
 		containerSpec.VolumeMounts = []corev1.VolumeMount{
@@ -203,7 +203,6 @@ Flags:
 	loadCmd.MarkFlagRequired("filename")
 	loadCmd.Flags().StringP("node", "n", "", "where the target FPGA card is plugged in")
 	loadCmd.MarkFlagRequired("node")
-	//loadCmd.Flags().StringP("no-sign", "", "", "where the target FPGA card is plugged in")
 	loadCmd.Flags().BoolVarP(&dontSign, "no-sign", "", false, "skip signing the RTL image")
 	loadCmd.SetHelpTemplate(help)
 }
