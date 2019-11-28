@@ -66,7 +66,7 @@ var dontSign bool
 // loadCmd represents the load command
 var loadCmd = &cobra.Command{
 	Use:   "load",
-	Short: "load FPGA RTL image for RSU",
+	Short: "Load & sign FPGA RTL image to a target node for RSU",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 

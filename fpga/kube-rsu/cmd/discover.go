@@ -96,7 +96,7 @@ func listDevices(node string) error {
 // discoverCmd represents the discover command
 var discoverCmd = &cobra.Command{
 	Use:   "discover",
-	Short: "Discover FPGA card(s) on a node",
+	Short: "Discover FPGA card(s) and RTL images on a target node",
 	Args:  cobra.MaximumNArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -122,7 +122,7 @@ var discoverCmd = &cobra.Command{
 
 func init() {
 
-	const help = `Discover FPGA card(s) on a node
+	const help = `Discover FPGA card(s) and RTL images on a target node
 
 Usage:
   rsu discover -n <target-node>
