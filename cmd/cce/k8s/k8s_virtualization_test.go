@@ -85,8 +85,9 @@ var _ = Describe("Kubernetes Read Metadata Service", func() {
 		cvaSvcCli = evapb.NewControllerVirtualizationAgentClient(cvaConn)
 
 		// label node with correct id
+		execParam := fmt.Sprintf("node-id=%s", nodeID)
 		Expect(exec.Command("kubectl",
-			"label", "nodes", "minikube", fmt.Sprintf("node-id=%s", nodeID)).Run()).To(Succeed())
+			"label", "nodes", "minikube", execParam).Run()).To(Succeed())
 	})
 
 	AfterEach(func() {
