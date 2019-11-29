@@ -340,10 +340,8 @@ var _ = Describe("/apps", func() {
 						},
 						Cores:  4,
 						Memory: 1024,
-						Ports: []swagger.PortProto{
-							{
-								PortProto: cce.PortProto{Port: 80, Protocol: "tcp"},
-							},
+						Ports: []cce.PortProto{
+							{Port: 80, Protocol: "tcp"},
 						},
 						Source: "http://www.test.com/my_container_app.tar.gz",
 					},
@@ -424,7 +422,7 @@ var _ = Describe("/apps", func() {
 					},
 					Cores:  4,
 					Memory: 1024,
-					Ports:  []swagger.PortProto{{PortProto: cce.PortProto{Port: 80, Protocol: "tcp"}}},
+					Ports:  []cce.PortProto{{Port: 80, Protocol: "tcp"}},
 					Source: "http://www.test.com/my_container_app.tar.gz",
 				}),
 			Entry("PATCH /apps/{app_id} with no description",
@@ -451,7 +449,7 @@ var _ = Describe("/apps", func() {
 					},
 					Cores:  4,
 					Memory: 1024,
-					Ports:  []swagger.PortProto{{PortProto: cce.PortProto{Port: 80, Protocol: "tcp"}}},
+					Ports:  []cce.PortProto{{Port: 80, Protocol: "tcp"}},
 					Source: "http://www.test.com/my_container_app.tar.gz",
 				}),
 		)

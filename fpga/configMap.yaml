@@ -43,6 +43,14 @@ data:
                     "devices": ["5050"],
                     "drivers": ["igb_uio"]
                 }
+            },
+            {
+                "resourceName": "intel_fec_5g",
+                "selectors": {
+                    "vendors": ["8086"],
+                    "devices": ["0d90"],
+                    "drivers": ["igb_uio"]
+                }
             }
         ]
     }

@@ -26,7 +26,8 @@ spec:
         image: fpga-config-utility:1.0
         imagePullPolicy: Never
         command: [ "/bin/bash", "-c", "--" ]
-        args: [ "./config_bbdev FPGA_LTE -c /root/fpga/fpga_bbdev.cfg" ]
+        #args: [ "./config_bbdev FPGA_LTE -c /root/fpga/fpga_bbdev.cfg" ]
+        args: [ "./config_bbdev FPGA_5GNR -c /root/fpga/fpga_bbdev.cfg" ]
         volumeMounts:
         - name: class
           mountPath: /sys/devices
@@ -46,6 +47,6 @@ spec:
             path: fpga_bbdev.cfg
       restartPolicy: Never
       nodeSelector:
-        kubernetes.io/hostname: sample_host_name
+        kubernetes.io/hostname: samplehostname 
 
   backoffLimit: 0

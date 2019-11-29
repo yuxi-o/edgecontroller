@@ -63,25 +63,18 @@ spec:
       - name: eaa
         image: eaa:1.0
         imagePullPolicy: Never
-        securityContext:
-          privileged: true
         volumeMounts:
-        - name: devices
-          mountPath: /devices      
         - name: certs
           mountPath: /root/certs
         - name: configs
           mountPath: /root/configs
       volumes:
-      - name: devices
-        hostPath:
-          path: /sys/devices
       - name: certs
         hostPath:
-          path: /var/lib/appliance/certs
+          path: /etc/openness/certs
       - name: configs
         hostPath:
-          path: /var/lib/appliance/configs
+          path: /etc/openness/configs
 
 ---
 apiVersion: v1
@@ -92,43 +85,54 @@ metadata:
 spec:
   clusterIP: None
   selector:
-    name: mec-app-edgednssvr
+    name: edgedns
   ports:
     - name: dns
       protocol: UDP
       port: 53
       targetPort: 53
+    - name: cli
+      protocol: TCP
+      port: 4204
+      targetPort: 4204
 
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: mec-app-edgednssvr
+  name: edgedns
   namespace: openness
 spec:
   selector:
     matchLabels:
-      name: mec-app-edgednssvr
+      name: edgedns
   template:
     metadata:
       labels:
-        name: mec-app-edgednssvr
+        name: edgedns
     spec:
       tolerations:
       - key: node-role.kube-ovn/master
         effect: NoSchedule
       containers:
-      - name: mec-app-edgednssvr
+      - name: edgedns
         image: edgednssvr:1.0
         imagePullPolicy: Never
         securityContext:
           capabilities:
             add: ["NET_ADMIN"]
+        args:
+        - -address=:4204
+        - -port=53
+        - -fwdr=$(DNS_FWDR)
         volumeMounts:
         - name: edgednssvr
           mountPath: /var/lib/edgedns
         - name: run
-          mountPath: /run 
+          mountPath: /run
+        - name: certs
+          mountPath: /root/certs
+          readOnly: true
         env:
           - name: http_proxy
             valueFrom:
@@ -142,31 +146,35 @@ spec:
                 key: https_proxy
           - name: DNS_FWDR
             value: 8.8.8.8
-          - name: LOCAL_SYSLOG
-            value: syslog:514
+      initContainers:
+      - name: openssl
+        image: emberstack/openssl:latest
+        command: ["/root/certgen/entrypoint_tls.sh", "edgedns.openness", "/root/certs", "/root/CA"]
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: ca
+          mountPath: /root/CA
+        - name: certs
+          mountPath: /root/certs
+        - name: certgen
+          mountPath: /root/certgen
       volumes:
       - name: edgednssvr
         hostPath:
-          path: /var/lib/appliance/edgednssvr
+          path: /etc/openness/edgednssvr
       - name: run
         hostPath:
           path: /run
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: syslog
-  namespace: openness
-spec:
-  clusterIP: None
-  selector:
-    name: syslog-ng
-  ports:
-  - name: syslog
-    protocol: UDP
-    port: 514
-    targetPort: 514
+      - name: ca
+        secret:
+          secretName: root-ca
+      - name: certgen
+        secret:
+          secretName: certgen
+          defaultMode: 0744
+      - name: certs
+        hostPath:
+          path: /etc/openness/certs/edgedns
 
 ---
 apiVersion: apps/v1
@@ -205,6 +213,10 @@ spec:
           readOnly: true
         - name: log
           mountPath: /var/log
+          readOnly: true
+        - name: dockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
       initContainers:
       - name: openssl
         image: emberstack/openssl:latest
@@ -229,7 +241,10 @@ spec:
           path: /etc/openness/certs/syslog
       - name: log
         hostPath:
-          path: /var/log/edgenode
+          path: /var/log
+      - name: dockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
       - name: ca
         secret:
           secretName: root-ca
@@ -359,7 +374,7 @@ spec:
         image: interfaceservice:1.0
         imagePullPolicy: Never
         securityContext:
-          privileged: true 
+          privileged: true
         volumeMounts:
         - name: configs
           mountPath: /root/configs
@@ -367,8 +382,6 @@ spec:
         - name: certs
           mountPath: /root/certs
           readOnly: true
-        - name: log
-          mountPath: /var/log
         - name: host-netdevs
           mountPath: /var/host_net_devices
         - name: host-ns
@@ -393,13 +406,10 @@ spec:
       volumes:
       - name: configs
         hostPath:
-          path: /var/lib/appliance/configs
+          path: /etc/openness/configs
       - name: certs
         hostPath:
-          path: /var/lib/appliance/certs/interfaceservice
-      - name: log
-        hostPath:
-          path: /var/log/appliance
+          path: /etc/openness/certs/interfaceservice
       - name: host-netdevs
         hostPath:
           path: /sys/class/net

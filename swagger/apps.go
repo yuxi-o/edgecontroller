@@ -31,15 +31,11 @@ type AppSummary struct {
 // AppDetail is a detailed representation of the app.
 type AppDetail struct {
 	AppSummary
-	Cores  int         `json:"cores"`
-	Memory int         `json:"memory"`
-	Ports  []PortProto `json:"ports"`
-	Source string      `json:"source"`
-}
-
-// PortProto is a port and protocol combination.
-type PortProto struct {
-	cce.PortProto
+	Cores       int              `json:"cores"`
+	Memory      int              `json:"memory"`
+	Ports       []cce.PortProto  `json:"ports"`
+	Source      string           `json:"source"`
+	EPAFeatures []cce.EPAFeature `json:"epafeatures,omitempty"`
 }
 
 // AppList is a list representation of apps.
