@@ -131,7 +131,7 @@ spec:
         args:
         - -address=:4204
         - -port=53
-        - -fwdr=$DNS_FWDR
+        - -fwdr=$(DNS_FWDR)
         volumeMounts:
         - name: edgednssvr
           mountPath: /var/lib/edgedns
