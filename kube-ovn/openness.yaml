@@ -43,11 +43,12 @@ spec:
 
 ---
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
   name: eaa
   namespace: openness
 spec:
+  replicas: 1
   selector:
     matchLabels:
       name: eaa
@@ -59,19 +60,35 @@ spec:
       tolerations:
       - key: node-role.kube-ovn/master
         effect: NoSchedule
+      initContainers:
+      - name: alpine
+        image: alpine:latest
+        command: ["/bin/sh"]
+        args: ["-c", "cp /root/certs-sec/* /root/certs/"]
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: certs-sec
+          mountPath: /root/certs-sec
+        - name: certs
+          mountPath: /root/certs
       containers:
       - name: eaa
         image: eaa:1.0
         imagePullPolicy: Never
         volumeMounts:
         - name: certs
-          mountPath: /root/certs
+          mountPath: /root/certs/eaa
+        - name: certs-sec
+          mountPath: /root/certs-sec
         - name: configs
           mountPath: /root/configs
       volumes:
+      - name: certs-sec
+        secret:
+          secretName: eaa-tls
       - name: certs
         hostPath:
-          path: /etc/openness/certs
+          path: /etc/openness/certs/eaa
       - name: configs
         hostPath:
           path: /etc/openness/configs
