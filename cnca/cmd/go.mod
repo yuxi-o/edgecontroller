@@ -13,3 +13,9 @@
 // limitations under the License.
 
 module cnca
+
+require (
+	github.com/ghodss/yaml v1.0.0 // indirect
+	github.com/spf13/cobra v0.0.5 // indirect
+	k8s.io/klog v1.0.0 // indirect
+)

@@ -16,6 +16,7 @@ package cnca
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -24,9 +25,9 @@ import (
 
 // Connectivity constants
 const (
-	NGCOAMServer = "http://localhost:8081"
-	NGCAFServer  = "http://localhost:8080"
-	LteOAMServer = "http://localhost:8082"
+	NgcOAMServiceEndpoint = "http://localhost:8081/ngcoam/v1"
+	NgcAFServiceEndpoint  = "http://localhost:8080/oam/v1"
+	LteOAMServiceEndpoint = "http://localhost:8082/"
 )
 
 // HTTP client
@@ -35,67 +36,82 @@ var client = &http.Client{
 }
 
 // OAM5gRegisterAFService register controller to AF services registry
-func OAM5gRegisterAFService(service []byte) (string, error) {
-	var afService string
+func OAM5gRegisterAFService(locService []byte) (string, error) {
+
 	req, err := http.NewRequest("POST",
-		NGCOAMServer+"/oam/v1/af/services",
-		bytes.NewReader(service))
+		NgcOAMServiceEndpoint+"/services",
+		bytes.NewReader(locService))
 	if err != nil {
-		return afService, err
+		return "", err
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return afService, err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusCreated {
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return afService, err
+			return "", err
 		}
-		afService = string(b)
-	} else {
-		return afService, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
-	}
 
-	return afService, nil
+		var s AFServiceID
+		err = json.Unmarshal(b, &s)
+		if err != nil {
+			return "", err
+		}
+		return s.AFServiceID, nil
+	} else {
+		return "", fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+	}
+}
+
+// OAM5gUnregisterAFService unregister controller from AF services registry
+func OAM5gUnregisterAFService(serviceID string) error {
+
+	return nil
 }
 
 // AFCreateSubscription create new Traffic Influence Subscription at AF
 func AFCreateSubscription(sub []byte) (string, error) {
-	var subID string
+
 	req, err := http.NewRequest("POST",
-		NGCAFServer+"/CNCA/1.0.1/subscriptions",
+		NgcAFServiceEndpoint+"/subscriptions",
 		bytes.NewReader(sub))
 	if err != nil {
-		return subID, err
+		return "", err
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return subID, err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		return subID, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+		return "", fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return subID, err
+		return "", err
 	}
-	subID = string(b)
-	return subID, nil
+
+	var s SubscriptionID
+	err = json.Unmarshal(b, &s)
+	if err != nil {
+		return "", err
+	}
+	return s.ID, nil
 }
 
 // AFPatchSubscription update an active subscription for the AF
 func AFPatchSubscription(subID string, sub []byte) error {
 
 	req, err := http.NewRequest("PATCH",
-		NGCAFServer+"/CNCA/1.0.1/subscriptions/"+subID,
+		NgcAFServiceEndpoint+"/subscriptions/"+subID,
 		bytes.NewReader(sub))
 	if err != nil {
 		return err
@@ -122,13 +138,13 @@ func AFGetSubscription(subID string) ([]byte, error) {
 
 	if subID == "all" {
 		req, err = http.NewRequest("GET",
-			NGCAFServer+"/CNCA/1.0.1/subscriptions", nil)
+			NgcAFServiceEndpoint+"/subscriptions", nil)
 		if err != nil {
 			return sub, err
 		}
 	} else {
 		req, err = http.NewRequest("GET",
-			NGCAFServer+"/CNCA/1.0.1/subscriptions/"+subID, nil)
+			NgcAFServiceEndpoint+"/subscriptions/"+subID, nil)
 		if err != nil {
 			return sub, err
 		}
@@ -155,7 +171,7 @@ func AFGetSubscription(subID string) ([]byte, error) {
 func AFDeleteSubscription(subID string) error {
 
 	req, err := http.NewRequest("DELETE",
-		NGCAFServer+"/CNCA/1.0.1/subscriptions/"+subID, nil)
+		NgcAFServiceEndpoint+"/subscriptions/"+subID, nil)
 	if err != nil {
 		return err
 	}
@@ -175,37 +191,42 @@ func AFDeleteSubscription(subID string) error {
 
 // LteCreateUserplane create new LTE userplane
 func LteCreateUserplane(up []byte) (string, error) {
-	var ID string
 	req, err := http.NewRequest("POST",
-		LteOAMServer+"/userplanes",
+		LteOAMServiceEndpoint+"/userplanes",
 		bytes.NewReader(up))
 	if err != nil {
-		return ID, err
+		return "", err
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return ID, err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return ID, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+		return "", fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return ID, err
+		return "", err
 	}
-	ID = string(b)
-	return ID, nil
+
+	var u CupsUserplaneID
+	err = json.Unmarshal(b, &u)
+	if err != nil {
+		return "", err
+	}
+
+	return u.ID, nil
 }
 
 // LtePatchUserplane update an active LTE CUPS userplane
 func LtePatchUserplane(upID string, up []byte) error {
 
 	req, err := http.NewRequest("PATCH",
-		LteOAMServer+"/userplanes/"+upID,
+		LteOAMServiceEndpoint+"/userplanes/"+upID,
 		bytes.NewReader(up))
 	if err != nil {
 		return err
@@ -232,13 +253,13 @@ func LteGetUserplane(upID string) ([]byte, error) {
 
 	if upID == "all" {
 		req, err = http.NewRequest("GET",
-			LteOAMServer+"/userplanes", nil)
+			LteOAMServiceEndpoint+"/userplanes", nil)
 		if err != nil {
 			return up, err
 		}
 	} else {
 		req, err = http.NewRequest("GET",
-			LteOAMServer+"/userplanes/"+upID, nil)
+			LteOAMServiceEndpoint+"/userplanes/"+upID, nil)
 		if err != nil {
 			return up, err
 		}
@@ -265,7 +286,7 @@ func LteGetUserplane(upID string) ([]byte, error) {
 func LteDeleteUserplane(upID string) error {
 
 	req, err := http.NewRequest("DELETE",
-		LteOAMServer+"/userplanes/"+upID, nil)
+		LteOAMServiceEndpoint+"/userplanes/"+upID, nil)
 	if err != nil {
 		return err
 	}

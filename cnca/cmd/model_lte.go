@@ -33,6 +33,11 @@ const (
 	SAEGWU UserplaneFunction = "SAEGWU"
 )
 
+// CupsUserplaneID identifies CUPS userplane ID
+type CupsUserplaneID struct {
+	ID string `json:"id,omitempty"`
+}
+
 // CupsUserplane CupsUserplane
 type CupsUserplane struct {
 	ID        string              `json:"id,omitempty"`
