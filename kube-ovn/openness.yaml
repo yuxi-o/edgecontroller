@@ -153,8 +153,6 @@ spec:
                 key: https_proxy
           - name: DNS_FWDR
             value: 8.8.8.8
-          - name: LOCAL_SYSLOG
-            value: syslog:514
       initContainers:
       - name: openssl
         image: emberstack/openssl:latest
@@ -184,22 +182,6 @@ spec:
       - name: certs
         hostPath:
           path: /etc/openness/certs/edgedns
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: syslog
-  namespace: openness
-spec:
-  clusterIP: None
-  selector:
-    name: syslog-ng
-  ports:
-  - name: syslog
-    protocol: UDP
-    port: 514
-    targetPort: 514
 
 ---
 apiVersion: apps/v1
@@ -238,6 +220,10 @@ spec:
           readOnly: true
         - name: log
           mountPath: /var/log
+          readOnly: true
+        - name: dockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
       initContainers:
       - name: openssl
         image: emberstack/openssl:latest
@@ -262,7 +248,10 @@ spec:
           path: /etc/openness/certs/syslog
       - name: log
         hostPath:
-          path: /var/log/edgenode
+          path: /var/log
+      - name: dockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
       - name: ca
         secret:
           secretName: root-ca
@@ -392,7 +381,7 @@ spec:
         image: interfaceservice:1.0
         imagePullPolicy: Never
         securityContext:
-          privileged: true 
+          privileged: true
         volumeMounts:
         - name: configs
           mountPath: /root/configs
