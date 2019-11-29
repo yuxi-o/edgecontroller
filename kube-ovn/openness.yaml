@@ -63,19 +63,12 @@ spec:
       - name: eaa
         image: eaa:1.0
         imagePullPolicy: Never
-        securityContext:
-          privileged: true
         volumeMounts:
-        - name: devices
-          mountPath: /devices
         - name: certs
           mountPath: /root/certs
         - name: configs
           mountPath: /root/configs
       volumes:
-      - name: devices
-        hostPath:
-          path: /sys/devices
       - name: certs
         hostPath:
           path: /etc/openness/certs
