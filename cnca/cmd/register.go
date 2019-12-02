@@ -22,6 +22,7 @@ import (
 )
 
 var tac int
+
 // registerCmd represents the register command
 var registerCmd = &cobra.Command{
 	Use:   "register",
