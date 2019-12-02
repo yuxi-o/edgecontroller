@@ -26,7 +26,7 @@ import (
 // Connectivity constants
 const (
 	NgcOAMServiceEndpoint = "http://localhost:8081/ngcoam/v1"
-	NgcAFServiceEndpoint  = "http://localhost:8080/oam/v1"
+	NgcAFServiceEndpoint  = "http://localhost:8080/af/v1"
 	LteOAMServiceEndpoint = "http://localhost:8082/"
 )
 
@@ -70,6 +70,22 @@ func OAM5gRegisterAFService(locService []byte) (string, error) {
 
 // OAM5gUnregisterAFService unregister controller from AF services registry
 func OAM5gUnregisterAFService(serviceID string) error {
+
+	req, err := http.NewRequest("DELETE",
+		NgcOAMServiceEndpoint+"/services/"+serviceID, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+	}
 
 	return nil
 }
