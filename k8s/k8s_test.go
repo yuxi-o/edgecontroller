@@ -53,7 +53,8 @@ var _ = BeforeSuite(func() {
 	cmd = exec.Command("minikube", "version")
 	Expect(cmd.Run()).To(Succeed())
 	// label node with correct app id
-	cmd = exec.Command("kubectl", "label", "nodes", "minikube", fmt.Sprintf("node-id=%s", nodeID))
+	execParam := fmt.Sprintf("node-id=%s", nodeID)
+	cmd = exec.Command("kubectl", "label", "nodes", "minikube", execParam)
 	Expect(cmd.Run()).To(Succeed())
 	// docker pull public image for testing
 	cmd = exec.Command("docker", "pull", "nginx:1.12")

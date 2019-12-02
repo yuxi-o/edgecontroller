@@ -45,13 +45,15 @@ var _ = Describe("/nodes/{node_id}/apps for k8s", func() {
 		nodeID = nodeCfg.nodeID
 
 		// label node with correct id
+		execParam := fmt.Sprintf("node-id=%s", nodeID)
 		Expect(exec.Command("kubectl",
-			"label", "nodes", "minikube", fmt.Sprintf("node-id=%s", nodeID)).Run()).To(Succeed())
+			"label", "nodes", "minikube", execParam).Run()).To(Succeed())
 
 		appID = postApps("container")
 
 		// tag docker with app id
-		cmd := exec.Command("docker", "tag", "nginx:1.12", fmt.Sprintf("%s:%s", appID, "latest"))
+		execParam = fmt.Sprintf("%s:%s", appID, "latest")
+		cmd := exec.Command("docker", "tag", "nginx:1.12", execParam)
 		Expect(cmd.Run()).To(Succeed())
 	})
 
@@ -63,7 +65,8 @@ var _ = Describe("/nodes/{node_id}/apps for k8s", func() {
 		cmd := exec.Command("kubectl", "delete", "--all", "deployments,pods", "--namespace=default")
 		Expect(cmd.Run()).To(Succeed())
 		// remove tagged docker image
-		cmd = exec.Command("docker", "rmi", fmt.Sprintf("%s:%s", appID, "latest"))
+		execParam := fmt.Sprintf("%s:%s", appID, "latest")
+		cmd = exec.Command("docker", "rmi", execParam)
 		Expect(cmd.Run()).To(Succeed())
 	})
 
@@ -103,14 +106,16 @@ var _ = Describe("/nodes/{node_id}/apps for k8s", func() {
 
 			app2ID = postApps("container")
 
-			cmd := exec.Command("docker", "tag", "nginx:1.12", fmt.Sprintf("%s:%s", app2ID, "latest"))
+			execParam := fmt.Sprintf("%s:%s", app2ID, "latest")
+			cmd := exec.Command("docker", "tag", "nginx:1.12", execParam)
 			Expect(cmd.Run()).To(Succeed())
 
 			postNodeApps(nodeID, app2ID)
 		})
 
 		AfterEach(func() {
-			cmd := exec.Command("docker", "rmi", fmt.Sprintf("%s:%s", app2ID, "latest"))
+			execParam := fmt.Sprintf("%s:%s", app2ID, "latest")
+			cmd := exec.Command("docker", "rmi", execParam)
 			Expect(cmd.Run()).To(Succeed())
 		})
 
