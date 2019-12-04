@@ -32,9 +32,9 @@ usage() {
     echo "Executes grpc request to edgedns on node to set/del dns entry"
     echo
     echo "Usage:"
-    echo "    kubectl edgednscli set <node_hostname> <JSON filename>"
-    echo "    kubectl edgednscli del <node_hostname> <JSON filename>"
-    echo "    kubectl edgednscli ( --help | -h)"
+    echo "    kubectl edgedns set <node_hostname> <JSON filename>"
+    echo "    kubectl edgedns del <node_hostname> <JSON filename>"
+    echo "    kubectl edgedns ( --help | -h)"
     echo
     echo "Actions:"
     echo "    set                     Send set request to set DNS"
