@@ -28,11 +28,11 @@ import (
 const (
 	// SyslogSNI is the server name for TLS when connecting to the Controller
 	// for Syslog ingress
-	SyslogSNI = "syslog.community.controller.mec"
+	SyslogSNI = "syslog.controller.openness"
 
 	// StatsdSNI is the server name for TLS when connecting to the Controller
 	// for StatsD ingress
-	StatsdSNI = "statsd.community.controller.mec"
+	StatsdSNI = "statsd.controller.openness"
 )
 
 // MaxUDPPacketSize is the maximum size of the packet (64kb) minus the UDP
