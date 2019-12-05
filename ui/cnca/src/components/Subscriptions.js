@@ -1,16 +1,6 @@
-// Copyright 2019 Intel Corporation and Smart-Edge.com, Inc. All rights reserved
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright © 2019 Intel Corporation
+ */
 
 import React, { Component } from 'react';
 import axios from 'axios';
@@ -28,7 +18,7 @@ import {
   Paper,
 } from '@material-ui/core';
 
-const baseURL = (process.env.NODE_ENV === 'production') ? process.env.REACT_APP_CUPS_API : '/api';
+const baseURL = (process.env.NODE_ENV === 'production') ? process.env.REACT_APP_CNCA_AF_API : '/api';
 const CONTROLLER_URL = process.env.REACT_APP_CONTROLLER_UI_URL;
 
 const styles = theme => ({
@@ -44,7 +34,7 @@ const styles = theme => ({
   },
 });
 
-class Userplanes extends Component {
+class Subscriptions extends Component {
   _isMounted = false;
 
   constructor(props) {
@@ -53,8 +43,8 @@ class Userplanes extends Component {
     this.state = {
       loaded: false,
       hasError: false,
-      userplanes: [],
-    };
+      subscriptions: [],
+    }
   }
 
   _cancelIfUnmounted = (action) => {
@@ -63,15 +53,26 @@ class Userplanes extends Component {
     }
   }
 
-  _getUserplanes = async () => {
+  _getSubscriptions = async () => {
     try {
-      const response = await axios.get(`${baseURL}/userplanes`);
+      const response = await axios.get(`${baseURL}/af/v1/subscriptions`);
 
-      return response.data.userplanes || [];
+      return response.data || [];
     } catch (error) {
-      console.error("Unable to get userplanes: " + error.toString());
+      console.error("Unable to get subscriptions: " + error.toString());
       throw error;
     }
+  }
+
+  parseUUID(selfURL) {
+    var split = selfURL.split("/"); 
+    if (split.length === 1){
+	return "";
+    }
+    var UUID = split[split.length-1];
+    console.log("UUID parsed is: " + UUID);
+
+    return UUID;
   }
 
   componentWillUnmount() {
@@ -84,16 +85,16 @@ class Userplanes extends Component {
     this._isMounted = true;
 
     try {
-      // Fetch userplanes.
-      const userplanes = await this._getUserplanes() || [];
+      // Fetch subscriptions.
+      const subscriptions = await this._getSubscriptions() || [];
 
-      // Update userplanes iff the component is mounted.
+      // Update subscriptions if the component is mounted.
       this._cancelIfUnmounted(() => this.setState({
         loaded: true,
-        userplanes: userplanes,
+        subscriptions: subscriptions,
       }));
     } catch (error) {
-      // Update error iff the component is mounted.
+      // Update error if the component is mounted.
       this._cancelIfUnmounted(() => this.setState({
         loaded: true,
         hasError: true,
@@ -113,7 +114,7 @@ class Userplanes extends Component {
       loaded,
       hasError,
       error,
-      userplanes,
+      subscriptions,
     } = this.state;
 
     if (!loaded) {
@@ -124,25 +125,33 @@ class Userplanes extends Component {
       throw error;
     }
 
-    const UserplaneTableRow = ({ match, history, item }) => {
+    const SubscriptionTableRow = ({ match, history, item }) => {
       return (
         <TableRow>
           <TableCell>
-            {item.id}
+            {item.afServiceId}
           </TableCell>
           <TableCell>
-            {item.uuid}
+            {item.afAppId}
           </TableCell>
           <TableCell>
-            {item.function}
+            {item.afTransId}
           </TableCell>
           <TableCell>
             <Button
-              onClick={() => history.push(`${match.url}/${item.id}`)}
+              onClick={() => history.push(`${match.url}/patch/${this.parseUUID(item.self)}`)}
+              variant="outlined"
+            >
+              Patch
+            </Button>
+          </TableCell>
+          <TableCell>
+            <Button
+              onClick={() => history.push(`${match.url}/edit/${this.parseUUID(item.self)}`)}
               variant="outlined"
             >
               Edit
-              </Button>
+            </Button>
           </TableCell>
         </TableRow>
       );
@@ -175,8 +184,18 @@ class Userplanes extends Component {
                 variant="h5"
                 gutterBottom
               >
-                Userplanes
+                Subscriptions
               </Typography>
+            </Grid>
+
+            <Grid item>
+              <Button
+                onClick={() => history.push('/services')}
+                variant="outlined"
+                color="primary"
+              >
+                View Services
+              </Button>
             </Grid>
 
             <Grid item>
@@ -193,28 +212,29 @@ class Userplanes extends Component {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>UUID</TableCell>
-                <TableCell>Function</TableCell>
+                <TableCell>Service ID</TableCell>
+	        <TableCell>App ID</TableCell>
+                <TableCell>Transaction ID</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {
-                userplanes.length === 0
-                  ? <div>No userplanes to display.</div>
-                  : userplanes.map(item => <UserplaneTableRow
-                    key={item.id}
+                subscriptions.length === 0
+                  ? <div>No subscriptions to display.</div>
+                  : subscriptions.map(item => <SubscriptionTableRow
+                    key={item.afServiceId}
                     item={item}
                     history={history}
                     match={match} />)
               }
             </TableBody>
           </Table>
-        </Paper >
+        </Paper>
       </div>
     );
   }
 };
 
-export default withStyles(styles)(Userplanes);
+export default withStyles(styles)(Subscriptions);
+

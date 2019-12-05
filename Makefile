@@ -50,6 +50,12 @@ else
 	export CCE_FLAGS=$(CCE_FLAGS_BASE)
 endif
 
+define bring_ui_up 
+	docker-compose up -d ui
+	docker-compose up -d cups-ui
+	docker-compose up -d cnca-ui
+endef
+
 .PHONY: help all-up all-down clean build build-dnscli lint test \
 	db-up db-reset db-down \
 	minikube-install kubectl-install minikube-wait \
@@ -82,6 +88,11 @@ help:
 	@echo "  cups-ui-down     to stop the production UI container"
 	@echo "  cups-ui-dev-up   to start local developer instance of the UI"
 	@echo "  cups-ui-test     run the UI project tests"
+	@echo ""
+	@echo "  cnca-ui-up       to start the production UI Container"
+	@echo "  cnca-ui-down     to stop the production UI container"
+	@echo "  cnca-ui-dev-up   to start local developer instance of the UI"
+	@echo "  cnca-ui-test     run the UI project tests"
 	@echo ""
 	@echo "  kubectl-install  to install kubectl"
 	@echo "  minikube-install to install minikube"
@@ -206,7 +217,7 @@ cce-down:
 	docker-compose stop cce
 
 ui-up:
-	docker-compose up -d ui
+	$(call bring_ui_up)
 
 ui-down:
 	docker-compose stop ui
@@ -228,6 +239,18 @@ cups-ui-dev-up:
 
 cups-ui-test:
 	cd ui/cups && yarn install && yarn build && yarn test
+
+cnca-ui-up:
+	docker-compose up -d cnca-ui
+
+cnca-ui-down:
+	docker-compose stop cnca-ui
+
+cnca-ui-dev-up:
+	cd ui/cnca && yarn install && yarn start
+
+cnca-ui-test:
+	cd ui/cnca && yarn install && yarn build && yarn test
 
 build-dnscli:
 	go build -o dist/edgednscli ./cmd/edgednscli
