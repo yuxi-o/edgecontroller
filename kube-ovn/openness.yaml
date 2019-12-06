@@ -418,8 +418,6 @@ spec:
         image: emberstack/openssl:latest
         command: ["/root/certgen/entrypoint_tls.sh", "interfaceservice.openness", "/root/certs", "/root/CA"]
         imagePullPolicy: IfNotPresent
-        securityContext:
-          readOnlyRootFilesystem: true
         volumeMounts:
         - name: ca
           mountPath: /root/CA
