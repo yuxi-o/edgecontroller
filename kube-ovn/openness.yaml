@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -75,6 +76,8 @@ spec:
       - name: eaa
         image: eaa:1.0
         imagePullPolicy: Never
+        securityContext:
+          readOnlyRootFilesystem: true
         volumeMounts:
         - name: certs
           mountPath: /home/eaa/certs/eaa
@@ -136,6 +139,7 @@ spec:
         image: edgednssvr:1.0
         imagePullPolicy: Never
         securityContext:
+          readOnlyRootFilesystem: true
           capabilities:
             add: ["NET_ADMIN"]
         args:
@@ -391,6 +395,7 @@ spec:
         image: interfaceservice:1.0
         imagePullPolicy: Never
         securityContext:
+          readOnlyRootFilesystem: true
           privileged: true
         volumeMounts:
         - name: configs
@@ -413,6 +418,8 @@ spec:
         image: emberstack/openssl:latest
         command: ["/root/certgen/entrypoint_tls.sh", "interfaceservice.openness", "/root/certs", "/root/CA"]
         imagePullPolicy: IfNotPresent
+        securityContext:
+          readOnlyRootFilesystem: true
         volumeMounts:
         - name: ca
           mountPath: /root/CA
