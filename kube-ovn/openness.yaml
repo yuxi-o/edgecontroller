@@ -77,11 +77,11 @@ spec:
         imagePullPolicy: Never
         volumeMounts:
         - name: certs
-          mountPath: /root/certs/eaa
+          mountPath: /home/eaa/certs/eaa
         - name: certs-sec
-          mountPath: /root/certs-sec
+          mountPath: /home/eaa/certs-sec
         - name: configs
-          mountPath: /root/configs
+          mountPath: /home/eaa/configs
       volumes:
       - name: certs-sec
         secret:
@@ -148,7 +148,7 @@ spec:
         - name: run
           mountPath: /run
         - name: certs
-          mountPath: /root/certs
+          mountPath: /home/edgednssvr/certs
           readOnly: true
         env:
           - name: http_proxy
@@ -394,10 +394,10 @@ spec:
           privileged: true
         volumeMounts:
         - name: configs
-          mountPath: /root/configs
+          mountPath: /home/interfaceservice/configs
           readOnly: true
         - name: certs
-          mountPath: /root/certs
+          mountPath: /home/interfaceservice/certs
           readOnly: true
         - name: host-netdevs
           mountPath: /var/host_net_devices
