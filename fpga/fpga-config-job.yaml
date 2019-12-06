@@ -25,15 +25,15 @@ spec:
         name: fpga-config-utility
         image: fpga-config-utility:1.0
         imagePullPolicy: Never
-        command: [ "/bin/bash", "-c", "--" ]
-        #args: [ "./config_bbdev FPGA_LTE -c /root/fpga/fpga_bbdev.cfg" ]
-        args: [ "./config_bbdev FPGA_5GNR -c /root/fpga/fpga_bbdev.cfg" ]
+        command: [ "sudo", "/bin/bash", "-c", "--" ]
+        #args: [ "./config_bbdev FPGA_LTE -c /home/fpga-config/fpga/fpga_bbdev.cfg" ]
+        args: [ "./config_bbdev FPGA_5GNR -c /home/fpga-config/fpga/fpga_bbdev.cfg" ]
         volumeMounts:
         - name: class
           mountPath: /sys/devices
           readOnly: false
         - name: config-volume
-          mountPath: /root/fpga
+          mountPath: /home/fpga-config/fpga
           readOnly: true
       volumes:
       - hostPath:

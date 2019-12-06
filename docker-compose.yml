@@ -22,10 +22,15 @@ services:
       - 8083:3306
     environment:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+    read_only: true
+    tmpfs:
+    - /run/mysqld:uid=999,gid=999
+    - /tmp
     volumes:
       - ./artifacts/db:/var/lib/mysql
   cce:
     image: cce:latest
+    read_only: true
     build:
       context: .
       dockerfile: docker/build/Dockerfile
@@ -43,25 +48,49 @@ services:
       - ./artifacts/controller:/artifacts
   ui:
     image: ui:latest
+    read_only: true
     build:
       context: ./ui/controller
       args:
         CCE_ORCHESTRATION_MODE: "${CCE_ORCHESTRATION_MODE}"
         REACT_APP_CONTROLLER_API: "${REACT_APP_CONTROLLER_API}"
         REACT_APP_ORCHESTRATION_MODE: "${CCE_ORCHESTRATION_MODE}"
+        CONTROLLER_UI_URL: "${CONTROLLER_UI_URL}"
+        CUPS_UI_URL: "${CUPS_UI_URL}"
+        CNCA_UI_URL: "${CNCA_UI_URL}"
     ports:
       - 3000:80/tcp
     environment:
       CCE_ORCHESTRATION_MODE: "${CCE_ORCHESTRATION_MODE}"
       REACT_APP_CONTROLLER_API: "${REACT_APP_CONTROLLER_API}"
       REACT_APP_ORCHESTRATION_MODE: "${CCE_ORCHESTRATION_MODE}"
+      CONTROLLER_UI_URL: "${CONTROLLER_UI_URL}"
+      CUPS_UI_URL: "${CUPS_UI_URL}"
+      CNCA_UI_URL: "${CNCA_UI_URL}"
   cups-ui:
     image: cups:latest
+    read_only: true
     build:
       context: ./ui/cups
       args:
         REACT_APP_CUPS_API: "${REACT_APP_CUPS_API}"
+        CONTROLLER_UI_URL: "${CONTROLLER_UI_URL}"
     ports:
       - 3010:80/tcp
     environment:
       REACT_APP_CUPS_API: "${REACT_APP_CUPS_API}"
+      CONTROLLER_UI_URL: "${CONTROLLER_UI_URL}"
+  cnca-ui:
+    image: cnca:latest
+    build:
+      context: ./ui/cnca
+      args:
+        REACT_APP_CNCA_AF_API: "${REACT_APP_CNCA_AF_API}"
+        REACT_APP_CNCA_5GOAM_API: "${REACT_APP_CNCA_5GOAM_API}"
+        CONTROLLER_UI_URL: "${CONTROLLER_UI_URL}"
+    ports:
+      - 3020:80/tcp
+    environment:
+      REACT_APP_CNCA_AF_API: "${REACT_APP_CNCA_AF_API}"
+      REACT_APP_CNCA_5GOAM_API: "${REACT_APP_CNCA_5GOAM_API}"
+      CONTROLLER_UI_URL: "${CONTROLLER_UI_URL}"

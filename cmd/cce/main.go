@@ -407,8 +407,8 @@ func serveTelemetry(ctx context.Context, outfile, addr string, conf *tls.Config)
 
 // Generate a TLS config that handles two server names:
 //
-//     v1.community.controller.mec: requires and verifies peer cert
-//     enroll.community.controller.mec: no peer cert required
+//     controller.openness: requires and verifies peer cert
+//     enroll.controller.openness: no peer cert required
 //
 // In the gRPC server the servername will be considered for the particular RPCs
 // authorized to the client.

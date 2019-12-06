@@ -1,16 +1,6 @@
-// Copyright 2019 Intel Corporation and Smart-Edge.com, Inc. All rights reserved
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright © 2019 Intel Corporation
+ */
 
 import React, { Component } from 'react';
 import axios from 'axios';
@@ -28,7 +18,7 @@ import {
   Paper,
 } from '@material-ui/core';
 
-const baseURL = (process.env.NODE_ENV === 'production') ? process.env.REACT_APP_CUPS_API : '/api';
+const baseURL = (process.env.NODE_ENV === 'production') ? process.env.REACT_APP_CNCA_5GOAM_API : '/api';
 const CONTROLLER_URL = process.env.REACT_APP_CONTROLLER_UI_URL;
 
 const styles = theme => ({
@@ -44,8 +34,8 @@ const styles = theme => ({
   },
 });
 
-class Userplanes extends Component {
-  _isMounted = false;
+class Services extends Component {
+  isMounted = false;
 
   constructor(props) {
     super(props);
@@ -53,51 +43,66 @@ class Userplanes extends Component {
     this.state = {
       loaded: false,
       hasError: false,
-      userplanes: [],
-    };
+      services: [],
+    }
   }
 
-  _cancelIfUnmounted = (action) => {
-    if (this._isMounted) {
+  cancelIfUnmounted = (action) => {
+    if (this.isMounted) {
       action();
     }
   }
 
-  _getUserplanes = async () => {
+  getServices = async() => {
     try {
-      const response = await axios.get(`${baseURL}/userplanes`);
+      const response = await axios.get(`${baseURL}/ngcoam/v1/af/services`);
 
-      return response.data.userplanes || [];
+      return response.data || [];
     } catch (error) {
-      console.error("Unable to get userplanes: " + error.toString());
+      console.error("Unable to get services: " + error.toString());
       throw error;
+    }
+  }
+
+  deleteService = async(id) => {
+    const { history } = this.props;
+
+    try {
+      await axios.delete(`${baseURL}/ngcoam/v1/af/services/${id}`);
+
+      // Redirect back to /services to refresh the table of services
+      history.push('/');
+    } catch (error) {
+      this.cancelIfUnmounted(() => this.setState({
+        loaded: true,
+        hasErrors: error,
+        error: error.toString(),
+      }));
     }
   }
 
   componentWillUnmount() {
     // Signal to cancel any pending async requests to prevent setting state
     // on an unmounted component.
-    this._isMounted = false;
+    this.isMounted = false;
   }
 
   async componentDidMount() {
-    this._isMounted = true;
+    this.isMounted = true;
 
     try {
-      // Fetch userplanes.
-      const userplanes = await this._getUserplanes() || [];
+      // GET services
+      const services = await this.getServices() || [];
 
-      // Update userplanes iff the component is mounted.
-      this._cancelIfUnmounted(() => this.setState({
+      this.cancelIfUnmounted(() => this.setState({
         loaded: true,
-        userplanes: userplanes,
+        services: services,
       }));
     } catch (error) {
-      // Update error iff the component is mounted.
-      this._cancelIfUnmounted(() => this.setState({
+      this.cancelIfUnmounted(() => this.setState({
         loaded: true,
-        hasError: true,
-        error: error,
+        hasErrors: true,
+        error: error.toString(),
       }));
     }
   }
@@ -111,38 +116,41 @@ class Userplanes extends Component {
 
     const {
       loaded,
-      hasError,
+      hasErrors,
       error,
-      userplanes,
+      services,
     } = this.state;
 
     if (!loaded) {
       return <Loader />;
     }
 
-    if (hasError) {
+    if (hasErrors) {
       throw error;
     }
 
-    const UserplaneTableRow = ({ match, history, item }) => {
+    const ServiceTableRow = ({ match, item }) => {
       return (
         <TableRow>
           <TableCell>
-            {item.id}
+            {item.afServiceId}
           </TableCell>
           <TableCell>
-            {item.uuid}
-          </TableCell>
-          <TableCell>
-            {item.function}
+            {item.locationService.dnn}
           </TableCell>
           <TableCell>
             <Button
-              onClick={() => history.push(`${match.url}/${item.id}`)}
+              onClick={() => history.push(`${match.url}/${item.afServiceId}`)}
               variant="outlined"
             >
               Edit
-              </Button>
+            </Button>
+            <Button
+              onClick={() => this.deleteService(item.afServiceId)}
+              variant="outlined"
+            >
+              Delete
+            </Button>
           </TableCell>
         </TableRow>
       );
@@ -157,7 +165,7 @@ class Userplanes extends Component {
             <Button
               onClick={() => window.location.assign(`${CONTROLLER_URL}/`)}
             >
-              Back to Home Page 
+              Back to Home Page
             </Button>
           </Grid>
         </Grid>
@@ -167,7 +175,7 @@ class Userplanes extends Component {
             container
             direction="row"
             justify="space-between"
-            alignItems="flex-end"
+            allignItems="flex-end"
           >
             <Grid item>
               <Typography
@@ -175,10 +183,18 @@ class Userplanes extends Component {
                 variant="h5"
                 gutterBottom
               >
-                Userplanes
+                Services
               </Typography>
             </Grid>
-
+            <Grid item>
+              <Button
+                onClick={() => history.push('/subscriptions')}
+                variant="outlined"
+                color="primary"
+              >
+                View Subscriptions
+              </Button>
+            </Grid>
             <Grid item>
               <Button
                 onClick={() => history.push(`${match.url}/create`)}
@@ -189,32 +205,29 @@ class Userplanes extends Component {
               </Button>
             </Grid>
           </Grid>
-
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>UUID</TableCell>
-                <TableCell>Function</TableCell>
+                <TableCell>AF Service ID</TableCell>
+                <TableCell>Data Network Name</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {
-                userplanes.length === 0
-                  ? <div>No userplanes to display.</div>
-                  : userplanes.map(item => <UserplaneTableRow
-                    key={item.id}
+                services.length === 0
+                  ? <div>No Services Registered.</div>
+                  : services.map(item => <ServiceTableRow
+                    key={item.afServiceId}
                     item={item}
-                    history={history}
                     match={match} />)
               }
             </TableBody>
           </Table>
-        </Paper >
+        </Paper>
       </div>
     );
   }
 };
 
-export default withStyles(styles)(Userplanes);
+export default withStyles(styles)(Services);

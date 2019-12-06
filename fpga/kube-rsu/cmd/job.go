@@ -55,7 +55,7 @@ var RSUJob = &batchv1.Job{
 					{
 						Name:    "fpga-opae", // to be edited by command
 						Image:   "fpga-opae-pacn3000:1.0",
-						Command: []string{"/bin/bash", "-c", "--"},
+						Command: []string{"sudo", "/bin/bash", "-c", "--"},
 						Args:    []string{""}, // to be added by command
 						SecurityContext: &corev1.SecurityContext{
 							Privileged: &privileged,

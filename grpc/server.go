@@ -40,9 +40,9 @@ import (
 
 const (
 	// SNI is the server name for TLS when connecting to the Controller post-enrollment
-	SNI = "v1.community.controller.mec"
+	SNI = "controller.openness"
 	// EnrollmentSNI is the server name for TLS when connecting to the Controller for enrollment
-	EnrollmentSNI = "v1.enroll.community.controller.mec"
+	EnrollmentSNI = "enroll.controller.openness"
 
 	// This is the gRPC full RPC path (format: /${package}.${service}/${rpc})
 	// for the authentication endpoint. The proto is defined here:
