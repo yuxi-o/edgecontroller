@@ -48,7 +48,7 @@ func init() {
 	const help = `Register controller to NGC AF services registry
 
 Usage:
-  cnca register --dnai=<DNAI> --dnn=<DNN> --priDns=<pri-DNS> --secDns=<sec-DNS> --upfIp=<UPF-IP> --snssai=<SNSSAI>
+  cnca register --dnai=<DNAI> --dnn=<DNN> --tac=<TAC> --priDns=<pri-DNS> --secDns=<sec-DNS> --upfIp=<UPF-IP> --snssai=<SNSSAI>
 
 Flags:
   -h, --help       help
