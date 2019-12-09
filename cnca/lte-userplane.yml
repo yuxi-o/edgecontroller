@@ -24,4 +24,4 @@ policy:
         tac: 51
     pdn:
       apns:
-      - test5
+      - APN001
