@@ -67,6 +67,11 @@ spec:
         command: ["/bin/sh"]
         args: ["-c", "cp /root/certs-sec/* /root/certs/"]
         imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "1"
+          limits:
+            memory: "128Mi"
         volumeMounts:
         - name: certs-sec
           mountPath: /root/certs-sec
@@ -78,6 +83,11 @@ spec:
         imagePullPolicy: Never
         securityContext:
           readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: "1"
+          limits:
+            memory: "128Mi"
         volumeMounts:
         - name: certs
           mountPath: /home/eaa/certs/eaa
@@ -146,6 +156,11 @@ spec:
         - -address=:4204
         - -port=53
         - -fwdr=$(DNS_FWDR)
+        resources:
+          requests:
+            cpu: "1"
+          limits:
+            memory: "128Mi"
         volumeMounts:
         - name: edgednssvr
           mountPath: /var/lib/edgedns
@@ -172,6 +187,11 @@ spec:
         image: emberstack/openssl:latest
         command: ["/root/certgen/entrypoint_tls.sh", "edgedns.openness", "/root/certs", "/root/CA"]
         imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "1"
+          limits:
+            memory: "128Mi"
         volumeMounts:
         - name: ca
           mountPath: /root/CA
@@ -225,6 +245,11 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: spec.nodeName
+        resources:
+          requests:
+            cpu: "1"
+          limits:
+            memory: "128Mi"
         volumeMounts:
         - name: syslog-conf
           mountPath: /etc/syslog-ng
@@ -243,6 +268,11 @@ spec:
         image: emberstack/openssl:latest
         command: ["/root/certgen/entrypoint_tls.sh", "syslog.openness", "/root/certs", "/root/CA"]
         imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "1"
+          limits:
+            memory: "128Mi"
         volumeMounts:
         - name: ca
           mountPath: /root/CA
@@ -314,6 +344,11 @@ spec:
         image: balabit/syslog-ng:3.19.1
         imagePullPolicy: IfNotPresent
         args: ["--no-caps"]
+        resources:
+          requests:
+            cpu: "1"
+          limits:
+            memory: "128Mi"
         volumeMounts:
         - name: syslog-conf
           mountPath: /etc/syslog-ng
@@ -328,6 +363,11 @@ spec:
         image: emberstack/openssl:latest
         command: ["/root/certgen/entrypoint_tls.sh", "syslog-master.openness", "/root/certs", "/root/CA"]
         imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "1"
+          limits:
+            memory: "128Mi"
         volumeMounts:
         - name: ca
           mountPath: /root/CA
@@ -397,6 +437,11 @@ spec:
         securityContext:
           readOnlyRootFilesystem: true
           privileged: true
+        resources:
+          requests:
+            cpu: "1"
+          limits:
+            memory: "128Mi"
         volumeMounts:
         - name: configs
           mountPath: /home/interfaceservice/configs
@@ -418,6 +463,11 @@ spec:
         image: emberstack/openssl:latest
         command: ["/root/certgen/entrypoint_tls.sh", "interfaceservice.openness", "/root/certs", "/root/CA"]
         imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "1"
+          limits:
+            memory: "128Mi"
         volumeMounts:
         - name: ca
           mountPath: /root/CA
