@@ -28,6 +28,7 @@ import Policies from './views/policies/Main'
 import PoliciesEdit from './views/policies/Edit'
 
 import ProtectedRoute from './components/ProtectedRoute'
+import Auth from './components/Auth'
 
 export default props => (
   <div>
@@ -35,7 +36,11 @@ export default props => (
       <Route
         exact
         path='/'
-        render={() => <Redirect to="/landing" />}
+        render={() => (
+          Auth.isAuthenticated()
+          ? <Redirect to="/nodes" />
+          : <Redirect to="/landing" />
+        )}
       />
 
       <Route exact path='/login' component={LoginForm} />
