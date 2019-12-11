@@ -25,7 +25,6 @@ var (
 	privileged   = true
 	backoffLimit = int32(0)
 	namespace    = "default"
-	jobTimeout   = 300 //seconds
 )
 
 // RSUJob struct to hold RSU job specification for K8
@@ -118,6 +117,20 @@ func PrintJobLogs(clientset *kubernetes.Clientset, job *batchv1.Job) (*exec.Cmd,
 		return cmd, err
 	}
 	return cmd, nil
+}
+
+// DeletePod deletes k8 pod belonging to the given job
+func DeletePod(clientset *kubernetes.Clientset, job *batchv1.Job) error {
+	// get pod of job based on labels
+	set := labels.Set(job.Spec.Selector.MatchLabels)
+	listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
+	podsClient := clientset.CoreV1().Pods(namespace)
+	pods, _ := podsClient.List(listOptions)
+	if len(pods.Items) < 1 {
+		return errors.New("Failed to retrieve pod")
+	}
+	// delete job after completion
+	return podsClient.Delete(pods.Items[0].Name, &metav1.DeleteOptions{})
 }
 
 // GetK8Clientset returns the clientset for kubernetes

@@ -111,7 +111,6 @@ var programCmd = &cobra.Command{
 		defer logs.Process.Kill()
 		defer logs.Wait()
 
-		// no timeout (this is a long process)
 		for {
 			// wait
 			time.Sleep(1 * time.Second)
@@ -133,6 +132,12 @@ var programCmd = &cobra.Command{
 
 		// delete job after completion
 		err = jobsClient.Delete(k8Job.Name, &metav1.DeleteOptions{})
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		// delete pod belonging to the job
+		err = DeletePod(clientset, k8Job)
 		if err != nil {
 			fmt.Println(err.Error())
 			return

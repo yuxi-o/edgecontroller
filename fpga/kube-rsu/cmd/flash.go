@@ -117,6 +117,12 @@ var flashCmd = &cobra.Command{
 			fmt.Println(err.Error())
 			return
 		}
+		// delete pod belonging to the job
+		err = DeletePod(clientset, k8Job)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
 	},
 }
 
