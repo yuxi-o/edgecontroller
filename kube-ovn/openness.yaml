@@ -58,8 +58,9 @@ spec:
         imagePullPolicy: IfNotPresent
         resources:
           requests:
-            cpu: "1"
+            cpu: "0.1"
           limits:
+            cpu: "0.1"
             memory: "128Mi"
         volumeMounts:
         - name: certs-sec
@@ -74,8 +75,9 @@ spec:
           readOnlyRootFilesystem: true
         resources:
           requests:
-            cpu: "1"
+            cpu: "0.1"
           limits:
+            cpu: "1"
             memory: "128Mi"
         volumeMounts:
         - name: certs
@@ -147,8 +149,9 @@ spec:
         - -fwdr=$(DNS_FWDR)
         resources:
           requests:
-            cpu: "1"
+            cpu: "0.1"
           limits:
+            cpu: "1"
             memory: "128Mi"
         volumeMounts:
         - name: edgednssvr
@@ -178,8 +181,9 @@ spec:
         imagePullPolicy: IfNotPresent
         resources:
           requests:
-            cpu: "1"
+            cpu: "0.1"
           limits:
+            cpu: "0.1"
             memory: "128Mi"
         volumeMounts:
         - name: ca
@@ -236,8 +240,9 @@ spec:
                 fieldPath: spec.nodeName
         resources:
           requests:
-            cpu: "1"
+            cpu: "0.1"
           limits:
+            cpu: "0.5"
             memory: "128Mi"
         volumeMounts:
         - name: syslog-conf
@@ -259,8 +264,9 @@ spec:
         imagePullPolicy: IfNotPresent
         resources:
           requests:
-            cpu: "1"
+            cpu: "0.1"
           limits:
+            cpu: "0.1"
             memory: "128Mi"
         volumeMounts:
         - name: ca
@@ -335,8 +341,9 @@ spec:
         args: ["--no-caps"]
         resources:
           requests:
-            cpu: "1"
+            cpu: "0.1"
           limits:
+            cpu: "0.5"
             memory: "128Mi"
         volumeMounts:
         - name: syslog-conf
@@ -354,8 +361,9 @@ spec:
         imagePullPolicy: IfNotPresent
         resources:
           requests:
-            cpu: "1"
+            cpu: "0.1"
           limits:
+            cpu: "0.1"
             memory: "128Mi"
         volumeMounts:
         - name: ca
@@ -428,8 +436,9 @@ spec:
           privileged: true
         resources:
           requests:
-            cpu: "1"
+            cpu: "0.1"
           limits:
+            cpu: "1"
             memory: "128Mi"
         volumeMounts:
         - name: configs
@@ -454,8 +463,9 @@ spec:
         imagePullPolicy: IfNotPresent
         resources:
           requests:
-            cpu: "1"
+            cpu: "0.1"
           limits:
+            cpu: "0.1"
             memory: "128Mi"
         volumeMounts:
         - name: ca
