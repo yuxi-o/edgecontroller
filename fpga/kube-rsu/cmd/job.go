@@ -25,6 +25,7 @@ var (
 	privileged   = true
 	backoffLimit = int32(0)
 	namespace    = "default"
+	timeout      = 60 //seconds
 )
 
 // RSUJob struct to hold RSU job specification for K8
@@ -96,20 +97,31 @@ func PrintJobLogs(clientset *kubernetes.Clientset, job *batchv1.Job) (*exec.Cmd,
 	// get pod of job based on labels
 	set := labels.Set(job.Spec.Selector.MatchLabels)
 	listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
-	podsClient := clientset.CoreV1().Pods(namespace)
-	pods, err := podsClient.List(listOptions)
+
+	// wait for pod creation
+	for i := 0;  i < timeout; i++ {
+		podsClient := clientset.CoreV1().Pods(namespace)
+		pods, err := podsClient.List(listOptions)
+		if len(pods.Items) > 0 {
+			break
+		}
+		time.Sleep(time.Second)
+	}
 	if len(pods.Items) < 1 {
-		return cmd, errors.New("Failed to retrieve pod")
+		return cmd, errors.New("Pod creation timeout")
 	}
 	// we should have 1 pod for the job
 	pod := pods.Items[0]
 	// wait for pod to create container
-	for {
+	for i := 0;  i < timeout; i++ {
 		k8Pod, _ := podsClient.Get(pod.Name, metav1.GetOptions{})
 		if k8Pod.Status.Phase != corev1.PodPending {
 			break
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(time.Second)
+	}
+	if k8Pod.Status.Phase == corev1.PodPending {
+		return cmd, errors.New("Container creation timeout")
 	}
 	// print logs
 	cmd, err = k8LogCmd(pod.Name)
