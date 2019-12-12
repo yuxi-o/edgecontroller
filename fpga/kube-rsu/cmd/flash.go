@@ -102,7 +102,7 @@ var flashCmd = &cobra.Command{
 				return
 			}
 			if k8Job.Status.Failed > 0 {
-				fmt.Println(" RSU job failed!")
+				fmt.Println("RSU job failed!")
 				break
 			}
 			if (k8Job.Status.Succeeded > 0) && (k8Job.Status.Active == 0) {
