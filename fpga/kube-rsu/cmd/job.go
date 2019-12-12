@@ -15,6 +15,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -94,14 +95,16 @@ func k8LogCmd(pod string) (*exec.Cmd, error) {
 // PrintJobLogs prints logs from k8 pod belonging to the given job
 func PrintJobLogs(clientset *kubernetes.Clientset, job *batchv1.Job) (*exec.Cmd, error) {
 	var cmd *exec.Cmd
+	var pods *corev1.PodList
+	var podsClient k8corev1.PodInterface
+	var pod *corev1.Pod
 	// get pod of job based on labels
 	set := labels.Set(job.Spec.Selector.MatchLabels)
 	listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
-
 	// wait for pod creation
 	for i := 0;  i < timeout; i++ {
-		podsClient := clientset.CoreV1().Pods(namespace)
-		pods, err := podsClient.List(listOptions)
+		podsClient = clientset.CoreV1().Pods(namespace)
+		pods, _ = podsClient.List(listOptions)
 		if len(pods.Items) > 0 {
 			break
 		}
@@ -110,21 +113,19 @@ func PrintJobLogs(clientset *kubernetes.Clientset, job *batchv1.Job) (*exec.Cmd,
 	if len(pods.Items) < 1 {
 		return cmd, errors.New("Pod creation timeout")
 	}
-	// we should have 1 pod for the job
-	pod := pods.Items[0]
 	// wait for pod to create container
 	for i := 0;  i < timeout; i++ {
-		k8Pod, _ := podsClient.Get(pod.Name, metav1.GetOptions{})
-		if k8Pod.Status.Phase != corev1.PodPending {
+		pod, _ = podsClient.Get(pods.Items[0].Name, metav1.GetOptions{})
+		if pod.Status.Phase != corev1.PodPending {
 			break
 		}
 		time.Sleep(time.Second)
 	}
-	if k8Pod.Status.Phase == corev1.PodPending {
+	if pod.Status.Phase == corev1.PodPending {
 		return cmd, errors.New("Container creation timeout")
 	}
 	// print logs
-	cmd, err = k8LogCmd(pod.Name)
+	cmd, err := k8LogCmd(pod.Name)
 	if err != nil {
 		return cmd, err
 	}
