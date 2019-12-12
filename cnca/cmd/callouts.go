@@ -14,8 +14,8 @@ import (
 
 // Connectivity constants
 const (
-	NgcOAMServiceEndpoint = "http://localhost:8081/ngcoam/v1/af"
-	NgcAFServiceEndpoint  = "http://localhost:8080/af/v1"
+	NgcOAMServiceEndpoint = "http://localhost:30070/ngcoam/v1/af"
+	NgcAFServiceEndpoint  = "http://localhost:30050/af/v1"
 	LteOAMServiceEndpoint = "http://localhost:8082/"
 )
 
