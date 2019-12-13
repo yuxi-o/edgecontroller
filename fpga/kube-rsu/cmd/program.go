@@ -111,7 +111,6 @@ var programCmd = &cobra.Command{
 		defer logs.Process.Kill()
 		defer logs.Wait()
 
-		// no timeout (this is a long process)
 		for {
 			// wait
 			time.Sleep(1 * time.Second)
@@ -122,17 +121,22 @@ var programCmd = &cobra.Command{
 				return
 			}
 			if k8Job.Status.Failed > 0 {
-				fmt.Println("Job `" + k8Job.Name + "` failed!")
+				fmt.Println("RSU job failed!")
 				break
 			}
 			if (k8Job.Status.Succeeded > 0) && (k8Job.Status.Active == 0) {
-				fmt.Println("Job `" + k8Job.Name + "` completed successfully!")
 				break
 			}
 		}
 
 		// delete job after completion
 		err = jobsClient.Delete(k8Job.Name, &metav1.DeleteOptions{})
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		// delete pod belonging to the job
+		err = DeletePod(clientset, k8Job)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
