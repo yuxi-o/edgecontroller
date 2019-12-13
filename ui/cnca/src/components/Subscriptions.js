@@ -71,7 +71,6 @@ class Subscriptions extends Component {
 	return "";
     }
     var UUID = split[split.length-1];
-    console.log("UUID parsed is: " + UUID);
 
     return UUID;
   }
@@ -145,8 +144,6 @@ class Subscriptions extends Component {
             >
               Patch
             </Button>
-          </TableCell>
-          <TableCell>
             <Button
               onClick={() => history.push(`${match.url}/edit/${this.parseUUID(item.self)}`)}
               variant="outlined"

@@ -67,7 +67,7 @@ class SubscriptionModify extends Component {
       this.cancelIfUnmounted(() => this.setState({
         snackbarOpen: true,
         snackbarVariant: "success",
-        snackbarMessage: "Successfully created subscription"
+        snackbarMessage: "Successfully updated subscription"
       }));
 
       await sleep(1000);
@@ -194,7 +194,7 @@ class SubscriptionModify extends Component {
         trafficFiltersModel: { trafficFilters: subscription.trafficFilters },
         ethFiltersModel: { ethFilters: subscription.ethFilters },
         trafficRoutesModel: { trafficRoutes: subscription.trafficRoutes },
-        tempValidityModel: { tempValidity: subscription.tempValidity },
+        tempValidityModel: { tempVal: subscription.tempValidity },
       }));
     } catch (error) {
       this.cancelIfUnmounted(() => this.setState({
@@ -333,7 +333,7 @@ class SubscriptionModify extends Component {
               schema={ModifySchema.temporalValidityFormSchema}
               form={ModifySchema.temporalValidityForm}
               model={tempValidityModel}
-              onModelChange={this.temporalValidityModelChange}
+              onModelChange={this.onTempValidityModelChange}
               showErrors={showErrors}
             />
           </Grid>

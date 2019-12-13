@@ -9,39 +9,40 @@ const subscriptionModifyForm = [
 
 const temporalValidityForm = [
   {
-    key: "tempValidity",
+    key: "tempVal",
     items: [
       {
-        key: "tempValidity[].temporalValidity",
+        key: "tempVal[].tempValidity",
         title: "Temporal Validity",
-      },
-      {
-        key: "tempValidity[].validGeoZoneIds",
-        title: "Valid Deo Zone Ids",
       },
     ],
   },
+  "validGeoZoneIds",
 ];
 
 const temporalValidityFormSchema = {
   type: "object",
-  title: "Temporal Validity",
+  title: "Temporal Validity and Support Features",
   properties: {
-    tempValidity: {
-      title: "Temporal Validity",
+    tempVal: {
+      title: "Temporal Validity and Support Features",
       type: "array",
-      properties: {
-        temporalValidity: {
-          title: "Temporal Validity",
-          type: "object",
-	  properties: {
-            startTime: {
-              title: "Start Time",
-              type: "string",
-            },
-            stopTime: {
-              title: "Stop Time",
-              type: "string",
+      items: {
+        title: "Temporal Validity",
+        type: "object",
+        properties: {
+          tempValidity: {
+            title: "Temporal Validity",
+            type: "object",
+	    properties: {
+              startTime: {
+                title: "Start Time",
+                type: "string",
+              },
+              stopTime: {
+                title: "Stop Time",
+                type: "string",
+              },
             },
           },
         },
