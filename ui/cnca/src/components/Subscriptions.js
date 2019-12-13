@@ -71,7 +71,6 @@ class Subscriptions extends Component {
 	return "";
     }
     var UUID = split[split.length-1];
-    console.log("UUID parsed is: " + UUID);
 
     return UUID;
   }
