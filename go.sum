@@ -100,12 +100,16 @@ github.com/otcshare/common/log v0.0.0-20190820113043-69a7d2cb754d h1:l4B6VmM114u
 github.com/otcshare/common/log v0.0.0-20190820113043-69a7d2cb754d/go.mod h1:30kZGx52RercaMNsH35keYVwwh2KCNXBnXTAdm2XPfM=
 github.com/otcshare/common/log v0.0.0-20190926085025-d7b0a7a47249 h1:XQWc87y+l+yMH7Ctibpz7t9bXWgVsS5YXkJod7K1RJk=
 github.com/otcshare/common/log v0.0.0-20190926085025-d7b0a7a47249/go.mod h1:30kZGx52RercaMNsH35keYVwwh2KCNXBnXTAdm2XPfM=
+github.com/otcshare/common/log v0.0.0-20191204122953-5cc7dfd62d15 h1:9+2MKzBkVtGuwJIdHogQ6lpOfu3aazyqc05JD5PmpPQ=
+github.com/otcshare/common/log v0.0.0-20191204122953-5cc7dfd62d15/go.mod h1:30kZGx52RercaMNsH35keYVwwh2KCNXBnXTAdm2XPfM=
 github.com/otcshare/common/proxy v0.0.0-20190820113043-69a7d2cb754d h1:x3AKivXRROFCHCX2dyD5EdjhTohD1Cr1wIzMKh6QjYU=
 github.com/otcshare/common/proxy v0.0.0-20190820113043-69a7d2cb754d/go.mod h1:a8/L/jNAu5ssj3elXyZ024lEWxl5gagqdgU6Gd/lHnA=
 github.com/otcshare/common/proxy v0.0.0-20190913124203-6b0465a8542e h1:l7V8yBB9tC12qTusxFPyKPOKhiW+b2JnwzlBaueL9iw=
 github.com/otcshare/common/proxy v0.0.0-20190913124203-6b0465a8542e/go.mod h1:bDxJjrhfrdTGmImnw4Obs7yf9ni3Df9C8znsZvPDlfM=
 github.com/otcshare/common/proxy v0.0.0-20190926085025-d7b0a7a47249 h1:lDYGtFTiKjPhELdlcOqc6Ls2FbJP2U/+7tnpT/+vCmw=
 github.com/otcshare/common/proxy v0.0.0-20190926085025-d7b0a7a47249/go.mod h1:bDxJjrhfrdTGmImnw4Obs7yf9ni3Df9C8znsZvPDlfM=
+github.com/otcshare/common/proxy v0.0.0-20191204122953-5cc7dfd62d15 h1:+shFjGYM3Ly1AnC3lUOCRXBMQYFDrSiYRSLGsFt9dXY=
+github.com/otcshare/common/proxy v0.0.0-20191204122953-5cc7dfd62d15/go.mod h1:IFSNKTbdSLvDVV/BxgI8Ff2pUt/12a37gVGm/vLFhJ0=
 github.com/peterbourgon/diskv v2.0.1+incompatible/go.mod h1:uqqh8zWWbv1HBMNONnaR/tNboyR3/BZd58JJSHlUSCU=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
