@@ -75,11 +75,6 @@ const (
 	Late      DNAIChangeType = "LATE"
 )
 
-// SubscriptionID identifies AF subscription ID
-type SubscriptionID struct {
-	ID string `json:"id,omitempty"`
-}
-
 // TrafficInfluSub is Traffic Influence Subscription structure
 type TrafficInfluSub struct {
 	// Identifies a service on behalf of which the AF is issuing the request.

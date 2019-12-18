@@ -59,12 +59,12 @@ var applyCmd = &cobra.Command{
 			}
 
 			// create new subscription
-			subID, err := AFCreateSubscription(sub)
+			subLoc, err := AFCreateSubscription(sub)
 			if err != nil {
 				klog.Info(err)
 				return
 			}
-			fmt.Println("Subscription created:", subID)
+			fmt.Println("Subscription URI:", subLoc)
 
 		case "lte":
 			var u LTEUserplane
@@ -91,7 +91,7 @@ var applyCmd = &cobra.Command{
 				klog.Info(err)
 				return
 			}
-			fmt.Println("Userplane created:", upID)
+			fmt.Println("Userplane:", upID)
 
 		default:
 			fmt.Println(errors.New("`kind` missing or unknown in YAML file"))
