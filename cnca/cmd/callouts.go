@@ -99,17 +99,12 @@ func AFCreateSubscription(sub []byte) (string, error) {
 		return "", fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
 
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
+	// retrive URI of the newly created subscription from response header
+	subLoc := resp.Header.Get("Location")
+	if subLoc == "" {
+		return "", fmt.Errorf("Empty subscription URI returned from AF")
 	}
-
-	var s SubscriptionID
-	err = json.Unmarshal(b, &s)
-	if err != nil {
-		return "", err
-	}
-	return s.ID, nil
+	return subLoc, nil
 }
 
 // AFPatchSubscription update an active subscription for the AF
