@@ -77,8 +77,16 @@ const trafficRoutesForm = [
     key: "trafficRoutes",
     items: [
       {
-        key: "trafficRoutes[].routeToLocation",
-        title: "Route To Location",
+        key: "trafficRoutes[].dnai",
+        title: "DNAI",
+      },
+      {
+        key: "trafficRoutes[].routeInfo",
+        title: "Route Info",
+      },
+      {
+        key: "trafficRoutes[].routeProfId",
+        title: "Route Prof Id",
       },
     ],
   },
@@ -179,37 +187,31 @@ const trafficRoutesFormSchema = {
         title: "Traffic Route",
         type: "object",
         properties: {
-          routeToLocation: {
-            title: "Route To Location",
+          dnai: {
+            title: "DNAI",
+            type: "string",
+          },
+          routeInfo: {
+            title: "Route Information",
             type: "object",
             properties: {
-              dnai: {
-                title: "DNAI",
+              ipv4Addr: {
+                title: "IPv4 Address",
                 type: "string",
               },
-              routeInfo: {
-                title: "Route Information",
-                type: "object",
-                properties: {
-                  ipv4Addr: {
-                    title: "IPv4 Address",
-                    type: "string",
-                  },
-                  ipv6Addr: {
-                    title: "IPv6 Address",
-                    type: "string",
-                  },
-                  portNumber: {
-                    title: "Port Number",
-                    type: "number",
-                  },
-                },
-              },
-              routeProfId: {
-                title: "Route Prof ID",
+              ipv6Addr: {
+                title: "IPv6 Address",
                 type: "string",
+              },
+              portNumber: {
+                title: "Port Number",
+                type: "number",
               },
             },
+          },
+          routeProfId: {
+            title: "Route Prof ID",
+            type: "string",
           },
         },
       },
