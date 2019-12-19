@@ -106,7 +106,7 @@ class Subscription extends Component {
       // Redirect user back to /subscriptions on success
       history.push('/subscriptions');
     } catch (error) {
-      this._cancelIfUnmounted(() => this.setState({
+      this.cancelIfUnmounted(() => this.setState({
         snackbarOpen: true,
         snackbarVariant: "error",
         snackbarMessage: error.toString(),
@@ -255,9 +255,9 @@ class Subscription extends Component {
         id: match.params.id,
         model: subscription,
         trafficFiltersModel: { trafficFilters: subscription.trafficFilters },
-        ethFiltersModel: { ethFilters: subscription.ethFilters },
+        ethFiltersModel: { ethTrafficFilters: subscription.ethTrafficFilters },
         trafficRoutesModel: { trafficRoutes: subscription.trafficRoutes },
-        tempValidateAndSupportModel: { tempVal: subscription.tempVal },
+        tempValidateAndSupportModel: { tempValidities: subscription.tempValidities, validGeoZoneIds: subscription.validGeoZoneIds, suppFeat: subscription.suppFeat },
       }));
     } catch (error) {
       this.cancelIfUnmounted(() => this.setState({

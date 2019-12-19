@@ -192,9 +192,9 @@ class SubscriptionModify extends Component {
         id: match.params.id,
         model: subscription,
         trafficFiltersModel: { trafficFilters: subscription.trafficFilters },
-        ethFiltersModel: { ethFilters: subscription.ethFilters },
+        ethFiltersModel: { ethTrafficFilters: subscription.ethTrafficFilters },
         trafficRoutesModel: { trafficRoutes: subscription.trafficRoutes },
-        tempValidityModel: { tempVal: subscription.tempValidity },
+        tempValidityModel: { tempValidities: subscription.tempValidities, validGeoZoneIds: subscription.validGeoZoneIds },
       }));
     } catch (error) {
       this.cancelIfUnmounted(() => this.setState({

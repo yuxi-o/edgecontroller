@@ -129,13 +129,13 @@ class Subscriptions extends Component {
       return (
         <TableRow>
           <TableCell>
+            {this.parseUUID(item.self)}
+          </TableCell>
+          <TableCell>
             {item.afServiceId}
           </TableCell>
           <TableCell>
             {item.afAppId}
-          </TableCell>
-          <TableCell>
-            {item.afTransId}
           </TableCell>
           <TableCell>
             <Button
@@ -210,9 +210,9 @@ class Subscriptions extends Component {
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell>Subscription ID</TableCell>
                 <TableCell>Service ID</TableCell>
 	        <TableCell>App ID</TableCell>
-                <TableCell>Transaction ID</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>

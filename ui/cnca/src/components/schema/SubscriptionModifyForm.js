@@ -9,11 +9,15 @@ const subscriptionModifyForm = [
 
 const temporalValidityForm = [
   {
-    key: "tempVal",
+    key: "tempValidities",
     items: [
       {
-        key: "tempVal[].tempValidity",
-        title: "Temporal Validity",
+        key: "tempValidities[].startTime",
+        title: "Start Time",
+      },
+      {
+        key: "tempValidities[].stopTime",
+        title: "Stop Time",
       },
     ],
   },
@@ -22,28 +26,22 @@ const temporalValidityForm = [
 
 const temporalValidityFormSchema = {
   type: "object",
-  title: "Temporal Validity and Support Features",
+  title: "Temporal Validity",
   properties: {
-    tempVal: {
-      title: "Temporal Validity and Support Features",
+    tempValidities: {
+      title: "Temporal Validities",
       type: "array",
       items: {
         title: "Temporal Validity",
         type: "object",
         properties: {
-          tempValidity: {
-            title: "Temporal Validity",
-            type: "object",
-	    properties: {
-              startTime: {
-                title: "Start Time",
-                type: "string",
-              },
-              stopTime: {
-                title: "Stop Time",
-                type: "string",
-              },
-            },
+          startTime: {
+            title: "Start Time",
+            type: "string",
+          },
+          stopTime: {
+            title: "Stop Time",
+            type: "string",
           },
         },
       },

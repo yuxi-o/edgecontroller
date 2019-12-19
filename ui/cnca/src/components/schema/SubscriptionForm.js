@@ -20,7 +20,7 @@ const subscriptionForm = [
   "dnaiChgType",
   "notificationDestination",
   "requestTestNotification",
-  "websocketNotifConfig",
+  "websockNotifConfig",
   "self",
 ];
 
@@ -33,7 +33,7 @@ const trafficFiltersForm = [
         title: "Flow ID",
       },
       {
-        key: "trafficFilters[].flowDescription",
+        key: "trafficFilters[].flowDescriptions",
         title: "Flow Description",
       },
     ],
@@ -42,30 +42,30 @@ const trafficFiltersForm = [
 
 const ethFiltersForm = [
   {
-    key: "ethFilters",
+    key: "ethTrafficFilters",
     items: [
       {
-        key: "ethFilters[].destMacAddr",
+        key: "ethTrafficFilters[].destMacAddr",
         title: "Destination MAC Address",
       },
       {
-        key: "ethFilters[].ethType",
+        key: "ethTrafficFilters[].ethType",
         title: "Ethernet Type",
       },
       {
-        key: "ethFilters[].fDesc",
+        key: "ethTrafficFilters[].fDesc",
         title: "Flow Description",
       },
       {
-        key: "ethFilters[].fDir",
+        key: "ethTrafficFilters[].fDir",
         title: "Flow Direction",
       },
       {
-        key: "ethFilters[].sourceMacAddr",
+        key: "ethTrafficFilters[].sourceMacAddr",
         title: "Source Mac Address",
       },
       {
-        key: "ethFilters[].vlanTags",
+        key: "ethTrafficFilters[].vlanTags",
         title: "VLAN Tags",
       },
     ],
@@ -94,11 +94,15 @@ const trafficRoutesForm = [
 
 const tempValidateAndSupportForm = [
   {
-    key: "tempVal",
+    key: "tempValidities",
     items: [
       {
-        key: "tempVal[].tempValidity",
-        title: "Temporal Validity",
+        key: "tempValidities[].startTime",
+        title: "Start Time",
+      },
+      {
+        key: "tempValidities[].stopTime",
+        title: "Stop Time",
       },
     ],
   },
@@ -121,9 +125,13 @@ const trafficFiltersFormSchema = {
             title: "Flow ID",
             type: "number",
           },
-          flowDescription: {
-            title: "Flow Description",
-            type: "string",
+          flowDescriptions: {
+            title: "Flow Descriptions",
+            type: "array",
+            items: {
+              title: "Flow Description",
+              type: "string",
+            },
 	  },
         },
       },
@@ -135,7 +143,7 @@ const ethFiltersFormSchema = {
   type: "object",
   title: "Ethernet Filters",
   properties: {
-    ethFilters: {
+    ethTrafficFilters: {
       title: "Ethernet Filters",
       type: "array",
       items: {
@@ -221,28 +229,22 @@ const trafficRoutesFormSchema = {
 
 const tempValidateAndSupportFormSchema = {
   type: "object",
-  title: "Temporal Validity and Support Features",
+  title: "Temporal Validities",
   properties: {
-    tempVal: {
-      title: "Temporal Validity and Support Features",
+    tempValidities: {
+      title: "Temporal Validities",
       type: "array",
       items: {
         title: "Temporal Validity",
         type: "object",
         properties: {
-          tempValidity: {
-            title: "Temporal Validity",
-            type: "object",
-	    properties: {
-              startTime: {
-                title: "Start Time",
-                type: "string",
-              },
-              stopTime: {
-                title: "Stop Time",
-                type: "string",
-              },
-            },
+          startTime: {
+            title: "Start Time",
+            type: "string",
+          },
+          stopTime: {
+            title: "Stop Time",
+            type: "string",
           },
         },
       },
@@ -344,7 +346,7 @@ const subscriptionFormSchema = {
       title: "Request Test Notification",
       type: "boolean",
     },
-    websocketNotifConfig: {
+    websockNotifConfig: {
       title: "Websocket Notification Configuration",
       type: "object",
       properties: {
