@@ -18,6 +18,11 @@ var getCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 
+		if len(args) < 1 {
+			fmt.Println(errors.New("Missing input"))
+			return
+		}
+
 		if args[0] == "subscription" {
 
 			// get subscription
