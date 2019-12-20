@@ -7,8 +7,8 @@ import (
 	"errors"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	cli "github.com/otcshare/edgecontroller/cmd/interfaceservicecli"
-	pb "github.com/otcshare/edgecontroller/pb/ela"
+	cli "github.com/open-ness/edgecontroller/cmd/interfaceservicecli"
+	pb "github.com/open-ness/edgecontroller/pb/ela"
 	"io/ioutil"
 	"os"
 )
