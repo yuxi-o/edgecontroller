@@ -1,16 +1,5 @@
-// Copyright 2019 Smart-Edge.com, Inc. All rights reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2019 Intel Corporation
 
 package cce
 
@@ -24,7 +13,7 @@ import (
 	"github.com/open-ness/edgecontroller/k8s"
 )
 
-// Our network callback helper
+// PrefaceLis Our network callback helper
 var PrefaceLis *progutil.PrefaceListener
 
 // OrchestrationMode global level orchestration mode for application deployment
@@ -124,12 +113,12 @@ type Filter struct {
 	Value string
 }
 
-func getIp(ctx context.Context, ps PersistenceService, nodeId string) (string, error) {
+func getIP(ctx context.Context, ps PersistenceService, nodeID string) (string, error) {
 	targets, err := ps.Filter(ctx, &NodeGRPCTarget{},
 		[]Filter{
 			{
 				Field: "node_id",
-				Value: nodeId,
+				Value: nodeID,
 			},
 		})
 	if err != nil {
@@ -140,12 +129,12 @@ func getIp(ctx context.Context, ps PersistenceService, nodeId string) (string, e
 		target := targets[0].(*NodeGRPCTarget).GRPCTarget
 		return target, nil
 	}
-	return "", fmt.Errorf("IP for %v not found", nodeId)
+	return "", fmt.Errorf("IP for %v not found", nodeID)
 }
 
 // Inform the proxy we're serving this host
-func RegisterToProxy(ctx context.Context, ps PersistenceService, nodeId string) {
-	ip, err := getIp(ctx, ps, nodeId)
+func RegisterToProxy(ctx context.Context, ps PersistenceService, nodeID string) {
+	ip, err := getIP(ctx, ps, nodeID)
 	if err != nil {
 		return
 	}

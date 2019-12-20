@@ -1,16 +1,5 @@
-// Copyright 2019 Smart-Edge.com, Inc. All rights reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2019 Intel Corporation
 
 package grpc
 
@@ -40,9 +29,9 @@ import (
 
 const (
 	// SNI is the server name for TLS when connecting to the Controller post-enrollment
-	SNI = "v1.community.controller.mec"
+	SNI = "controller.openness"
 	// EnrollmentSNI is the server name for TLS when connecting to the Controller for enrollment
-	EnrollmentSNI = "v1.enroll.community.controller.mec"
+	EnrollmentSNI = "enroll.controller.openness"
 
 	// This is the gRPC full RPC path (format: /${package}.${service}/${rpc})
 	// for the authentication endpoint. The proto is defined here:

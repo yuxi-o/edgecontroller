@@ -1,16 +1,5 @@
-// Copyright 2019 Intel Corporation and Smart-Edge.com, Inc. All rights reserved
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2019 Intel Corporation
 
 import React, { Component } from 'react';
 import withStyles from '@material-ui/core/styles/withStyles';
@@ -53,6 +42,7 @@ class AddAppFormDialog extends Component {
       loading: false,
       helperText: null,
       ports: [{ port: 0, protocol: '' }],
+      epafeatures: [{ key: '', value: '' }],
     };
 
     this.handleDialogClose = this.handleDialogClose.bind(this);
@@ -60,6 +50,8 @@ class AddAppFormDialog extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handlePortInput = this.handlePortInput.bind(this);
     this.handleProtocol = this.handleProtocol.bind(this);
+    this.handleEPAFeatureKey = this.handleEPAFeatureKey.bind(this);
+    this.handleEPAFeatureValue = this.handleEPAFeatureValue.bind(this);
     this.handleParentRefresh = handleParentRefresh.bind(this);
     this.handleParentClose = handleParentClose.bind(this);
   }
@@ -85,6 +77,19 @@ class AddAppFormDialog extends Component {
     this.setState({ ports });
   };
 
+  handleEPAFeatureKey = (e) => {
+    let epafeatures = [...this.state.epafeatures];
+    epafeatures[e.target.dataset.id]['key'] = e.target.value;
+    this.setState({ epafeatures });
+  };
+
+  handleEPAFeatureValue = (e) => {
+    const [name, id] = e.target.name.split('-');
+    let epafeatures = [...this.state.epafeatures];
+    epafeatures[id][name] = e.target.value;
+    this.setState({ epafeatures });
+  };
+
   handleInputChange = (e) => {
     if (e.target.name === 'cores' || e.target.name === 'memory') {
       this.setState({ [e.target.name]: Math.trunc(e.target.value) });
@@ -99,21 +104,28 @@ class AddAppFormDialog extends Component {
     }));
   };
 
+  addEPAFeature = (e) => {
+    this.setState((prevState) => ({
+      epafeatures: [...prevState.epafeatures, { key: '', value: '' }]
+    }));
+  };
+
   handleDialogClose = () => {
     this.handleParentClose(!this.state.open);
   };
 
-  clearPortList = () => {
+  clearLists = () => {
     this.setState({ ports: [{ port: 0, protocol: '' }] });
+    this.setState({ epafeatures: [{ key: '', value: '' }] });
   };
 
   handleSubmit = (e) => {
     e.preventDefault();
 
     const getAppFormValues = () => {
-      const { name, version, type, vendor, description, cores, memory, ports, source } = this.state;
+      const { name, version, type, vendor, description, cores, memory, ports, source, epafeatures } = this.state;
 
-      return { name, version, type, vendor, description, cores, memory, ports, source };
+      return { name, version, type, vendor, description, cores, memory, ports, source, epafeatures };
     };
 
     if (this.state.loading === true) {
@@ -239,12 +251,55 @@ class AddAppFormDialog extends Component {
       );
     };
 
+    const renderEPAFeaturesInputField = () => {
+      const button = (<button onClick={this.addEPAFeature}>Add Additional EPA Feature</button>);
+
+      return (
+        <React.Fragment>
+          {
+            this.state.epafeatures.map((val, idx) => {
+              let keyId = `key-{idx}`, valueId = `value-${idx}`;
+              return (
+                <div className={classes.epafeatures} key={idx}>
+                  <TextField
+                    autoFocus
+                    margin="dense"
+                    id={keyId}
+                    name={keyId}
+                    label="EPA Feature Key"
+                    type="string"
+                    inputProps={{
+                      'data-id': idx,
+                    }}
+                    onChange={this.handleEPAFeatureKey}
+                  />
+                  <TextField
+                    autoFocus
+                    margin="dense"
+                    id={valueId}
+                    name={valueId}
+                    label="EPA Feature Value"
+                    type="string"
+                    inputProps={{
+                      'data-id': idx,
+                    }}
+                    onChange={this.handleEPAFeatureValue}
+                  />
+                  {button}
+                </div>
+              )
+            })
+          }
+        </React.Fragment>
+      );
+    };
+
     return (
       <React.Fragment>
         <Dialog
           open={this.state.open}
           onClose={this.handleDialogClose}
-          onEnter={this.clearPortList}
+          onEnter={this.clearLists}
           aria-labelledby="add-node-dialog-title"
           aria-describedby="add-node-dialog-description"
         >
@@ -262,6 +317,7 @@ class AddAppFormDialog extends Component {
               {generateInputField("memory", "memory", "Memory (in MB)")}
               {generateInputField("source", "source", "Source")}
               {renderPortsInputField()}
+              {renderEPAFeaturesInputField()}
 
               {this.state.helperText !== "" ?
                 <FormHelperText id="component-error-text">

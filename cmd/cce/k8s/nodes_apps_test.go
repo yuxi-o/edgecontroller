@@ -1,16 +1,5 @@
-// Copyright 2019 Smart-Edge.com, Inc. All rights reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2019 Intel Corporation
 
 package k8s_test
 
@@ -45,13 +34,15 @@ var _ = Describe("/nodes/{node_id}/apps for k8s", func() {
 		nodeID = nodeCfg.nodeID
 
 		// label node with correct id
+		execParam := fmt.Sprintf("node-id=%s", nodeID)
 		Expect(exec.Command("kubectl",
-			"label", "nodes", "minikube", fmt.Sprintf("node-id=%s", nodeID)).Run()).To(Succeed())
+			"label", "nodes", "minikube", execParam).Run()).To(Succeed())
 
 		appID = postApps("container")
 
 		// tag docker with app id
-		cmd := exec.Command("docker", "tag", "nginx:1.12", fmt.Sprintf("%s:%s", appID, "latest"))
+		execParam = fmt.Sprintf("%s:%s", appID, "latest")
+		cmd := exec.Command("docker", "tag", "nginx:1.12", execParam)
 		Expect(cmd.Run()).To(Succeed())
 	})
 
@@ -63,7 +54,8 @@ var _ = Describe("/nodes/{node_id}/apps for k8s", func() {
 		cmd := exec.Command("kubectl", "delete", "--all", "deployments,pods", "--namespace=default")
 		Expect(cmd.Run()).To(Succeed())
 		// remove tagged docker image
-		cmd = exec.Command("docker", "rmi", fmt.Sprintf("%s:%s", appID, "latest"))
+		execParam := fmt.Sprintf("%s:%s", appID, "latest")
+		cmd = exec.Command("docker", "rmi", execParam)
 		Expect(cmd.Run()).To(Succeed())
 	})
 
@@ -103,14 +95,16 @@ var _ = Describe("/nodes/{node_id}/apps for k8s", func() {
 
 			app2ID = postApps("container")
 
-			cmd := exec.Command("docker", "tag", "nginx:1.12", fmt.Sprintf("%s:%s", app2ID, "latest"))
+			execParam := fmt.Sprintf("%s:%s", app2ID, "latest")
+			cmd := exec.Command("docker", "tag", "nginx:1.12", execParam)
 			Expect(cmd.Run()).To(Succeed())
 
 			postNodeApps(nodeID, app2ID)
 		})
 
 		AfterEach(func() {
-			cmd := exec.Command("docker", "rmi", fmt.Sprintf("%s:%s", app2ID, "latest"))
+			execParam := fmt.Sprintf("%s:%s", app2ID, "latest")
+			cmd := exec.Command("docker", "rmi", execParam)
 			Expect(cmd.Run()).To(Succeed())
 		})
 

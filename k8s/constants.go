@@ -1,48 +1,30 @@
-// Copyright 2019 Smart-Edge.com, Inc. All rights reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2019 Intel Corporation
 
 package k8s
 
 // LifecycleStatus is a kubernetes deployment's status.
-type LifecycleStatus int
+type LifecycleStatus string
 
 const (
-	// Unknown is an unknown lifecycle status
-	Unknown LifecycleStatus = iota
-	// Deploying is processing status of a kubernetes deployment
-	Deploying
-	// Deployed is available status of a kubernetes deployment
-	Deployed
-	// Stopped is stopped
-	Stopped
-	// Error is an error status
-	Error
-)
+	// Unknown means status of the pod is currently unknown
+	Unknown LifecycleStatus = "unknown"
 
-func (s *LifecycleStatus) String() string {
-	switch *s {
-	case Deploying:
-		return "deploying"
-	case Deployed:
-		return "deployed"
-	case Stopped:
-		return "stopped"
-	case Error:
-		return "error"
-	case Unknown:
-		fallthrough
-	default:
-		return "unknown"
-	}
-}
+	// Deployed means the deployment is created, but no pod is running
+	Deployed LifecycleStatus = "deployed"
+
+	// Pending means the deployment is created and pod is yet to be created
+	Pending LifecycleStatus = "pending"
+
+	// Starting means the pod is starting
+	Starting LifecycleStatus = "starting"
+
+	// Running means the pod is currently running
+	Running LifecycleStatus = "running"
+
+	// Terminating means the pod is being terminated
+	Terminating LifecycleStatus = "terminating"
+
+	// Error means error occurred
+	Error LifecycleStatus = "error"
+)

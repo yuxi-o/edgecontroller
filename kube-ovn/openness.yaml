@@ -1,21 +1,5 @@
-# Copyright 2019 Intel Corporation and Smart-Edge.com, Inc. All rights reserved
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: openness
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2019 Intel Corporation
 
 ---
 apiVersion: v1
@@ -36,7 +20,7 @@ metadata:
 spec:
   clusterIP: None
   selector:
-    name: appliance
+    name: eaa
   ports:
     - name: http
       protocol: TCP
@@ -49,84 +33,69 @@ spec:
 
 ---
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
-  name: appliance
+  name: eaa
   namespace: openness
 spec:
+  replicas: 1
   selector:
     matchLabels:
-      name: appliance
+      name: eaa
   template:
     metadata:
       labels:
-        name: appliance
+        name: eaa
     spec:
       tolerations:
       - key: node-role.kube-ovn/master
         effect: NoSchedule
-      containers:
-      - name: appliance
-        image: appliance:1.0
-        imagePullPolicy: Never
-        securityContext:
-          privileged: true
+      initContainers:
+      - name: alpine
+        image: alpine:latest
+        command: ["/bin/sh"]
+        args: ["-c", "cp /root/certs-sec/* /root/certs/"]
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "0.1"
+          limits:
+            cpu: "0.1"
+            memory: "128Mi"
         volumeMounts:
-        - name: host-certs
-          mountPath: /host_certs
-        - name: host-ns
-          mountPath: /var/host_ns
-          readOnly: true
-        - name: run
-          mountPath: /run
-        - name: netns
-          mountPath: /var/run/docker/netns
-        - name: host-net-devices
-          mountPath: /var/host_net_devices
-        - name: devices
-          mountPath: /devices      
+        - name: certs-sec
+          mountPath: /root/certs-sec
         - name: certs
           mountPath: /root/certs
+      containers:
+      - name: eaa
+        image: eaa:1.0
+        imagePullPolicy: Never
+        securityContext:
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: "0.1"
+          limits:
+            cpu: "1"
+            memory: "128Mi"
+        volumeMounts:
+        - name: certs
+          mountPath: /home/eaa/certs/eaa
+        - name: certs-sec
+          mountPath: /home/eaa/certs-sec
         - name: configs
-          mountPath: /root/configs
-        - name: applications
-          mountPath: /var/lib/appliance/applications 
-        - name: openvswitch
-          mountPath: /usr/local/var/run/openvswitch
-        env:
-        - name: SYSLOG_ADDR
-          value: syslog
+          mountPath: /home/eaa/configs
       volumes:
-      - name: host-certs
-        hostPath:
-          path: /etc/pki/tls/certs
-      - name: host-ns
-        hostPath:
-          path: /proc/1/ns
-      - name: run
-        hostPath:
-          path: /run
-      - name: netns
-        hostPath:
-          path: /var/run/docker/netns
-      - name: host-net-devices
-        hostPath:
-          path: /sys/class/net
-      - name: devices
-        hostPath:
-          path: /sys/devices
+      - name: certs-sec
+        secret:
+          secretName: eaa-tls
       - name: certs
         hostPath:
-          path: /var/lib/appliance/certs
+          path: /etc/openness/certs/eaa
       - name: configs
         hostPath:
-          path: /var/lib/appliance/configs
-      - name: applications
-        hostPath:
-          path: /var/lib/appliance/applications
-      - name: openvswitch
-        hostPath:
-          path: /var/run/openvswitch         
+          path: /etc/openness/configs
 
 ---
 apiVersion: v1
@@ -137,43 +106,61 @@ metadata:
 spec:
   clusterIP: None
   selector:
-    name: mec-app-edgednssvr
+    name: edgedns
   ports:
     - name: dns
       protocol: UDP
       port: 53
       targetPort: 53
+    - name: cli
+      protocol: TCP
+      port: 4204
+      targetPort: 4204
 
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: mec-app-edgednssvr
+  name: edgedns
   namespace: openness
 spec:
   selector:
     matchLabels:
-      name: mec-app-edgednssvr
+      name: edgedns
   template:
     metadata:
       labels:
-        name: mec-app-edgednssvr
+        name: edgedns
     spec:
       tolerations:
       - key: node-role.kube-ovn/master
         effect: NoSchedule
       containers:
-      - name: mec-app-edgednssvr
+      - name: edgedns
         image: edgednssvr:1.0
         imagePullPolicy: Never
         securityContext:
+          readOnlyRootFilesystem: true
           capabilities:
             add: ["NET_ADMIN"]
+        args:
+        - -address=:4204
+        - -port=53
+        - -fwdr=$(DNS_FWDR)
+        resources:
+          requests:
+            cpu: "0.1"
+          limits:
+            cpu: "1"
+            memory: "128Mi"
         volumeMounts:
         - name: edgednssvr
           mountPath: /var/lib/edgedns
         - name: run
-          mountPath: /run 
+          mountPath: /run
+        - name: certs
+          mountPath: /home/edgednssvr/certs
+          readOnly: true
         env:
           - name: http_proxy
             valueFrom:
@@ -187,31 +174,41 @@ spec:
                 key: https_proxy
           - name: DNS_FWDR
             value: 8.8.8.8
-          - name: LOCAL_SYSLOG
-            value: syslog:514
+      initContainers:
+      - name: openssl
+        image: emberstack/openssl:latest
+        command: ["/root/certgen/entrypoint_tls.sh", "edgedns.openness", "/root/certs", "/root/CA"]
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "0.1"
+          limits:
+            cpu: "0.1"
+            memory: "128Mi"
+        volumeMounts:
+        - name: ca
+          mountPath: /root/CA
+        - name: certs
+          mountPath: /root/certs
+        - name: certgen
+          mountPath: /root/certgen
       volumes:
       - name: edgednssvr
         hostPath:
-          path: /var/lib/appliance/edgednssvr
+          path: /etc/openness/edgednssvr
       - name: run
         hostPath:
           path: /run
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: syslog
-  namespace: openness
-spec:
-  clusterIP: None
-  selector:
-    name: syslog-ng
-  ports:
-  - name: syslog
-    protocol: UDP
-    port: 514
-    targetPort: 514
+      - name: ca
+        secret:
+          secretName: root-ca
+      - name: certgen
+        secret:
+          secretName: certgen
+          defaultMode: 0744
+      - name: certs
+        hostPath:
+          path: /etc/openness/certs/edgedns
 
 ---
 apiVersion: apps/v1
@@ -236,22 +233,270 @@ spec:
         image: balabit/syslog-ng:3.19.1
         imagePullPolicy: IfNotPresent
         args: ["--no-caps"]
+        env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+        resources:
+          requests:
+            cpu: "0.1"
+          limits:
+            cpu: "0.5"
+            memory: "128Mi"
         volumeMounts:
         - name: syslog-conf
-          mountPath: /etc/syslog-ng/syslog-ng.conf
+          mountPath: /etc/syslog-ng
           readOnly: true
         - name: certs
           mountPath: /etc/syslog-ng/certs
           readOnly: true
         - name: log
           mountPath: /var/log
+          readOnly: true
+        - name: dockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+      initContainers:
+      - name: openssl
+        image: emberstack/openssl:latest
+        command: ["/root/certgen/entrypoint_tls.sh", "syslog.openness", "/root/certs", "/root/CA"]
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "0.1"
+          limits:
+            cpu: "0.1"
+            memory: "128Mi"
+        volumeMounts:
+        - name: ca
+          mountPath: /root/CA
+        - name: certs
+          mountPath: /root/certs
+        - name: certgen
+          mountPath: /root/certgen
       volumes:
       - name: syslog-conf
-        hostPath:
-          path: /var/lib/appliance/configs/syslog-ng.conf
+        configMap:
+          name: syslog-conf
+          items:
+          - key: syslog-ng-k8s-worker.conf
+            path: syslog-ng.conf
       - name: certs
         hostPath:
-          path: /var/lib/appliance/certs
+          path: /etc/openness/certs/syslog
       - name: log
         hostPath:
-          path: /var/log/appliance
+          path: /var/log
+      - name: dockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: ca
+        secret:
+          secretName: root-ca
+      - name: certgen
+        secret:
+          secretName: certgen
+          defaultMode: 0744
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: syslog-master
+  namespace: openness
+spec:
+  clusterIP: None
+  selector:
+    name: syslog-master
+  ports:
+  - name: syslog
+    protocol: UDP
+    port: 6514
+    targetPort: 6514
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: syslog-master
+  namespace: openness
+spec:
+  selector:
+    matchLabels:
+      name: syslog-master
+  template:
+    metadata:
+      labels:
+        name: syslog-master
+    spec:
+      nodeSelector:
+        kube-ovn/role: "master"
+      tolerations:
+      - operator: Exists
+      containers:
+      - name: syslog-ng
+        image: balabit/syslog-ng:3.19.1
+        imagePullPolicy: IfNotPresent
+        args: ["--no-caps"]
+        resources:
+          requests:
+            cpu: "0.1"
+          limits:
+            cpu: "0.5"
+            memory: "128Mi"
+        volumeMounts:
+        - name: syslog-conf
+          mountPath: /etc/syslog-ng
+          readOnly: true
+        - name: certs
+          mountPath: /etc/syslog-ng/certs
+          readOnly: true
+        - name: log
+          mountPath: /var/log
+      initContainers:
+      - name: openssl
+        image: emberstack/openssl:latest
+        command: ["/root/certgen/entrypoint_tls.sh", "syslog-master.openness", "/root/certs", "/root/CA"]
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "0.1"
+          limits:
+            cpu: "0.1"
+            memory: "128Mi"
+        volumeMounts:
+        - name: ca
+          mountPath: /root/CA
+        - name: certs
+          mountPath: /root/certs
+        - name: certgen
+          mountPath: /root/certgen
+      volumes:
+      - name: syslog-conf
+        configMap:
+          name: syslog-conf
+          items:
+          - key: syslog-ng-k8s-master.conf
+            path: syslog-ng.conf
+      - name: certs
+        hostPath:
+          path: /etc/openness/certs/syslog
+      - name: log
+        hostPath:
+          path: /var/log/openness
+      - name: ca
+        secret:
+          secretName: root-ca
+      - name: certgen
+        secret:
+          secretName: certgen
+          defaultMode: 0744
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: interfaceservice
+  namespace: openness
+spec:
+  clusterIP: None
+  selector:
+    name: interfaceservice
+  ports:
+  - name: interfaceservice
+    protocol: TCP
+    port: 42101
+    targetPort: 42101
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: interfaceservice
+  namespace: openness
+spec:
+  selector:
+    matchLabels:
+      name: interfaceservice
+  template:
+    metadata:
+      labels:
+        name: interfaceservice
+    spec:
+      tolerations:
+      - key: node-role.kube-ovn/master
+        effect: NoSchedule
+      containers:
+      - name: interfaceservice
+        image: interfaceservice:1.0
+        imagePullPolicy: Never
+        securityContext:
+          readOnlyRootFilesystem: true
+          privileged: true
+        resources:
+          requests:
+            cpu: "0.1"
+          limits:
+            cpu: "1"
+            memory: "128Mi"
+        volumeMounts:
+        - name: configs
+          mountPath: /home/interfaceservice/configs
+          readOnly: true
+        - name: certs
+          mountPath: /home/interfaceservice/certs
+          readOnly: true
+        - name: host-netdevs
+          mountPath: /var/host_net_devices
+        - name: host-ns
+          mountPath: /var/host_ns
+          readOnly: true
+        - name: devices
+          mountPath: /devices
+        - name: run
+          mountPath: /var/run
+      initContainers:
+      - name: openssl
+        image: emberstack/openssl:latest
+        command: ["/root/certgen/entrypoint_tls.sh", "interfaceservice.openness", "/root/certs", "/root/CA"]
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "0.1"
+          limits:
+            cpu: "0.1"
+            memory: "128Mi"
+        volumeMounts:
+        - name: ca
+          mountPath: /root/CA
+        - name: certs
+          mountPath: /root/certs
+        - name: certgen
+          mountPath: /root/certgen
+      volumes:
+      - name: configs
+        hostPath:
+          path: /etc/openness/configs
+      - name: certs
+        hostPath:
+          path: /etc/openness/certs/interfaceservice
+      - name: host-netdevs
+        hostPath:
+          path: /sys/class/net
+      - name: host-ns
+        hostPath:
+          path: /proc/1/ns
+      - name: devices
+        hostPath:
+          path: /sys/devices
+      - name: run
+        hostPath:
+          path: /var/run
+      - name: ca
+        secret:
+          secretName: root-ca
+      - name: certgen
+        secret:
+          secretName: certgen
+          defaultMode: 0744

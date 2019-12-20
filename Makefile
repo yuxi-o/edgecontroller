@@ -1,16 +1,5 @@
-# Copyright 2019 Intel Corporation and Smart-Edge.com, Inc. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2019 Intel Corporation
 
 # Source user configured environment file.
 include .env
@@ -50,18 +39,26 @@ else
 	export CCE_FLAGS=$(CCE_FLAGS_BASE)
 endif
 
-.PHONY: help all-up all-down clean build lint test \
+define bring_ui_up 
+	docker-compose up -d ui
+	docker-compose up -d cups-ui
+	docker-compose up -d cnca-ui
+endef
+
+.PHONY: help all-up all-down clean build build-dnscli lint test \
 	db-up db-reset db-down \
 	minikube-install kubectl-install minikube-wait \
 	ui-up ui-down ui-test \
 	test-k8s test-api-k8s \
-	test-unit test-api
+	test-unit test-api test-dnscli
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
 	@echo "Building:"
 	@echo "  clean            to clean up build artifacts and docker volumes"
 	@echo "  build            to build the project to the ./dist/ folder"
+	@echo "  build-ifsvccli   to build interfaceservice CLI to the ./dist/ folder"
+	@echo "  build-dnscli     to build edgednscli to the ./dist/ folder"
 	@echo ""
 	@echo "Services:"
 	@echo "  all-up           to start the full controller stack"
@@ -81,6 +78,11 @@ help:
 	@echo "  cups-ui-dev-up   to start local developer instance of the UI"
 	@echo "  cups-ui-test     run the UI project tests"
 	@echo ""
+	@echo "  cnca-ui-up       to start the production UI Container"
+	@echo "  cnca-ui-down     to stop the production UI container"
+	@echo "  cnca-ui-dev-up   to start local developer instance of the UI"
+	@echo "  cnca-ui-test     run the UI project tests"
+	@echo ""
 	@echo "  kubectl-install  to install kubectl"
 	@echo "  minikube-install to install minikube"
 	@echo "  minikube-start   to start minikube"
@@ -94,6 +96,7 @@ help:
 	@echo "  test-api         to run api tests"
 	@echo "  test-api-k8s     to run k8s app deployment api tests"
 	@echo "  test-k8s         to run kubernetes orchestration tests"
+	@echo "  test-dnscli      to run edgednscli tests"
 	@echo "  test             to run unit followed by api tests"
 
 clean:
@@ -113,6 +116,9 @@ build:
 	@###########################
 	@# go build -o dist/test-node ./test/node/grpc
 	@###########################
+
+build-ifsvccli:
+	go build -o dist/interfaceservicecli ./cmd/interfaceservicecli
 
 lint:
 	golangci-lint run
@@ -200,7 +206,7 @@ cce-down:
 	docker-compose stop cce
 
 ui-up:
-	docker-compose up -d ui
+	$(call bring_ui_up)
 
 ui-down:
 	docker-compose stop ui
@@ -222,6 +228,21 @@ cups-ui-dev-up:
 
 cups-ui-test:
 	cd ui/cups && yarn install && yarn build && yarn test
+
+cnca-ui-up:
+	docker-compose up -d cnca-ui
+
+cnca-ui-down:
+	docker-compose stop cnca-ui
+
+cnca-ui-dev-up:
+	cd ui/cnca && yarn install && yarn start
+
+cnca-ui-test:
+	cd ui/cnca && yarn install && yarn build && yarn test
+
+build-dnscli:
+	go build -o dist/edgednscli ./cmd/edgednscli
 
 test-unit:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites \
@@ -247,4 +268,7 @@ test-api-kubeovn:
 test-k8s:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites k8s
 
-test: test-unit test-api test-k8s test-api-k8s test-api-kubeovn
+test-dnscli:
+	ginkgo -v -r --randomizeAllSpecs --randomizeSuites edgednscli
+
+test: test-unit test-api test-k8s test-api-k8s test-api-kubeovn test-dnscli

@@ -1,16 +1,5 @@
-// Copyright 2019 Smart-Edge.com, Inc. All rights reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2019 Intel Corporation
 
 package k8s_test
 
@@ -184,10 +173,7 @@ func startup() {
 		"github.com/open-ness/edgecontroller/test/node/grpc")
 	Expect(err).ToNot(HaveOccurred(), "Problem building node")
 
-	cmd = exec.Command(exe,
-		"-ela-port", "42101",
-		"-eva-port", "42102",
-	)
+	cmd = exec.Command(exe)
 	nodeIn, err = cmd.StdinPipe()
 	Expect(err).ToNot(HaveOccurred(), "Problem creating node stdin pipe")
 
@@ -348,10 +334,10 @@ func createAndRegisterNode() *nodeConfig {
 
 	By("Verifying that the node started successfully")
 	Eventually(node.Err, 3).Should(gbytes.Say(
-		"test-node: listening on port: 4210[12]"),
+		"connecting to port 8081"),
 		"Node did not start in time")
 	Eventually(node.Err, 3).Should(gbytes.Say(
-		"test-node: listening on port: 4210[12]"),
+		"connecting to port 8081"),
 		"Node did not start in time")
 
 	By("Requesting credentials from auth service")

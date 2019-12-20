@@ -1,23 +1,12 @@
-// Copyright 2019 Smart-Edge.com, Inc. All rights reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2019 Intel Corporation
 
 package k8s
 
 import (
 	"context"
 	"fmt"
-	"sort"
+	"strings"
 	"sync"
 
 	"github.com/open-ness/edgecontroller/uuid"
@@ -396,36 +385,80 @@ func (ks *Client) getDeployment(nodeID, appID string) (*appsV1.Deployment, error
 	return &deps[0], nil
 }
 
-// Status gets the status of kubernetes deployment
+func getPodStatus(pod apiV1.Pod) LifecycleStatus {
+	if pod.DeletionTimestamp != nil {
+		return Terminating
+	}
+
+	// Capture situation when container did not start because of e.g. ErrImageNeverPull
+	for _, cStatus := range pod.Status.ContainerStatuses {
+		if cStatus.State.Waiting != nil {
+			if strings.HasPrefix(cStatus.State.Waiting.Reason, "Err") {
+				return Error
+			}
+
+			if strings.Contains(cStatus.State.Waiting.Reason, "ContainerCreating") {
+				return Starting
+			}
+		}
+	}
+
+	switch pod.Status.Phase {
+	case apiV1.PodPending:
+		return Pending
+	case apiV1.PodRunning:
+		return Running
+	}
+
+	return Unknown
+}
+
+// Status gets the status of kubernetes app
 func (ks *Client) Status(ctx context.Context, nodeID, appID string) (LifecycleStatus, error) {
-	deployment, err := ks.getDeployment(nodeID, appID)
+	// Check if deployment actually exists
+	_, err := ks.getDeployment(nodeID, appID)
+	if err != nil {
+		return Error, err
+	}
+
+	podsClient := ks.clientSet.CoreV1().Pods(apiV1.NamespaceDefault)
+
+	listOptions := metaV1.ListOptions{
+		LabelSelector: fmt.Sprintf("node-id=%s,app-id=%s", nodeID, appID),
+	}
+
+	pods, err := podsClient.List(listOptions)
 	if err != nil {
 		return Unknown, err
 	}
 
-	conditions := deployment.Status.Conditions
-
-	// Sort condition status by latest timestamp
-	sort.Slice(conditions, func(i, j int) bool {
-		return conditions[i].LastUpdateTime.Time.After(
-			conditions[j].LastUpdateTime.Time,
-		)
-	})
-
-	// Return first "true" condition
-	for _, condition := range conditions {
-		if condition.Status == apiV1.ConditionTrue {
-			switch conditions[0].Type {
-			case appsV1.DeploymentAvailable:
-				return Deployed, nil
-			case appsV1.DeploymentProgressing:
-				return Deploying, nil
-			case appsV1.DeploymentReplicaFailure:
-				return Error, nil
-			}
-		}
+	if len(pods.Items) == 0 {
+		// Deployment exists, but no pod is running
+		return Deployed, nil
 	}
-	return Unknown, nil
+
+	if len(pods.Items) == 1 {
+		// Just one pod for deployment
+		return getPodStatus(pods.Items[0]), nil
+	}
+
+	// Many pods exist
+	state := Unknown
+	isAnyTerminating := false
+	for _, pod := range pods.Items {
+		if getPodStatus(pod) == Terminating {
+			isAnyTerminating = true
+			continue
+		}
+
+		state = getPodStatus(pod)
+	}
+
+	if state == Unknown && isAnyTerminating {
+		return Terminating, nil
+	}
+
+	return state, nil
 }
 
 // GetAppIDByIP gets the ID of an application running on a node by its pod IP address
