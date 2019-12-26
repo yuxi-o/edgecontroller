@@ -7,13 +7,15 @@ FROM node:lts-alpine AS cce-ui-deps-image
 # Create app directory & install dependencies for running the server
 WORKDIR /usr/src/app
 COPY ./server/package.json ./server/yarn.lock ./
-RUN yarn install --pure-lockfile --production
+#RUN yarn install --pure-lockfile --production
+RUN yarn config set registry https://registry.npm.taobao.org && yarn upgrade &&  yarn install --pure-lockfile --production
 COPY ./server ./
 
 # Create app directory & install dependencies for building the app
 WORKDIR /app
 COPY package.json yarn.lock ./
-RUN yarn install --pure-lockfile --production
+#RUN yarn install --pure-lockfile --production
+RUN yarn config set registry https://registry.npm.taobao.org && yarn upgrade &&  yarn install --pure-lockfile --production
 
 # Second stage - building the app with already existing dependencies
 FROM cce-ui-deps-image

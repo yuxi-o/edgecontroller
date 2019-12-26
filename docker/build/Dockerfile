@@ -5,9 +5,11 @@
 FROM golang:1.12-alpine
 
 ENV GO111MODULE on
+ENV GOPROXY "https://goproxy.cn"
 
 WORKDIR /go/src/github.com/open-ness/edgecontroller
 
+RUN sed -e 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' -i~ /etc/apk/repositories
 RUN apk add git
 
 COPY go.mod .

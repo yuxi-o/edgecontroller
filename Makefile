@@ -5,6 +5,7 @@
 include .env
 
 export GO111MODULE = on
+export GOPROXY = "https://goproxy.cn"
 export MINIKUBE_WANTUPDATENOTIFICATION=false
 export MINIKUBE_WANTREPORTERRORPROMPT=false
 export MINIKUBE_HOME=$(HOME)
