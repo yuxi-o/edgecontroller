@@ -5,17 +5,13 @@
 
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
-import './LandingHeader.css'
 import {
   Table,
   TableBody,
   TableCell,
   TableRow,
   Button,
-  Typography,
   Paper,
-  AppBar,
-  Link,
 } from '@material-ui/core';
 
 const CONTROLLER_URL = process.env.REACT_APP_CONTROLLER_UI_URL
@@ -23,29 +19,6 @@ const CUPS_URL = process.env.REACT_APP_CUPS_UI_URL
 const CNCA_URL = process.env.REACT_APP_CNCA_UI_URL
 
 const styles = theme => ({
-  root: {
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '100vh',
-  },
-  header: {
-    padding: 20,
-    flexGrow: 1,
-  },
-  
-  main: {
-    width: 'auto',
-    marginTop: theme.spacing.unit * 14,
-    marginBottom: theme.spacing.unit * 2,
-    marginLeft: theme.spacing.unit * 2,
-    marginRight: theme.spacing.unit * 2,
-    [theme.breakpoints.up(600 + theme.spacing.unit * 4)]: {
-      width: 800,
-      marginLeft: 'auto',
-      marginRight: 'auto',
-    },
-  },
-
   paper: {
     marginTop: theme.spacing.unit * 3,
     marginBottom: theme.spacing.unit * 3,
@@ -105,8 +78,9 @@ class Landing extends Component {
         <TableRow>
           <TableCell>
             <Button
-              onClick={() => window.location.assign(`${CONTROLLER_URL}/login/`)}
+              onClick={() => window.location.assign(`${CONTROLLER_URL}/`)}
               variant="outlined"
+              color="primary"
             >
               Infrastructure Manager
             </Button>
@@ -115,6 +89,7 @@ class Landing extends Component {
             <Button
               onClick={() => window.location.assign(`${CUPS_URL}/`)}
               variant="outlined"
+              color="primary"
             >
               LTE CUPS Core Network
             </Button>
@@ -123,6 +98,7 @@ class Landing extends Component {
             <Button
               onClick={() => window.location.assign(`${CNCA_URL}/`)}
               variant="outlined"
+              color="primary"
             >
               5G Next-Gen Core Network
             </Button>
@@ -133,14 +109,6 @@ class Landing extends Component {
 
     return (
       <div>
-        <AppBar className={classes.header}>
-          <Typography variant="h6" component="h2" id="title">
-            <Link to="/">
-              Infrastructure and Network Management
-            </Link>
-          </Typography>
-        </AppBar>
-              
         <Paper className={classes.paper}>
           <Table>
             <TableBody>
@@ -149,7 +117,6 @@ class Landing extends Component {
               }
             </TableBody>
           </Table>
-
         </Paper>
       </div>
     );
@@ -157,4 +124,3 @@ class Landing extends Component {
 };
 
 export default withStyles(styles)(Landing);
-

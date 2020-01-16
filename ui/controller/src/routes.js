@@ -8,7 +8,6 @@ import NodeView from './views/Node'
 import AppsView from './views/AppsListing'
 import AppView from './views/AppView'
 import LoginForm from './components/Login'
-import Landing from './components/Landing'
 
 // import Dns from './views/dns/Main'
 // import DnsEdit from './views/dns/Edit'
@@ -28,13 +27,11 @@ export default props => (
         render={() => (
           Auth.isAuthenticated()
           ? <Redirect to="/nodes" />
-          : <Redirect to="/landing" />
+          : <Redirect to="/login" />
         )}
       />
 
       <Route exact path='/login' component={LoginForm} />
-
-      <Route exact path='/landing' component={Landing} />
 
       <ProtectedRoute exact path='/nodes' component={NodesView} />
       <ProtectedRoute path='/nodes/:id' component={NodeView} />

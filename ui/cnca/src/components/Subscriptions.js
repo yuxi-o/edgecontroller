@@ -20,7 +20,7 @@ import {
 } from '@material-ui/core';
 
 const baseURL = (process.env.NODE_ENV === 'production') ? process.env.REACT_APP_CNCA_AF_API : '/api';
-const CONTROLLER_URL = process.env.REACT_APP_CONTROLLER_UI_URL;
+const LANDING_URL = process.env.REACT_APP_LANDING_UI_URL;
 
 const styles = theme => ({
   paper: {
@@ -162,7 +162,7 @@ class Subscriptions extends Component {
         >
           <Grid item>
             <Button
-              onClick={() => window.location.assign(`${CONTROLLER_URL}/`)}
+              onClick={() => window.location.assign(`${LANDING_URL}/`)}
             >
               Back to Home Page 
             </Button>

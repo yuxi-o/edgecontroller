@@ -26,6 +26,8 @@ import Grow from '@material-ui/core/Grow';
 import Paper from '@material-ui/core/Paper';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 
+const LANDING_URL = process.env.REACT_APP_LANDING_UI_URL
+
 const styles = theme => ({
   appBar: {
     position: 'relative',
@@ -124,7 +126,7 @@ class Topbar extends Component {
 
   handleLogout = event => {
     Auth.logout(() => {
-      return this.props.history.push('/');
+      return window.location.assign(`${LANDING_URL}/`);
     });
 
   };
