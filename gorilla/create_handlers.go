@@ -27,6 +27,7 @@ func handleCreateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 	if err != nil {
 		return fmt.Errorf("Error connecting to node: %v", err)
 	}
+	defer disconnectNode(nodeCC)
 
 	if err := nodeCC.AppDeploySvcCli.Deploy(ctx, app.(*cce.App)); err != nil {
 		return err
@@ -44,8 +45,6 @@ func handleCreateNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 	}
 
 	log.Infof("App %s deployed to node", app.GetID())
-
-	disconnectNode(nodeCC)
 
 	return nil
 }
@@ -70,6 +69,7 @@ func handleCreateNodesDNSConfigs(
 	if err != nil {
 		return err
 	}
+	defer disconnectNode(nodeCC)
 
 	for _, aRecord := range dnsConfig.(*cce.DNSConfig).ARecords {
 		if err := nodeCC.DNSSvcCli.SetA(ctx, aRecord); err != nil {
@@ -96,6 +96,7 @@ func handleCreateNodesDNSConfigsWithAliases(
 	if err != nil {
 		return err
 	}
+	defer disconnectNode(nodeCC)
 
 	for _, alias := range dnsAliases {
 		record := &cce.DNSARecord{

@@ -25,6 +25,7 @@ func handleGetNodes(
 	if err != nil {
 		return nil, err
 	}
+	defer disconnectNode(nodeCC)
 
 	nis, err := nodeCC.IfaceSvcCli.GetAll(ctx)
 	if err != nil {
