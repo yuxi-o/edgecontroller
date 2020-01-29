@@ -376,7 +376,7 @@ class Subscription extends Component {
             />
           </Grid>
 
-	  <Grid item xs={6}>
+          <Grid item xs={6}>
             <SchemaForm
               schema={Schema.ethFiltersFormSchema}
               form={Schema.ethFiltersForm}

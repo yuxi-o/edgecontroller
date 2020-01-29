@@ -132,7 +132,7 @@ const trafficFiltersFormSchema = {
               title: "Flow Description",
               type: "string",
             },
-	  },
+          },
         },
       },
     },
@@ -149,7 +149,7 @@ const ethFiltersFormSchema = {
       items: {
         title: "Ethernet Filter",
         type: "object",
-	properties: {
+        properties: {
           destMacAddr: {
             title: "Destination MAC Address",
             type: "string",
@@ -176,7 +176,7 @@ const ethFiltersFormSchema = {
             items: {
               title: "VLAN Tag",
               type: "string",
-	    },
+            },
           },
         },
       },

@@ -68,7 +68,7 @@ class Subscriptions extends Component {
   parseUUID(selfURL) {
     var split = selfURL.split("/"); 
     if (split.length === 1){
-	return "";
+        return "";
     }
     var UUID = split[split.length-1];
 
@@ -212,7 +212,7 @@ class Subscriptions extends Component {
               <TableRow>
                 <TableCell>Subscription ID</TableCell>
                 <TableCell>Service ID</TableCell>
-	        <TableCell>App ID</TableCell>
+                <TableCell>App ID</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
