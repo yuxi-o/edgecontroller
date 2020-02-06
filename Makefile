@@ -39,7 +39,7 @@ else
 	export CCE_FLAGS=$(CCE_FLAGS_BASE)
 endif
 
-define bring_ui_up 
+define bring_ui_up
 	docker-compose up -d landing-ui
 	docker-compose up -d ui
 	docker-compose up -d cups-ui
@@ -125,7 +125,7 @@ all-up: db-up cce-up ui-up
 all-down: db-down cce-down ui-down
 
 build:
-	docker-compose build
+	docker-compose build mysql cce ui cups-ui cnca-ui landing-ui
 
 	@# TODO: Remove the following when the test node is built as a Docker image and add it to the docker-compose.yml
 	@# and add details to the README about running a test node.
@@ -277,6 +277,13 @@ landing-ui-test:
 
 build-dnscli:
 	go build -o dist/edgednscli ./cmd/edgednscli
+
+nfd-master-up:
+	go build -o dist/nfd-master ./cmd/nfd-master
+	docker-compose up -d nfd-master
+
+nfd-master-down:
+	docker-compose stop nfd-master
 
 test-unit:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites \

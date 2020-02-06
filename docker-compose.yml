@@ -13,8 +13,8 @@ services:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
     read_only: true
     tmpfs:
-    - /run/mysqld:uid=999,gid=999
-    - /tmp
+      - /run/mysqld:uid=999,gid=999
+      - /tmp
     volumes:
       - ./artifacts/db:/var/lib/mysql
   cce:
@@ -95,3 +95,16 @@ services:
       CONTROLLER_UI_URL: "${INFRASTRUCTURE_UI_URL}"
       CUPS_UI_URL: "${CUPS_UI_URL}"
       CNCA_UI_URL: "${CNCA_UI_URL}"
+  nfd-master:
+    image: nfd-master:latest
+    read_only: true
+    build:
+      context: .
+      dockerfile: nfd-master/Dockerfile
+    depends_on:
+      - cce
+    restart: on-failure:10
+    ports:
+      - 8082:8082
+    volumes:
+      - ./artifacts/controller/certificates/ca:/ca
