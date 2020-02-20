@@ -101,10 +101,8 @@ services:
     build:
       context: .
       dockerfile: nfd-master/Dockerfile
-    depends_on:
-      - cce
-    restart: on-failure:10
+    restart: on-failure:15
     ports:
-      - 8082:8082
+      - 8082:8082/tcp
     volumes:
       - ./artifacts/controller/certificates/ca:/ca

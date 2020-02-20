@@ -57,6 +57,7 @@ endef
 	db-up db-reset db-down \
 	minikube-install kubectl-install minikube-wait \
 	ui-up ui-down \
+	nfd-master-up nfd-master-down \
 	test-k8s test-api-k8s \
 	test-unit test-api test-dnscli
 
@@ -98,6 +99,9 @@ help:
 	@echo "  landing-ui-down   to stop the production UI container"
 	@echo "  landing-ui-dev-up to start local developer instance of the UI"
 	@echo "  landing-ui-test   run the UI project tests"
+	@echo ""
+	@echo "  nfd-master-up     to start the nfd-master container"
+	@echo "  nfd-master-down   to stop the nfd-master container"
 	@echo ""
 	@echo "  kubectl-install   to install kubectl"
 	@echo "  minikube-install  to install minikube"
