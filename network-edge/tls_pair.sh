@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # SPDX-License-Identifier: Apache-2.0
-# Copyright (c) 2019 Intel Corporation
+# Copyright (c) 2019-2020 Intel Corporation
 
 # This script generates key using P-384 curve and certificate for it. Certificate is
 # valid for 3 years and signed with CA if CA key and certificate directory is defined
