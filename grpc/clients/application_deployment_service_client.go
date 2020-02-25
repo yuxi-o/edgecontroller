@@ -6,11 +6,17 @@ package clients
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
 
 	cce "github.com/otcshare/edgecontroller"
 	"github.com/otcshare/edgecontroller/grpc"
 	evapb "github.com/otcshare/edgecontroller/pb/eva"
 	"github.com/pkg/errors"
+)
+
+const (
+	cniConfPath = "/artifacts/cni/cni.conf"
+	cniArgsPath = "/artifacts/cni/cni_args.json"
 )
 
 // ApplicationDeploymentServiceClient wraps the PB client.
@@ -49,6 +55,37 @@ func (c *ApplicationDeploymentServiceClient) Deploy(
 	return nil
 }
 
+// TODO: Find better place for this function
+func getCNIConf() (*evapb.CNIConfiguration, error) {
+	cniConf, err := ioutil.ReadFile(cniConfPath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read file with CNI configuration: %s", cniConfPath)
+	}
+
+	cniArgsContents, err := ioutil.ReadFile(cniArgsPath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read file with CNI args: %s", cniArgsPath)
+	}
+
+	var cniArgs struct {
+		InterfaceName string
+		Path          string
+		ExtraArgs     string
+	}
+
+	err = json.Unmarshal(cniArgsContents, &cniArgs)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal CNI args")
+	}
+
+	return &evapb.CNIConfiguration{
+		CniConfig:     string(cniConf),
+		InterfaceName: cniArgs.InterfaceName,
+		Path:          cniArgs.Path,
+		Args:          cniArgs.ExtraArgs,
+	}, nil
+}
+
 func toPBApp(app *cce.App) *evapb.Application {
 	var ports []*evapb.PortProto
 	for _, pp := range app.Ports {
@@ -85,6 +122,11 @@ func toPBApp(app *cce.App) *evapb.Application {
 			},
 		},
 		EACJsonBlob: string(tmp),
+	}
+
+	cniConf, err := getCNIConf()
+	if err == nil {
+		pb.CniConf = cniConf
 	}
 
 	return &pb
