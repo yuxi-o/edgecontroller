@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2020 Intel Corporation
 
 package gorilla
 
@@ -24,6 +24,7 @@ import (
 
 	"github.com/gorilla/mux"
 	cce "github.com/otcshare/edgecontroller"
+	"github.com/otcshare/edgecontroller/nfd-master"
 	"github.com/otcshare/edgecontroller/swagger"
 	"github.com/otcshare/edgecontroller/uuid"
 )
@@ -1638,6 +1639,35 @@ func (g *Gorilla) swagPOSTNodeApp(w http.ResponseWriter, r *http.Request) { //no
 	}
 	if persisted == nil {
 		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// Fetch the NFD features for node from persistence
+	persistedNodeNFD, err := ctrl.PersistenceService.Filter(
+		r.Context(),
+		&nfd.NodeFeatureNFD{},
+		[]cce.Filter{
+			{
+				Field: "node_id",
+				Value: mux.Vars(r)["node_id"],
+			},
+		},
+	)
+	if err != nil {
+		log.Errf("Error when retrieving NFD features for node %s from database: %v", mux.Vars(r)["node_id"], err)
+	}
+
+	// Convert persisted node NFD features to plain map
+	features := make(map[string]string)
+	for _, f := range persistedNodeNFD {
+		features[f.(*nfd.NodeFeatureNFD).NfdID] = f.(*nfd.NodeFeatureNFD).NfdValue
+	}
+
+	// EPA validation
+	err = persisted.(*cce.App).EPAValidate(features)
+	if err != nil {
+		log.Errf("Unable to deploy app [%s] on node [%s]: %v", nodeApp.AppID, mux.Vars(r)["node_id"], err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

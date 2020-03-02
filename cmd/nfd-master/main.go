@@ -52,6 +52,7 @@ func main() {
 		CaCertPath: caCertPath,
 		CaKeyPath:  caKeyPath,
 		Sni:        sni,
+		Dsn:        dsn,
 	}
 
 	err := nfdSrv.ServeGRPC(ctx)

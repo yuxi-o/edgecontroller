@@ -14,11 +14,14 @@ import (
 	"database/sql"
 	"fmt"
 	logger "github.com/otcshare/common/log"
+	cce "github.com/otcshare/edgecontroller"
 	"github.com/otcshare/edgecontroller/mysql"
 	"github.com/otcshare/edgecontroller/pki"
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/peer"
 	"net"
 	"path/filepath"
 	pb "sigs.k8s.io/node-feature-discovery/pkg/labeler"
@@ -27,23 +30,24 @@ import (
 
 var log = logger.DefaultLogger.WithField("nfd-master", nil)
 
+// ServerNFD describes NFD Master server object
 type ServerNFD struct {
-	persistenceService *mysql.PersistenceService
-	Endpoint           int
-	CaCertPath         string
-	CaKeyPath          string
-	Sni                string
-	Dsn                string
+	Endpoint   int
+	CaCertPath string
+	CaKeyPath  string
+	Sni        string
+	Dsn        string
 }
 
 type labeler struct {
+	persistenceService *mysql.PersistenceService
 }
 
-func (s ServerNFD) connectDB() error {
+func (s ServerNFD) connectDB() (*mysql.PersistenceService, error) {
 	db, err := sql.Open("mysql", s.Dsn)
 	if err != nil {
 		log.Errf("Error opening db: %v", err)
-		return err
+		return nil, err
 	}
 
 	for {
@@ -56,8 +60,7 @@ func (s ServerNFD) connectDB() error {
 		}
 	}
 
-	s.persistenceService = &mysql.PersistenceService{DB: db}
-	return nil
+	return &mysql.PersistenceService{DB: db}, nil
 }
 
 func (s ServerNFD) createCredentialsTLS() (credentials.TransportCredentials, error) {
@@ -104,7 +107,13 @@ func (s ServerNFD) createCredentialsTLS() (credentials.TransportCredentials, err
 	}), nil
 }
 
+// ServeGRPC creates and starts NFD Master server
 func (s ServerNFD) ServeGRPC(ctx context.Context) error {
+
+	pers, err := s.connectDB()
+	if err != nil {
+		return err
+	}
 
 	creds, err := s.createCredentialsTLS()
 	if err != nil {
@@ -119,7 +128,8 @@ func (s ServerNFD) ServeGRPC(ctx context.Context) error {
 	}
 
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
-	labelerServer := labeler{}
+	labelerServer := labeler{persistenceService: pers}
+
 	pb.RegisterLabelerServer(grpcServer, &labelerServer)
 
 	go func() {
@@ -138,7 +148,94 @@ func (s ServerNFD) ServeGRPC(ctx context.Context) error {
 	return nil
 }
 
+// getPeerName returns Subject.CommonName from peer TLS certificate
+func getPeerName(ctx context.Context) (string, error) {
+	p, ok := peer.FromContext(ctx)
+	if !ok {
+		return "", errors.New("Missing peer data in gRPC context")
+	}
+
+	authInfo, ok := p.AuthInfo.(credentials.TLSInfo)
+	if !ok {
+		return "", errors.New("gRPC peer missing TLS auth info")
+	}
+
+	chains := authInfo.State.VerifiedChains
+	if len(chains) < 1 {
+		return "", errors.New("gRPC peer was not authenticated with a client TLS certificate")
+	}
+	nodeID := chains[0][0].Subject.CommonName
+	if nodeID == "" {
+		return "", errors.New("gRPC peer connected with a client TLS cert with no Common Name")
+	}
+
+	return nodeID, nil
+}
+
+// SetLabels implements gRPC request handling
 func (l labeler) SetLabels(c context.Context, r *pb.SetLabelsRequest) (*pb.SetLabelsReply, error) {
 	log.Infof("REQUEST Node: %s NFD-version: %s Labels: %s", r.NodeName, r.NfdVersion, r.Labels)
-	return &pb.SetLabelsReply{}, nil
+
+	nodeID, err := getPeerName(c)
+	if err != nil {
+		log.Errf("Peer error %v", err)
+		return nil, err
+	}
+
+	if nodeID != r.NodeName {
+		err = errors.Errorf("Node name from request [%s] does not match TLS peer name [%s]", r.NodeName, nodeID)
+		return nil, err
+	}
+
+	for lf, lv := range r.Labels {
+		var f []cce.Persistable
+		f, err = l.persistenceService.Filter(
+			c,
+			&NodeFeatureNFD{},
+			[]cce.Filter{
+				{
+					Field: "node_id",
+					Value: r.NodeName,
+				},
+				{
+					Field: "nfd_id",
+					Value: lf,
+				},
+			},
+		)
+
+		if err != nil {
+			log.Errf("Error when filtering DB! %v", err)
+			return nil, err
+		}
+
+		// persist NFD feature with value
+		if len(f) == 0 {
+			persisted := NodeFeatureNFD{
+				ID:       uuid.NewV4().String(),
+				NodeID:   r.NodeName,
+				NfdID:    lf,
+				NfdValue: lv,
+			}
+
+			log.Infof("Creating new entry: %s %s %s %s", persisted.ID, persisted.NodeID, persisted.NfdID,
+				persisted.NfdValue)
+			if err = l.persistenceService.Create(c, &persisted); err != nil {
+				log.Errf("Error creating entity: %v", err)
+			}
+		} else {
+			persisted := NodeFeatureNFD{
+				ID:       f[0].GetID(),
+				NodeID:   r.NodeName,
+				NfdID:    lf,
+				NfdValue: lv,
+			}
+			log.Infof("Updating existing entry: %s %s %s %s", persisted.ID, persisted.NodeID, persisted.NfdID,
+				persisted.NfdValue)
+			if err = l.persistenceService.BulkUpdate(c, []cce.Persistable{&persisted}); err != nil {
+				log.Errf("Error updating entities: %v", err)
+			}
+		}
+	}
+	return nil, err
 }

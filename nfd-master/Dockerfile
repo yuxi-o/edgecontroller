@@ -22,4 +22,4 @@ WORKDIR $user_dir
 COPY ./dist/nfd-master ./
 COPY ./nfd-master/entrypoint.sh ./
 
-CMD ["sudo", "./entrypoint.sh"]
+CMD ["sudo", "-E", "./entrypoint.sh"]

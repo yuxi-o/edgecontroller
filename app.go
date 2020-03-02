@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2020 Intel Corporation
 
 package cce
 
@@ -136,4 +136,23 @@ App[
 		app.Ports,
 		app.Source,
 		app.EPAFeatures)
+}
+
+// EPAValidate returns error if provided nodeFeatures do not fulfill app.EPAFeatures
+func (app *App) EPAValidate(nodeFeatures map[string]string) error {
+	for _, epaFeature := range app.EPAFeatures {
+		if epaFeature.Key == "" || epaFeature.Value == "" {
+			continue
+		}
+
+		if nodeFeatureVal, ok := nodeFeatures[epaFeature.Key]; ok {
+			if nodeFeatureVal != epaFeature.Value {
+				return fmt.Errorf("EPA Feature [%s] value required: [%s] provided by node: [%s] ", epaFeature.Key,
+					epaFeature.Value, nodeFeatureVal)
+			}
+		} else {
+			return fmt.Errorf("Missing EPA Feature: [%s] required by app", epaFeature.Key)
+		}
+	}
+	return nil
 }

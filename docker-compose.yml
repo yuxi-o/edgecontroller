@@ -104,5 +104,7 @@ services:
     restart: on-failure:15
     ports:
       - 8082:8082/tcp
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
     volumes:
       - ./artifacts/controller/certificates/ca:/ca
