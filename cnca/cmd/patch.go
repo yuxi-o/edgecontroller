@@ -6,22 +6,25 @@ package cnca
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+
 	y2j "github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"k8s.io/klog"
 )
 
 // patchCmd represents the patch command
 var patchCmd = &cobra.Command{
-	Use:   "patch",
-	Short: "Patch an active LTE CUPS userplane or NGC AF subscription using YAML configuration file",
-	Args:  cobra.MaximumNArgs(1),
+	Use: "patch",
+	Short: "Patch an active LTE CUPS userplane or NGC AF TI subscription or " +
+		"NGC AF PFD Transaction or NGC AF PFD Application " +
+		"using YAML configuration file",
+	Args: cobra.MaximumNArgs(4),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
-			fmt.Println(errors.New("LTE CUPS userplane or NGC AF subscription ID missing"))
+			fmt.Println(errors.New("Missing input"))
 			return
 		}
 
@@ -45,6 +48,13 @@ var patchCmd = &cobra.Command{
 
 		switch c.Kind {
 		case "ngc":
+			if pfdCommandCalled == true {
+				fmt.Println(errors.New("Incorrect `kind` in YAML file"))
+				return
+			} else if len(args) > 1 {
+				fmt.Println(errors.New("Invalid input(s)"))
+				return
+			}
 			var s AFTrafficInfluSub
 			if err = yaml.Unmarshal(data, &s); err != nil {
 				fmt.Println(err)
@@ -72,6 +82,13 @@ var patchCmd = &cobra.Command{
 			fmt.Printf("Subscription %s patched\n", args[0])
 
 		case "lte":
+			if pfdCommandCalled == true {
+				fmt.Println(errors.New("Incorrect `kind` in YAML file"))
+				return
+			} else if len(args) > 1 {
+				fmt.Println(errors.New("Invalid input(s)"))
+				return
+			}
 			var u LTEUserplane
 			if err = yaml.Unmarshal(data, &u); err != nil {
 				fmt.Println(err)
@@ -97,7 +114,59 @@ var patchCmd = &cobra.Command{
 				return
 			}
 			fmt.Printf("Subscription %s patched\n", args[0])
+		case "ngc_pfd":
 
+			if pfdCommandCalled == false {
+				fmt.Println(errors.New("Incorrect `kind` in YAML file"))
+				return
+			}
+			if len(args) < 2 {
+				fmt.Println(errors.New("Missing input(s)"))
+				return
+			}
+
+			var s AFPfdManagement
+			if err = yaml.Unmarshal(data, &s); err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			trans, err := yaml.Marshal(s.Policy)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			trans, err = y2j.YAMLToJSON(trans)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			if args[0] == "transaction" && args[1] != "" {
+				if len(args) > 2 {
+					if args[2] == "application" && len(args) > 3 {
+						// patch PFD Application
+						err = AFPatchPfdApplication(args[1], args[3], trans)
+						if err != nil {
+							klog.Info(err)
+							return
+						}
+						fmt.Printf("Application %s patched\n", args[3])
+						return
+					}
+				} else {
+					// patch PFD Transaction
+					err = AFPatchPfdTransaction(args[1], trans)
+					if err != nil {
+						klog.Info(err)
+						return
+					}
+					fmt.Printf("Transaction %s patched\n", args[1])
+					return
+				}
+			}
+			fmt.Println(errors.New("Invalid input(s)"))
 		default:
 			fmt.Println(errors.New("`kind` missing or unknown in YAML file"))
 		}
@@ -106,10 +175,17 @@ var patchCmd = &cobra.Command{
 
 func init() {
 
-	const help = `Patch an active LTE CUPS userplane or NGC AF subscription using YAML configuration file
+	const help = `Patch an active LTE CUPS userplane or NGC AF TI subscription or NGC AF PFD Transaction or NGC AF PFD Application using YAML configuration file
 
 Usage:
-  cnca patch { <userplane-id> | <subscription-id> } -f <config.yml>
+  cnca {pfd | <none>} patch { <userplane-id> | <subscription-id> | transaction <transaction-id> {application <application-id> | <none>}  } -f <config.yml>
+
+Example:
+  cnca patch <userplane-id> -f <config.yml>
+  cnca patch <subscription-id> -f <config.yml>
+  cnca pfd patch transactions
+  cnca pfd patch transaction <transaction-id> -f <config.yml>
+  cnca pfd patch transaction <transaction-id> application <application-id> -f <config.yml>
 
 Flags:
   -h, --help       help
@@ -117,6 +193,7 @@ Flags:
 `
 	// add `patch` command
 	cncaCmd.AddCommand(patchCmd)
+	pfdCmd.AddCommand(patchCmd)
 	patchCmd.Flags().StringP("filename", "f", "", "YAML configuration file")
 	applyCmd.MarkFlagRequired("filename")
 	patchCmd.SetHelpTemplate(help)

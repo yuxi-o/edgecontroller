@@ -168,3 +168,57 @@ type LteConfigInfoCpup struct {
 type LteConfigInfoUp struct {
 	UpIPAddress string `yaml:"up_ip_address,omitempty"`
 }
+
+// AFPfdManagement describes NGC AF Pfd Transaction
+type AFPfdManagement struct {
+	H      Header
+	Policy struct {
+		// Link to the resource "Individual PFD Management Transaction".
+		// This parameter shall be supplied by the AF in HTTP responses.
+		Self string `yaml:"self,omitempty"`
+		// String identifying supported optional features of PFD Management
+		// This attribute shall be provided in the POST request and in the
+		// response of successful resource creation.
+		SuppFeat *string `yaml:"suppFeat,omitempty"`
+		// Each element uniquely identifies the PFDs for an external application
+		// identifier. Each element is identified in the map via an external
+		// application identifier as key. The response shall include successfully
+		// provisioned PFD data of application(s).
+		PfdDatas []struct {
+			// Each element uniquely identifies external application identifier
+			ExternalAppID string `yaml:"externalAppID"`
+			// Link to the resource. This parameter shall be supplied by the AF in
+			// HTTP responses that include an object of PfdData type
+			Self string `yaml:"self,omitempty"`
+			// Contains the PFDs of the external application identifier. Each PFD is
+			// identified in the map via a key containing the PFD identifier.
+			Pfds []struct {
+				// Identifies a PDF of an application identifier.
+				PfdID string `yaml:"pfdID"`
+				// Represents a 3-tuple with protocol, server ip and server port for UL/DL
+				// application traffic. The content of the string has the same encoding as
+				// the IPFilterRule AVP value as defined in IETFÂ RFCÂ 6733.
+				FlowDescriptions []string `yaml:"flowDescriptions,omitempty"`
+				// Indicates a URL or a regular expression which is used to match the
+				// significant parts of the URL.
+				Urls []string `yaml:"urls,omitempty"`
+				// Indicates an FQDN or a regular expression as a domain name matching
+				// criteria.
+				DomainNames []string `yaml:"domainNames,omitempty"`
+			} `yaml:"pfds"`
+			// Indicates that the list of PFDs in this request should be deployed
+			// within the time interval indicated by the Allowed Delay
+			AllowedDelay *uint64 `yaml:"allowedDelay,omitempty"`
+			// SCEF supplied property, inclusion of this property means the allowed
+			// delayed cannot be satisfied, i.e. it is smaller than the caching time,
+			// but the PFD data is still stored.
+			CachingTime *uint64 `yaml:"cachingTime,omitempty"`
+		} `yaml:"pfdDatas"`
+		// Supplied by the AF and contains the external application identifiers
+		// for which PFD(s) are not added or modified successfully. The failure
+		// reason is also included. Each element provides the related information
+		// for one or more external application identifier(s) and is identified in
+		// the map via the failure identifier as key.
+		PfdReports map[string]PfdReport `yaml:"pfdReports,omitempty"`
+	} `yaml:"policy"`
+}
