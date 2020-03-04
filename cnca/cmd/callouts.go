@@ -410,7 +410,7 @@ func AFPatchPfdTransaction(transID string, trans []byte) error {
 
 	url := getNgcAFPfdServiceUrl() + "/" + transID
 
-	req, err := http.NewRequest("PATCH", url, bytes.NewReader(trans))
+	req, err := http.NewRequest("PUT", url, bytes.NewReader(trans))
 	if err != nil {
 		return err
 	}

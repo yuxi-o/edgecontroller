@@ -222,3 +222,38 @@ type AFPfdManagement struct {
 		PfdReports map[string]PfdReport `yaml:"pfdReports,omitempty"`
 	} `yaml:"policy"`
 }
+
+// AFPfdData describes NGC AF Pfd Application
+type AFPfdData struct {
+	H      Header
+	Policy struct {
+		// Each element uniquely identifies external application identifier
+		ExternalAppID string `yaml:"externalAppID"`
+		// Link to the resource. This parameter shall be supplied by the AF in
+		// HTTP responses that include an object of PfdData type
+		Self string `yaml:"self,omitempty"`
+		// Contains the PFDs of the external application identifier. Each PFD is
+		// identified in the map via a key containing the PFD identifier.
+		Pfds []struct {
+			// Identifies a PDF of an application identifier.
+			PfdID string `yaml:"pfdID"`
+			// Represents a 3-tuple with protocol, server ip and server port for UL/DL
+			// application traffic. The content of the string has the same encoding as
+			// the IPFilterRule AVP value as defined in IETFÂ RFCÂ 6733.
+			FlowDescriptions []string `yaml:"flowDescriptions,omitempty"`
+			// Indicates a URL or a regular expression which is used to match the
+			// significant parts of the URL.
+			Urls []string `yaml:"urls,omitempty"`
+			// Indicates an FQDN or a regular expression as a domain name matching
+			// criteria.
+			DomainNames []string `yaml:"domainNames,omitempty"`
+		} `yaml:"pfds"`
+		// Indicates that the list of PFDs in this request should be deployed
+		// within the time interval indicated by the Allowed Delay
+		AllowedDelay *uint64 `yaml:"allowedDelay,omitempty"`
+		// SCEF supplied property, inclusion of this property means the allowed
+		// delayed cannot be satisfied, i.e. it is smaller than the caching time,
+		// but the PFD data is still stored.
+		CachingTime *uint64 `yaml:"cachingTime,omitempty"`
+	} `yaml:"policy"`
+}

@@ -4,6 +4,7 @@
 package cnca
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -125,29 +126,26 @@ var patchCmd = &cobra.Command{
 				return
 			}
 
-			var s AFPfdManagement
-			if err = yaml.Unmarshal(data, &s); err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			trans, err := yaml.Marshal(s.Policy)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			trans, err = y2j.YAMLToJSON(trans)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-
 			if args[0] == "transaction" && args[1] != "" {
 				if len(args) > 2 {
 					if args[2] == "application" && len(args) > 3 {
 						// patch PFD Application
-						err = AFPatchPfdApplication(args[1], args[3], trans)
+
+						var s AFPfdData
+						if err = yaml.Unmarshal(data, &s); err != nil {
+							fmt.Println(err)
+							return
+						}
+
+						pfdAppData := getPfdAppData(s)
+
+						app, err := json.Marshal(pfdAppData)
+						if err != nil {
+							fmt.Println(err)
+							return
+						}
+
+						err = AFPatchPfdApplication(args[1], args[3], app)
 						if err != nil {
 							klog.Info(err)
 							return
@@ -157,6 +155,21 @@ var patchCmd = &cobra.Command{
 					}
 				} else {
 					// patch PFD Transaction
+
+					var s AFPfdManagement
+					if err = yaml.Unmarshal(data, &s); err != nil {
+						fmt.Println(err)
+						return
+					}
+
+					pfdTransData := getPfdTransData(s)
+
+					trans, err := json.Marshal(pfdTransData)
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+
 					err = AFPatchPfdTransaction(args[1], trans)
 					if err != nil {
 						klog.Info(err)
@@ -197,4 +210,30 @@ Flags:
 	patchCmd.Flags().StringP("filename", "f", "", "YAML configuration file")
 	applyCmd.MarkFlagRequired("filename")
 	patchCmd.SetHelpTemplate(help)
+}
+
+func getPfdAppData(inputPfdAppData AFPfdData) PfdData {
+
+	var pfdAppData PfdData
+
+	pfdAppData.ExternalAppID = inputPfdAppData.Policy.ExternalAppID
+	pfdAppData.Self = Link(inputPfdAppData.Policy.Self)
+
+	if inputPfdAppData.Policy.AllowedDelay != nil {
+		allowedDelay := DurationSecRm(*inputPfdAppData.Policy.AllowedDelay)
+		pfdAppData.AllowedDelay = &allowedDelay
+	}
+	if inputPfdAppData.Policy.CachingTime != nil {
+		cachingTime := DurationSecRo(*inputPfdAppData.Policy.CachingTime)
+		pfdAppData.CachingTime = &cachingTime
+	}
+	if inputPfdAppData.Policy.Pfds != nil {
+		pfdAppData.Pfds = make(map[string]Pfd)
+	}
+
+	for _, inputPfdData := range inputPfdAppData.Policy.Pfds {
+		pfdAppData.Pfds[inputPfdData.PfdID] = Pfd(inputPfdData)
+	}
+
+	return pfdAppData
 }
