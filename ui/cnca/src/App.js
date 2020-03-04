@@ -13,6 +13,9 @@ import Subscription from './components/Subscription';
 import SubscriptionModify from './components/SubscriptionModify';
 import Services from './components/Services.js';
 import Service from './components/Service.js';
+import PacketFlowDescriptors from './components/PacketFlowDescriptors.js';
+import PacketFlowDescriptor from './components/PacketFlowDescriptor.js';
+import PacketFlowDescriptorAppModify from './components/PacketFlowDescriptorAppModify.js';
 import Header from './components/Header';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -73,6 +76,7 @@ class App extends Component {
                   path="/services/:id"
                   component={Service}
                 />
+
                 <Route
                   exact
                   path="/subscriptions"
@@ -93,6 +97,29 @@ class App extends Component {
                   path="/subscriptions/patch/:id"
                   component={SubscriptionModify}
                 />
+                <Route
+                  exact
+                  path="/pfd"
+                  component={PacketFlowDescriptors}
+                />
+                <Route
+                  exact
+                  path="/pfd/transactions/create"
+                  render={(props) => <PacketFlowDescriptor {...props} createMode={true} />}
+                />
+
+                 <Route
+                  exact
+                  path="/pfd/transactions/:tId"
+                  component={PacketFlowDescriptor}
+                />
+                <Route
+                  exact
+                  path="/pfd/transactions/:tId/applications/:appId"
+                  render={(props) => <PacketFlowDescriptorAppModify {...props} />}
+                />
+ 
+ 
                 <Route
                   render={() => <span>404 Not Found</span>}
                 />

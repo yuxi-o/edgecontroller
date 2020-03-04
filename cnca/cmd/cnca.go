@@ -26,7 +26,7 @@ const (
 
 // HTTP2/HTTPS constants
 const (
-	UseHttpProtocol      = HTTP2
+	UseHttpProtocol      = HTTP
 	TlsCAFile            = "root-ca-cert.pem"
 	DefaultTlsCAFilePath = "/etc/openness/certs/ngc"
 )
