@@ -127,6 +127,7 @@ func toPBApp(app *cce.App) *evapb.Application {
 	cniConf, err := getCNIConf()
 	if err == nil {
 		pb.CniConf = cniConf
+		pb.CniConf.Args = pb.CniConf.Args + ";appID=" + app.ID
 	}
 
 	return &pb
