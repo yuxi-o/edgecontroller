@@ -4,11 +4,16 @@
 package main_test
 
 import (
+	"context"
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/otcshare/edgecontroller/nfd-master"
 	"github.com/otcshare/edgecontroller/swagger"
 	"github.com/otcshare/edgecontroller/uuid"
 
@@ -47,6 +52,157 @@ var _ = Describe("/nodes/{node_id}/apps", func() {
 
 				By("Verifying a 200 response")
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			},
+			Entry(
+				"POST /nodes/{node_id}/apps"),
+		)
+
+		DescribeTable("500 Internal server error",
+			func() {
+				nodeCfg := createAndRegisterNode()
+
+				By("Sending a POST /nodes/{node_id}/apps request")
+
+				resp, err := apiCli.Post(
+					"http://127.0.0.1:8080/apps",
+					"application/json",
+					strings.NewReader(fmt.Sprintf(`
+							{
+								"type": "%s",
+								"name": "%s app",
+								"version": "latest",
+								"vendor": "smart edge",
+								"description": "my %s app",
+								"cores": 4,
+								"memory": 1024,
+								"ports": [{"port": 80, "protocol": "tcp"}],
+								"source": "http://www.test.com/my_%s_app.tar.gz",
+								"epafeatures": [{"key": "NFD:test_id", "value": "nfd_val"}]
+							}`, "container", "nfd_req", "nfd_req", "container")))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 201 Created response")
+				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+
+				var rb respBody
+
+				By("Unmarshaling the response")
+				Expect(json.Unmarshal(body, &rb)).To(Succeed())
+
+				appid := rb.ID
+
+				respPost, err := apiCli.Post(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps", nodeCfg.nodeID),
+					"application/json",
+					strings.NewReader(fmt.Sprintf(
+						`
+						{
+							"id": "%s"
+						}
+						`, appid)))
+				Expect(err).ToNot(HaveOccurred())
+				defer respPost.Body.Close()
+
+				By("Verifying a 500 response")
+				Expect(respPost.StatusCode).To(Equal(http.StatusInternalServerError))
+			},
+			Entry(
+				"POST /nodes/{node_id}/apps"),
+		)
+
+		DescribeTable("200 OK with EPAValidate",
+			func() {
+				nodeCfg := createAndRegisterNode()
+
+				By("Sending a POST /nodes/{node_id}/apps request")
+
+				resp, err := apiCli.Post(
+					"http://127.0.0.1:8080/apps",
+					"application/json",
+					strings.NewReader(fmt.Sprintf(`
+							{
+								"type": "%s",
+								"name": "%s app",
+								"version": "latest",
+								"vendor": "smart edge",
+								"description": "my %s app",
+								"cores": 4,
+								"memory": 1024,
+								"ports": [{"port": 80, "protocol": "tcp"}],
+								"source": "http://www.test.com/my_%s_app.tar.gz",
+								"epafeatures": [{"key": "NFD:test_id", "value": "nfd_val"}]
+							}`, "container", "nfd_req", "nfd_req", "container")))
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+
+				By("Verifying a 201 Created response")
+				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+				By("Reading the response body")
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).ToNot(HaveOccurred())
+
+				var rb respBody
+
+				By("Unmarshaling the response")
+				Expect(json.Unmarshal(body, &rb)).To(Succeed())
+
+				appid := rb.ID
+
+				By("Executing the delete query")
+				db, err := sql.Open(
+					"mysql",
+					fmt.Sprintf("root:%s@tcp(:8083)/controller_ce?multiStatements=true", dbPass))
+				Expect(err).ToNot(HaveOccurred())
+
+				defer func() {
+					Expect(db.Close()).To(Succeed())
+				}()
+
+				By("Pinging the database")
+				err = db.Ping()
+				Expect(err).ToNot(HaveOccurred())
+
+				timeoutCtx, cancel := context.WithTimeout(
+					context.Background(), 2*time.Second)
+				defer cancel()
+
+				persisted := nfd.NodeFeatureNFD{
+					ID:       uuid.New(),
+					NodeID:   nodeCfg.nodeID,
+					NfdID:    "test_id",
+					NfdValue: "nfd_val",
+				}
+
+				bytes, err := json.Marshal(persisted)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Executing the INSERT query with NodeFeatureNFD")
+				_, err = db.ExecContext(
+					timeoutCtx,
+					"INSERT INTO nodes_nfd_features (entity) VALUES (?)",
+					bytes)
+				Expect(err).ToNot(HaveOccurred())
+
+				respPost, err := apiCli.Post(
+					fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/apps", nodeCfg.nodeID),
+					"application/json",
+					strings.NewReader(fmt.Sprintf(
+						`
+						{
+							"id": "%s"
+						}
+						`, appid)))
+				Expect(err).ToNot(HaveOccurred())
+				defer respPost.Body.Close()
+
+				By("Verifying a 200 response")
+				Expect(respPost.StatusCode).To(Equal(http.StatusOK))
 			},
 			Entry(
 				"POST /nodes/{node_id}/apps"),

@@ -30,6 +30,15 @@ import (
 
 var log = logger.DefaultLogger.WithField("nfd-master", nil)
 
+// GetDB gets DB for passed data source name
+var GetDB = func(dsn string) (mysql.CceDB, error) {
+	return sql.Open("mysql", dsn)
+}
+
+var GetPersistenceService = func(db mysql.CceDB) cce.PersistenceService {
+	return &mysql.PersistenceService{DB: db}
+}
+
 // ServerNFD describes NFD Master server object
 type ServerNFD struct {
 	Endpoint   int
@@ -40,11 +49,11 @@ type ServerNFD struct {
 }
 
 type labeler struct {
-	persistenceService *mysql.PersistenceService
+	persistenceService cce.PersistenceService
 }
 
-func (s ServerNFD) connectDB() (*mysql.PersistenceService, error) {
-	db, err := sql.Open("mysql", s.Dsn)
+func (s ServerNFD) connectDB() (cce.PersistenceService, error) {
+	db, err := GetDB(s.Dsn)
 	if err != nil {
 		log.Errf("Error opening db: %v", err)
 		return nil, err
@@ -60,7 +69,7 @@ func (s ServerNFD) connectDB() (*mysql.PersistenceService, error) {
 		}
 	}
 
-	return &mysql.PersistenceService{DB: db}, nil
+	return GetPersistenceService(db), nil
 }
 
 func (s ServerNFD) createCredentialsTLS() (credentials.TransportCredentials, error) {
@@ -179,12 +188,12 @@ func (l labeler) SetLabels(c context.Context, r *pb.SetLabelsRequest) (*pb.SetLa
 	nodeID, err := getPeerName(c)
 	if err != nil {
 		log.Errf("Peer error %v", err)
-		return nil, err
+		return &pb.SetLabelsReply{}, err
 	}
 
 	if nodeID != r.NodeName {
 		err = errors.Errorf("Node name from request [%s] does not match TLS peer name [%s]", r.NodeName, nodeID)
-		return nil, err
+		return &pb.SetLabelsReply{}, err
 	}
 
 	for lf, lv := range r.Labels {
@@ -206,7 +215,7 @@ func (l labeler) SetLabels(c context.Context, r *pb.SetLabelsRequest) (*pb.SetLa
 
 		if err != nil {
 			log.Errf("Error when filtering DB! %v", err)
-			return nil, err
+			return &pb.SetLabelsReply{}, err
 		}
 
 		// persist NFD feature with value
@@ -237,5 +246,5 @@ func (l labeler) SetLabels(c context.Context, r *pb.SetLabelsRequest) (*pb.SetLa
 			}
 		}
 	}
-	return nil, err
+	return &pb.SetLabelsReply{}, err
 }

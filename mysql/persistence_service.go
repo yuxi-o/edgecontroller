@@ -17,9 +17,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+type CceDB interface {
+	Ping() error
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+}
+
 // PersistenceService implements cce.PersistenceService.
 type PersistenceService struct {
-	DB *sql.DB
+	DB CceDB
 }
 
 // Create persists a resource.
