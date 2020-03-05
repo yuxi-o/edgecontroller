@@ -150,7 +150,7 @@ var patchCmd = &cobra.Command{
 							klog.Info(err)
 							return
 						}
-						fmt.Printf("Application %s patched\n", args[3])
+						fmt.Printf("PFD Application %s patched\n", args[3])
 						return
 					}
 				} else {
@@ -175,7 +175,7 @@ var patchCmd = &cobra.Command{
 						klog.Info(err)
 						return
 					}
-					fmt.Printf("Transaction %s patched\n", args[1])
+					fmt.Printf("PFD Transaction %s patched\n", args[1])
 					return
 				}
 			}

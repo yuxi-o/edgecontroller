@@ -176,9 +176,9 @@ var getCmd = &cobra.Command{
 			}
 
 			if appId != "" {
-				fmt.Printf("Active AF PFD Applications:\n%s", string(pfdData))
+				fmt.Printf("PFD Application: %s\n%s", appId, string(pfdData))
 			} else {
-				fmt.Printf("Active AF PFD Transactions:\n%s", string(pfdData))
+				fmt.Printf("PFD Transaction: %s\n%s", transId, string(pfdData))
 			}
 			return
 		}

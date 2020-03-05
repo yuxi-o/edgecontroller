@@ -69,7 +69,7 @@ var deleteCmd = &cobra.Command{
 						klog.Info(err)
 						return
 					}
-					fmt.Printf("AF PFD Application %s deleted\n", args[3])
+					fmt.Printf("PFD Application %s deleted\n", args[3])
 					return
 				}
 			} else {
@@ -79,7 +79,7 @@ var deleteCmd = &cobra.Command{
 					klog.Info(err)
 					return
 				}
-				fmt.Printf("AF PFD Transaction %s deleted\n", args[1])
+				fmt.Printf("PFD Transaction %s deleted\n", args[1])
 				return
 			}
 		}
