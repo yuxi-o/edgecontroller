@@ -486,7 +486,7 @@ func AFPatchPfdApplication(transID string, appID string, trans []byte) error {
 
 	url := getNgcAFPfdServiceUrl() + "/" + transID + "/applications/" + appID
 
-	req, err := http.NewRequest("PATCH", url, bytes.NewReader(trans))
+	req, err := http.NewRequest("PUT", url, bytes.NewReader(trans))
 	if err != nil {
 		return err
 	}
