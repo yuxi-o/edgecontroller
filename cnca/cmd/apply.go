@@ -123,11 +123,31 @@ var applyCmd = &cobra.Command{
 				fmt.Println(err)
 				return
 			}
-
+			var appStatus map[string]string
 			// create new AF PFD Transaction
 			pfdData, self, err := AFCreatePfdTransaction(trans)
 			if err != nil {
 				klog.Info(err)
+				if err.Error() == "HTTP failure: 500" && pfdData != nil {
+					//Convert the json PFD Transaction Report into struct
+					pfdReports := []PfdReport{}
+					err = json.Unmarshal(pfdData, &pfdReports)
+					if err != nil {
+						klog.Info(err)
+						return
+					}
+					fmt.Println("PFD Transaction ID:")
+					fmt.Println("    Application IDs:")
+					appStatus = make(map[string]string)
+					for _, v := range pfdReports {
+						for _, str := range PfdReport(v).ExternalAppIds {
+							appStatus[str] = string(PfdReport(v).FailureCode)
+						}
+					}
+					for k, v := range appStatus {
+						fmt.Printf("      - %s : Failed (Reason: %s)\n", k, v)
+					}
+				}
 				return
 			}
 
@@ -147,8 +167,6 @@ var applyCmd = &cobra.Command{
 				fmt.Printf("PFD Transaction ID: %s\n",
 					getTransIdFromUrl(self))
 				fmt.Println("    Application IDs:")
-
-				var appStatus map[string]string
 
 				appStatus = make(map[string]string)
 				for k, _ := range pfdTrans.PfdDatas {

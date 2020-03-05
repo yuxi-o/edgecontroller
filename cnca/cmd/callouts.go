@@ -354,7 +354,8 @@ func AFCreatePfdTransaction(trans []byte) ([]byte, string, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusCreated {
+	if resp.StatusCode != http.StatusCreated &&
+		resp.StatusCode != http.StatusInternalServerError {
 		return nil, "", fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
 
@@ -367,7 +368,11 @@ func AFCreatePfdTransaction(trans []byte) ([]byte, string, error) {
 		}
 	}
 
-	return pfdData, self, nil
+	if resp.StatusCode == http.StatusInternalServerError {
+		return pfdData, self, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+	} else {
+		return pfdData, self, nil
+	}
 }
 
 // AFGetPfdTransaction get the active PFD Transaction for the AF
