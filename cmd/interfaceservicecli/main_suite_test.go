@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2020 Intel Corporation
 
 package main_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"log"
 	"os"
 	"testing"
 	"time"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var (
@@ -21,8 +22,10 @@ var (
     -endpoint      Endpoint to be requested
     -servicename   Name to be used as server name for TLS handshake
     -cmd           Supported commands: get, attach, detach
-    -val           PCI address for attach and detach commands. Multiple addresses can be passed
-                   and must be separated by commas: -val=0000:00:00.0,0000:00:00.1
+    -pci           PCI address for attach and detach commands. Multiple addresses can be passed
+                   and must be separated by commas: -pci=0000:00:00.0,0000:00:00.1
+    -brg           OVS bridge an interface would be attached to: -brg=br-local
+    -drv           Driver that would be used: -drv=kernel
     -certsdir      Directory where cert.pem and key.pem for client and root.pem for CA resides   
     -timeout       Timeout value [s] for grpc requests
 

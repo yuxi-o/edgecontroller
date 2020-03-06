@@ -42,7 +42,6 @@ spec:
         image: interfaceservice:1.0
         imagePullPolicy: Never
         securityContext:
-          readOnlyRootFilesystem: true
           privileged: true
         resources:
           requests:
@@ -63,9 +62,15 @@ spec:
           mountPath: /var/host_ns
           readOnly: true
         - name: devices
+          mountPath: /sys/devices
+        - name: devices
           mountPath: /devices
         - name: run
           mountPath: /var/run
+        - name: sys-pci
+          mountPath: /sys/bus/pci
+        - name: lib-modules
+          mountPath: /lib/modules
       initContainers:
       - name: openssl
         image: emberstack/openssl:latest
@@ -103,6 +108,12 @@ spec:
       - name: run
         hostPath:
           path: /var/run
+      - name: sys-pci
+        hostPath:
+          path: /sys/bus/pci
+      - name: lib-modules
+        hostPath:
+          path: /lib/modules
       - name: ca
         secret:
           secretName: root-ca

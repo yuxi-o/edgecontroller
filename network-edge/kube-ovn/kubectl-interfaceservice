@@ -22,15 +22,23 @@ usage() {
     echo
     echo "Usage:"
     echo "    kubectl interfaceservice get <node_hostname>"
-    echo "    kubectl interfaceservice attach <node_hostname> <pci_addr1,pci_addr2,...>"
+    echo "    kubectl interfaceservice attach <node_hostname> <pci_addr1,pci_addr2,...> [<ovs_bridge>] [<driver>]"
     echo "    kubectl interfaceservice detach <node_hostname> <pci_addr1,pci_addr2,...>"
     echo "    kubectl interfaceservice ( --help | -h)"
     echo
     echo "Actions:"
     echo "    get                     Get network interfaces on remote node"
-    echo "    attach                  Attach network interface to node OVS"
-    echo "    detach                  Detach network interface from node OVS"
+    echo "    attach                  Attach network interface(s) to node OVS"
+    echo "    detach                  Detach network interface(s) from node OVS"
     echo "    --help | -h             Print this message"
+    echo
+    echo "Drivers:"
+    echo "    kernel                  Interface will use kernel driver [default]"
+    echo "    dpdk                    Interface will use dpdk enabled userspace driver"
+    echo
+    echo "Bridges:"
+    echo "    br-local                Default kernel bridge [default]"
+    echo "    br-userspace            Default userspace (dpdk) bridge"
     echo
     exit "${exit_code}"
 }
@@ -80,7 +88,6 @@ get_node_service() {
             return
         fi
     done
-
 }
 
 # main
@@ -89,8 +96,8 @@ if [ "$#" -ge 1 ]; then
 
     if [[ "${action}" == "--help" || "${action}" == "-h" ]]; then
         usage 0
-    elif [ "${action}" = "get" ]; then
-        if [ "$#" -ne 2 ]; then
+    elif [[ "${action}" = "get" ]]; then
+        if [[ "$#" -ne 2 ]]; then
             error "Get action requires one argument: kubectl interfaceservice get <node_hostname>"
             usage 1
         fi
@@ -104,16 +111,38 @@ if [ "$#" -ge 1 ]; then
             exit 1
         fi
         /usr/local/bin/interfaceservicecli -endpoint="${ip}:42101" -servicename=interfaceservice.openness -certsdir=${CERTS_DIRECTORY} -cmd=get
-
     elif [[ "${action}" == "attach" || "${action}" == "detach" ]]; then
-        if [ "$#" -ne 3 ]; then
-            error "Action ${action} requires two arguments: kubectl interfaceservice ${action} <node_hostname> <pciaddr>"
+        if [[ "${action}" == "attach" && "$#" -lt 3 ]]; then
+            error "Action ${action} requires at least two arguments: kubectl interfaceservice ${action} <node_hostname> <pci_addr> [<driver>] [<ovs_bridge>]\n"
             usage 1
+        elif [[ "${action}" == "attach" && "$#" -gt 5 ]]; then
+            error "Too many arguments. Action ${action} supports up to four arguments: kubectl interfaceservice ${action} <node_hostname> <pci_addr> [<driver>] [<ovs_bridge>]\n"
+            usage 1
+        elif [[ "${action}" == "detach" && "$#" -ne 3 ]]; then
+            error "Action ${action} requires two arguments: kubectl interfaceservice ${action} <node_hostname> <pci_addr>\n"
+            usage 1 
         fi
+
         node=${2:-}
-        pciaddr=${3:-}
+        pci_addr=${3:-}
+
+        ovs_bridge=""
+        driver=""
+
+        if [[ "${action}" == "attach" && "$#" -eq 5 ]]; then
+            if [[ "${5:-}" != "kernel" && "${5:-}" != "dpdk" ]]; then
+                error "Drivers other than 'kernel' and 'dpdk' are currently not supported\n"
+                usage 1 
+            fi
+            ovs_bridge=${4:-}
+            driver=${5:-}
+        elif [[ "${action}" == "attach" && "$#" -eq 4 ]]; then
+            ovs_bridge=${4:-}
+        fi
+
         fail_if_var_empty "${node}" "<node_hostname>"
-        fail_if_var_empty "${pciaddr}" "<pciaddr>"
+        fail_if_var_empty "${pci_addr}" "<pci_addr>"
+
         fail_if_node_not_exist "${node}"
         get_node_service  "${node}" "interfaceservice"
 
@@ -122,7 +151,7 @@ if [ "$#" -ge 1 ]; then
             exit 1
         fi
 
-        /usr/local/bin/interfaceservicecli -endpoint="${ip}:42101" -servicename=interfaceservice.openness -certsdir=${CERTS_DIRECTORY} -cmd="${action}" -val="${pciaddr}"
+        /usr/local/bin/interfaceservicecli -endpoint="${ip}:42101" -servicename=interfaceservice.openness -certsdir=${CERTS_DIRECTORY} -cmd="${action}" -pci="${pci_addr}" -brg="${ovs_bridge}" -drv="${driver}"
     else
         error "Unrecognized action: ${action}\n"
         usage 1

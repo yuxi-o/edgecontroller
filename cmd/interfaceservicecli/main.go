@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2020 Intel Corporation
 
 package main
 
@@ -16,11 +16,14 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	pb "github.com/otcshare/edgecontroller/pb/ela"
+	pb "github.com/otcshare/edgecontroller/pb/interfaceservice"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
+
+const defaultBridge = "br-local"
+const defaultDriver = pb.Port_KERNEL
 
 type cliFlags struct {
 	CertsDir    string
@@ -28,7 +31,9 @@ type cliFlags struct {
 	ServiceName string
 	Timeout     int
 	Cmd         string
-	Val         string
+	Pci         string
+	Brg         string
+	Drv         string
 }
 
 // Cfg stores flags passed to CLI
@@ -38,9 +43,11 @@ func init() {
 	flag.StringVar(&Cfg.Endpoint, "endpoint", "", "Interface service endpoint")
 	flag.StringVar(&Cfg.ServiceName, "servicename", "interfaceservice.openness", "Name of server in certificate")
 	flag.StringVar(&Cfg.Cmd, "cmd", "help", "Interface service command")
-	flag.StringVar(&Cfg.Val, "val", "", "Interface service command parameters")
+	flag.StringVar(&Cfg.Pci, "pci", "", "List of network interfaces PCI addresses")
+	flag.StringVar(&Cfg.Brg, "brg", "", "OVS bridge an interface would be attached to")
+	flag.StringVar(&Cfg.Drv, "drv", "", "Driver to be used")
 	flag.StringVar(&Cfg.CertsDir, "certsdir", "./certs/client/interfaceservice", "Directory of key and certificate")
-	flag.IntVar(&Cfg.Timeout, "timeout", 3, "Timeout value for grpc call (in seconds)")
+	flag.IntVar(&Cfg.Timeout, "timeout", 6, "Timeout value for grpc call (in seconds)")
 }
 
 func getTransportCredentials() (*credentials.TransportCredentials, error) {
@@ -97,8 +104,10 @@ func printHelp() {
     -endpoint      Endpoint to be requested
     -servicename   Name to be used as server name for TLS handshake
     -cmd           Supported commands: get, attach, detach
-    -val           PCI address for attach and detach commands. Multiple addresses can be passed
-                   and must be separated by commas: -val=0000:00:00.0,0000:00:00.1
+    -pci           PCI address for attach and detach commands. Multiple addresses can be passed
+                   and must be separated by commas: -pci=0000:00:00.0,0000:00:00.1
+    -brg           OVS bridge an interface would be attached to: -brg=br-local
+    -drv           Driver that would be used: -drv=kernel
     -certsdir      Directory where cert.pem and key.pem for client and root.pem for CA resides   
     -timeout       Timeout value [s] for grpc requests
 
@@ -121,7 +130,11 @@ func splitAndValidatePCIFormat(val string) []string {
 	return validPCIs
 }
 
-func updateInterfaces(driver pb.NetworkInterface_InterfaceDriver, pcis string) error {
+func updateInterfaces(command, pcis, bridge string, driver pb.Port_InterfaceDriver) error {
+
+	if bridge == "" {
+		bridge = defaultBridge
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(Cfg.Timeout)*time.Second)
 	defer cancel()
@@ -131,9 +144,9 @@ func updateInterfaces(driver pb.NetworkInterface_InterfaceDriver, pcis string) e
 
 	client := pb.NewInterfaceServiceClient(conn)
 
-	var ifsReq []*pb.NetworkInterface
+	var reqPorts []*pb.Port
 
-	ifsActual, err := client.GetAll(ctx, &empty.Empty{})
+	nodePorts, err := client.Get(ctx, &empty.Empty{})
 	if err != nil {
 		return err
 	}
@@ -141,10 +154,11 @@ func updateInterfaces(driver pb.NetworkInterface_InterfaceDriver, pcis string) e
 	addr := splitAndValidatePCIFormat(pcis)
 	for _, a := range addr {
 		found := false
-		for _, i := range ifsActual.GetNetworkInterfaces() {
-			if i.GetId() == a {
-				i.Driver = driver
-				ifsReq = append(ifsReq, i)
+		for _, p := range nodePorts.GetPorts() {
+			if p.GetPci() == a {
+				p.Driver = driver
+				p.Bridge = bridge
+				reqPorts = append(reqPorts, p)
 				found = true
 			}
 		}
@@ -154,9 +168,13 @@ func updateInterfaces(driver pb.NetworkInterface_InterfaceDriver, pcis string) e
 		}
 	}
 
-	if len(ifsReq) != 0 {
-		_, err = client.BulkUpdate(ctx, &pb.NetworkInterfaces{
-			NetworkInterfaces: ifsReq,
+	if command == "attach" {
+		_, err = client.Attach(ctx, &pb.Ports{
+			Ports: reqPorts,
+		})
+	} else {
+		_, err = client.Detach(ctx, &pb.Ports{
+			Ports: reqPorts,
 		})
 	}
 
@@ -164,16 +182,25 @@ func updateInterfaces(driver pb.NetworkInterface_InterfaceDriver, pcis string) e
 		return err
 	}
 
-	op := "attached"
-	if driver == pb.NetworkInterface_KERNEL {
-		op = "detached"
-	}
-
-	for _, i := range ifsReq {
-		fmt.Println("Interface: " + i.GetId() + " successfully " + op)
+	for _, p := range reqPorts {
+		fmt.Println("Interface: " + p.GetPci() + " successfully " + command + "ed")
 	}
 
 	return nil
+}
+
+func createInterfaceGroups(ports []*pb.Port) ([]*pb.Port, []*pb.Port, []*pb.Port) {
+	var kernelPorts, dpdkPorts, otherPorts []*pb.Port
+	for _, port := range ports {
+		if port.Driver == pb.Port_KERNEL {
+			kernelPorts = append(kernelPorts, port)
+		} else if port.Driver == pb.Port_USERSPACE {
+			dpdkPorts = append(dpdkPorts, port)
+		} else {
+			otherPorts = append(otherPorts, port)
+		}
+	}
+	return kernelPorts, dpdkPorts, otherPorts
 }
 
 func printInterfaces() error {
@@ -187,21 +214,49 @@ func printInterfaces() error {
 	client := pb.NewInterfaceServiceClient(conn)
 
 	var err error
-	ifs, err := client.GetAll(ctx, &empty.Empty{})
+	ports, err := client.Get(ctx, &empty.Empty{})
 	if err != nil {
 		return err
 	}
 
-	if len(ifs.GetNetworkInterfaces()) == 0 {
-		return errors.Errorf("No interfaces on node found")
+	allPorts := ports.GetPorts()
+
+	if len(allPorts) == 0 {
+		return errors.Errorf("No interfaces found on node")
 	}
 
-	for _, dev := range ifs.GetNetworkInterfaces() {
-		drv := "detached"
-		if dev.GetDriver() == 1 {
-			drv = "attached"
+	kernelPorts, dpdkPorts, otherPorts := createInterfaceGroups(allPorts)
+
+	if len(kernelPorts) > 0 {
+		fmt.Printf("\nKernel interfaces:\n")
+		for _, port := range kernelPorts {
+			if port.GetBridge() != "" {
+				fmt.Printf("\t%s  |  %s  |  attached  | %s\n", port.GetPci(), port.GetMacAddress(), port.GetBridge())
+			} else {
+				fmt.Printf("\t%s  |  %s  |  detached\n", port.GetPci(), port.GetMacAddress())
+			}
 		}
-		fmt.Printf("%s  |  %s  |  %s\n", dev.GetId(), dev.GetMacAddress(), drv)
+		fmt.Println()
+	}
+
+	if len(dpdkPorts) > 0 {
+		fmt.Printf("DPDK interfaces:\n")
+		for _, port := range dpdkPorts {
+			if port.GetBridge() != "" {
+				fmt.Printf("\t%s  |  attached  | %s\n", port.GetPci(), port.GetBridge())
+			} else {
+				fmt.Printf("\t%s  |  detached\n", port.GetPci())
+			}
+		}
+		fmt.Println()
+	}
+
+	if len(otherPorts) > 0 {
+		fmt.Printf("Other interfaces:\n")
+		for _, port := range otherPorts {
+			fmt.Printf("\t%s\n", port.GetPci())
+		}
+		fmt.Println()
 	}
 
 	return nil
@@ -220,11 +275,16 @@ func main() {
 func StartCli() error {
 	var err error
 
+	driver := defaultDriver
+	if Cfg.Drv == "dpdk" {
+		driver = pb.Port_USERSPACE
+	}
+
 	switch Cfg.Cmd {
 	case "attach":
-		err = updateInterfaces(pb.NetworkInterface_USERSPACE, Cfg.Val)
+		fallthrough
 	case "detach":
-		err = updateInterfaces(pb.NetworkInterface_KERNEL, Cfg.Val)
+		err = updateInterfaces(Cfg.Cmd, Cfg.Pci, Cfg.Brg, driver)
 	case "get":
 		err = printInterfaces()
 	case "help", "h", "":
