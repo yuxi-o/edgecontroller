@@ -16,50 +16,46 @@ const (
 	NgcOAMServiceEndpoint      = "http://localhost:30070/ngcoam/v1/af"
 	NgcAFServiceEndpoint       = "http://localhost:30050/af/v1"
 	LteOAMServiceEndpoint      = "http://localhost:8082"
-	NgcOAMServiceHttp2Endpoint = "https://localhost:30070/ngcoam/v1/af"
-	NgcAFServiceHttp2Endpoint  = "https://localhost:30050/af/v1"
-	LteOAMServiceHttp2Endpoint = "https://localhost:8082"
+	NgcOAMServiceHTTP2Endpoint = "https://localhost:30070/ngcoam/v1/af"
+	NgcAFServiceHTTP2Endpoint  = "https://localhost:30050/af/v1"
+	LteOAMServiceHTTP2Endpoint = "https://localhost:8082"
 )
 
 // HTTP client
 var client http.Client
 
-func getNgcOAMServiceUrl() string {
-	if UseHttpProtocol == HTTP2 {
-		return NgcOAMServiceHttp2Endpoint + "/services"
-	} else {
-		return NgcOAMServiceEndpoint + "/services"
+func getNgcOAMServiceURL() string {
+	if UseHTTPProtocol == HTTP2 {
+		return NgcOAMServiceHTTP2Endpoint + "/services"
 	}
+	return NgcOAMServiceEndpoint + "/services"
 }
 
-func getNgcAFServiceUrl() string {
-	if UseHttpProtocol == HTTP2 {
-		return NgcAFServiceHttp2Endpoint + "/subscriptions"
-	} else {
-		return NgcAFServiceEndpoint + "/subscriptions"
+func getNgcAFServiceURL() string {
+	if UseHTTPProtocol == HTTP2 {
+		return NgcAFServiceHTTP2Endpoint + "/subscriptions"
 	}
+	return NgcAFServiceEndpoint + "/subscriptions"
 }
 
-func getNgcAFPfdServiceUrl() string {
-	if UseHttpProtocol == HTTP2 {
-		return NgcAFServiceHttp2Endpoint + "/pfd/transactions"
-	} else {
-		return NgcAFServiceEndpoint + "/pfd/transactions"
+func getNgcAFPfdServiceURL() string {
+	if UseHTTPProtocol == HTTP2 {
+		return NgcAFServiceHTTP2Endpoint + "/pfd/transactions"
 	}
+	return NgcAFServiceEndpoint + "/pfd/transactions"
 }
 
-func getLteOAMServiceUrl() string {
-	if UseHttpProtocol == HTTP2 {
-		return LteOAMServiceHttp2Endpoint + "/userplanes"
-	} else {
-		return LteOAMServiceEndpoint + "/userplanes"
+func getLteOAMServiceURL() string {
+	if UseHTTPProtocol == HTTP2 {
+		return LteOAMServiceHTTP2Endpoint + "/userplanes"
 	}
+	return LteOAMServiceEndpoint + "/userplanes"
 }
 
 // OAM5gRegisterAFService register controller to AF services registry
 func OAM5gRegisterAFService(locService []byte) (string, error) {
 
-	url := getNgcOAMServiceUrl()
+	url := getNgcOAMServiceURL()
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(locService))
 	if err != nil {
@@ -91,7 +87,7 @@ func OAM5gRegisterAFService(locService []byte) (string, error) {
 // OAM5gUnregisterAFService unregister controller from AF services registry
 func OAM5gUnregisterAFService(serviceID string) error {
 
-	url := getNgcOAMServiceUrl() + "/" + serviceID
+	url := getNgcOAMServiceURL() + "/" + serviceID
 
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -114,7 +110,7 @@ func OAM5gUnregisterAFService(serviceID string) error {
 // AFCreateSubscription create new Traffic Influence Subscription at AF
 func AFCreateSubscription(sub []byte) (string, error) {
 
-	url := getNgcAFServiceUrl()
+	url := getNgcAFServiceURL()
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(sub))
 	if err != nil {
@@ -142,7 +138,7 @@ func AFCreateSubscription(sub []byte) (string, error) {
 // AFPatchSubscription update an active subscription for the AF
 func AFPatchSubscription(subID string, sub []byte) error {
 
-	url := getNgcAFServiceUrl() + "/" + subID
+	url := getNgcAFServiceURL() + "/" + subID
 
 	req, err := http.NewRequest("PATCH", url, bytes.NewReader(sub))
 	if err != nil {
@@ -170,9 +166,9 @@ func AFGetSubscription(subID string) ([]byte, error) {
 	var url string
 
 	if subID == "all" {
-		url = getNgcAFServiceUrl()
+		url = getNgcAFServiceURL()
 	} else {
-		url = getNgcAFServiceUrl() + "/" + subID
+		url = getNgcAFServiceURL() + "/" + subID
 	}
 
 	req, err = http.NewRequest("GET", url, nil)
@@ -200,7 +196,7 @@ func AFGetSubscription(subID string) ([]byte, error) {
 // AFDeleteSubscription delete an active Traffic Influence Subscription for AF
 func AFDeleteSubscription(subID string) error {
 
-	url := getNgcAFServiceUrl() + "/" + subID
+	url := getNgcAFServiceURL() + "/" + subID
 
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -223,7 +219,7 @@ func AFDeleteSubscription(subID string) error {
 // LteCreateUserplane create new LTE userplane
 func LteCreateUserplane(up []byte) (string, error) {
 
-	url := getLteOAMServiceUrl()
+	url := getLteOAMServiceURL()
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(up))
 	if err != nil {
@@ -257,7 +253,7 @@ func LteCreateUserplane(up []byte) (string, error) {
 // LtePatchUserplane update an active LTE CUPS userplane
 func LtePatchUserplane(upID string, up []byte) error {
 
-	url := getLteOAMServiceUrl() + "/" + upID
+	url := getLteOAMServiceURL() + "/" + upID
 
 	req, err := http.NewRequest("PATCH", url, bytes.NewReader(up))
 	if err != nil {
@@ -285,9 +281,9 @@ func LteGetUserplane(upID string) ([]byte, error) {
 	var url string
 
 	if upID == "all" {
-		url = getLteOAMServiceUrl()
+		url = getLteOAMServiceURL()
 	} else {
-		url = getLteOAMServiceUrl() + "/" + upID
+		url = getLteOAMServiceURL() + "/" + upID
 	}
 
 	req, err = http.NewRequest("GET", url, nil)
@@ -315,7 +311,7 @@ func LteGetUserplane(upID string) ([]byte, error) {
 // LteDeleteUserplane delete an active LTE CUPS userplane
 func LteDeleteUserplane(upID string) error {
 
-	url := getLteOAMServiceUrl() + "/" + upID
+	url := getLteOAMServiceURL() + "/" + upID
 
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -340,7 +336,7 @@ func AFCreatePfdTransaction(trans []byte) ([]byte, string, error) {
 
 	var pfdData []byte
 
-	url := getNgcAFPfdServiceUrl()
+	url := getNgcAFPfdServiceURL()
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(trans))
 	if err != nil {
@@ -382,9 +378,9 @@ func AFGetPfdTransaction(transID string) ([]byte, error) {
 	var url string
 
 	if transID == "all" {
-		url = getNgcAFPfdServiceUrl()
+		url = getNgcAFPfdServiceURL()
 	} else {
-		url = getNgcAFPfdServiceUrl() + "/" + transID
+		url = getNgcAFPfdServiceURL() + "/" + transID
 	}
 
 	req, err = http.NewRequest("GET", url, nil)
@@ -413,8 +409,8 @@ func AFGetPfdTransaction(transID string) ([]byte, error) {
 func AFPatchPfdTransaction(transID string, trans []byte) ([]byte, error) {
 
 	var pfdReports []byte
-	
-	url := getNgcAFPfdServiceUrl() + "/" + transID
+
+	url := getNgcAFPfdServiceURL() + "/" + transID
 
 	req, err := http.NewRequest("PUT", url, bytes.NewReader(trans))
 	if err != nil {
@@ -449,7 +445,7 @@ func AFPatchPfdTransaction(transID string, trans []byte) ([]byte, error) {
 // AFDeletePfdTransaction delete an active PFD Transaction for the AF
 func AFDeletePfdTransaction(transID string) error {
 
-	url := getNgcAFPfdServiceUrl() + "/" + transID
+	url := getNgcAFPfdServiceURL() + "/" + transID
 
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -475,7 +471,7 @@ func AFGetPfdApplication(transID string, appID string) ([]byte, error) {
 	var req *http.Request
 	var err error
 
-	url := getNgcAFPfdServiceUrl() + "/" + transID + "/applications/" + appID
+	url := getNgcAFPfdServiceURL() + "/" + transID + "/applications/" + appID
 
 	req, err = http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -503,7 +499,7 @@ func AFGetPfdApplication(transID string, appID string) ([]byte, error) {
 func AFPatchPfdApplication(transID string, appID string, trans []byte) ([]byte, error) {
 
 	var pfdReports []byte
-	url := getNgcAFPfdServiceUrl() + "/" + transID + "/applications/" + appID
+	url := getNgcAFPfdServiceURL() + "/" + transID + "/applications/" + appID
 
 	req, err := http.NewRequest("PUT", url, bytes.NewReader(trans))
 	if err != nil {
@@ -538,7 +534,7 @@ func AFPatchPfdApplication(transID string, appID string, trans []byte) ([]byte, 
 // AFDeletePfdApplication delete an active PFD Application for the AF
 func AFDeletePfdApplication(transID string, appID string) error {
 
-	url := getNgcAFPfdServiceUrl() + "/" + transID + "/applications/" + appID
+	url := getNgcAFPfdServiceURL() + "/" + transID + "/applications/" + appID
 
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {

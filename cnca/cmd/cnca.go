@@ -16,21 +16,21 @@ import (
 	"golang.org/x/net/http2"
 )
 
-type HttpProtocol int
+type HTTPProtocol int
 
 const (
-	HTTP HttpProtocol = 1 + iota
+	HTTP HTTPProtocol = 1 + iota
 	HTTP2
 )
 
 // HTTP2/HTTPS constants
 const (
-	UseHttpProtocol      = HTTP
-	TlsCAFile            = "root-ca-cert.pem"
-	DefaultTlsCAFilePath = "/etc/openness/certs/ngc"
+	UseHTTPProtocol      = HTTP
+	TLSCAFile            = "root-ca-cert.pem"
+	DefaultTLSCAFilePath = "/etc/openness/certs/ngc"
 )
 
-var Http2ClientTlsCAPath string
+var HTTP2ClientTLSCAPath string
 
 // cncaCmd represents the base command when called without any subcommands
 var cncaCmd = &cobra.Command{
@@ -83,23 +83,23 @@ Flags:
 // Execute CNCA agent
 func Execute() error {
 
-	if UseHttpProtocol == HTTP2 {
-		if Http2ClientTlsCAPath == "" {
-			Http2ClientTlsCAPath = DefaultTlsCAFilePath
+	if UseHTTPProtocol == HTTP2 {
+		if HTTP2ClientTLSCAPath == "" {
+			HTTP2ClientTLSCAPath = DefaultTLSCAFilePath
 		}
-		http2ClientTlsCAData := Http2ClientTlsCAPath + "/" + TlsCAFile
-		err := InitHttp2Client(http2ClientTlsCAData)
+		http2ClientTLSCAData := HTTP2ClientTLSCAPath + "/" + TLSCAFile
+		err := InitHTTP2Client(http2ClientTLSCAData)
 		if nil != err {
 			fmt.Printf("Failure in Initializing HTTP2 Client: %v\n", err)
 			return err
 		}
 	} else {
-		InitHttpClient()
+		InitHTTPClient()
 	}
 	return cncaCmd.Execute()
 }
 
-func InitHttp2Client(clientCertData string) error {
+func InitHTTP2Client(clientCertData string) error {
 	CACert, err := ioutil.ReadFile(clientCertData)
 	if err != nil {
 		return err
@@ -108,7 +108,7 @@ func InitHttp2Client(clientCertData string) error {
 	CACertPool := x509.NewCertPool()
 	CACertPool.AppendCertsFromPEM(CACert)
 
-	if UseHttpProtocol == HTTP2 {
+	if UseHTTPProtocol == HTTP2 {
 		client = http.Client{
 			Timeout: 10 * time.Second,
 			Transport: &http2.Transport{
@@ -124,9 +124,8 @@ func InitHttp2Client(clientCertData string) error {
 	return nil
 }
 
-func InitHttpClient() {
+func InitHTTPClient() {
 	client = http.Client{
 		Timeout: 10 * time.Second,
 	}
-	return
 }
