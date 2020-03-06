@@ -7,7 +7,8 @@ package cnca
 type Header struct {
 	Version string `yaml:"apiVersion"`
 	//  ngc: 5G Traffic Influence Subscription, or
-	//  lte: LTE CUPS Userplane
+	//  lte: LTE CUPS Userplane, or
+	//  ngc_pfd: 5G PFD Transaction
 	Kind string `yaml:"kind"`
 }
 
@@ -30,7 +31,9 @@ type AFTrafficInfluSub struct {
 			SST int32  `yaml:"sst"`
 			SD  string `yaml:"sd,omitempty"`
 		} `yaml:"snssai,omitempty"`
-		// string containing a local identifier followed by \"@\" and a domain identifier. Both the local identifier and the domain identifier shall be encoded as strings that do not contain any \"@\" characters. See Clauses 4.6.2 and 4.6.3 of 3GPP TS 23.682 for more information.
+		// string containing a local identifier followed by \"@\" and a domain identifier. Both the local identifier
+		// and the domain identifier shall be encoded as strings that do not contain any \"@\" characters.
+		// See Clauses 4.6.2 and 4.6.3 of 3GPP TS 23.682 for more information.
 		ExternalGroupID string `yaml:"externalGroupId,omitempty"`
 		// Identifies whether the AF request applies to any UE.
 		AnyUeInd bool `yaml:"anyUeInd,omitempty"`
@@ -45,7 +48,11 @@ type AFTrafficInfluSub struct {
 		IPv6Addr string `yaml:"ipv6Addr,omitempty"`
 		// string identifying MAC Address
 		MACAddr string `yaml:"macAddr,omitempty"`
-		// Identifies the type of notification regarding UP path management event. Possible values are EARLY - early notification of UP path reconfiguration. EARLY_LATE - early and late notification of UP path reconfiguration. This value shall only be present in the subscription to the DNAI change event. LATE - late notification of UP path reconfiguration.
+		// Identifies the type of notification regarding UP path management event. Possible values are
+		// EARLY - early notification of UP path reconfiguration.
+		// EARLY_LATE - early and late notification of UP path reconfiguration. This value shall only be present in
+		//              the subscription to the DNAI change event.
+		// LATE - late notification of UP path reconfiguration.
 		DNAIChgType string `yaml:"dnaiChgType,omitempty"`
 		// string formatted according to IETF RFC 3986 identifying a referenced resource.
 		NotificationDestination string `yaml:"notificationDestination,omitempty"`
@@ -60,7 +67,8 @@ type AFTrafficInfluSub struct {
 		TrafficFilters []struct {
 			// Indicates the IP flow.
 			FlowID int32 `yaml:"flowId"`
-			// Indicates the packet filters of the IP flow. Refer to subclause 5.3.8 of 3GPP TS 29.214 for encoding. It shall contain UL and/or DL IP flow description.
+			// Indicates the packet filters of the IP flow. Refer to subclause 5.3.8 of 3GPP TS 29.214 for encoding.
+			// It shall contain UL and/or DL IP flow description.
 			FlowDescriptions []string `yaml:"flowDescriptions,omitempty"`
 		} `yaml:"trafficFilters,omitempty"`
 		// Identifies Ethernet packet filters.
@@ -73,7 +81,9 @@ type AFTrafficInfluSub struct {
 			// - DOWNLINK - The corresponding filter applies for traffic to the UE.
 			// - UPLINK - The corresponding filter applies for traffic from the UE.
 			// - BIDIRECTIONAL The corresponding filter applies for traffic both to and from the UE.
-			// UNSPECIFIED - The corresponding filter applies for traffic to the UE (downlink), but has no specific direction declared. The service data flow detection shall apply the filter for uplink traffic as if the filter was bidirectional.
+			// UNSPECIFIED - The corresponding filter applies for traffic to the UE (downlink), but has no specific
+			//              direction declared. The service data flow detection shall apply the filter for uplink
+			//              traffic as if the filter was bidirectional.
 			FDir          string   `yaml:"fDir,omitempty"`
 			SourceMACAddr string   `yaml:"sourceMacAddr,omitempty"`
 			VLANTags      []string `yaml:"vlanTags,omitempty"`
@@ -95,7 +105,8 @@ type AFTrafficInfluSub struct {
 			// string with format \"date-time\" as defined in OpenAPI.
 			StopTime string `yaml:"stopTime,omitempty"`
 		} `yaml:"tempValidities,omitempty"`
-		// Identifies a geographic zone that the AF request applies only to the traffic of UE(s) located in this specific zone.
+		// Identifies a geographic zone that the AF request applies only to the traffic of UE(s) located in this
+		// specific zone.
 		ValidGeoZoneIds []string `yaml:"validGeoZoneIds,omitempty"`
 	} `yaml:"policy"`
 }

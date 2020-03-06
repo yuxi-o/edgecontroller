@@ -6,6 +6,7 @@ package cnca
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 )
@@ -48,7 +49,8 @@ func init() {
 	const help = `Register controller to NGC AF services registry
 
 Usage:
-  cnca register --dnai=<DNAI> --dnn=<DNN> --tac=<TAC> --priDns=<pri-DNS> --secDns=<sec-DNS> --upfIp=<UPF-IP> --snssai=<SNSSAI>
+  cnca register --dnai=<DNAI> --dnn=<DNN> --tac=<TAC> --priDns=<pri-DNS> 
+  	--secDns=<sec-DNS> --upfIp=<UPF-IP> --snssai=<SNSSAI>
 
 Flags:
   -h, --help       help
@@ -63,18 +65,18 @@ Flags:
 	// add `register` command
 	cncaCmd.AddCommand(registerCmd)
 	registerCmd.Flags().String("dnai", "", "Identifies DNAI")
-	registerCmd.MarkFlagRequired("dnai")
+	_ = registerCmd.MarkFlagRequired("dnai")
 	registerCmd.Flags().String("dnn", "", "Identifies data network name")
-	registerCmd.MarkFlagRequired("dnn")
+	_ = registerCmd.MarkFlagRequired("dnn")
 	registerCmd.Flags().IntVar(&tac, "tac", 0, "Identifies Tracking Area Code (TAC)")
-	registerCmd.MarkFlagRequired("tac")
+	_ = registerCmd.MarkFlagRequired("tac")
 	registerCmd.Flags().String("priDns", "", "Identifies primary DNS")
-	registerCmd.MarkFlagRequired("priDns")
+	_ = registerCmd.MarkFlagRequired("priDns")
 	registerCmd.Flags().String("secDns", "", "Identifies secondary DNS")
-	registerCmd.MarkFlagRequired("secDns")
+	_ = registerCmd.MarkFlagRequired("secDns")
 	registerCmd.Flags().String("upfIp", "", "Identifies UPF IP address")
-	registerCmd.MarkFlagRequired("upfIp")
+	_ = registerCmd.MarkFlagRequired("upfIp")
 	registerCmd.Flags().String("snssai", "", "Identifies SNSSAI")
-	registerCmd.MarkFlagRequired("snssai")
+	_ = registerCmd.MarkFlagRequired("snssai")
 	registerCmd.SetHelpTemplate(help)
 }

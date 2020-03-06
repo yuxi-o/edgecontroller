@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -32,7 +31,6 @@ const (
 )
 
 var Http2ClientTlsCAPath string
-var pfdCommandCalled bool
 
 // cncaCmd represents the base command when called without any subcommands
 var cncaCmd = &cobra.Command{
@@ -84,9 +82,7 @@ Flags:
 
 // Execute CNCA agent
 func Execute() error {
-	if os.Args[1] == "pfd" {
-		pfdCommandCalled = true
-	}
+
 	if UseHttpProtocol == HTTP2 {
 		if Http2ClientTlsCAPath == "" {
 			Http2ClientTlsCAPath = DefaultTlsCAFilePath

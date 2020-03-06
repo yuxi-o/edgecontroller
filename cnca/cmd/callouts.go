@@ -15,10 +15,10 @@ import (
 const (
 	NgcOAMServiceEndpoint      = "http://localhost:30070/ngcoam/v1/af"
 	NgcAFServiceEndpoint       = "http://localhost:30050/af/v1"
-	LteOAMServiceEndpoint      = "http://localhost:8082/"
+	LteOAMServiceEndpoint      = "http://localhost:8082"
 	NgcOAMServiceHttp2Endpoint = "https://localhost:30070/ngcoam/v1/af"
 	NgcAFServiceHttp2Endpoint  = "https://localhost:30050/af/v1"
-	LteOAMServiceHttp2Endpoint = "https://localhost:8082/"
+	LteOAMServiceHttp2Endpoint = "https://localhost:8082"
 )
 
 // HTTP client
@@ -84,9 +84,8 @@ func OAM5gRegisterAFService(locService []byte) (string, error) {
 			return "", err
 		}
 		return s.AFServiceID, nil
-	} else {
-		return "", fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
+	return "", fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 }
 
 // OAM5gUnregisterAFService unregister controller from AF services registry
@@ -132,7 +131,7 @@ func AFCreateSubscription(sub []byte) (string, error) {
 		return "", fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
 
-	// retrive URI of the newly created subscription from response header
+	// retrieve URI of the newly created subscription from response header
 	subLoc := resp.Header.Get("Location")
 	if subLoc == "" {
 		return "", fmt.Errorf("Empty subscription URI returned from AF")
@@ -359,7 +358,7 @@ func AFCreatePfdTransaction(trans []byte) ([]byte, string, error) {
 		return nil, "", fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
 
-	// retrive URI of the newly created transaction from response header
+	// retrieve URI of the newly created transaction from response header
 	self := resp.Header.Get("Self")
 	if resp.Body != nil {
 		pfdData, err = ioutil.ReadAll(resp.Body)
@@ -370,9 +369,9 @@ func AFCreatePfdTransaction(trans []byte) ([]byte, string, error) {
 
 	if resp.StatusCode == http.StatusInternalServerError {
 		return pfdData, self, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
-	} else {
-		return pfdData, self, nil
 	}
+
+	return pfdData, self, nil
 }
 
 // AFGetPfdTransaction get the active PFD Transaction for the AF
@@ -411,26 +410,40 @@ func AFGetPfdTransaction(transID string) ([]byte, error) {
 }
 
 // AFPatchPfdTransaction update an active PFD Transaction for the AF
-func AFPatchPfdTransaction(transID string, trans []byte) error {
+func AFPatchPfdTransaction(transID string, trans []byte) ([]byte, error) {
 
+	var pfdReports []byte
+	
 	url := getNgcAFPfdServiceUrl() + "/" + transID
 
 	req, err := http.NewRequest("PUT", url, bytes.NewReader(trans))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK &&
+		resp.StatusCode != http.StatusInternalServerError {
+		return nil, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
 
-	return nil
+	if resp.Body != nil {
+		pfdReports, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if resp.StatusCode == http.StatusInternalServerError {
+		return pfdReports, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+	}
+
+	return pfdReports, nil
 }
 
 // AFDeletePfdTransaction delete an active PFD Transaction for the AF
@@ -487,26 +500,39 @@ func AFGetPfdApplication(transID string, appID string) ([]byte, error) {
 }
 
 // AFPatchPfdApplication update an active PFD Application for the AF
-func AFPatchPfdApplication(transID string, appID string, trans []byte) error {
+func AFPatchPfdApplication(transID string, appID string, trans []byte) ([]byte, error) {
 
+	var pfdReports []byte
 	url := getNgcAFPfdServiceUrl() + "/" + transID + "/applications/" + appID
 
 	req, err := http.NewRequest("PUT", url, bytes.NewReader(trans))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK &&
+		resp.StatusCode != http.StatusInternalServerError {
+		return nil, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
 	}
 
-	return nil
+	if resp.Body != nil {
+		pfdReports, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if resp.StatusCode == http.StatusInternalServerError {
+		return pfdReports, fmt.Errorf("HTTP failure: %d", resp.StatusCode)
+	}
+
+	return pfdReports, nil
 }
 
 // AFDeletePfdApplication delete an active PFD Application for the AF

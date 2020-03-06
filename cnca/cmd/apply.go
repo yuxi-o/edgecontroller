@@ -19,18 +19,13 @@ import (
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
 	Use: "apply",
-	Short: "Apply LTE CUPS userplane or NGC AF TI subscription or NGC AF PFD" +
-		"Transaction or NGC AF PFD Application using YAML configuration file",
+	Short: "Apply LTE CUPS userplane or NGC AF TI subscription using YAML " +
+		"configuration file",
 	Args: cobra.MaximumNArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		ymlFile, _ := cmd.Flags().GetString("filename")
-		if ymlFile == "" {
-			fmt.Println(errors.New("YAML file missing"))
-			return
-		}
-
-		data, err := ioutil.ReadFile(ymlFile)
+		// Read file from the filename provided in command
+		data, err := readInputData(cmd)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -44,17 +39,15 @@ var applyCmd = &cobra.Command{
 
 		switch c.Kind {
 		case "ngc":
-			if pfdCommandCalled == true {
-				fmt.Println(errors.New("Incorrect `kind` in YAML file"))
-				return
-			}
+
 			var s AFTrafficInfluSub
 			if err = yaml.Unmarshal(data, &s); err != nil {
 				fmt.Println(err)
 				return
 			}
 
-			sub, err := yaml.Marshal(s.Policy)
+			var sub []byte
+			sub, err = yaml.Marshal(s.Policy)
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -67,7 +60,8 @@ var applyCmd = &cobra.Command{
 			}
 
 			// create new subscription
-			subLoc, err := AFCreateSubscription(sub)
+			var subLoc string
+			subLoc, err = AFCreateSubscription(sub)
 			if err != nil {
 				klog.Info(err)
 				return
@@ -75,10 +69,7 @@ var applyCmd = &cobra.Command{
 			fmt.Println("Subscription URI:", subLoc)
 
 		case "lte":
-			if pfdCommandCalled == true {
-				fmt.Println(errors.New("Incorrect `kind` in YAML file"))
-				return
-			}
+
 			var u LTEUserplane
 			if err = yaml.Unmarshal(data, &u); err != nil {
 				fmt.Println(err)
@@ -105,105 +96,96 @@ var applyCmd = &cobra.Command{
 			}
 			fmt.Println("Userplane:", upID)
 
-		case "ngc_pfd":
-			if pfdCommandCalled == false {
-				fmt.Println(errors.New("Incorrect `kind` in YAML file"))
-				return
-			}
-			var s AFPfdManagement
-			if err = yaml.Unmarshal(data, &s); err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			pfdTransData := getPfdTransData(s)
-
-			trans, err := json.Marshal(pfdTransData)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			var appStatus map[string]string
-			// create new AF PFD Transaction
-			pfdData, self, err := AFCreatePfdTransaction(trans)
-			if err != nil {
-				klog.Info(err)
-				if err.Error() == "HTTP failure: 500" && pfdData != nil {
-					//Convert the json PFD Transaction Report into struct
-					pfdReports := []PfdReport{}
-					err = json.Unmarshal(pfdData, &pfdReports)
-					if err != nil {
-						klog.Info(err)
-						return
-					}
-					fmt.Println("PFD Transaction ID:")
-					fmt.Println("    Application IDs:")
-					appStatus = make(map[string]string)
-					for _, v := range pfdReports {
-						for _, str := range PfdReport(v).ExternalAppIds {
-							appStatus[str] = string(PfdReport(v).FailureCode)
-						}
-					}
-					for k, v := range appStatus {
-						fmt.Printf("      - %s : Failed (Reason: %s)\n", k, v)
-					}
-				}
-				return
-			}
-
-			if pfdData != nil {
-				//Convert the json PFD Transaction data into struct
-				pfdTrans := PfdManagement{}
-				err = json.Unmarshal(pfdData, &pfdTrans)
-				if err != nil {
-					klog.Info(err)
-					return
-				}
-				if self == "" {
-					self = string(pfdTrans.Self)
-				}
-
-				fmt.Printf("PFD Transaction URI: %s\n", self)
-				fmt.Printf("PFD Transaction ID: %s\n",
-					getTransIdFromUrl(self))
-				fmt.Println("    Application IDs:")
-
-				appStatus = make(map[string]string)
-				for k, _ := range pfdTrans.PfdDatas {
-					appStatus[k] = "Created"
-				}
-				for _, v := range pfdTrans.PfdReports {
-					for _, str := range PfdReport(v).ExternalAppIds {
-						appStatus[str] = string(PfdReport(v).FailureCode)
-					}
-				}
-				for k, v := range appStatus {
-					if v != "Created" {
-						fmt.Printf("      - %s : Failed (Reason: %s)\n", k, v)
-					} else {
-						fmt.Printf("      - %s : %s\n", k, v)
-					}
-				}
-			} else {
-				fmt.Printf("PFD Transaction URI: %s\n", self)
-				fmt.Printf("PFD Transaction ID: %s\n",
-					getTransIdFromUrl(self))
-			}
 		default:
 			fmt.Println(errors.New("`kind` missing or unknown in YAML file"))
 		}
 	},
 }
 
+// pfdApplyCmd represents the apply command
+var pfdApplyCmd = &cobra.Command{
+	Use: "apply",
+	Short: "Apply NGC AF PFD Transaction or NGC AF PFD Application " +
+		"using YAML configuration file",
+	Args: cobra.MaximumNArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
+
+		// Read file from the filename provided in command
+		data, err := readInputData(cmd)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		var c Header
+		if err = yaml.Unmarshal(data, &c); err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		if c.Kind != "ngc_pfd" {
+			fmt.Println(errors.New("`kind` missing or unknown in YAML file"))
+			return
+		}
+
+		var s AFPfdManagement
+		if err = yaml.Unmarshal(data, &s); err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		pfdTransData := getPfdTransData(s)
+
+		var trans []byte
+		trans, err = json.Marshal(pfdTransData)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		// create new AF PFD Transaction
+		pfdData, self, err := AFCreatePfdTransaction(trans)
+		if err != nil {
+			klog.Info(err)
+			if err.Error() == "HTTP failure: 500" && pfdData != nil {
+				printPdfReports(pfdData)
+			}
+			return
+		}
+
+		if pfdData != nil {
+			printPdfTransStatus(pfdData, self)
+		} else {
+			fmt.Printf("PFD Transaction URI: %s\n", self)
+			fmt.Printf("PFD Transaction ID: %s\n",
+				getTransIDFromURL(self))
+		}
+	},
+}
+
 func init() {
 
-	const help = `Apply LTE CUPS userplane or NGC AF TI subscription or NGC AF PFD Transaction or NGC AF PFD Application using YAML configuration file
+	const help = `Apply LTE CUPS userplane or NGC AF TI subscription
+using YAML configuration file
 
 Usage:
-  cnca {pfd | <none>} apply -f <config.yml>
+  cnca apply -f <config.yml>
 
 Example:
   cnca apply -f <config.yml>
+
+Flags:
+  -h, --help       help
+  -f, --filename   YAML configuration file
+`
+
+	const pfdHelp = `Apply NGC AF PFD Transaction or NGC AF PFD Application
+using YAML configuration file
+
+Usage:
+  cnca pfd apply -f <config.yml>
+
+Example:
   cnca pfd apply -f <config.yml>
 
 Flags:
@@ -212,13 +194,31 @@ Flags:
 `
 	// add `apply` command
 	cncaCmd.AddCommand(applyCmd)
-	pfdCmd.AddCommand(applyCmd)
 	applyCmd.Flags().StringP("filename", "f", "", "YAML configuration file")
-	applyCmd.MarkFlagRequired("filename")
+	_ = applyCmd.MarkFlagRequired("filename")
 	applyCmd.SetHelpTemplate(help)
+
+	// add pfd `apply` command
+	pfdCmd.AddCommand(pfdApplyCmd)
+	pfdApplyCmd.Flags().StringP("filename", "f", "", "YAML configuration file")
+	_ = pfdApplyCmd.MarkFlagRequired("filename")
+	pfdApplyCmd.SetHelpTemplate(pfdHelp)
 }
 
-func getTransIdFromUrl(url string) string {
+func readInputData(cmd *cobra.Command) ([]byte, error) {
+	ymlFile, _ := cmd.Flags().GetString("filename")
+	if ymlFile == "" {
+		return nil, errors.New("YAML file missing")
+	}
+
+	data, err := ioutil.ReadFile(ymlFile)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func getTransIDFromURL(url string) string {
 	urlElements := strings.Split(url, "/")
 	for index, str := range urlElements {
 		if str == "transactions" {
@@ -265,4 +265,40 @@ func getPfdTransData(inputPfdTransData AFPfdManagement) PfdManagement {
 		pfdTransData.PfdDatas[pfdAppData.ExternalAppID] = pfdAppData
 	}
 	return pfdTransData
+}
+
+func printPdfTransStatus(pfdTransData []byte, transURI string) {
+
+	//Convert the json PFD Transaction data into struct
+	pfdTrans := PfdManagement{}
+	err := json.Unmarshal(pfdTransData, &pfdTrans)
+	if err != nil {
+		klog.Info(err)
+		return
+	}
+	if transURI == "" {
+		transURI = string(pfdTrans.Self)
+	}
+
+	fmt.Printf("PFD Transaction URI: %s\n", transURI)
+	fmt.Printf("PFD Transaction ID: %s\n",
+		getTransIDFromURL(transURI))
+	fmt.Println("    Application IDs:")
+
+	appStatus := make(map[string]string)
+	for k := range pfdTrans.PfdDatas {
+		appStatus[k] = "Created"
+	}
+	for _, v := range pfdTrans.PfdReports {
+		for _, str := range v.ExternalAppIds {
+			appStatus[str] = string(v.FailureCode)
+		}
+	}
+	for k, v := range appStatus {
+		if v != "Created" {
+			fmt.Printf("      - %s : Failed (Reason: %s)\n", k, v)
+		} else {
+			fmt.Printf("      - %s : %s\n", k, v)
+		}
+	}
 }

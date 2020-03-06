@@ -13,10 +13,9 @@ import (
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
-	Use: "delete",
-	Short: "Delete an active LTE CUPS userplane or NGC AF TI subscription or " +
-		"NGC AF PFD Transaction or NGC AF PFD Application",
-	Args: cobra.MaximumNArgs(4),
+	Use:   "delete",
+	Short: "Delete an active LTE CUPS userplane or NGC AF TI subscription",
+	Args:  cobra.MaximumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 2 {
@@ -25,11 +24,6 @@ var deleteCmd = &cobra.Command{
 		}
 
 		if args[0] == "subscription" {
-
-			if pfdCommandCalled == true {
-				fmt.Println(errors.New("Invalid input(s)"))
-				return
-			}
 
 			// delete subscription
 			err := AFDeleteSubscription(args[1])
@@ -41,11 +35,6 @@ var deleteCmd = &cobra.Command{
 			return
 		} else if args[0] == "userplane" {
 
-			if pfdCommandCalled == true {
-				fmt.Println(errors.New("Invalid input(s)"))
-				return
-			}
-
 			// delete userplane
 			err := LteDeleteUserplane(args[1])
 			if err != nil {
@@ -54,12 +43,25 @@ var deleteCmd = &cobra.Command{
 			}
 			fmt.Printf("LTE CUPS userplane %s deleted\n", args[1])
 			return
-		} else if args[0] == "transaction" && args[1] != "" {
+		}
 
-			if pfdCommandCalled == false {
-				fmt.Println(errors.New("Invalid input(s)"))
-				return
-			}
+		fmt.Println(errors.New("Invalid input(s)"))
+	},
+}
+
+// pfdDeleteCmd represents the delete command
+var pfdDeleteCmd = &cobra.Command{
+	Use:   "delete",
+	Short: "Delete an active NGC AF PFD Transaction or NGC AF PFD Application",
+	Args:  cobra.MaximumNArgs(4),
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) < 2 {
+			fmt.Println(errors.New("Missing input(s)"))
+			return
+		}
+
+		if args[0] == "transaction" && args[1] != "" {
 
 			if len(args) > 2 {
 				if args[2] == "application" && len(args) > 3 {
@@ -90,14 +92,27 @@ var deleteCmd = &cobra.Command{
 
 func init() {
 
-	const help = `Delete an active LTE CUPS userplane or NGC AF TI subscription or NGC AF PFD Transaction or NGC AF PFD Application
-	
+	const help = `Delete an active LTE CUPS userplane or NGC AF TI subscription
+
 Usage:
-  cnca {pfd | <none>} delete { userplane <userplane-id> | subscription <subscription-id> | transaction <transaction-id> {application <application-id> | <none>}  }
+  cnca delete { userplane <userplane-id> | subscription <subscription-id> }
 
  Example:
   cnca delete userplane <userplane-id>
   cnca delete subscription <subscription-id>
+
+Flags:
+  -h, --help   help
+`
+
+	const pfdHelp = `Delete an active NGC AF PFD Transaction or NGC AF PFD 
+Application
+
+Usage:
+  cnca pfd delete { transaction <transaction-id> |
+	                transaction <transaction-id> application <application-id>}
+
+ Example:
   cnca pfd delete transaction <transaction-id>
   cnca pfd delete transaction <transaction-id> application <application-id> 
 
@@ -107,6 +122,9 @@ Flags:
 
 	// add `delete` command
 	cncaCmd.AddCommand(deleteCmd)
-	pfdCmd.AddCommand(deleteCmd)
 	deleteCmd.SetHelpTemplate(help)
+
+	// add pfd `delete` command
+	pfdCmd.AddCommand(pfdDeleteCmd)
+	pfdDeleteCmd.SetHelpTemplate(pfdHelp)
 }
