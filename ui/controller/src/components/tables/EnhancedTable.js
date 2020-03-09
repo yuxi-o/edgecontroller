@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2020 Intel Corporation
 
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -63,6 +63,7 @@ class EnhancedTable extends React.Component {
     const { classes } = this.props;
     const { data, order, orderBy, selected, rowsPerPage, page } = this.state;
     const emptyRows = rowsPerPage - Math.min(rowsPerPage, data.length - page * rowsPerPage);
+    const e = this.props.editable;
 
     return (
       <Paper className={classes.root}>
@@ -86,6 +87,7 @@ class EnhancedTable extends React.Component {
                     <EnhancedTableRow
                       tableData={n}
                       isSelected={isSelected}
+                      editable={e}
                     />
                   )
                 })}

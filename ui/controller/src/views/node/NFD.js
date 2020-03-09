@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (c) 2019-2020 Intel Corporation
+// Copyright (c) 2020 Intel Corporation
 
 import React, { Component } from 'react';
 import ApiClient from '../../api/ApiClient';
@@ -35,30 +35,30 @@ const styles = (theme) => ({
   },
 });
 
-class PoliciesView extends Component {
+class NFDView extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       loaded: false,
-      policies: [],
-      editable: true,
+      nfds: [],
+      editable: false,
     };
   }
 
   static contextType = OrchestrationContext;
 
   componentDidMount = () => {
-    return this.getPolicies();
+    return this.getData();
   };
 
-  // GET /policies
-  getPolicies = () => {
-    ApiClient.get(`${this.context.apiClientPath}/policies`)
+  getData = () => {
+    const { nodeID } = this.props;
+    ApiClient.get(`/nodes/${nodeID}/nfd`)
       .then((resp) => {
         this.setState({
           loaded: true,
-          policies: resp.data.policies || [],
+          nfds: resp.data.nodenfds || [],
         });
       })
       .catch((err) => {
@@ -73,33 +73,22 @@ class PoliciesView extends Component {
       });
   };
 
-  handleOnClickAddPolicy = () => {
-    const { history } = this.props;
-
-    // Redirect user to add policies view
-    history.push('/policies/add');
-  };
-
   renderTable = () => {
-    const { policies } = this.state;
-    const data = [];
+    const {
+      loaded,
+      nfds,
+    } = this.state;
 
     const tableHeaders = [
       { id: 'id', numeric: true, disablePadding: false, label: 'ID' },
-      { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
-      { id: 'action', numeric: false, disablePadding: false, label: 'Action' },
+      { id: 'value', numeric: false, disablePadding: false, label: 'Value' },
     ];
-
-    // Append the edit view url to each policy
-    policies.forEach((item) =>
-      data.push({ ...item, editUrl: `/policies/${item.id}/edit` })
-    );
 
     const tableData = {
       order: 'asc',
       orderBy: 'id',
       selected: [],
-      data: data,
+      data: nfds,
       page: 0,
       rowsPerPage: 10,
     };
@@ -109,11 +98,10 @@ class PoliciesView extends Component {
 
   render() {
     const { classes } = this.props;
-    const currentPath = this.props.location.pathname;
 
     const circularLoader = () => <CircularLoader />;
 
-    const policiesGrid = () => (
+    const NFDGrid = () => (
       <Grid
         spacing={24}
         alignItems="center"
@@ -131,26 +119,14 @@ class PoliciesView extends Component {
           >
             <Grid item>
               <Typography variant="subtitle1" className={classes.title}>
-                Traffic Policies
               </Typography>
               <Typography
                 variant="body1"
                 gutterBottom
                 className={classes.subtitle}
               >
-                List of Traffic Policies
+                Node Features Discovery list
               </Typography>
-            </Grid>
-            <Grid item xs={3}>
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.addButton}
-                onClick={this.handleOnClickAddPolicy}
-              >
-                Add Policy
-                <AddIcon className={classes.rightIcon} />
-              </Button>
             </Grid>
           </Grid>
           {this.renderTable()}
@@ -161,10 +137,9 @@ class PoliciesView extends Component {
     return (
       <React.Fragment>
         <CssBaseline />
-        <Topbar currentPath={currentPath} />
         <div className={classes.root}>
           <Grid container justify="center">
-            {this.state.loaded ? policiesGrid() : circularLoader()}
+            {this.state.loaded ? NFDGrid() : circularLoader()}
           </Grid>
         </div>
       </React.Fragment>
@@ -172,4 +147,5 @@ class PoliciesView extends Component {
   }
 }
 
-export default withSnackbar(withStyles(styles)(PoliciesView));
+export default withSnackbar(withStyles(styles)(NFDView));
+

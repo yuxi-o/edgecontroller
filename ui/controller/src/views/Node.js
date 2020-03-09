@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2020 Intel Corporation
 
 import React, { Component } from 'react';
 import withStyles from '@material-ui/core/styles/withStyles';
@@ -15,6 +15,7 @@ import DashboardView from './node/Dashboard';
 import AppsView from './node/NodeApps';
 import InterfacesView from './node/Interfaces';
 import DNSView from './node/DNS';
+import NFDView from './node/NFD';
 
 const styles = theme => ({
   root: {
@@ -57,6 +58,9 @@ class NodesView extends Component {
   renderInterfacesTab = () =>
     <InterfacesView nodeID={this.props.match.params.id} />
 
+  renderNFDTab = () =>
+    <NFDView nodeID={this.props.match.params.id} />
+
   render() {
     const { classes, match } = this.props;
     const currentPath = this.props.location.pathname;
@@ -80,6 +84,7 @@ class NodesView extends Component {
                       <Tab label="Apps" />
                       <Tab label="Interfaces" />
                       <Tab label="DNS" />
+                      <Tab label="NFD" />
                     </Tabs>
                   </AppBar>
                   <div className={classes.divTabContainer}>
@@ -87,6 +92,7 @@ class NodesView extends Component {
                     {tabValue === 1 && <TabContainer>{this.renderAppsTab()}</TabContainer>}
                     {tabValue === 2 && <TabContainer>{this.renderInterfacesTab()}</TabContainer>}
                     {tabValue === 3 && <TabContainer>{this.renderDNSTab()}</TabContainer>}
+                    {tabValue === 4 && <TabContainer>{this.renderNFDTab()}</TabContainer>}
                   </div>
                 </div>
               </Grid>
