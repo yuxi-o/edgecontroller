@@ -148,7 +148,7 @@ var pfdApplyCmd = &cobra.Command{
 		if err != nil {
 			klog.Info(err)
 			if err.Error() == "HTTP failure: 500" && pfdData != nil {
-				printPdfReports(pfdData)
+				printPfdReports(pfdData)
 			}
 			return
 		}

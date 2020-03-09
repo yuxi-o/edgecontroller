@@ -159,7 +159,7 @@ var pfdPatchCmd = &cobra.Command{
 					if err != nil {
 						klog.Info(err)
 						if err.Error() == "HTTP failure: 500" && pfdReportData != nil {
-							printPdfReports(pfdReportData)
+							printPfdReport(pfdReportData)
 						}
 						return
 					}
@@ -187,7 +187,7 @@ var pfdPatchCmd = &cobra.Command{
 				if err != nil {
 					klog.Info(err)
 					if err.Error() == "HTTP failure: 500" && pfdReportData != nil {
-						printPdfReports(pfdReportData)
+						printPfdReports(pfdReportData)
 					}
 					return
 				}
@@ -273,7 +273,7 @@ func getPfdAppData(inputPfdAppData AFPfdData) PfdData {
 	return pfdAppData
 }
 
-func printPdfReports(pfdReportData []byte) {
+func printPfdReports(pfdReportData []byte) {
 	//Convert the json PFD Transaction Report into struct
 	pfdReports := []PfdReport{}
 	err := json.Unmarshal(pfdReportData, &pfdReports)
@@ -291,5 +291,26 @@ func printPdfReports(pfdReportData []byte) {
 	}
 	for k, v := range appStatus {
 		fmt.Printf("      - %s : Failed (Reason: %s)\n", k, v)
+	}
+}
+
+func printPfdReport(pfdReportData []byte) {
+	//Convert the json PFD Transaction Report into struct
+	pfdReport := PfdReport{}
+	err := json.Unmarshal(pfdReportData, &pfdReport)
+	if err != nil {
+		klog.Info(err)
+		return
+	}
+	fmt.Println("PFD Transaction ID:")
+	fmt.Println("    Application IDs:")
+
+	var appIDList []string
+	if pfdReport.ExternalAppIds != nil {
+		copy(appIDList, pfdReport.ExternalAppIds)
+	}
+
+	for _, v := range appIDList {
+		fmt.Printf("      - %s : Failed (Reason: %s)\n", v, string(pfdReport.FailureCode))
 	}
 }
