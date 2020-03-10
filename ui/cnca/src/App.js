@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
- * Copyright (c) 2019 Intel Corporation
+ * Copyright (c) 2019-2020 Intel Corporation
  */
 
 import React, { Component } from 'react';
@@ -76,7 +76,6 @@ class App extends Component {
                   path="/services/:id"
                   component={Service}
                 />
-
                 <Route
                   exact
                   path="/subscriptions"

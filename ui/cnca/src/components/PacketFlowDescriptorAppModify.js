@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
- * Copyright (c) 2019 Intel Corporation
+ * Copyright (c) 2020 Intel Corporation
  */
 
 import React, { Component } from 'react';
@@ -58,7 +58,7 @@ class PacketFlowDescriptorAppModify extends Component {
    * Variable with prefix "ui" corresponds to json data representation 
    * according to ui schema (pfdAppFormSchema).
    */
-  transformToAfSchema = (uiModel) => {
+  transformToAfAppSchema = (uiModel) => {
       var afModel = {};
       var uiAppKeys  = Object.keys(uiModel);
       var uiPfds = uiModel['pfds'];
@@ -70,19 +70,10 @@ class PacketFlowDescriptorAppModify extends Component {
           continue;
         afModel[uiAppKeys[j]] = uiModel[uiAppKeys[j]];
       }
-      for(j=0; j<uiPfds.length; j++){
+      for(j=0; j<uiPfds.length; ++j){
         var uiPfd = uiPfds[j].pfd;
-        var afPfd = {};
         var pfdId = uiPfd.pfdID;
-        afPfd['pfdID'] = pfdId;
-
-        if(uiPfd['flowDescType'] === 'URL')
-          afPfd['urls'] = uiPfd['flowDescValue'];
-        else if(uiPfd['flowDescType'] === 'Domain Name')
-          afPfd['domainNames'] = uiPfd['flowDescValue'];
-        else
-          afPfd['flowDescriptions'] = uiPfd['flowDescValue'];
-        afPfds[pfdId] = afPfd;
+        afPfds[pfdId] = uiPfd;
       }
       afModel['pfds'] = afPfds;
     return afModel;
@@ -95,7 +86,7 @@ class PacketFlowDescriptorAppModify extends Component {
    * Variable with prefix "ui" corresponds to json data representation 
    * according to ui schema (pfdAppFormSchema).
    */
-  transformToUiSchema = (afModel) => {
+  transformToUiAppSchema = (afModel) => {
     var uiModel = {};
     var afAppKeys = Object.keys(afModel);
     var afPfds = afModel.pfds;
@@ -112,25 +103,8 @@ class PacketFlowDescriptorAppModify extends Component {
     for(j=0; j<afPfdNames.length; ++j){
       var afPfdName = afPfdNames[j];
       var afPfd = afPfds[afPfdName];
-      var uiPfd = {};
       var temp = {};
-      var afPfdKeys = Object.keys(afPfd);
-
-      for(var k=0; k<afPfdKeys.length; ++k){
-        if(afPfdKeys[k] === 'flowDescriptions'){
-          uiPfd['flowDescType'] = "Flow Description";
-          uiPfd['flowDescValue'] = afPfd.flowDescriptions;
-        } else if(afPfdKeys[k] === 'urls'){
-          uiPfd['flowDescType'] = "URL";
-          uiPfd['flowDescValue'] = afPfd.urls;
-        } else if(afPfdKeys[k] === 'domainNames'){
-          uiPfd['flowDescType'] = "Domain Name";
-          uiPfd['flowDescValue'] = afPfd.domainNames;
-        } else {
-          uiPfd[afPfdKeys[k]] = afPfd[afPfdKeys[k]];
-        }
-      }
-      temp['pfd'] = uiPfd;
+      temp['pfd'] = afPfd;
       uiPfds.push(temp);
     }
     uiModel['pfds'] = uiPfds;
@@ -149,7 +123,7 @@ class PacketFlowDescriptorAppModify extends Component {
     };
 
     try {
-      var afModel = this.transformToAfSchema(model);
+      var afModel = this.transformToAfAppSchema(model);
       await axios.put(
           `${baseURL}/af/v1/pfd/transactions/${tId}/applications/${appId}`, 
           afModel);
@@ -249,7 +223,7 @@ class PacketFlowDescriptorAppModify extends Component {
     try {
       const app = await this.getPfdApplication(match.params.tId, match.params.appId);
 
-      const model = this.transformToUiSchema(app);
+      const model = this.transformToUiAppSchema(app);
       this.cancelIfUnmounted(() => this.setState({
         loaded: true,
         tId: match.params.tId,

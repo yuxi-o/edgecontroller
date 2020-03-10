@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
- * Copyright (c) 2019 Intel Corporation
+ * Copyright (c) 2020 Intel Corporation
  */
 
 const pfdForm = [
@@ -44,29 +44,36 @@ const pfdAppFormSchema = {
               title: "PFD ID",
               type: "string",
             },
-            flowDescType: {
-              title: "PFD Rule Type",
-              type: "string",
-              enum: [
-                "Flow Description",
-                "URL",
-                "Domain Name",
-              ],
-            },
-            flowDescValue: {
-              title: "Values",
+            flowDescriptions: {
+              title: "Flow Descriptions Values",
               type: "array",
               items: {
-                title: "PFD Rule value",
+                title: "Flow Description Value",
                 type: "string",
-              },
+              }
             },
-          }
+            urls: {
+              title: "urls",
+              type: "array",
+              items: {
+                title: "url",
+                type: "string",
+              }
+            },
+            domainNames: {
+              title: "Domain Names",
+              type: "array",
+              items: {
+                title: "Domain Name",
+                type: "string",
+              }
+            }
+            }
+          } // pfd end
         }
       }
-    }
+    } // pfds end
   }
-}
 };
 
 
@@ -114,23 +121,30 @@ const pfdFormSchema = {
                         title: "PFD ID",
                         type: "string",
                       },
-                      flowDescType: {
-                        title: "PFD Rule Type",
-                        type: "string",
-                        enum: [
-                          "Flow Description",
-                          "URL",
-                          "Domain Name",
-                        ],
-                      },
-                      flowDescValue: {
-                        title: "Values",
+                      flowDescriptions: {
+                        title: "Flow Descriptions Values",
                         type: "array",
                         items: {
-                          title: "PFD Rule value",
+                          title: "Flow Description Value",
                           type: "string",
-                        },
+                        }
                       },
+                      urls: {
+                        title: "urls",
+                        type: "array",
+                        items: {
+                          title: "url",
+                          type: "string",
+                        }
+                      },
+                      domainNames: {
+                        title: "Domain Names",
+                        type: "array",
+                        items: {
+                          title: "Domain Name",
+                          type: "string",
+                        }
+                      }
                     }
                   } // pfd end
                 }

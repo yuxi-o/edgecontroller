@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
- * Copyright (c) 2019 Intel Corporation
+ * Copyright (c) 2020 Intel Corporation
  */
 
 import React, { Component } from 'react';
@@ -70,7 +70,7 @@ class PacketFlowDescriptor extends Component {
     }
 
 
-    for (i=0; i<pfdDatas.length; i++){
+    for (i=0; i<pfdDatas.length; ++i){
       var origApp = pfdDatas[i].apps;
       var newApp = {};
       var appName = origApp.externalAppID;
@@ -83,18 +83,10 @@ class PacketFlowDescriptor extends Component {
           continue;
         newApp[appKeys[j]] = origApp[appKeys[j]];
       }
-      for(j=0; j<pfds.length; j++){
+      for(j=0; j<pfds.length; ++j){
         var pfd = pfds[j].pfd;
-        var newPfd = {};
         var pfdId = pfd.pfdID;
-        newPfd['pfdID'] = pfdId;
-        if(pfd['flowDescType'] === 'URL')
-          newPfd['urls'] = pfd['flowDescValue'];
-        else if(pfd['flowDescType'] === 'Domain Name')
-          newPfd['domainNames'] = pfd['flowDescValue'];
-        else
-          newPfd['flowDescriptions'] = pfd['flowDescValue'];
-        newPfds[pfdId] = newPfd;
+        newPfds[pfdId] = pfd;
       }
       newApp['pfds'] = newPfds;
       newPfdDatas[appName] = newApp;
@@ -131,6 +123,7 @@ class PacketFlowDescriptor extends Component {
       var uiApp = {};
       var uiPfds = [];
       var afPfdNames = Object.keys(afPfds);
+      var tempApp = {};
 
       for(j=0; j<afAppKeys.length; ++j){
         if(afAppKeys[j] === 'pfds')
@@ -141,29 +134,11 @@ class PacketFlowDescriptor extends Component {
       for(j=0; j<afPfdNames.length; ++j){
         var afPfdName = afPfdNames[j];
         var afPfd = afPfds[afPfdName];
-        var uiPfd = {};
         var temp = {};
-        var afPfdKeys = Object.keys(afPfd);
-
-        for(var k=0; k<afPfdKeys.length; ++k){
-          if(afPfdKeys[k] === 'flowDescriptions'){
-            uiPfd['flowDescType'] = "Flow Description";
-            uiPfd['flowDescValue'] = afPfd.flowDescriptions;
-          } else if(afPfdKeys[k] === 'urls'){
-            uiPfd['flowDescType'] = "URL";
-            uiPfd['flowDescValue'] = afPfd.urls;
-          } else if(afPfdKeys[k] === 'domainNames'){
-            uiPfd['flowDescType'] = "Domain Name";
-            uiPfd['flowDescValue'] = afPfd.domainNames;
-          } else {
-            uiPfd[afPfdKeys[k]] = afPfd[afPfdKeys[k]];
-          }
-        }
-        temp['pfd'] = uiPfd;
+        temp['pfd'] = afPfd;
         uiPfds.push(temp);
       }
       uiApp['pfds'] = uiPfds;
-      var tempApp = {};
       tempApp['apps'] = uiApp;
       uiApps.push(tempApp);
     }

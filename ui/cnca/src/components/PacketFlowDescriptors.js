@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
- * Copyright (c) 2019 Intel Corporation
+ * Copyright (c) 2020 Intel Corporation
  */
 
 import React, { Component } from 'react';
@@ -114,7 +114,7 @@ class PacketFlowDescriptors extends Component {
 
       await sleep(1000);
       // Redirect back to /pfd to refresh the table of pfd transactions
-      history.push('/pfd');
+      window.location.reload();
     } catch (error) {
       this.cancelIfUnmounted(() => this.setState({
         loaded: true,
@@ -147,11 +147,11 @@ class PacketFlowDescriptors extends Component {
        * array {this.state.selectOpts}, generated in TransactionTableRow. 
        */
       var currSelectOpts = this.state.selectOpts;
-      for(var i=0; i<currSelectOpts.length; i++){
+      for(var i=0; i<currSelectOpts.length; ++i){
         var htmlSelect = document.getElementById(currSelectOpts[i].selectId);
         var appNames = currSelectOpts[i].appNames;
         var appIds = currSelectOpts[i].appIds;
-        for(var j=0; j<appNames.length; j++){
+        for(var j=0; j<appNames.length; ++j){
           htmlSelect.options[htmlSelect.options.length] = 
                                           new Option(appIds[j], appIds[j]);
         }
