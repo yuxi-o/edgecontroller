@@ -7,7 +7,8 @@ package cnca
 type Header struct {
 	Version string `yaml:"apiVersion"`
 	//  ngc: 5G Traffic Influence Subscription, or
-	//  lte: LTE CUPS Userplane
+	//  lte: LTE CUPS Userplane, or
+	//  ngc_pfd: 5G PFD Transaction
 	Kind string `yaml:"kind"`
 }
 
@@ -30,7 +31,9 @@ type AFTrafficInfluSub struct {
 			SST int32  `yaml:"sst"`
 			SD  string `yaml:"sd,omitempty"`
 		} `yaml:"snssai,omitempty"`
-		// string containing a local identifier followed by \"@\" and a domain identifier. Both the local identifier and the domain identifier shall be encoded as strings that do not contain any \"@\" characters. See Clauses 4.6.2 and 4.6.3 of 3GPP TS 23.682 for more information.
+		// string containing a local identifier followed by \"@\" and a domain identifier. Both the local identifier
+		// and the domain identifier shall be encoded as strings that do not contain any \"@\" characters.
+		// See Clauses 4.6.2 and 4.6.3 of 3GPP TS 23.682 for more information.
 		ExternalGroupID string `yaml:"externalGroupId,omitempty"`
 		// Identifies whether the AF request applies to any UE.
 		AnyUeInd bool `yaml:"anyUeInd,omitempty"`
@@ -45,7 +48,11 @@ type AFTrafficInfluSub struct {
 		IPv6Addr string `yaml:"ipv6Addr,omitempty"`
 		// string identifying MAC Address
 		MACAddr string `yaml:"macAddr,omitempty"`
-		// Identifies the type of notification regarding UP path management event. Possible values are EARLY - early notification of UP path reconfiguration. EARLY_LATE - early and late notification of UP path reconfiguration. This value shall only be present in the subscription to the DNAI change event. LATE - late notification of UP path reconfiguration.
+		// Identifies the type of notification regarding UP path management event. Possible values are
+		// EARLY - early notification of UP path reconfiguration.
+		// EARLY_LATE - early and late notification of UP path reconfiguration. This value shall only be present in
+		//              the subscription to the DNAI change event.
+		// LATE - late notification of UP path reconfiguration.
 		DNAIChgType string `yaml:"dnaiChgType,omitempty"`
 		// string formatted according to IETF RFC 3986 identifying a referenced resource.
 		NotificationDestination string `yaml:"notificationDestination,omitempty"`
@@ -60,7 +67,8 @@ type AFTrafficInfluSub struct {
 		TrafficFilters []struct {
 			// Indicates the IP flow.
 			FlowID int32 `yaml:"flowId"`
-			// Indicates the packet filters of the IP flow. Refer to subclause 5.3.8 of 3GPP TS 29.214 for encoding. It shall contain UL and/or DL IP flow description.
+			// Indicates the packet filters of the IP flow. Refer to subclause 5.3.8 of 3GPP TS 29.214 for encoding.
+			// It shall contain UL and/or DL IP flow description.
 			FlowDescriptions []string `yaml:"flowDescriptions,omitempty"`
 		} `yaml:"trafficFilters,omitempty"`
 		// Identifies Ethernet packet filters.
@@ -73,7 +81,9 @@ type AFTrafficInfluSub struct {
 			// - DOWNLINK - The corresponding filter applies for traffic to the UE.
 			// - UPLINK - The corresponding filter applies for traffic from the UE.
 			// - BIDIRECTIONAL The corresponding filter applies for traffic both to and from the UE.
-			// UNSPECIFIED - The corresponding filter applies for traffic to the UE (downlink), but has no specific direction declared. The service data flow detection shall apply the filter for uplink traffic as if the filter was bidirectional.
+			// UNSPECIFIED - The corresponding filter applies for traffic to the UE (downlink), but has no specific
+			//              direction declared. The service data flow detection shall apply the filter for uplink
+			//              traffic as if the filter was bidirectional.
 			FDir          string   `yaml:"fDir,omitempty"`
 			SourceMACAddr string   `yaml:"sourceMacAddr,omitempty"`
 			VLANTags      []string `yaml:"vlanTags,omitempty"`
@@ -95,7 +105,8 @@ type AFTrafficInfluSub struct {
 			// string with format \"date-time\" as defined in OpenAPI.
 			StopTime string `yaml:"stopTime,omitempty"`
 		} `yaml:"tempValidities,omitempty"`
-		// Identifies a geographic zone that the AF request applies only to the traffic of UE(s) located in this specific zone.
+		// Identifies a geographic zone that the AF request applies only to the traffic of UE(s) located in this
+		// specific zone.
 		ValidGeoZoneIds []string `yaml:"validGeoZoneIds,omitempty"`
 	} `yaml:"policy"`
 }
@@ -167,4 +178,93 @@ type LteConfigInfoCpup struct {
 // relates to the user plane (UP) side only.
 type LteConfigInfoUp struct {
 	UpIPAddress string `yaml:"up_ip_address,omitempty"`
+}
+
+// AFPfdManagement describes NGC AF Pfd Transaction
+type AFPfdManagement struct {
+	H      Header
+	Policy struct {
+		// Link to the resource "Individual PFD Management Transaction".
+		// This parameter shall be supplied by the AF in HTTP responses.
+		Self string `yaml:"self,omitempty"`
+		// String identifying supported optional features of PFD Management
+		// This attribute shall be provided in the POST request and in the
+		// response of successful resource creation.
+		SuppFeat *string `yaml:"suppFeat,omitempty"`
+		// Each element uniquely identifies the PFDs for an external application
+		// identifier. Each element is identified in the map via an external
+		// application identifier as key. The response shall include successfully
+		// provisioned PFD data of application(s).
+		PfdDatas []struct {
+			// Each element uniquely identifies external application identifier
+			ExternalAppID string `yaml:"externalAppID"`
+			// Link to the resource. This parameter shall be supplied by the AF in
+			// HTTP responses that include an object of PfdData type
+			Self string `yaml:"self,omitempty"`
+			// Contains the PFDs of the external application identifier. Each PFD is
+			// identified in the map via a key containing the PFD identifier.
+			Pfds []struct {
+				// Identifies a PDF of an application identifier.
+				PfdID string `yaml:"pfdID"`
+				// Represents a 3-tuple with protocol, server ip and server port for UL/DL
+				// application traffic. The content of the string has the same encoding as
+				// the IPFilterRule AVP value as defined in IETFÂ RFCÂ 6733.
+				FlowDescriptions []string `yaml:"flowDescriptions,omitempty"`
+				// Indicates a URL or a regular expression which is used to match the
+				// significant parts of the URL.
+				Urls []string `yaml:"urls,omitempty"`
+				// Indicates an FQDN or a regular expression as a domain name matching
+				// criteria.
+				DomainNames []string `yaml:"domainNames,omitempty"`
+			} `yaml:"pfds"`
+			// Indicates that the list of PFDs in this request should be deployed
+			// within the time interval indicated by the Allowed Delay
+			AllowedDelay *uint64 `yaml:"allowedDelay,omitempty"`
+			// SCEF supplied property, inclusion of this property means the allowed
+			// delayed cannot be satisfied, i.e. it is smaller than the caching time,
+			// but the PFD data is still stored.
+			CachingTime *uint64 `yaml:"cachingTime,omitempty"`
+		} `yaml:"pfdDatas"`
+		// Supplied by the AF and contains the external application identifiers
+		// for which PFD(s) are not added or modified successfully. The failure
+		// reason is also included. Each element provides the related information
+		// for one or more external application identifier(s) and is identified in
+		// the map via the failure identifier as key.
+		PfdReports map[string]PfdReport `yaml:"pfdReports,omitempty"`
+	} `yaml:"policy"`
+}
+
+// AFPfdData describes NGC AF Pfd Application
+type AFPfdData struct {
+	H      Header
+	Policy struct {
+		// Each element uniquely identifies external application identifier
+		ExternalAppID string `yaml:"externalAppID"`
+		// Link to the resource. This parameter shall be supplied by the AF in
+		// HTTP responses that include an object of PfdData type
+		Self string `yaml:"self,omitempty"`
+		// Contains the PFDs of the external application identifier. Each PFD is
+		// identified in the map via a key containing the PFD identifier.
+		Pfds []struct {
+			// Identifies a PDF of an application identifier.
+			PfdID string `yaml:"pfdID"`
+			// Represents a 3-tuple with protocol, server ip and server port for UL/DL
+			// application traffic. The content of the string has the same encoding as
+			// the IPFilterRule AVP value as defined in IETFÂ RFCÂ 6733.
+			FlowDescriptions []string `yaml:"flowDescriptions,omitempty"`
+			// Indicates a URL or a regular expression which is used to match the
+			// significant parts of the URL.
+			Urls []string `yaml:"urls,omitempty"`
+			// Indicates an FQDN or a regular expression as a domain name matching
+			// criteria.
+			DomainNames []string `yaml:"domainNames,omitempty"`
+		} `yaml:"pfds"`
+		// Indicates that the list of PFDs in this request should be deployed
+		// within the time interval indicated by the Allowed Delay
+		AllowedDelay *uint64 `yaml:"allowedDelay,omitempty"`
+		// SCEF supplied property, inclusion of this property means the allowed
+		// delayed cannot be satisfied, i.e. it is smaller than the caching time,
+		// but the PFD data is still stored.
+		CachingTime *uint64 `yaml:"cachingTime,omitempty"`
+	} `yaml:"policy"`
 }

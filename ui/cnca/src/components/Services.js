@@ -189,6 +189,16 @@ class Services extends Component {
             </Grid>
             <Grid item>
               <Button
+                onClick={() => history.push('/pfd')}
+                variant="outlined"
+                color="primary"
+              >
+                View PFD Transactions
+              </Button>
+            </Grid>
+ 
+            <Grid item>
+              <Button
                 onClick={() => history.push('/subscriptions')}
                 variant="outlined"
                 color="primary"
