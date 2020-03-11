@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2020 Intel Corporation
 
 package main_test
 
@@ -212,6 +212,32 @@ func clearGRPCTargetsTable() {
 	_, err = db.ExecContext(
 		timeoutCtx,
 		"DELETE FROM node_grpc_targets")
+	Expect(err).ToNot(HaveOccurred())
+}
+
+func insertNFDTags(values string) {
+	By("Connecting to the database")
+	db, err := sql.Open(
+		"mysql",
+		fmt.Sprintf("root:%s@tcp(:8083)/controller_ce?multiStatements=true", dbPass))
+	Expect(err).ToNot(HaveOccurred())
+
+	defer func() {
+		Expect(db.Close()).To(Succeed())
+	}()
+
+	By("Pinging the database")
+	err = db.Ping()
+	Expect(err).ToNot(HaveOccurred())
+
+	timeoutCtx, cancel := context.WithTimeout(
+		context.Background(), 2*time.Second)
+	defer cancel()
+
+	//nolint:gosec
+	query := fmt.Sprintf("INSERT INTO nodes_nfd_features (entity) values(%s)", values)
+	By(fmt.Sprintf("Executing the insert query: %v", query))
+	_, err = db.ExecContext(timeoutCtx, query)
 	Expect(err).ToNot(HaveOccurred())
 }
 
@@ -597,6 +623,28 @@ func getNodeDNS(id string) *swagger.DNSDetail {
 	Expect(json.Unmarshal(body, &nodeDNSConfig)).To(Succeed())
 
 	return &nodeDNSConfig
+}
+
+func getNodeNFD(id string) *swagger.NodeNfdList {
+	By(fmt.Sprintf("Sending a GET /nodes/%v/nfd request", id))
+	resp, err := apiCli.Get(
+		fmt.Sprintf("http://127.0.0.1:8080/nodes/%s/nfd", id))
+	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
+
+	By("Verifying a 200 OK response")
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	By("Reading the response body")
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ToNot(HaveOccurred())
+
+	var output swagger.NodeNfdList
+
+	By("Unmarshaling the response")
+	Expect(json.Unmarshal(body, &output)).To(Succeed())
+
+	return &output
 }
 
 func postPolicies(policyNames ...string) (id string) {
