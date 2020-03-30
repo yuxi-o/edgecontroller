@@ -13,12 +13,12 @@ import (
 
 // Connectivity constants
 const (
-	NgcOAMServiceEndpoint      = "http://localhost:30070/ngcoam/v1/af"
-	NgcAFServiceEndpoint       = "http://localhost:30050/af/v1"
-	LteOAMServiceEndpoint      = "http://localhost:8082"
-	NgcOAMServiceHTTP2Endpoint = "https://localhost:30070/ngcoam/v1/af"
-	NgcAFServiceHTTP2Endpoint  = "https://localhost:30050/af/v1"
-	LteOAMServiceHTTP2Endpoint = "https://localhost:8082"
+	NgcOAMServiceEndpoint      = "http://127.0.0.1:30070/ngcoam/v1/af"
+	NgcAFServiceEndpoint       = "http://127.0.0.1:30050/af/v1"
+	LteOAMServiceEndpoint      = "http://127.0.0.1:8082"
+	NgcOAMServiceHTTP2Endpoint = "https://127.0.0.1:30070/ngcoam/v1/af"
+	NgcAFServiceHTTP2Endpoint  = "https://127.0.0.1:30050/af/v1"
+	LteOAMServiceHTTP2Endpoint = "https://127.0.0.1:8082"
 )
 
 // HTTP client
