@@ -27,6 +27,7 @@ func handleDeleteNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 	if err != nil {
 		return err
 	}
+	defer disconnectNode(nodeCC)
 
 	// if kubernetes un-deploy application
 	if ctrl.OrchestrationMode == cce.OrchestrationModeKubernetes ||
@@ -41,7 +42,6 @@ func handleDeleteNodesApps(ctx context.Context, ps cce.PersistenceService, e cce
 	}
 
 	err = nodeCC.AppDeploySvcCli.Undeploy(ctx, app.GetID())
-	disconnectNode(nodeCC)
 
 	return err
 }
@@ -92,6 +92,7 @@ func handleDeleteNodesDNSConfigsWithAliases(
 	if err != nil {
 		return err
 	}
+	defer disconnectNode(nodeCC)
 
 	for _, alias := range dnsAliases {
 		record := &cce.DNSARecord{

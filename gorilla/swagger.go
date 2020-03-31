@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2020 Intel Corporation
 
 package gorilla
 
@@ -18,12 +18,14 @@ package gorilla
 // TODO: Remove nolint when possible and address the issues
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	cce "github.com/open-ness/edgecontroller"
+	"github.com/open-ness/edgecontroller/nfd-master"
 	"github.com/open-ness/edgecontroller/swagger"
 	"github.com/open-ness/edgecontroller/uuid"
 )
@@ -1495,6 +1497,36 @@ func (g *Gorilla) swagDELETENodeInterfacePolicy(w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// Query the DB to get the NFD features for a node. Return in a map form.
+func getNfdFeatures(ctx context.Context, nodeID string) (map[string]string, error) {
+	ctrl := ctx.Value(contextKey("controller")).(*cce.Controller)
+	// Fetch the NFD features for node from persistence
+	persistedNodeNFD, err := ctrl.PersistenceService.Filter(
+		ctx,
+		&nfd.NodeFeatureNFD{},
+		[]cce.Filter{
+			{
+				Field: "node_id",
+				Value: nodeID,
+			},
+		},
+	)
+	if err != nil {
+		log.Errf("Error when retrieving NFD features for node %s from database: %v",
+			nodeID, err)
+		return nil, err
+	}
+
+	// Convert persisted node NFD features to plain map
+	features := make(map[string]string)
+	for _, f := range persistedNodeNFD {
+		nfd := f.(*nfd.NodeFeatureNFD)
+		features[nfd.NfdID] = nfd.NfdValue
+	}
+
+	return features, nil
+}
+
 // Used for GET /nodes/{node_id}/apps endpoint
 func (g *Gorilla) swagGETNodeApps(w http.ResponseWriter, r *http.Request) {
 	// Load the controller to access the persistence
@@ -1638,6 +1670,21 @@ func (g *Gorilla) swagPOSTNodeApp(w http.ResponseWriter, r *http.Request) { //no
 	}
 	if persisted == nil {
 		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// EPA validation
+	features, err := getNfdFeatures(r.Context(), mux.Vars(r)["node_id"])
+	if err != nil {
+		log.Errf("swagPOSTNodeApp(): getNfdFeatures() failed: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "error: %v\n", err)
+		return
+	}
+	err = persisted.(*cce.App).EPAValidate(features)
+	if err != nil {
+		log.Errf("Unable to deploy app [%s] on node [%s]: %v", nodeApp.AppID, mux.Vars(r)["node_id"], err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -2431,4 +2478,35 @@ func (g *Gorilla) swagDELETENodeAppKubeOVNPolicy(w http.ResponseWriter, r *http.
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// Return the NFD tags of a node in a Json form to the remote caller
+func (g *Gorilla) swagGETNodeNFDTags(w http.ResponseWriter, r *http.Request) {
+	nodeID := mux.Vars(r)["node_id"]
+
+	// Convert persisted node NFD features to NodeNfdList
+	features, err := getNfdFeatures(r.Context(), nodeID)
+	if err != nil {
+		log.Errf("swagGETNodeNFDTags(): getNfdFeatures() failed: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "error: %v\n", err)
+		return
+	}
+	nodeNfds := swagger.NodeNfdList{}
+	for k, v := range features {
+		nodeNfdTag := swagger.NodeNfdTag{ID: k, Value: v}
+		nodeNfds.List = append(nodeNfds.List, nodeNfdTag)
+	}
+	nfdJSON, err := json.Marshal(nodeNfds)
+	if err != nil {
+		log.Errf("Error %v marshaling the NFD features into JSON for node %v", err, nodeID)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "error: %v\n", err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(nfdJSON); err != nil {
+		log.Errf("Error writing response: %v", err)
+	}
+	fmt.Fprintf(w, "\n")
 }

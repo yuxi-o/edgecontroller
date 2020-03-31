@@ -77,6 +77,14 @@ class AddNodeFormDialog extends Component {
       return this.setState({ submitError: true, helperText: 'Serial cannot be empty', loading: false });
     }
 
+    if (name === '') {
+      return this.setState({ submitError: true, helperText: 'Name cannot be empty', loading: false });
+    }
+
+    if (location === '') {
+      return this.setState({ submitError: true, helperText: 'Location cannot be empty', loading: false });
+    }
+
     return ApiClient.post('/nodes', { serial, location, name })
       .then((resp) => {
         clearFormValues();
@@ -141,7 +149,6 @@ class AddNodeFormDialog extends Component {
                 required
               />
               <TextField
-                autoFocus
                 margin="dense"
                 onChange={this.handleInputChange}
                 id="name"
@@ -149,9 +156,9 @@ class AddNodeFormDialog extends Component {
                 label="Name"
                 type="text"
                 fullWidth
+                required
               />
               <TextField
-                autoFocus
                 onChange={this.handleInputChange}
                 margin="dense"
                 id="location"
@@ -159,6 +166,7 @@ class AddNodeFormDialog extends Component {
                 label="Location"
                 type="text"
                 fullWidth
+                required
               />
 
               {this.state.helperText !== "" ?

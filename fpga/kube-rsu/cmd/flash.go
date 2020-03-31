@@ -40,7 +40,7 @@ var flashCmd = &cobra.Command{
 
 		containerSpec.Args = []string{
 			"./check_if_modules_loaded.sh && " +
-				"/root/intelrtestack/bin/fpga-n3000-2x2x25G-setup.sh",
+				"/home/fpga_opae/intelrtestack/bin/fpga-n3000-2x2x25G-setup.sh",
 		}
 
 		containerSpec.VolumeMounts = []corev1.VolumeMount{
@@ -50,8 +50,8 @@ var flashCmd = &cobra.Command{
 				ReadOnly:  false,
 			},
 			{
-				Name:      "image-dir",
-				MountPath: "/root/images",
+				Name:      "dev",
+				MountPath: "/dev",
 				ReadOnly:  false,
 			},
 		}
@@ -66,10 +66,10 @@ var flashCmd = &cobra.Command{
 				},
 			},
 			{
-				Name: "image-dir",
+				Name: "dev",
 				VolumeSource: corev1.VolumeSource{
 					HostPath: &corev1.HostPathVolumeSource{
-						Path: "/temp/vran_images",
+						Path: "/dev",
 					},
 				},
 			},

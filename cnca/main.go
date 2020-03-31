@@ -13,5 +13,4 @@ func main() {
 	if err := cnca.Execute(); err != nil {
 		os.Exit(1)
 	}
-	return
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2020 Intel Corporation
 
 import React, { Component } from 'react';
 import ApiClient from '../../api/ApiClient';
@@ -42,6 +42,7 @@ class PoliciesView extends Component {
     this.state = {
       loaded: false,
       policies: [],
+      editable: true,
     };
   }
 
@@ -103,7 +104,7 @@ class PoliciesView extends Component {
       rowsPerPage: 10,
     };
 
-    return <Table rows={tableHeaders} tableState={tableData} />;
+    return <Table rows={tableHeaders} tableState={tableData} editable={this.state.editable} />;
   };
 
   render() {

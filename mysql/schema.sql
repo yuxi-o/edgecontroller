@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: Apache-2.0
--- Copyright (c) 2019 Intel Corporation
+-- Copyright (c) 2019-2020 Intel Corporation
 
 DROP DATABASE IF EXISTS controller_ce;
 
@@ -28,6 +28,15 @@ CREATE TABLE node_grpc_targets (
     FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE,
     UNIQUE KEY (node_id),
     UNIQUE KEY (grpc_target)
+);
+
+CREATE TABLE nodes_nfd_features (
+    id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.id') STORED UNIQUE KEY,
+    node_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.node_id') STORED,
+    nfd_id VARCHAR(36) GENERATED ALWAYS AS (entity->>'$.nfd_id') STORED,
+    entity JSON,
+    FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE,
+    UNIQUE KEY (node_id, nfd_id)
 );
 
 CREATE TABLE apps (

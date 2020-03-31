@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-# Copyright (c) 2019 Intel Corporation
+# Copyright (c) 2019-2020 Intel Corporation
 
 # Build image with online dependencies
 FROM node:lts-alpine AS cups-ui-deps-image
@@ -22,8 +22,8 @@ FROM cups-ui-deps-image
 ARG REACT_APP_CUPS_API
 ENV REACT_APP_CUPS_API=$REACT_APP_CUPS_API
 
-ARG CONTROLLER_UI_URL
-ENV REACT_APP_CONTROLLER_UI_URL=$CONTROLLER_UI_URL
+ARG LANDING_UI_URL
+ENV REACT_APP_LANDING_UI_URL=$LANDING_UI_URL
 
 # Instruct webpack to only import runtime scripts
 ENV INLINE_RUNTIME_CHUNK=false

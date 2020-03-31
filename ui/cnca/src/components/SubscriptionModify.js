@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
- * Copyright (c) 2019 Intel Corporation
+ * Copyright (c) 2019-2020 Intel Corporation
  */
 
 import React, { Component } from 'react';
@@ -308,7 +308,7 @@ class SubscriptionModify extends Component {
             />
           </Grid>
 
-	  <Grid item xs={6}>
+          <Grid item xs={6}>
             <SchemaForm
               schema={Schema.ethFiltersFormSchema}
               form={Schema.ethFiltersForm}

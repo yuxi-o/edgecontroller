@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-# Copyright (c) 2019 Intel Corporation
+# Copyright (c) 2019-2020 Intel Corporation
 
 version: "3.4"
 
@@ -13,8 +13,8 @@ services:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
     read_only: true
     tmpfs:
-    - /run/mysqld:uid=999,gid=999
-    - /tmp
+      - /run/mysqld:uid=999,gid=999
+      - /tmp
     volumes:
       - ./artifacts/db:/var/lib/mysql
   cce:
@@ -44,18 +44,14 @@ services:
         CCE_ORCHESTRATION_MODE: "${CCE_ORCHESTRATION_MODE}"
         REACT_APP_CONTROLLER_API: "${REACT_APP_CONTROLLER_API}"
         REACT_APP_ORCHESTRATION_MODE: "${CCE_ORCHESTRATION_MODE}"
-        CONTROLLER_UI_URL: "${INFRASTRUCTURE_UI_URL}"
-        CUPS_UI_URL: "${CUPS_UI_URL}"
-        CNCA_UI_URL: "${CNCA_UI_URL}"
+        LANDING_UI_URL: "${LANDING_UI_URL}"
     ports:
       - 3000:80/tcp
     environment:
       CCE_ORCHESTRATION_MODE: "${CCE_ORCHESTRATION_MODE}"
       REACT_APP_CONTROLLER_API: "${REACT_APP_CONTROLLER_API}"
       REACT_APP_ORCHESTRATION_MODE: "${CCE_ORCHESTRATION_MODE}"
-      CONTROLLER_UI_URL: "${INFRASTRUCTURE_UI_URL}"
-      CUPS_UI_URL: "${CUPS_UI_URL}"
-      CNCA_UI_URL: "${CNCA_UI_URL}"
+      LANDING_UI_URL: "${LANDING_UI_URL}"
   cups-ui:
     image: cups:latest
     read_only: true
@@ -63,12 +59,12 @@ services:
       context: ./ui/cups
       args:
         REACT_APP_CUPS_API: "${REACT_APP_CUPS_API}"
-        CONTROLLER_UI_URL: "${LANDING_UI_URL}"
+        LANDING_UI_URL: "${LANDING_UI_URL}"
     ports:
       - 3010:80/tcp
     environment:
       REACT_APP_CUPS_API: "${REACT_APP_CUPS_API}"
-      CONTROLLER_UI_URL: "${LANDING_UI_URL}"
+      LANDING_UI_URL: "${LANDING_UI_URL}"
   cnca-ui:
     image: cnca:latest
     build:
@@ -76,10 +72,39 @@ services:
       args:
         REACT_APP_CNCA_AF_API: "${REACT_APP_CNCA_AF_API}"
         REACT_APP_CNCA_5GOAM_API: "${REACT_APP_CNCA_5GOAM_API}"
-        CONTROLLER_UI_URL: "${LANDING_UI_URL}"
+        LANDING_UI_URL: "${LANDING_UI_URL}"
     ports:
       - 3020:80/tcp
     environment:
       REACT_APP_CNCA_AF_API: "${REACT_APP_CNCA_AF_API}"
       REACT_APP_CNCA_5GOAM_API: "${REACT_APP_CNCA_5GOAM_API}"
-      CONTROLLER_UI_URL: "${LANDING_UI_URL}"
+      LANDING_UI_URL: "${LANDING_UI_URL}"
+  landing-ui:
+    image: landing:latest
+    build:
+      context: ./ui/landing
+      args:
+        REACT_APP_CONTROLLER_API: "${REACT_APP_CONTROLLER_API}"
+        CONTROLLER_UI_URL: "${INFRASTRUCTURE_UI_URL}"
+        CUPS_UI_URL: "${CUPS_UI_URL}"
+        CNCA_UI_URL: "${CNCA_UI_URL}"
+    ports:
+      - 3030:80/tcp
+    environment:
+      REACT_APP_CONTROLLER_API: "${REACT_APP_CONTROLLER_API}"
+      CONTROLLER_UI_URL: "${INFRASTRUCTURE_UI_URL}"
+      CUPS_UI_URL: "${CUPS_UI_URL}"
+      CNCA_UI_URL: "${CNCA_UI_URL}"
+  nfd-master:
+    image: nfd-master:latest
+    read_only: true
+    build:
+      context: .
+      dockerfile: nfd-master/Dockerfile
+    restart: on-failure:15
+    ports:
+      - 8082:8082/tcp
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+    volumes:
+      - ./artifacts/controller/certificates/ca:/ca

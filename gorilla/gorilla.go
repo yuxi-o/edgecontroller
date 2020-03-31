@@ -154,6 +154,8 @@ func NewGorilla( //nolint:gocyclo
 		"GET      /nodes/{node_id}/apps/{app_id}": g.swagGETNodeAppsByID,
 		"PATCH    /nodes/{node_id}/apps/{app_id}": g.swagPATCHNodeAppsByID,
 		"DELETE   /nodes/{node_id}/apps/{app_id}": g.swagDELETENodeAppByID,
+
+		"GET      /nodes/{node_id}/nfd": g.swagGETNodeNFDTags,
 	}
 
 	if controller.OrchestrationMode == cce.OrchestrationModeKubernetesOVN {

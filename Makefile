@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-# Copyright (c) 2019 Intel Corporation
+# Copyright (c) 2019-2020 Intel Corporation
 
 # Source user configured environment file.
 include .env
@@ -39,65 +39,85 @@ else
 	export CCE_FLAGS=$(CCE_FLAGS_BASE)
 endif
 
-define bring_ui_up 
+define bring_ui_up
+	docker-compose up -d landing-ui
 	docker-compose up -d ui
 	docker-compose up -d cups-ui
 	docker-compose up -d cnca-ui
 endef
 
+define bring_ui_down
+	docker-compose stop landing-ui
+	docker-compose stop ui
+	docker-compose stop cups-ui
+	docker-compose stop cnca-ui
+endef
+
 .PHONY: help all-up all-down clean build build-dnscli lint test \
 	db-up db-reset db-down \
 	minikube-install kubectl-install minikube-wait \
-	ui-up ui-down ui-test \
+	ui-up ui-down \
+	nfd-master-up nfd-master-down \
 	test-k8s test-api-k8s \
 	test-unit test-api test-dnscli
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
 	@echo "Building:"
-	@echo "  clean            to clean up build artifacts and docker volumes"
-	@echo "  build            to build the project to the ./dist/ folder"
-	@echo "  build-ifsvccli   to build interfaceservice CLI to the ./dist/ folder"
-	@echo "  build-dnscli     to build edgednscli to the ./dist/ folder"
+	@echo "  clean             to clean up build artifacts and docker volumes"
+	@echo "  build             to build the project to the ./dist/ folder"
+	@echo "  build-ifsvccli    to build interfaceservice CLI to the ./dist/ folder"
+	@echo "  build-dnscli      to build edgednscli to the ./dist/ folder"
 	@echo ""
 	@echo "Services:"
-	@echo "  all-up           to start the full controller stack"
-	@echo "  all-down         to stop the full controller stack"
+	@echo "  all-up            to start the full controller stack"
+	@echo "  all-down          to stop the full controller stack"
 	@echo ""
-	@echo "  db-up            to start the MySQL database service"
-	@echo "  db-reset         to start and reset the MySQL database service"
-	@echo "  db-down          to stop the MySQL database service"
+	@echo "  db-up             to start the MySQL database service"
+	@echo "  db-reset          to start and reset the MySQL database service"
+	@echo "  db-down           to stop the MySQL database service"
 	@echo ""
-	@echo "  ui-up            to start the production UI Container"
-	@echo "  ui-down          to stop the production UI container"
-	@echo "  ui-dev-up        to start local developer instance of the UI"
-	@echo "  ui-test          run the UI project tests"
+	@echo "  ui-up             to start all of the production UI Containers"
+	@echo "  ui-down           to stop all of the production UI containers"
 	@echo ""
-	@echo "  cups-ui-up       to start the production UI Container"
-	@echo "  cups-ui-down     to stop the production UI container"
-	@echo "  cups-ui-dev-up   to start local developer instance of the UI"
-	@echo "  cups-ui-test     run the UI project tests"
+	@echo "  cce-ui-up         to start the production UI Container"
+	@echo "  cce-ui-down       to stop the production UI container"
+	@echo "  cce-ui-dev-up     to start local developer instance of the UI"
+	@echo "  cce-ui-test       run the UI project tests"
 	@echo ""
-	@echo "  cnca-ui-up       to start the production UI Container"
-	@echo "  cnca-ui-down     to stop the production UI container"
-	@echo "  cnca-ui-dev-up   to start local developer instance of the UI"
-	@echo "  cnca-ui-test     run the UI project tests"
+	@echo "  cups-ui-up        to start the production UI Container"
+	@echo "  cups-ui-down      to stop the production UI container"
+	@echo "  cups-ui-dev-up    to start local developer instance of the UI"
+	@echo "  cups-ui-test      run the UI project tests"
 	@echo ""
-	@echo "  kubectl-install  to install kubectl"
-	@echo "  minikube-install to install minikube"
-	@echo "  minikube-start   to start minikube"
-	@echo "  minikube-wait    to wait for minikube to be ready"
-	@echo "  minikube-stop    to stop minikube"
+	@echo "  cnca-ui-up        to start the production UI Container"
+	@echo "  cnca-ui-down      to stop the production UI container"
+	@echo "  cnca-ui-dev-up    to start local developer instance of the UI"
+	@echo "  cnca-ui-test      run the UI project tests"
+	@echo ""
+	@echo "  landing-ui-up     to start the production UI Container"
+	@echo "  landing-ui-down   to stop the production UI container"
+	@echo "  landing-ui-dev-up to start local developer instance of the UI"
+	@echo "  landing-ui-test   run the UI project tests"
+	@echo ""
+	@echo "  nfd-master-up     to start the nfd-master container"
+	@echo "  nfd-master-down   to stop the nfd-master container"
+	@echo ""
+	@echo "  kubectl-install   to install kubectl"
+	@echo "  minikube-install  to install minikube"
+	@echo "  minikube-start    to start minikube"
+	@echo "  minikube-wait     to wait for minikube to be ready"
+	@echo "  minikube-stop     to stop minikube"
 	@echo ""
 	@echo "Testing:"
-	@echo "  lint             to run linters and static analysis on the code"
-	@echo "  test             to run all tests"
-	@echo "  test-unit        to run unit tests"
-	@echo "  test-api         to run api tests"
-	@echo "  test-api-k8s     to run k8s app deployment api tests"
-	@echo "  test-k8s         to run kubernetes orchestration tests"
-	@echo "  test-dnscli      to run edgednscli tests"
-	@echo "  test             to run unit followed by api tests"
+	@echo "  lint              to run linters and static analysis on the code"
+	@echo "  test              to run all tests"
+	@echo "  test-unit         to run unit tests"
+	@echo "  test-api          to run api tests"
+	@echo "  test-api-k8s      to run k8s app deployment api tests"
+	@echo "  test-k8s          to run kubernetes orchestration tests"
+	@echo "  test-dnscli       to run edgednscli tests"
+	@echo "  test              to run unit followed by api tests"
 
 clean:
 	@docker-compose stop
@@ -109,7 +129,7 @@ all-up: db-up cce-up ui-up
 all-down: db-down cce-down ui-down
 
 build:
-	docker-compose build
+	docker-compose build mysql cce ui cups-ui cnca-ui landing-ui
 
 	@# TODO: Remove the following when the test node is built as a Docker image and add it to the docker-compose.yml
 	@# and add details to the README about running a test node.
@@ -209,12 +229,18 @@ ui-up:
 	$(call bring_ui_up)
 
 ui-down:
+	$(call bring_ui_down)
+
+cce-ui-up:
+	docker-compose up -d ui
+
+cce-ui-down:
 	docker-compose stop ui
 
-ui-dev-up:
+cce-ui-dev-up:
 	cd ui/controller && yarn install && yarn start
 
-ui-test:
+cce-ui-test:
 	cd ui/controller && yarn install && yarn build && yarn test
 
 cups-ui-up:
@@ -241,8 +267,27 @@ cnca-ui-dev-up:
 cnca-ui-test:
 	cd ui/cnca && yarn install && yarn build && yarn test
 
+landing-ui-up:
+	docker-compose up -d landing-ui
+
+landing-ui-down:
+	docker-compose stop landing-ui
+
+landing-ui-dev-up:
+	cd ui/landing && yarn install && yarn start
+
+landing-ui-test:
+	cd ui/landing && yarn install && yarn build && yarn test
+
 build-dnscli:
 	go build -o dist/edgednscli ./cmd/edgednscli
+
+nfd-master-up:
+	go build -o dist/nfd-master ./cmd/nfd-master
+	docker-compose up -d nfd-master
+
+nfd-master-down:
+	docker-compose stop nfd-master
 
 test-unit:
 	ginkgo -v -r --randomizeAllSpecs --randomizeSuites \

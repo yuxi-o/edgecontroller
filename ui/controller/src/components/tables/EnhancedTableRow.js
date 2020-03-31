@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2020 Intel Corporation
 
 import React from "react";
 import TableRow from "@material-ui/core/TableRow";
@@ -12,6 +12,7 @@ class EnhancedTableRow extends React.Component {
   render() {
     const { tableData } = this.props;
     const isSelected = this.props.isSelected;
+    const editButton = this.props.editable;
 
     const editLink = (props) => <Link to={tableData.editUrl} {...props} />;
 
@@ -28,6 +29,7 @@ class EnhancedTableRow extends React.Component {
             <TableCell align="left">{tableData[key]}</TableCell>
           ) : "";
         })}
+        { editButton &&
         <TableCell align="left">
           <Button
             style={{ marginRight: '15px' }}
@@ -39,6 +41,7 @@ class EnhancedTableRow extends React.Component {
             Edit
           </Button>
         </TableCell>
+        }
       </TableRow>
     );
   }

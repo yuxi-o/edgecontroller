@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2020 Intel Corporation
 
 package main_test
 
@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	pb "github.com/open-ness/edgecontroller/pb/ela"
+	pb "github.com/open-ness/edgecontroller/pb/interfaceservice"
 	"google.golang.org/grpc"
 )
 
@@ -18,12 +18,10 @@ type InterfaceServiceServer struct {
 	Endpoint string
 	server   *grpc.Server
 
-	updateReturnErr     error
-	bulkUpdateReturnErr error
+	attachReturnErr error
+	detachReturnErr error
 
-	getAllReturnNi  *pb.NetworkInterfaces
-	getAllReturnErr error
-
+	getReturnNi  *pb.Ports
 	getReturnErr error
 }
 
@@ -58,22 +56,17 @@ func (is *InterfaceServiceServer) GracefulStop() error {
 	return nil
 }
 
-func (is *InterfaceServiceServer) Update(context.Context, *pb.NetworkInterface) (*empty.Empty, error) {
-	fmt.Println("@@@ 'Update' from GRPC server @@@")
-	return &empty.Empty{}, is.updateReturnErr
+func (is *InterfaceServiceServer) Attach(context.Context, *pb.Ports) (*empty.Empty, error) {
+	fmt.Println("@@@ 'Attach' from GRPC server @@@")
+	return &empty.Empty{}, is.attachReturnErr
 }
 
-func (is *InterfaceServiceServer) BulkUpdate(context.Context, *pb.NetworkInterfaces) (*empty.Empty, error) {
-	fmt.Println("@@@ 'BulkUpdate' from GRPC server @@@")
-	return &empty.Empty{}, is.bulkUpdateReturnErr
+func (is *InterfaceServiceServer) Detach(context.Context, *pb.Ports) (*empty.Empty, error) {
+	fmt.Println("@@@ 'Detach' from GRPC server @@@")
+	return &empty.Empty{}, is.detachReturnErr
 }
 
-func (is *InterfaceServiceServer) GetAll(context.Context, *empty.Empty) (*pb.NetworkInterfaces, error) {
-	fmt.Println("@@@ 'GetAll' from GRPC server @@@")
-	return is.getAllReturnNi, is.getAllReturnErr
-}
-
-func (is *InterfaceServiceServer) Get(context.Context, *pb.InterfaceID) (*pb.NetworkInterface, error) {
+func (is *InterfaceServiceServer) Get(context.Context, *empty.Empty) (*pb.Ports, error) {
 	fmt.Println("@@@ 'Get' from GRPC server @@@")
-	return &pb.NetworkInterface{}, is.getReturnErr
+	return is.getReturnNi, is.getReturnErr
 }
