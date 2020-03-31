@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2019 Intel Corporation
 
-module github.com/otcshare/edgecontroller
+module github.com/open-ness/edgecontroller
 
 require (
 	github.com/go-sql-driver/mysql v1.4.1
@@ -12,8 +12,8 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
-	github.com/otcshare/common/log v0.0.0-20191204122953-5cc7dfd62d15
-	github.com/otcshare/common/proxy v0.0.0-20191204122953-5cc7dfd62d15
+	github.com/open-ness/common/log v0.0.0-20191220144925-273a86a3f0d0
+	github.com/open-ness/common/proxy v0.0.0-20191220144925-273a86a3f0d0
 	github.com/pkg/errors v0.8.1
 	github.com/satori/go.uuid v1.2.0
 	golang.org/x/crypto v0.0.0-20190909091759-094676da4a83 // indirect
